@@ -1,0 +1,29 @@
+<schema package="com.redhat.nodereporter">
+
+  <class name="CPU">
+
+    <property name="cpunum" type="int32" access="RO" index="y"/>
+    <statistic name="corenum" type="int32" desc="Index of core within CPU"/>
+    <statistic name="numcores" type="int32" desc="Total # of cores for CPU"/>
+    <statistic name="model" type="int32" desc="Processor Model"/>
+    <statistic name="family" type="int32" desc="Processor Family"/>
+    <statistic name="cpuid_lvl" type="int32" desc="CPU ID Level"/>
+    <statistic name="speed" type="double" unit="MHz" desc="CPU Speed"/>
+    <statistic name="cache" type="int32"  unit="kb" desc="CPU Cache Size"/>
+    <statistic name="vendor" type="sstr" desc="CPU Vendor"/>
+    <statistic name="flags" type="lstr" desc="CPU Flags"/>
+
+  </class>
+
+  <class name="NIC">
+
+    <property name="macaddr" type="sstr" access="RO" index="y"/>
+    <statistic name="interface" type="sstr" desc="Interface name"/>
+    <statistic name="ipaddr" type="sstr" desc="IP Address"/>
+    <statistic name="netmask" type="sstr" desc="Netmask"/>
+    <statistic name="broadcast" type="sstr" desc="Broadcast"/>
+    <statistic name="bandwidth" type="int32" desc="Bandwidth"/>
+
+  </class>
+
+</schema>
