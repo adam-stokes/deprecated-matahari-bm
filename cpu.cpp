@@ -12,41 +12,35 @@
 using namespace std;
 namespace _qmf = qmf::com::redhat::nodereporter;
 
-CPUWrapper::CPUWrapper(ManagementAgent *agent__,
-		       int cpunum__,
-		       int corenum__,
-		       int numcores__,
-		       int model__,
-		       int family__,
-		       int cpuid_lvl__,
-		       double speed__,
-		       int cache__,
-		       const string &vendor__,
-		       const string &flags__)
+ostream& operator<<(ostream& output, const CPUWrapper& cpu) 
 {
-    agent = agent__;
-    cpunum = cpunum__;
-    corenum = corenum__;
-    numcores = numcores__;
-    model = model__;
-    family = family__;
-    cpuid_lvl = cpuid_lvl__;
-    speed = speed__;
-    cache = cache__;
-    vendor = vendor__;
-    flags = flags__;
-
-    mgmt_object = new _qmf::CPU(agent, this);
-    agent->addObject(mgmt_object);
-    sync();
+    output << "Processor" << endl;
+    output << "CPU #: " << cpu.cpunum << endl;
+    output << "Core #: " << cpu.corenum << endl;
+    output << "Num. Cores: " << cpu.numcores << endl;
+    output << "Model: " << cpu.model << endl;
+    output << "Family: " << cpu.family << endl;
+    output << "CPU ID Level: " << cpu.cpuid_lvl << endl;
+    output << "Speed (Mhz): " << cpu.speed << endl;
+    output << "Cache (kB): " << cpu.cache << endl;
+    output << "Vendor: " << cpu.vendor << endl;
+    output << "Flags: " << cpu.flags << endl;
+    return output;
 }
 
-CPUWrapper::~CPUWrapper()
+void CPUWrapper::setupQMFObject(ManagementAgent *agent, Manageable *parent)
+{
+    mgmt_object = new _qmf::CPU(agent, this, parent);
+    agent->addObject(mgmt_object);
+    syncQMFObject();    
+}
+
+void CPUWrapper::cleanupQMFObject(void)
 {
     mgmt_object->resourceDestroy();
 }
 
-void CPUWrapper::sync()
+void CPUWrapper::syncQMFObject(void)
 {
     mgmt_object->set_cpunum(cpunum);
     mgmt_object->set_corenum(corenum);
@@ -69,7 +63,7 @@ void CPUWrapper::sync()
  *
  * Throws a runtime error if file io is unsuccessful.
  */
-void fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
+void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
 {
     string line;
     boost::smatch matches;
@@ -128,17 +122,16 @@ void fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
     		    while (line != "");
 
     		    // Got all the data. Add the CPU to our list
-    		    CPUWrapper *cpu = new CPUWrapper(agent, 
-    						     cpunum,
-    						     coreid,
-    						     cpucores,
-    						     model,
-    						     family,
-    						     cpuid_lvl,
-    						     speed,
-    						     cache,
-    						     vendor,
-    						     flags);
+                CPUWrapper *cpu = new CPUWrapper(cpunum,
+                                                coreid,
+                                                cpucores,
+                                                model,
+                                                family,
+                                                cpuid_lvl,
+                                                speed,
+                                                cache,
+                                                vendor,
+                                                flags);
     		    cpus.push_back(cpu);
     		}
 	    }
@@ -148,16 +141,3 @@ void fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
 	cpuinfo.close();
 }
 
-ostream& operator<<(ostream& output, const CPUWrapper& cpu) {
-    output << "Processor: " << cpu.cpunum << endl;
-    output << "Core #: " << cpu.corenum << endl;
-    output << "Num. Cores: " << cpu.numcores << endl;
-    output << "Model: " << cpu.model << endl;
-    output << "Family: " << cpu.family << endl;
-    output << "CPU ID Level: " << cpu.cpuid_lvl << endl;
-    output << "Speed (Mhz): " << cpu.speed << endl;
-    output << "Cache (kB): " << cpu.cache << endl;
-    output << "Vendor: " << cpu.vendor << endl;
-    output << "Flags: " << cpu.flags << endl;
-    return output;
-}

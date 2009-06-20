@@ -11,8 +11,7 @@
 #include <cstdlib>
 
 #include "hal.h"
-#include "cpu.h"
-#include "nic.h"
+#include "host.h"
 #include "qmf/com/redhat/nodereporter/Package.h"
 
 using namespace qpid::management;
@@ -22,30 +21,12 @@ namespace _qmf = qmf::com::redhat::nodereporter;
 
 // Global Variables
 ManagementAgent::Singleton* singleton;
-vector<CPUWrapper*> cpus;
-vector<NICWrapper*> nics;
-
-void clearCPUList()
-{
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin(); iter != cpus.end();) {
-        delete (*iter);
-        iter = cpus.erase(iter);
-    }
-}
-
-void clearNICList()
-{
-    for (vector<NICWrapper*>::iterator iter = nics.begin(); iter != nics.end();) {
-        delete (*iter);
-        iter = nics.erase(iter);
-    }
-}
+HostWrapper* HostWrapper::hostSingleton = NULL;
 
 void cleanup(void)
 {
+    HostWrapper::disposeHostWrapper();
     delete singleton;
-    clearCPUList();
-    clearNICList();    
 }
 
 void shutdown(int)
@@ -60,12 +41,7 @@ int do_main(int argc, char **argv)
     int port = argc>2 ? atoi(argv[2]) : 5672;
     ConnectionSettings settings;
     ManagementAgent *agent;
-    LibHalContext *hal_ctx;
-
-    // Get our HAL Context or die trying
-    hal_ctx = get_hal_ctx();
-    if (!hal_ctx)
-        throw runtime_error("Unable to get HAL Context Structure.");
+    HostWrapper *hostWrapper;
 
     // Get our management agent
     singleton = new ManagementAgent::Singleton();
@@ -82,31 +58,14 @@ int do_main(int argc, char **argv)
 
     // Get the info and post it to the broker
     try {
-    	fillCPUInfo(cpus, agent);
-	    fillNICInfo(nics, agent, hal_ctx);
+        hostWrapper = HostWrapper::setupHostWrapper(agent);
     }
     catch (...) {
-        put_hal_ctx(hal_ctx);
         cleanup();
 	    throw;
     }
 
-    // Close the Hal Context
-    put_hal_ctx(hal_ctx);
-    
-    // Print gathered CPU data
-    vector<CPUWrapper*>::iterator cpu_cursor = cpus.begin();
-    while (cpu_cursor != cpus.end()) {
-        cout << **cpu_cursor << endl;
-        cpu_cursor++;
-    }
-
-    // Print gathered NIC data
-    vector<NICWrapper*>::iterator nic_cursor = nics.begin();
-    while (nic_cursor != nics.end()) {
-        cout << **nic_cursor << endl;
-        nic_cursor++;
-    }
+    cout << *hostWrapper << endl;
 
     // Keep alive while not EOF
     while(!cin.eof()) {

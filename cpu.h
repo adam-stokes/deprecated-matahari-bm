@@ -12,6 +12,9 @@ using qpid::management::Manageable;
 class CPUWrapper : public Manageable
 {
     friend ostream& operator<<(ostream &output, const CPUWrapper& cpu);
+    friend class HostWrapper;
+
+    // CPU Parameters
     int cpunum;
     int corenum;
     int numcores;
@@ -25,17 +28,22 @@ class CPUWrapper : public Manageable
     string vendor;
     string flags;
 
-    /* QMF related fields */
+    // QMF related fields
     ManagementAgent *agent;
     qmf::com::redhat::nodereporter::CPU *mgmt_object;
 
-    void sync();
-    
-public:
-    /* Constructors */
-    CPUWrapper(ManagementAgent *agent__,
-	       int cpunum__,
-	       int coreid__,
+    // Methods to put up / take down QMF Objects
+    void setupQMFObject(ManagementAgent *agent, Manageable *parent);
+    void cleanupQMFObject(void);
+    void syncQMFObject(void);
+
+    // Constructors and Destructor are private
+    CPUWrapper() {}
+    CPUWrapper(const CPUWrapper&) {}
+    ~CPUWrapper() {}
+
+    CPUWrapper(int cpunum__,
+	       int corenum__,
 	       int numcores__,
 	       int model__,
 	       int family__,
@@ -43,45 +51,42 @@ public:
 	       double speed__,
 	       int cache__,
 	       const string &vendor__,
-	       const string &flags__);
-    ~CPUWrapper();
+	       const string &flags__) {
+            cpunum = cpunum__;
+        corenum = corenum__;
+        numcores = numcores__;
+        model = model__;
+        family = family__;
+        cpuid_lvl = cpuid_lvl__;
+        speed = speed__;
+        cache = cache__;
+        vendor = vendor__;
+        flags = flags__;
+    }
+    
+public:
 
-    /* QMF Methods */
+    // Factory like method
+    static void fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent);
+
+    // QMF Methods
     ManagementObject* GetManagementObject(void) const { return mgmt_object; }
 
     status_t ManagementMethod(uint32_t methodId, Args& args, string& text) {
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    /* Field Accessors */
-    int getCpunum() { return cpunum; }
-    int getCorenum() { return corenum; }
-    int getNumcores() { return numcores; }
+    // Field Accessors
+    int getCpunum(void) { return cpunum; }
+    int getCorenum(void) { return corenum; }
+    int getNumcores(void) { return numcores; }
 
-    int getModel() { return model; }
-    int getFamily() { return family; }
-    int getCpuid_Lvl() { return cpuid_lvl; }
-    double getSpeed() { return speed; }
-    int getCache() { return cache; }
+    int getModel(void) { return model; }
+    int getFamily(void) { return family; }
+    int getCpuid_Lvl(void) { return cpuid_lvl; }
+    double getSpeed(void) { return speed; }
+    int getCache(void) { return cache; }
 
-    const string &getVendor() { return vendor; }
-    const string &getFlags() { return flags; }
-
-#if 0
-    void setCpunum(int cpunum__) { cpunum = cpunum__; }
-    void setCorenum(int corenum__) { corenum = corenum__; }
-    void setNumcores(int numcores__) { numcores = numcores__; }
-
-    void setModel(int model__) { model = model__; }
-    void setFamily(int family__) { family = family__; }
-    void setCpuid_Lvl(int cpuid_lvl__) { cpuid_lvl = cpuid_lvl__; }
-    void setSpeed(double speed__) { speed = speed__; }
-    void setCache(int cache__) { cache = cache__; }
-
-    void setVendor(const string &vendor__) { vendor = vendor__; }
-    void setFlags(const string &flags__) { flags = flags__; } 
-#endif
+    const string &getVendor(void) { return vendor; }
+    const string &getFlags(void) { return flags; }
 };
-
-void fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent);
-

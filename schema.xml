@@ -1,28 +1,39 @@
 <schema package="com.redhat.nodereporter">
 
+  <class name="Host">
+
+    <property name="uuid"     type="sstr"  access="RO" desc="Host UUID" index="y"/>
+    <property name="hostname" type="sstr"  access="RO" desc="Hostname"/>
+    <property name="memory"   type="int32" access="RO" desc="Amount of primary memory for host (kb)" unit="kb"/>
+    <property name="beeping"  type="bool"  access="RW" desc="speaker beep loop active? (used to identify host)"/>
+
+  </class>
+
   <class name="CPU">
 
-    <property name="cpunum" type="int32" access="RO" index="y"/>
-    <statistic name="corenum" type="int32" desc="Index of core within CPU"/>
-    <statistic name="numcores" type="int32" desc="Total # of cores for CPU"/>
-    <statistic name="model" type="int32" desc="Processor Model"/>
-    <statistic name="family" type="int32" desc="Processor Family"/>
-    <statistic name="cpuid_lvl" type="int32" desc="CPU ID Level"/>
-    <statistic name="speed" type="double" unit="MHz" desc="CPU Speed"/>
-    <statistic name="cache" type="int32"  unit="kb" desc="CPU Cache Size"/>
-    <statistic name="vendor" type="sstr" desc="CPU Vendor"/>
-    <statistic name="flags" type="lstr" desc="CPU Flags"/>
+    <property name="host"      type="objId"  access="RO" desc="Host that this cpu belongs to" index="y" references="Host" parentRef="y"/>
+    <property name="cpunum"    type="int32"  access="RO" desc="CPU # for this host"           index="y"/>
+    <property name="corenum"   type="int32"  access="RO" desc="Index of core within CPU"/>
+    <property name="numcores"  type="int32"  access="RO" desc="Total # of cores for CPU"/>
+    <property name="model"     type="int32"  access="RO" desc="Processor Model"/>
+    <property name="family"    type="int32"  access="RO" desc="Processor Family"/>
+    <property name="cpuid_lvl" type="int32"  access="RO" desc="CPU ID Level"/>
+    <property name="speed"     type="double" access="RO" desc="CPU Speed"      unit="MHz"/>
+    <property name="cache"     type="int32"  access="RO" desc="CPU Cache Size" unit="kb"/>
+    <property name="vendor"    type="sstr"   access="RO" desc="CPU Vendor"/>
+    <property name="flags"     type="lstr"   access="RO" desc="CPU Flags"/>
 
   </class>
 
   <class name="NIC">
 
-    <property name="macaddr" type="sstr" access="RO" index="y"/>
-    <statistic name="interface" type="sstr" desc="Interface name"/>
-    <statistic name="ipaddr" type="sstr" desc="IP Address"/>
-    <statistic name="netmask" type="sstr" desc="Netmask"/>
-    <statistic name="broadcast" type="sstr" desc="Broadcast"/>
-    <statistic name="bandwidth" type="int32" desc="Bandwidth"/>
+    <property name="host"      type="objId" access="RO" desc="Host that this NIC belongs to" index="y" references="Host" parentRef="y"/>
+    <property name="macaddr"   type="sstr"  access="RO" desc="MAC Address"                   index="y"/>
+    <property name="interface" type="sstr"  access="RO" desc="Interface name"/>
+    <property name="ipaddr"    type="sstr"  access="RO" desc="IP Address"/>
+    <property name="netmask"   type="sstr"  access="RO" desc="Netmask"/>
+    <property name="broadcast" type="sstr"  access="RO" desc="Broadcast"/>
+    <property name="bandwidth" type="int32" access="RO" desc="Bandwidth"/>
 
   </class>
 

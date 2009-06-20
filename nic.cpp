@@ -25,33 +25,30 @@ namespace _qmf = qmf::com::redhat::nodereporter;
 extern DBusConnection *dbus_connection;
 extern DBusError dbus_error;
 
-NICWrapper::NICWrapper(ManagementAgent *agent__,
-		       const string &interfaceName__,
-		       const string &macaddr__,
-		       const string &ipaddr__,
-		       const string &netmask__,
-		       const string &broadcast__,
-		       int bandwidth__)
-{
-    agent = agent__;
-    interfaceName = interfaceName__;
-    macaddr = macaddr__;
-    ipaddr = ipaddr__;
-    netmask = netmask__;
-    broadcast = broadcast__;
-    bandwidth = bandwidth__;
-    
-    mgmt_object = new _qmf::NIC(agent, this);
-    agent->addObject(mgmt_object);
-    sync();
+ostream &operator<<(ostream& output, const NICWrapper& nic) {
+    output << "NIC" << endl;
+    output << "Interface Name: " << nic.interfaceName << endl;
+    output << "MAC Address: " << nic.macaddr << endl;
+    output << "IP Address: " << nic.ipaddr << endl;
+    output << "Netmask: " << nic.netmask << endl;
+    output << "Broadcast: " << nic.broadcast << endl;
+    output << "Bandwidth: " << nic.bandwidth << endl;
+    return output;
 }
 
-NICWrapper::~NICWrapper()
+void NICWrapper::setupQMFObject(ManagementAgent *agent, Manageable *parent)
+{
+    mgmt_object = new _qmf::NIC(agent, this, parent);
+    agent->addObject(mgmt_object);
+    syncQMFObject();
+}
+
+void NICWrapper::cleanupQMFObject(void)
 {
     mgmt_object->resourceDestroy();
 }
 
-void NICWrapper::sync()
+void NICWrapper::syncQMFObject(void)
 {
     mgmt_object->set_interface(interfaceName);
     mgmt_object->set_macaddr(macaddr);
@@ -61,7 +58,7 @@ void NICWrapper::sync()
     mgmt_object->set_bandwidth(bandwidth);
 }
 
-NICWrapper *getNIC(ManagementAgent *agent, 
+NICWrapper *NICWrapper::getNIC(ManagementAgent *agent, 
 		   LibHalContext *hal_ctx,
 		   char *nic_handle)
 {
@@ -182,13 +179,13 @@ NICWrapper *getNIC(ManagementAgent *agent,
     // We have all the data. Create the NICWrapper instance
     macaddr = macaddr_c;
     interface = interface_c;
-    nic = new NICWrapper(agent,
-			 interface,
+    nic = new NICWrapper(interface,
 			 macaddr,
 			 ipaddr,
 			 netmask,
 			 broadcast,
 			 bandwidth);
+
     // Free resources and return
     libhal_free_string(interface_c);
     libhal_free_string(macaddr_c);
@@ -204,9 +201,9 @@ NICWrapper *getNIC(ManagementAgent *agent,
  * NICs found in the system found by querying dbus and making other system
  * calls.
  */
-void fillNICInfo(vector <NICWrapper*> &nics, 
-		 ManagementAgent *agent, 
-		 LibHalContext *hal_ctx)
+void NICWrapper::fillNICInfo(vector <NICWrapper*> &nics, 
+			     ManagementAgent *agent, 
+			     LibHalContext *hal_ctx)
 {
     char **net_devices;
     int num_results, i;
@@ -236,14 +233,4 @@ void fillNICInfo(vector <NICWrapper*> &nics,
     }
     // And we're all done.
     libhal_free_string_array(net_devices);
-}
-
-ostream &operator<<(ostream& output, const NICWrapper& nic) {
-    output << "NIC: " << nic.interfaceName << endl;
-    output << "MAC Address: " << nic.macaddr << endl;
-    output << "IP Address: " << nic.ipaddr << endl;
-    output << "Netmask: " << nic.netmask << endl;
-    output << "Broadcast: " << nic.broadcast << endl;
-    output << "Bandwidth: " << nic.bandwidth << endl;
-    return output;
 }

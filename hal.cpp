@@ -23,9 +23,9 @@
 
 #include "hal.h"
 #include <cstdio>
+#include <stdexcept>
 
 DBusConnection *dbus_connection;
-
 DBusError dbus_error;
 
 LibHalContext *
@@ -49,7 +49,7 @@ get_hal_ctx(void)
                 fprintf(stderr,
                         "Failed to initial libhal context: %s : %s\n",
                         dbus_error.name, dbus_error.message);
-            }
+            }	
         } else {
             fprintf(stderr, "Unable to connect to system bus: %s : %s\n",
                     dbus_error.name, dbus_error.message);
@@ -68,3 +68,20 @@ void put_hal_ctx(LibHalContext *hal_ctx)
     libhal_ctx_free(hal_ctx);
 }
 
+char* get_uuid(LibHalContext *hal_ctx)
+{
+    const char *udi = "/org/freedesktop/Hal/devices/computer";
+    const char *key = "system.hardware.uuid";
+    char *value;
+
+    int type = libhal_device_get_property_type(hal_ctx, udi, key, &dbus_error);
+    if (type == LIBHAL_PROPERTY_TYPE_STRING) {
+        value = libhal_device_get_property_string(hal_ctx, 
+                                                  udi, 
+                                                  key, 
+                                                  &dbus_error);
+    }
+    if (!value)
+        throw std::runtime_error("Unable to get host UUID");
+    return value;
+}
