@@ -1,0 +1,8 @@
+Change Log
+
+v 0.0.1
+===============================================================================
+Initial version using autotools.
+
+Tracks Node, CPU and NIC info. Provides method to physically identify NIC.
+

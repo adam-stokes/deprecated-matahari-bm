@@ -1,8 +1,11 @@
 QMF System Agent
 
 To build, you need a copy of Apache QPID (http://qpid.apache.org/) checked out
-and built. Modify the makefile to point to the directory of the checked out
-and built qpid branch, and then type make to compile this project.
+and built. Following this, run a make install of QPID.
+
+To build the system agent:
+./configure --with-boost-regex=mt
+make
 
 To test, run qpidd followed by the executable built by this project. qpid-tool
 from the qpid project is a quick and easy way to manipulate the functionality
