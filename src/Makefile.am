@@ -1,7 +1,6 @@
 INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/nodereporter $(HAL_CFLAGS) $(BOOST_CPPFLAGS)
 
 sbin_PROGRAMS = nodereporter
-PYTHONPATH = /usr/local/lib/python2.6/site-packages/
 
 generated_file_list = \
 	qmf/com/redhat/nodereporter/Host.cpp\
