@@ -15,11 +15,17 @@
 #include <linux/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #include "nic.h"
 #include "qmf/com/redhat/nodereporter/NIC.h"
+#include "qmf/com/redhat/nodereporter/ArgsNICIdentify_nic.h"
 
+using namespace qpid::management;
 using namespace std;
+
+using qpid::management::Manageable;
+
 namespace _qmf = qmf::com::redhat::nodereporter;
 
 extern DBusConnection *dbus_connection;
@@ -233,4 +239,40 @@ void NICWrapper::fillNICInfo(vector <NICWrapper*> &nics,
     }
     // And we're all done.
     libhal_free_string_array(net_devices);
+}
+
+int NICWrapper::identifyNIC(int seconds)
+{
+    struct ethtool_value edata;
+    struct ifreq ifr;
+    int sock, ret;
+
+    edata.cmd = ETHTOOL_PHYS_ID;
+    edata.data = seconds; // seconds of blink time
+
+    strncpy(ifr.ifr_name, interfaceName.c_str(), IFNAMSIZ - 1);
+    ifr.ifr_data = (caddr_t)&edata;
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    ret = ioctl(sock, SIOCETHTOOL, &ifr);
+    close(sock);
+
+    if (ret != 0)
+	ret = errno;
+
+    return ret;
+}
+
+Manageable::status_t 
+NICWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text)
+{
+    switch (methodId) {
+        case _qmf::NIC::METHOD_IDENTIFY_NIC:
+	    _qmf::ArgsNICIdentify_nic& ioArgs = (_qmf::ArgsNICIdentify_nic&) args;
+	    int seconds = ioArgs.i_seconds;
+	    ioArgs.o_ret = identifyNIC(seconds);
+	    return STATUS_OK;
+    }
+
+    return STATUS_NOT_IMPLEMENTED;
 }

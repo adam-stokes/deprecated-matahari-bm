@@ -52,10 +52,7 @@ class HostWrapper : public Manageable
 
     // QMF Methods
     ManagementObject* GetManagementObject(void) const { return mgmt_object; }
-
-    status_t ManagementMethod(uint32_t methodId, Args& args, string& text) {
-        return STATUS_NOT_IMPLEMENTED;
-    }
+    status_t ManagementMethod(uint32_t methodId, Args& args, string& text);
    
     // Field Accessors
     const string &getUUID(void) { return uuid; }

@@ -1,3 +1,5 @@
+#include <qpid/management/Manageable.h>
+
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -9,7 +11,10 @@
 #include "host.h"
 #include "qmf/com/redhat/nodereporter/Host.h"
 
+using namespace qpid::management;
 using namespace std;
+
+using qpid::management::Manageable;
 namespace _qmf = qmf::com::redhat::nodereporter;
 
 ostream& operator<<(ostream &output, const HostWrapper& host)
@@ -177,3 +182,14 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
     return hostSingleton;
 }
 
+Manageable::status_t 
+HostWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text) 
+{
+    switch(methodId) {
+        case _qmf::Host::METHOD_SHUTDOWN:
+	    return Manageable::STATUS_NOT_IMPLEMENTED;
+        case _qmf::Host::METHOD_REBOOT:
+	    return Manageable::STATUS_NOT_IMPLEMENTED;
+    }
+    return Manageable::STATUS_NOT_IMPLEMENTED;
+}

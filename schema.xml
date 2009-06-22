@@ -7,6 +7,9 @@
     <property name="memory"   type="int32" access="RO" desc="Amount of primary memory for host (kb)" unit="kb"/>
     <property name="beeping"  type="bool"  access="RW" desc="speaker beep loop active? (used to identify host)"/>
 
+    <method name="shutdown" desc="Shutdown node" />
+    <method name="reboot" desc="Reboot node" />
+
   </class>
 
   <class name="CPU">
@@ -34,6 +37,11 @@
     <property name="netmask"   type="sstr"  access="RO" desc="Netmask"/>
     <property name="broadcast" type="sstr"  access="RO" desc="Broadcast"/>
     <property name="bandwidth" type="int32" access="RO" desc="Bandwidth"/>
+
+    <method name="identify_nic" desc="Physically Identify NIC">
+      <arg name="seconds" dir="I" type="int32" />
+      <arg name="ret" dir="O" type="int32" />
+    </method>
 
   </class>
 

@@ -54,6 +54,8 @@ class NICWrapper : public Manageable
     static NICWrapper *getNIC(ManagementAgent *agent, 
 		       LibHalContext *hal_ctx,
 		       char *nic_handle);
+
+    int identifyNIC(int seconds);
 public:
 
     // Factory like method
@@ -63,10 +65,7 @@ public:
 
     // QMF Methods
     ManagementObject *GetManagementObject(void) const { return mgmt_object; }
-
-    status_t ManagementMethod(uint32_t methodId, Args& args, string& text) {
-        return STATUS_NOT_IMPLEMENTED;
-    }
+    status_t ManagementMethod(uint32_t methodId, Args& args, string& text);
 
     // Field Accessors
     const string &getInterfaceName(void) { return interfaceName; }
