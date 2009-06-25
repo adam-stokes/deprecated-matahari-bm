@@ -6,6 +6,7 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <cstdlib>
 #include <unistd.h>
 
 #include "host.h"
@@ -182,14 +183,26 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
     return hostSingleton;
 }
 
+void HostWrapper::reboot()
+{
+    system("shutdown -r now");
+}
+
+void HostWrapper::shutdown()
+{
+    system("shutdown -h now");
+}
+
 Manageable::status_t 
 HostWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text) 
 {
     switch(methodId) {
         case _qmf::Host::METHOD_SHUTDOWN:
-	    return Manageable::STATUS_NOT_IMPLEMENTED;
+	    shutdown();
+	    return Manageable::STATUS_OK;
         case _qmf::Host::METHOD_REBOOT:
-	    return Manageable::STATUS_NOT_IMPLEMENTED;
+	    reboot();
+	    return Manageable::STATUS_OK;
     }
     return Manageable::STATUS_NOT_IMPLEMENTED;
 }
