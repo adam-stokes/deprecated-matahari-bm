@@ -40,6 +40,10 @@ class HostWrapper : public Manageable
     void syncQMFHostObject(void);
     void cleanupMemberObjects(void);
 
+    // Host functionality
+    void reboot();
+    void shutdown();
+
     // Constructors and Destructor are private
     HostWrapper() {}
     HostWrapper(const HostWrapper &) {}
