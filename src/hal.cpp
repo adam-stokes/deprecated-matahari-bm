@@ -1,4 +1,3 @@
-
 /* hal_support.c -- Interfaces with the HAL libraries.
  *
  * Copyright (C) 2008 Red Hat, Inc.

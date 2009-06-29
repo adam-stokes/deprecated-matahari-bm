@@ -1,4 +1,4 @@
-<schema package="com.redhat.nodereporter">
+<schema package="com.redhat.matahari">
 
   <class name="Host">
 

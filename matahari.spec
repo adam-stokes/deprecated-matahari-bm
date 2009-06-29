@@ -1,8 +1,8 @@
 Summary: Qpid QMF Agent for Hosts
-Name: nodereporter
+Name: matahari
 Version: 0.0.1
 Release: 1%{?dist}
-Source: nodereporter-%{version}.tar.gz
+Source: matahari-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 License: GPL
 Group: Applications/System
@@ -24,7 +24,7 @@ BuildRequires: libvirt-devel >= 0.6.2
 
 %description
 
-nodereporter provides a QMF Agent that can be used to control and manage
+matahari provides a QMF Agent that can be used to control and manage
 various pieces of functionality for a host system, using the AMQP protocol.
 
 The Advanced Message Queuing Protocol (AMQP) is an open standard application 
@@ -56,10 +56,10 @@ test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644, root, root, 644)
-%dir %{_datadir}/nodereporter/
-%{_datadir}/nodereporter/schema.xml
+%dir %{_datadir}/matahari/
+%{_datadir}/matahari/schema.xml
 
-%attr(755, root, root) %{_sbindir}/nodereporter
+%attr(755, root, root) %{_sbindir}/matahari
 
 %doc AUTHORS COPYING
 
