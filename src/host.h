@@ -20,7 +20,9 @@ class HostWrapper : public Manageable
     
     // Host Parameters
     string uuid;
-    string hostname;    
+    string hostname;
+    string hypervisor;
+    string arch;
     bool beeping;
     int memory;
 
@@ -61,6 +63,8 @@ class HostWrapper : public Manageable
     // Field Accessors
     const string &getUUID(void) { return uuid; }
     const string &getHostname(void) { return hostname; }
+    const string &getHypervisor(void) { return hypervisor; }
+    const string &getArch(void) { return arch; }
     bool isBeeping(void) { return beeping; }
     int getMemory(void) { return memory; }
 

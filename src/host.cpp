@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include <libvirt/libvirt.h>
+
 #include "host.h"
 #include "qmf/com/redhat/nodereporter/Host.h"
 
@@ -23,7 +25,9 @@ ostream& operator<<(ostream &output, const HostWrapper& host)
     output << "Node" << endl << endl;
     output << "UUID: " << host.uuid << endl;
     output << "Hostname: " << host.hostname << endl;
-    output << "Memory: " << host.memory << endl << endl;
+    output << "Memory: " << host.memory << endl;
+    output << "Hypervisor: " << host.hypervisor << endl;
+    output << "Arch: " << host.arch << endl << endl;
 
     vector<CPUWrapper*> cpus = host.cpus;
     vector<NICWrapper*> nics = host.nics;
@@ -163,6 +167,23 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
         if (boost::regex_match(line, matches, re)) {
             host->memory = boost::lexical_cast<int>(matches[1]);
         }
+
+	// Hypervisor, arch
+	host->hypervisor = "unknown";
+	host->arch = "unknown";
+
+	virConnectPtr connection;
+	virNodeInfo info;
+	connection = virConnectOpenReadOnly(NULL);
+	if (connection) {
+	    const char *hv = virConnectGetType(connection);
+	    if (hv != NULL)
+		host->hypervisor = hv;
+	    ret = virNodeGetInfo(connection, &info);
+	    if (ret == 0)
+		host->arch = info.model;
+	}
+	virConnectClose(connection);
 
         host->beeping = false;
     }

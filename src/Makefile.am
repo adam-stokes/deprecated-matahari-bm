@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/nodereporter $(HAL_CFLAGS) $(BOOST_CPPFLAGS)
+INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/nodereporter $(HAL_CFLAGS) $(BOOST_CPPFLAGS) $(LIBVIRT_CFLAGS)
 
 sbin_PROGRAMS = nodereporter
 
@@ -34,6 +34,6 @@ BUILT_SOURCES = $(generated_file_list)
 CLEANFILES = $(generated_file_list)
 
 nodereporter_LDFLAGS = -L/usr/local/lib
-nodereporter_LDADD = -lqmfagent -lqmfcommon $(HAL_LIBS) $(BOOST_REGEX_LIB)
+nodereporter_LDADD = -lqmfagent -lqmfcommon $(HAL_LIBS) $(BOOST_REGEX_LIB) $(LIBVIRT_LIBS)
 
 dist_pkgdata_DATA = schema.xml
