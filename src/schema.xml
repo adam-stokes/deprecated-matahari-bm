@@ -2,10 +2,12 @@
 
   <class name="Host">
 
-    <property name="uuid"     type="sstr"  access="RO" desc="Host UUID" index="y"/>
-    <property name="hostname" type="sstr"  access="RO" desc="Hostname"/>
-    <property name="memory"   type="int32" access="RO" desc="Amount of primary memory for host (kb)" unit="kb"/>
-    <property name="beeping"  type="bool"  access="RW" desc="speaker beep loop active? (used to identify host)"/>
+    <property name="uuid"       type="sstr"  access="RO" desc="Host UUID" index="y"/>
+    <property name="hostname"   type="sstr"  access="RO" desc="Hostname"/>
+    <property name="memory"     type="int32" access="RO" desc="Amount of primary memory for host (kb)" unit="kb"/>
+    <property name="hypervisor" type="sstr"  access="RO" desc="Hypervisor used by host"/>
+    <property name="arch"       type="sstr"  access="RO" desc="Architecture of host"/>
+    <property name="beeping"    type="bool"  access="RW" desc="speaker beep loop active? (used to identify host)"/>
 
     <method name="shutdown" desc="Shutdown node" />
     <method name="reboot" desc="Reboot node" />

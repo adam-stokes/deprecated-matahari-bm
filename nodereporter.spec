@@ -12,6 +12,7 @@ Requires: hal >= 0.5.12
 Requires: boost >= 1.37.0
 Requires: qpidc >= 0.5.787286
 Requires: qmf >= 0.5.787286
+Requires: libvirt >= 0.6.2
 
 BuildRequires: gcc-c++ >= 4.4.0
 BuildRequires: dbus-devel >= 1.2.12
@@ -19,6 +20,7 @@ BuildRequires: hal-devel >= 0.5.12
 BuildRequires: boost-devel >= 1.37.0
 BuildRequires: qpidc-devel >= 0.5.787286
 BuildRequires: qmf-devel >= 0.5.787286
+BuildRequires: libvirt-devel >= 0.6.2
 
 %description
 
