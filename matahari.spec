@@ -1,6 +1,6 @@
 Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
-Version: 0.0.1
+Version: 0.0.3
 Release: 1%{?dist}
 Source: matahari-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
@@ -80,7 +80,7 @@ test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 - Added getopt and daemonize support
 - Added sysV init script support
 
-* Mon Jun 29 2009
+* Mon Jun 29 2009 Arjun Roy <arroy@redhat.com> - 0.0.2-1
 - Now tracks hypervisor and arch using libvirt
 
 * Tue Jun 23 2009 Arjun Roy <arroy@redhat.com> - 0.0.1-1
