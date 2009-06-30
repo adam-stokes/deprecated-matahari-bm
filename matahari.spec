@@ -76,6 +76,13 @@ test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 
 %changelog
 
+* Tue Jun 30 2009 Arjun Roy <arroy@redhat.com> - 0.0.3-1
+- Added getopt and daemonize support
+- Added sysV init script support
+
+* Mon Jun 29 2009
+- Now tracks hypervisor and arch using libvirt
+
 * Tue Jun 23 2009 Arjun Roy <arroy@redhat.com> - 0.0.1-1
 - Initial rpmspec packaging
 
