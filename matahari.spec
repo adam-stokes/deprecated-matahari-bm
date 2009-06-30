@@ -46,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 %makeinstall
 
 %post
-/sbin/chkconfig --add matahari --level -
+/sbin/chkconfig --add matahari --level 2345
 /sbin/service matahari condrestart
 
 %preun

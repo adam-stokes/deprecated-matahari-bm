@@ -2,7 +2,7 @@
 
 # the following is chkconfig init header
 # matahari: host qmf agent for ovirt node
-# chkconfig: - 99 01
+# chkconfig: 2345 99 01
 # description: This is a daemon for interacting with an ovirt server.
 # processname: matahari
 # pidfile: @localstatedir@/run/matahari.pid
