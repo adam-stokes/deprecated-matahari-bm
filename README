@@ -1,12 +1,17 @@
 QMF System Agent
 
-To build, you need a copy of Apache QPID (http://qpid.apache.org/) checked out
-and built. Following this, run a make install of QPID.
-
 To build the system agent:
+./autogen.sh
 ./configure --with-boost-regex=mt
-make
+make rpm
 
-To test, run qpidd followed by the executable built by this project. qpid-tool
+The resulting rpm can then be installed.
+
+To test, ensure the qpidd service is running. Then, run the matahari service
+(defaults to port 5672 on 127.0.0.1 with no authentication). qpid-tool
 from the qpid project is a quick and easy way to manipulate the functionality
 exposed by this agent.
+
+Edit parameters passed to the script by editing the corresponding sysconfig file,
+or by running from the command line.
+

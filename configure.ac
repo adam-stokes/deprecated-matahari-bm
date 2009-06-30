@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(matahari, 0.0.1)
+AC_INIT(matahari, 0.0.3)
 AC_CONFIG_SRCDIR([src/nic.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE

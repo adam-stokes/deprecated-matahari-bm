@@ -39,7 +39,7 @@ a set of objects with properties and methods.
 
 %build
 ./configure --with-boost-regex=mt --prefix=$RPM_BUILD_ROOT/usr
-make
+make -j2
 
 %install
 rm -rf $RPM_BUILD_ROOT
