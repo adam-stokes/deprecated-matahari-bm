@@ -38,8 +38,8 @@ a set of objects with properties and methods.
 %setup
 
 %build
-./configure --with-boost-regex=mt --prefix=$RPM_BUILD_ROOT/usr
-make -j2
+%configure --with-boost-regex=mt --prefix=/
+%{__make} -j2
 
 %install
 rm -rf $RPM_BUILD_ROOT
