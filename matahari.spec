@@ -1,4 +1,4 @@
-Summary: Qpid QMF Agent for Hosts
+Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.1
 Release: 1%{?dist}
@@ -25,7 +25,7 @@ BuildRequires: libvirt-devel >= 0.6.2
 %description
 
 matahari provides a QMF Agent that can be used to control and manage
-various pieces of functionality for a host system, using the AMQP protocol.
+various pieces of functionality for an ovirt node, using the AMQP protocol.
 
 The Advanced Message Queuing Protocol (AMQP) is an open standard application 
 layer protocol providing reliable transport of messages.
@@ -46,10 +46,19 @@ rm -rf $RPM_BUILD_ROOT
 %makeinstall
 
 %post
+/sbin/chkconfig --add matahari --level -
+/sbin/service matahari condrestart
 
 %preun
+if [ $1 = 0 ]; then
+    /sbin/service matahari stop >/dev/null 2>&1 || :
+    chkconfig --del matahari
+fi
 
 %postun
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari condrestart >/dev/null 2>&1 || :
+fi
 
 %clean
 test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
@@ -60,6 +69,8 @@ test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 %{_datadir}/matahari/schema.xml
 
 %attr(755, root, root) %{_sbindir}/matahari
+%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari
 
 %doc AUTHORS COPYING
 

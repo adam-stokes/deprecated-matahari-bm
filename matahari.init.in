@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# the following is chkconfig init header
+# matahari: host qmf agent for ovirt node
+# chkconfig: - 99 01
+# description: This is a daemon for interacting with an ovirt server.
+# processname: matahari
+# pidfile: @localstatedir@/run/matahari.pid
+#
+
+# Source function library.
+. @sysconfdir@/rc.d/init.d/functions
+
+SERVICE=matahari
+PROCESS=matahari
+
+RETVAL=0
+
+test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
+
+start() {
+    echo -n $"Starting $SERVICE daemon: "
+    daemon $PROCESS $MATAHARI_ARGS --daemon
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+}
+
+stop() {
+    echo -n $"Stopping $SERVICE daemon: "
+
+    killproc $PROCESS
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        rm -f @localstatedir@/lock/subsys/$SERVICE
+        rm -f @localstatedir@/run/$SERVICE.pid
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading $SERVICE configuration: "
+
+    killproc $PROCESS -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start|stop|restart|reload)
+        $1
+        ;;
+    status)
+        status $PROCESS
+        RETVAL=$?
+        ;;
+    force-reload)
+        reload
+	;;
+    condrestart|try-restart)
+        [ -f @localstatedir@/lock/subsys/$SERVICE ] && restart || :
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+	exit 1
+        ;;
+esac
+exit $RETVAL
+

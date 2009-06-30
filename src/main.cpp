@@ -29,6 +29,8 @@
 #include <signal.h>
 #include <cstdlib>
 
+#include <getopt.h>
+
 #include "hal.h"
 #include "host.h"
 #include "qmf/com/redhat/matahari/Package.h"
@@ -54,13 +56,109 @@ void shutdown(int)
     exit(0);
 }
 
+static void
+print_usage()
+{
+    printf("Usage:\tmatahari <options>\n");
+    printf("\t-d | --daemon     run as a daemon.\n");
+    printf("\t-h | --help       print this help message.\n");
+    printf("\t-b | --broker     specify broker host name..\n");
+    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
+    printf("\t-u | --username   username to use for authentication purproses.\n");
+    printf("\t-s | --service    service name to use for authentication purproses.\n");
+    printf("\t-p | --port       specify broker port.\n");
+}
+
 int do_main(int argc, char **argv)
 {
-    const char* host = argc>1 ? argv[1] : "127.0.0.1";
-    int port = argc>2 ? atoi(argv[2]) : 5672;
+    int arg;
+    int idx = 0;
+    bool daemonize = false;
+    bool gssapi = false;
+    bool verbose = false;
+    char *host = NULL;
+    char *username = NULL;
+    char *service = NULL;
+    int port = 5672;
+
     ConnectionSettings settings;
     ManagementAgent *agent;
     HostWrapper *hostWrapper;
+
+    struct option opt[] = {
+        {"help", no_argument, NULL, 'h'},
+        {"daemon", no_argument, NULL, 'd'},
+        {"broker", required_argument, NULL, 'b'},
+        {"gssapi", no_argument, NULL, 'g'},
+        {"username", required_argument, NULL, 'u'},
+        {"service", required_argument, NULL, 's'},
+        {"port", required_argument, NULL, 'p'},
+        {0, 0, 0, 0}
+    };
+
+    // Get args
+    while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:", opt, &idx)) != -1) {
+        switch (arg) {
+            case 'h':
+            case '?':
+                print_usage();
+                exit(0);
+                break;
+            case 'd':
+                daemonize = true;
+                break;
+            case 'v':
+                verbose = true;
+                break;
+            case 's':
+                if (optarg) {
+                    service = strdup(optarg);
+                } else {
+                    print_usage();
+                    exit(1);
+                }
+                break;
+            case 'u':
+                if (optarg) {
+                    username = strdup(optarg);
+                } else {
+                    print_usage();
+                    exit(1);
+                }
+                break;
+            case 'g':
+                gssapi = true;
+                break;
+            case 'p':
+                if (optarg) {
+                    port = atoi(optarg);
+                } else {
+                    print_usage();
+                    exit(1);
+                }
+                break;
+            case 'b':
+                if (optarg) {
+                    host = strdup(optarg);
+                } else {
+                    print_usage();
+                    exit(1);
+                }
+                break;
+            default:
+                fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
+                print_usage();
+                exit(0);
+            break;
+        }
+    }
+
+    if (daemonize == true) {
+        if (daemon(0, 0) < 0) {
+            fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
+            exit(1);
+        }
+    }
 
     // Get our management agent
     singleton = new ManagementAgent::Singleton();
@@ -71,8 +169,19 @@ int do_main(int argc, char **argv)
     signal(SIGINT, shutdown);
 
     // Connect to the broker
-    settings.host = host;
+    settings.host = host ? host : "127.0.0.1";
     settings.port = port;
+
+    if (username != NULL) {
+        settings.username = username;
+    }
+    if (service != NULL) {
+        settings.service = service;
+    }
+    if (gssapi == true) {
+        settings.mechanism = "GSSAPI";
+    }
+
     agent->init(settings, 5, false, ".magentdata");
 
     // Get the info and post it to the broker
@@ -84,12 +193,8 @@ int do_main(int argc, char **argv)
 	    throw;
     }
 
-    cout << *hostWrapper << endl;
-
-    // Keep alive while not EOF
-    while(!cin.eof()) {
-        cin.get();
-    }
+    // Main loop
+    hostWrapper->doLoop();
 
     // And we are done
     cleanup();

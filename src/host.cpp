@@ -66,6 +66,13 @@ ostream& operator<<(ostream &output, const HostWrapper& host)
     return output;
 }
 
+void HostWrapper::doLoop(void)
+{
+    // Someday we might update statistics too!
+    while(1)
+        sleep(5);
+}
+
 void HostWrapper::setupQMFObjects(ManagementAgent *agent)
 {
     // Set up Host object

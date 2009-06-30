@@ -89,5 +89,8 @@ class HostWrapper : public Manageable
 
     const vector<CPUWrapper*> &getCPUList(void) { return cpus; }
     const vector<NICWrapper*> &getNICList(void) { return nics; }
+
+    // Main Loop
+    void doLoop(void);
 };
 
