@@ -99,6 +99,8 @@ void HostWrapper::syncQMFHostObject(void)
     mgmt_object->set_uuid(uuid);
     mgmt_object->set_hostname(hostname);
     mgmt_object->set_memory(memory);
+    mgmt_object->set_hypervisor(hypervisor);
+    mgmt_object->set_arch(arch);
     mgmt_object->set_beeping(beeping);
 }
 
@@ -194,22 +196,22 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
             host->memory = boost::lexical_cast<int>(matches[1]);
         }
 
-	// Hypervisor, arch
-	host->hypervisor = "unknown";
-	host->arch = "unknown";
+        // Hypervisor, arch
+        host->hypervisor = "unknown";
+        host->arch = "unknown";
 
-	virConnectPtr connection;
-	virNodeInfo info;
-	connection = virConnectOpenReadOnly(NULL);
-	if (connection) {
-	    const char *hv = virConnectGetType(connection);
-	    if (hv != NULL)
-		host->hypervisor = hv;
-	    ret = virNodeGetInfo(connection, &info);
-	    if (ret == 0)
-		host->arch = info.model;
-	}
-	virConnectClose(connection);
+        virConnectPtr connection;
+        virNodeInfo info;
+        connection = virConnectOpenReadOnly(NULL);
+        if (connection) {
+            const char *hv = virConnectGetType(connection);
+            if (hv != NULL)
+                host->hypervisor = hv;
+            ret = virNodeGetInfo(connection, &info);
+            if (ret == 0)
+                host->arch = info.model;
+        }
+	    virConnectClose(connection);
 
         host->beeping = false;
     }

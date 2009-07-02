@@ -1,7 +1,7 @@
 Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Source: matahari-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 License: GPL
@@ -75,6 +75,10 @@ test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING
 
 %changelog
+
+* Thu Jul 2 2009 Arjun Roy <arroy@redhat.com> - 0.0.3-2
+- Fixed bug with not publishing host hypervisor and arch to broker
+- Updated aclocal.m4 to match new version of automake
 
 * Tue Jun 30 2009 Arjun Roy <arroy@redhat.com> - 0.0.3-1
 - Added getopt and daemonize support
