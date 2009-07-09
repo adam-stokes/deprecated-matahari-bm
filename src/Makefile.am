@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(HAL_CFLAGS) $(BOOST_CPPFLAGS) $(LIBVIRT_CFLAGS)
+INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(HAL_CFLAGS) $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS)
 
 sbin_PROGRAMS = matahari
 
@@ -36,6 +36,6 @@ BUILT_SOURCES = $(generated_file_list) $(first)
 CLEANFILES = $(generated_file_list) $(first)
 
 matahari_LDFLAGS = -L/usr/local/lib
-matahari_LDADD = -lqmfagent -lqmfcommon $(HAL_LIBS) $(BOOST_REGEX_LIB) $(LIBVIRT_LIBS)
+matahari_LDADD = -lqmfagent -lqmfcommon $(HAL_LIBS) $(LIBVIRT_LIBS) $(PCRE_LIBS)
 
 dist_pkgdata_DATA = schema.xml

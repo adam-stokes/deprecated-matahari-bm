@@ -22,8 +22,6 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <cstdlib>
 #include <unistd.h>
@@ -181,22 +179,8 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
         string hostname(hostname_c);
         host->hostname = hostname;
 
-        // Memory
+        // Hypervisor, arch, memory
         host->memory = 0;
-        ifstream meminfo("/proc/meminfo", ios::in);
-        if (!meminfo.is_open() || meminfo.fail())
-            throw runtime_error("Unable to open /proc/cpuinfo");
-        string line;
-        getline(meminfo, line);
-        meminfo.close();
-
-        boost::smatch matches;
-        boost::regex re("MemTotal:\\s*([\\S]+) kB");
-        if (boost::regex_match(line, matches, re)) {
-            host->memory = boost::lexical_cast<int>(matches[1]);
-        }
-
-        // Hypervisor, arch
         host->hypervisor = "unknown";
         host->arch = "unknown";
 
@@ -208,8 +192,10 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
             if (hv != NULL)
                 host->hypervisor = hv;
             ret = virNodeGetInfo(connection, &info);
-            if (ret == 0)
+            if (ret == 0) {
                 host->arch = info.model;
+                host->memory = info.memory;
+            }
         }
 	    virConnectClose(connection);
 

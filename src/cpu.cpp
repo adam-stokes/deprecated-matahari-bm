@@ -19,17 +19,28 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
+
+#include <pcre.h>
 
 #include "cpu.h"
 #include "qmf/com/redhat/matahari/CPU.h"
 
 using namespace std;
 namespace _qmf = qmf::com::redhat::matahari;
+
+template<typename targetType> targetType convert(const std::string& str)
+{
+    istringstream i(str);
+    targetType t;
+    char c;
+    if (!(i >> t))
+        throw invalid_argument("Conversion failure for " + str);
+    return t;
+} 
 
 ostream& operator<<(ostream& output, const CPUWrapper& cpu) 
 {
@@ -85,8 +96,28 @@ void CPUWrapper::syncQMFObject(void)
 void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
 {
     string line;
-    boost::smatch matches;
-    boost::regex re("(.*\\S)\\s*:\\s*(\\S.*)");
+    string regexstr = "(.*\\S)\\s*:\\s*(\\S.*)";
+    int desiredmatches = 3; // Match string and two captured substrings
+    int matchArraySize = desiredmatches * 3;
+    int results[matchArraySize]; // pcre requires this much
+    const char *pcre_err;
+    int pcre_err_offset;
+    int matched;
+    pcre *regex;
+
+    regex = pcre_compile(regexstr.c_str(), // input
+                         0,                // no options
+                         &pcre_err,        // where to place static error str
+                         &pcre_err_offset, // index in regex string of error
+                         NULL              // use the default charset
+                        );
+    if (!regex) {
+        ostringstream err;
+        err << "Error: Bad regex: " << regexstr << endl;
+        err << "Error was: " << pcre_err << " at " << pcre_err_offset << endl;
+        throw runtime_error(err.str());
+    }
+
     ifstream cpuinfo("/proc/cpuinfo", ios::in);
     if (!cpuinfo.is_open() || cpuinfo.fail())
         throw runtime_error("Unable to open /proc/cpuinfo");
@@ -95,52 +126,78 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
     // delimiter is the "processor" key.
     while (!cpuinfo.eof()) {
         getline(cpuinfo, line);
-        if (boost::regex_match(line, matches, re)) {
-            if (matches[1] == "processor") {
+        int match = pcre_exec(regex,         // Regex
+                              NULL,          // No extra optimizations
+                              line.c_str(),  // Input
+                              line.length(), // Input length
+                              0,             // Start offset
+                              PCRE_NOTEMPTY, // options bitvector
+                              results,       // Results vector
+                              matchArraySize // Vector size
+                              );
+
+        if (match == desiredmatches) {
+            if (line.substr(results[2], results[3] - results[2]) == "processor") {
                 // Start pulling data for a new processor
-		        int cpunum;
-		        int coreid;
-		        int cpucores;
-		        int model;
-		        int family;
-		        int cpuid_lvl;
-		        double speed;
-		        int cache;
-		        string vendor;
-		        string flags;
+                int cpunum;
+                int coreid;
+                int cpucores;
+                int model;
+                int family;
+                int cpuid_lvl;
+                double speed;
+                int cache;
+                string vendor;
+                string flags;
+
                 // Get the cpu # from this line
-                cpunum = boost::lexical_cast<int, string>(matches[2]);
+                cpunum = convert<int>(line.substr(results[4], 
+                                       results[5] - results[4]));
                 // And now grab the rest
                 do {
                     getline(cpuinfo, line);
-                    if (boost::regex_match(line, matches, re)) {
+                    match = pcre_exec(regex,         // Regex
+                                      NULL,          // No extra optimizations
+                                      line.c_str(),  // Input
+                                      line.length(), // Input length
+                                      0,             // Start offset
+                                      PCRE_NOTEMPTY, // options bitvector
+                                      results,       // Results vector
+                                      matchArraySize // Vector size
+				                      );
 
-                        if (matches[1] == "core id") {
-                            coreid = boost::lexical_cast<int>(matches[2]);
-                        } else if (matches[1] == "cpu cores") {
-                            cpucores = boost::lexical_cast<int>(matches[2]);
-                        } else if (matches[1] == "model") {
-                            model = boost::lexical_cast<int>(matches[2]);
-                        } else if (matches[1] == "cpu family") {
-                            family = boost::lexical_cast<int>(matches[2]);
-                        } else if (matches[1] == "cpuid level") {
-                            cpuid_lvl = boost::lexical_cast<int>(matches[2]);
-                        } else if (matches[1] == "cpu MHz") {
-                            speed = boost::lexical_cast<double>(matches[2]);
-                        } else if (matches[1] == "cache size") {
-                            string str = matches[2].str();
-                            int space = str.find(' ');
-                            cache = boost::lexical_cast<int>(str.substr(0, space));
-                        } else if (matches[1] == "vendor_id") {
-                            vendor = string(matches[2]);
-                        } else if (matches[1] == "flags") {
-                            flags = string(matches[2]);
+                    if (match == desiredmatches) {
+                        string key = line.substr(results[2], 
+                                                 results[3] - results[2]);
+
+                        string value = line.substr(results[4], 
+                                                    results[5] - results[4]);
+
+                        if (key == "core id") {
+                            coreid = convert<int>(value);
+                        } else if (key == "cpu cores") {
+                            cpucores = convert<int>(value);
+                        } else if (key == "model") {
+                            model = convert<int>(value);
+                        } else if (key == "cpu family") {
+                            family = convert<int>(value);
+                        } else if (key == "cpuid level") {
+                            cpuid_lvl = convert<int>(value);
+                        } else if (key == "cpu MHz") {
+                            speed = convert<int>(value);
+                        } else if (key == "cache size") {
+                            int space = value.find(' ');
+                            cache = convert<int>(value.substr(0, space));
+                        } else if (key == "vendor_id") {
+                            vendor = value;
+                        } else if (key == "flags") {
+                            flags = value;
                         }
-        			}
+		            }
     		    }
     		    while (line != "");
 
-    		    // Got all the data. Add the CPU to our list
+		        // Got all the data. Add the CPU to our list
                 CPUWrapper *cpu = new CPUWrapper(cpunum,
                                                 coreid,
                                                 cpucores,
@@ -153,7 +210,7 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
                                                 flags);
     		    cpus.push_back(cpu);
     		}
-	    }
+        }
     	else
             continue;
     }

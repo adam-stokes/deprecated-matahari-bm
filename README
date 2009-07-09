@@ -2,7 +2,7 @@ QMF System Agent
 
 To build the system agent:
 ./autogen.sh
-./configure --with-boost-regex=mt
+./configure
 make rpm
 
 The resulting rpm can then be installed.

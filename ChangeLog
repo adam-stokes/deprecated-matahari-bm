@@ -1,5 +1,9 @@
 Change Log
 
+v 0.0.4
+===============================================================================
+Removed dependency on boost.
+
 v 0.0.3
 ===============================================================================
 Added getopt and daemonize support. Added sysV style init script so daemon
