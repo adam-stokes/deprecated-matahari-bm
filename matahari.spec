@@ -1,7 +1,7 @@
 Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 Source: matahari-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 License: GPL
@@ -9,16 +9,16 @@ Group: Applications/System
 
 Requires: dbus >= 1.2.12
 Requires: hal >= 0.5.12
-Requires: qpidc >= 0.5.787286
-Requires: qmf >= 0.5.787286
+Requires: qpidc >= 0.5.790661
+Requires: qmf >= 0.5.790661
 Requires: libvirt >= 0.6.2
 Requires: pcre >= 7.8
 
 BuildRequires: gcc-c++ >= 4.4.0
 BuildRequires: dbus-devel >= 1.2.12
 BuildRequires: hal-devel >= 0.5.12
-BuildRequires: qpidc-devel >= 0.5.787286
-BuildRequires: qmf-devel >= 0.5.787286
+BuildRequires: qpidc-devel >= 0.5.790661
+BuildRequires: qmf-devel >= 0.5.790661
 BuildRequires: libvirt-devel >= 0.6.2
 BuildRequires: pcre-devel >= 7.8
 
@@ -75,6 +75,9 @@ test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING
 
 %changelog
+
+* Thu Jul 9 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-2
+- Bumped qpidc and qmf version requirements to 0.5.790661.
 
 * Thu Jul 9 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-1
 - Removed dependency on boost. Added dependency on pcre.
