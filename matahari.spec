@@ -36,7 +36,7 @@ AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
 %prep
-%setup
+%setup -q
 
 %build
 %configure
