@@ -35,6 +35,7 @@ $(first): schema.xml
 BUILT_SOURCES = $(generated_file_list) $(first)
 CLEANFILES = $(generated_file_list) $(first)
 
+matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDFLAGS = -L/usr/local/lib
 matahari_LDADD = -lqmfagent -lqmfcommon $(HAL_LIBS) $(LIBVIRT_LIBS) $(PCRE_LIBS)
 

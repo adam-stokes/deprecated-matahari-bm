@@ -71,7 +71,7 @@ char* get_uuid(LibHalContext *hal_ctx)
 {
     const char *udi = "/org/freedesktop/Hal/devices/computer";
     const char *key = "system.hardware.uuid";
-    char *value;
+    char *value = NULL;
 
     int type = libhal_device_get_property_type(hal_ctx, udi, key, &dbus_error);
     if (type == LIBHAL_PROPERTY_TYPE_STRING) {

@@ -36,7 +36,6 @@ template<typename targetType> targetType convert(const std::string& str)
 {
     istringstream i(str);
     targetType t;
-    char c;
     if (!(i >> t))
         throw invalid_argument("Conversion failure for " + str);
     return t;
@@ -102,7 +101,6 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
     int results[matchArraySize]; // pcre requires this much
     const char *pcre_err;
     int pcre_err_offset;
-    int matched;
     pcre *regex;
 
     regex = pcre_compile(regexstr.c_str(), // input
@@ -139,16 +137,16 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
         if (match == desiredmatches) {
             if (line.substr(results[2], results[3] - results[2]) == "processor") {
                 // Start pulling data for a new processor
-                int cpunum;
-                int coreid;
-                int cpucores;
-                int model;
-                int family;
-                int cpuid_lvl;
-                double speed;
-                int cache;
-                string vendor;
-                string flags;
+                int cpunum = -1;
+                int coreid = -1;
+                int cpucores = -1;
+                int model = -1;
+                int family = -1;
+                int cpuid_lvl = -1;
+                double speed = -1;
+                int cache = -1;
+                string vendor = "unknown";
+                string flags = "unknown";
 
                 // Get the cpu # from this line
                 cpunum = convert<int>(line.substr(results[4], 
