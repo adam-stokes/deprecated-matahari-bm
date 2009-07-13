@@ -1,7 +1,7 @@
 Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 Source: matahari-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 License: GPLv2
@@ -76,6 +76,12 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %changelog
+
+* Mon Jul 13 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-3
+- Quietened rpmlint errors and warnings.
+- Fixed most gcc warnings.
+- Changed init script so it doesn't run by default
+- Now rpm specfile makes it so service runs by default instead
 
 * Thu Jul 9 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-2
 - Bumped qpidc and qmf version requirements to 0.5.790661.
