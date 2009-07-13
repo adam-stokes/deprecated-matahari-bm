@@ -4,8 +4,9 @@ Version: 0.0.4
 Release: 2%{?dist}
 Source: matahari-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-License: GPL
+License: GPLv2
 Group: Applications/System
+URL: http://git.et.redhat.com/?p=matahari.git;a=summary
 
 Requires: dbus >= 1.2.12
 Requires: hal >= 0.5.12
@@ -31,22 +32,22 @@ The Advanced Message Queuing Protocol (AMQP) is an open standard application
 layer protocol providing reliable transport of messages.
 
 QMF provides a modeling framework layer on top of qpid (which implements 
-AMQP).  This interface allows you to manage a host and its various components as
-a set of objects with properties and methods.
+AMQP).  This interface allows you to manage a host and its various components
+as a set of objects with properties and methods.
 
 %prep
 %setup
 
 %build
-%configure --prefix=/
-%{__make} -j2
+%configure
+make %{?_smp_mflags}
 
 %install
-rm -rf $RPM_BUILD_ROOT
-%makeinstall
+rm -rf %{buildroot}
+make DESTDIR=%{buildroot} install
 
 %post
-/sbin/chkconfig --add matahari --level 2345
+/sbin/chkconfig --level 2345 matahari on
 /sbin/service matahari condrestart
 
 %preun
@@ -61,10 +62,10 @@ if [ "$1" -ge "1" ]; then
 fi
 
 %clean
-test "x$RPM_BUILD_ROOT" != "x" && rm -rf $RPM_BUILD_ROOT
+test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files
-%defattr(644, root, root, 644)
+%defattr(644, root, root, 755)
 %dir %{_datadir}/matahari/
 %{_datadir}/matahari/schema.xml
 
