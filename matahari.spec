@@ -1,12 +1,12 @@
 Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.4
-Release: 3%{?dist}
+Release: 4%{?dist}
 Source: matahari-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-root
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 License: GPLv2
 Group: Applications/System
-URL: http://git.et.redhat.com/?p=matahari.git;a=summary
+URL: http://arjunroy.fedorapeople.org/matahari/index.html
 
 Requires: dbus >= 1.2.12
 Requires: hal >= 0.5.12
@@ -76,6 +76,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %changelog
+
+* Thu Jul 16 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-4
+- Changed buildroot value to meet fedora packaging guidelines
+- Updated project website
 
 * Mon Jul 13 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-3
 - Quietened rpmlint errors and warnings.
