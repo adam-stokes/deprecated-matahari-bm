@@ -2,7 +2,7 @@ Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.4
 Release: 4%{?dist}
-Source: matahari-%{version}.tar.gz
+Source: http://arjunroy.fedorapeople.org/matahari/matahari-0.0.4.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 License: GPLv2
 Group: Applications/System
