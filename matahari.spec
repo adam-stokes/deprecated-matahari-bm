@@ -1,7 +1,7 @@
 Summary: Qpid QMF Agent for Ovirt Nodes
 Name: matahari
 Version: 0.0.4
-Release: 4%{?dist}
+Release: 7%{?dist}
 Source: http://arjunroy.fedorapeople.org/matahari/matahari-0.0.4.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 License: GPLv2
@@ -10,16 +10,16 @@ URL: http://arjunroy.fedorapeople.org/matahari/index.html
 
 Requires: dbus >= 1.2.12
 Requires: hal >= 0.5.12
-Requires: qpidc >= 0.5.790661
-Requires: qmf >= 0.5.790661
+Requires: qpidc >= 0.5.819819
+Requires: qmf >= 0.5.819819
 Requires: libvirt >= 0.6.2
 Requires: pcre >= 7.8
 
 BuildRequires: gcc-c++ >= 4.4.0
 BuildRequires: dbus-devel >= 1.2.12
 BuildRequires: hal-devel >= 0.5.12
-BuildRequires: qpidc-devel >= 0.5.790661
-BuildRequires: qmf-devel >= 0.5.790661
+BuildRequires: qpidc-devel >= 0.5.819819
+BuildRequires: qmf-devel >= 0.5.819819
 BuildRequires: libvirt-devel >= 0.6.2
 BuildRequires: pcre-devel >= 7.8
 
@@ -76,6 +76,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %changelog
+
+* Thu Oct 08 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-7
+- Refactored for new version of qpidc.
+
+* Fri Oct 02 2009 Kevin Kofler <Kevin@tigcc.ticalc.org> - 0.0.4-6
+- Rebuild for new qpidc.
+
+* Sat Jul 25 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.0.4-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
 
 * Thu Jul 16 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-4
 - Changed buildroot value to meet fedora packaging guidelines
