@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* main.cpp - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -190,7 +190,7 @@ int do_main(int argc, char **argv)
     }
     catch (...) {
         cleanup();
-	    throw;
+            throw;
     }
 
     // Main loop
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
 {
     try {
         return do_main(argc, argv);
-    } 
+    }
     catch(std::exception& e) {
         cout << "Top Level Exception: " << e.what() << endl;
     }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* nic.cpp - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -83,9 +83,9 @@ void NICWrapper::syncQMFObject(void)
     mgmt_object->set_bandwidth(bandwidth);
 }
 
-NICWrapper *NICWrapper::getNIC(ManagementAgent *agent, 
-		   LibHalContext *hal_ctx,
-		   char *nic_handle)
+NICWrapper *NICWrapper::getNIC(ManagementAgent *agent,
+                   LibHalContext *hal_ctx,
+                   char *nic_handle)
 {
     // Used to get the data
     char *macaddr_c;
@@ -102,12 +102,12 @@ NICWrapper *NICWrapper::getNIC(ManagementAgent *agent,
     string netmask;
     string broadcast;
     int bandwidth;
-    
+
     // Grab the MAC Address from libhal
     macaddr_c = libhal_device_get_property_string(hal_ctx,
-						nic_handle,
-						"net.address",
-						&dbus_error);
+                                                nic_handle,
+                                                "net.address",
+                                                &dbus_error);
     // Or throw an exception if we could not find it. No cleanup yet.
     if (!macaddr_c)
         throw runtime_error("Could not get mac address for NIC");
@@ -143,7 +143,7 @@ NICWrapper *NICWrapper::getNIC(ManagementAgent *agent,
         }
         // Get the netmask
         ret = ioctl(sock, SIOCGIFNETMASK, &ifr);
-        if(ret == 0 && strcmp("255.255.255.255",  
+        if(ret == 0 && strcmp("255.255.255.255",
             inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr))) {
 
             struct sockaddr_in *addr = (struct sockaddr_in *) &ifr.ifr_addr;
@@ -205,11 +205,11 @@ NICWrapper *NICWrapper::getNIC(ManagementAgent *agent,
     macaddr = macaddr_c;
     interface = interface_c;
     nic = new NICWrapper(interface,
-			 macaddr,
-			 ipaddr,
-			 netmask,
-			 broadcast,
-			 bandwidth);
+                         macaddr,
+                         ipaddr,
+                         netmask,
+                         broadcast,
+                         bandwidth);
 
     // Free resources and return
     libhal_free_string(interface_c);
@@ -218,23 +218,23 @@ NICWrapper *NICWrapper::getNIC(ManagementAgent *agent,
 }
 
 /**
- * void fillNICInfo(vector <NICWrapper*> &nics, 
- *                  ManagementAgent *agent, 
+ * void fillNICInfo(vector <NICWrapper*> &nics,
+ *                  ManagementAgent *agent,
  *                  LibHalContext *hal_ctx)
  *
  * Takes in a vector of NICWrapper object pointers and populates it with
  * NICs found in the system found by querying dbus and making other system
  * calls.
  */
-void NICWrapper::fillNICInfo(vector <NICWrapper*> &nics, 
-			     ManagementAgent *agent, 
-			     LibHalContext *hal_ctx)
+void NICWrapper::fillNICInfo(vector <NICWrapper*> &nics,
+                             ManagementAgent *agent,
+                             LibHalContext *hal_ctx)
 {
     char **net_devices;
     int num_results, i;
-    net_devices = libhal_find_device_by_capability(hal_ctx, 
+    net_devices = libhal_find_device_by_capability(hal_ctx,
                            "net.80203",
-                           &num_results, 
+                           &num_results,
                            &dbus_error);
     if (!net_devices)
         throw runtime_error("Error: Couldn't get NIC devices through libhal.");
@@ -277,20 +277,20 @@ int NICWrapper::identifyNIC(int seconds)
     close(sock);
 
     if (ret != 0)
-	ret = errno;
+        ret = errno;
 
     return ret;
 }
 
-Manageable::status_t 
+Manageable::status_t
 NICWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text)
 {
     switch (methodId) {
         case _qmf::NIC::METHOD_IDENTIFY_NIC:
-	    _qmf::ArgsNICIdentify_nic& ioArgs = (_qmf::ArgsNICIdentify_nic&) args;
-	    int seconds = ioArgs.i_seconds;
-	    ioArgs.o_ret = identifyNIC(seconds);
-	    return STATUS_OK;
+            _qmf::ArgsNICIdentify_nic& ioArgs = (_qmf::ArgsNICIdentify_nic&) args;
+            int seconds = ioArgs.i_seconds;
+            ioArgs.o_ret = identifyNIC(seconds);
+            return STATUS_OK;
     }
 
     return STATUS_NOT_IMPLEMENTED;

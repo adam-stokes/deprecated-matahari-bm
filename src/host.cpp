@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* host.cpp - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -49,17 +49,17 @@ ostream& operator<<(ostream &output, const HostWrapper& host)
     vector<CPUWrapper*> cpus = host.cpus;
     vector<NICWrapper*> nics = host.nics;
 
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin(); 
-	 iter!= cpus.end();
-	 iter++) {
+    for (vector<CPUWrapper*>::iterator iter = cpus.begin();
+         iter!= cpus.end();
+         iter++) {
         output << **iter << endl;
     }
-    for (vector<NICWrapper*>::iterator iter = nics.begin(); 
-	 iter!= nics.end();
-	 iter++) {
+    for (vector<NICWrapper*>::iterator iter = nics.begin();
+         iter!= nics.end();
+         iter++) {
         output << **iter << endl;
     }
-    
+
     output << "End Node" << endl;
     return output;
 }
@@ -79,15 +79,15 @@ void HostWrapper::setupQMFObjects(ManagementAgent *agent)
     syncQMFHostObject();
 
     // Iterate over list and set up CPU objects
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin(); 
-	 iter!= cpus.end();
-	 iter++) {
+    for (vector<CPUWrapper*>::iterator iter = cpus.begin();
+         iter!= cpus.end();
+         iter++) {
         (*iter)->setupQMFObject(agent, this);
     }
     // Iterate over list and set up NIC objects
-    for (vector<NICWrapper*>::iterator iter = nics.begin(); 
-	 iter!= nics.end();
-	 iter++) {
+    for (vector<NICWrapper*>::iterator iter = nics.begin();
+         iter!= nics.end();
+         iter++) {
         (*iter)->setupQMFObject(agent, this);
     }
 }
@@ -108,15 +108,15 @@ void HostWrapper::cleanupQMFObjects(void)
     mgmt_object->resourceDestroy();
 
     // Iterate over list and clean up CPU objects
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin(); 
-	 iter!= cpus.end();
-	 iter++) {
+    for (vector<CPUWrapper*>::iterator iter = cpus.begin();
+         iter!= cpus.end();
+         iter++) {
         (*iter)->cleanupQMFObject();
     }
     // Iterate over list and clean up NIC objects
-    for (vector<NICWrapper*>::iterator iter = nics.begin(); 
-	 iter!= nics.end();
-	 iter++) {
+    for (vector<NICWrapper*>::iterator iter = nics.begin();
+         iter!= nics.end();
+         iter++) {
         (*iter)->cleanupQMFObject();
     }
 }
@@ -142,7 +142,7 @@ void HostWrapper::disposeHostWrapper()
 
     hostSingleton->cleanupQMFObjects();
     hostSingleton->cleanupMemberObjects();
-    
+
     delete hostSingleton;
     hostSingleton = NULL;
 }
@@ -197,7 +197,7 @@ HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
                 host->memory = info.memory;
             }
         }
-	    virConnectClose(connection);
+            virConnectClose(connection);
 
         host->beeping = false;
     }
@@ -228,16 +228,16 @@ void HostWrapper::shutdown()
     system("shutdown -h now");
 }
 
-Manageable::status_t 
-HostWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text) 
+Manageable::status_t
+HostWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text)
 {
     switch(methodId) {
         case _qmf::Host::METHOD_SHUTDOWN:
-	    shutdown();
-	    return Manageable::STATUS_OK;
+            shutdown();
+            return Manageable::STATUS_OK;
         case _qmf::Host::METHOD_REBOOT:
-	    reboot();
-	    return Manageable::STATUS_OK;
+            reboot();
+            return Manageable::STATUS_OK;
     }
     return Manageable::STATUS_NOT_IMPLEMENTED;
 }

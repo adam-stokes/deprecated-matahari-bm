@@ -28,10 +28,10 @@ BuildRequires: pcre-devel >= 7.8
 matahari provides a QMF Agent that can be used to control and manage
 various pieces of functionality for an ovirt node, using the AMQP protocol.
 
-The Advanced Message Queuing Protocol (AMQP) is an open standard application 
+The Advanced Message Queuing Protocol (AMQP) is an open standard application
 layer protocol providing reliable transport of messages.
 
-QMF provides a modeling framework layer on top of qpid (which implements 
+QMF provides a modeling framework layer on top of qpid (which implements
 AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
@@ -115,4 +115,3 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 * Tue Jun 23 2009 Arjun Roy <arroy@redhat.com> - 0.0.1-1
 - Initial rpmspec packaging
-

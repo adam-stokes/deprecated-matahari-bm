@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* nic.h - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -57,11 +57,11 @@ class NICWrapper : public Manageable
     ~NICWrapper() {}
 
     NICWrapper(const string &interfaceName__,
-	       const string &macaddr__,
-	       const string &ipaddr__,
-	       const string &netmask__,
-	       const string &broadcast__,
-	       int bandwidth__) {
+               const string &macaddr__,
+               const string &ipaddr__,
+               const string &netmask__,
+               const string &broadcast__,
+               int bandwidth__) {
         interfaceName = interfaceName__;
         macaddr = macaddr__;
         ipaddr = ipaddr__;
@@ -69,18 +69,18 @@ class NICWrapper : public Manageable
         broadcast = broadcast__;
         bandwidth = bandwidth__;
     }
-    
-    static NICWrapper *getNIC(ManagementAgent *agent, 
-		       LibHalContext *hal_ctx,
-		       char *nic_handle);
+
+    static NICWrapper *getNIC(ManagementAgent *agent,
+                       LibHalContext *hal_ctx,
+                       char *nic_handle);
 
     int identifyNIC(int seconds);
 public:
 
     // Factory like method
-    static void fillNICInfo(vector<NICWrapper*> &nics, 
-			    ManagementAgent *agent, 
-			    LibHalContext *ctx);
+    static void fillNICInfo(vector<NICWrapper*> &nics,
+                            ManagementAgent *agent,
+                            LibHalContext *ctx);
 
     // QMF Methods
     ManagementObject *GetManagementObject(void) const { return mgmt_object; }
@@ -94,4 +94,3 @@ public:
     const string &getBroadcast(void) { return broadcast; }
     int getBandwidth(void) { return bandwidth; }
 };
-

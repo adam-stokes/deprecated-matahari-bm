@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* host.h - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,7 @@ class HostWrapper : public Manageable
     static HostWrapper *hostSingleton;
 
     friend ostream& operator<<(ostream &output, const HostWrapper& host);
-    
+
     // Host Parameters
     string uuid;
     string hostname;
@@ -78,7 +78,7 @@ class HostWrapper : public Manageable
     // QMF Methods
     ManagementObject* GetManagementObject(void) const { return mgmt_object; }
     status_t ManagementMethod(uint32_t methodId, Args& args, string& text);
-   
+
     // Field Accessors
     const string &getUUID(void) { return uuid; }
     const string &getHostname(void) { return hostname; }
@@ -93,4 +93,3 @@ class HostWrapper : public Manageable
     // Main Loop
     void doLoop(void);
 };
-

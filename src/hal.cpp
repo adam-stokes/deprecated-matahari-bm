@@ -1,8 +1,5 @@
-/* hal_support.c -- Interfaces with the HAL libraries.
- *
- * Copyright (C) 2008 Red Hat, Inc.
+/* hal_support.c - Copyright (C) 2008 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
- * Modified by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +45,7 @@ get_hal_ctx(void)
                 fprintf(stderr,
                         "Failed to initial libhal context: %s : %s\n",
                         dbus_error.name, dbus_error.message);
-            }	
+            }
         } else {
             fprintf(stderr, "Unable to connect to system bus: %s : %s\n",
                     dbus_error.name, dbus_error.message);
@@ -75,9 +72,9 @@ char* get_uuid(LibHalContext *hal_ctx)
 
     int type = libhal_device_get_property_type(hal_ctx, udi, key, &dbus_error);
     if (type == LIBHAL_PROPERTY_TYPE_STRING) {
-        value = libhal_device_get_property_string(hal_ctx, 
-                                                  udi, 
-                                                  key, 
+        value = libhal_device_get_property_string(hal_ctx,
+                                                  udi,
+                                                  key,
                                                   &dbus_error);
     }
     if (!value)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* cpu.h - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -62,15 +62,15 @@ class CPUWrapper : public Manageable
     ~CPUWrapper() {}
 
     CPUWrapper(int cpunum__,
-	       int corenum__,
-	       int numcores__,
-	       int model__,
-	       int family__,
-	       int cpuid_lvl__,
-	       double speed__,
-	       int cache__,
-	       const string &vendor__,
-	       const string &flags__) {
+               int corenum__,
+               int numcores__,
+               int model__,
+               int family__,
+               int cpuid_lvl__,
+               double speed__,
+               int cache__,
+               const string &vendor__,
+               const string &flags__) {
             cpunum = cpunum__;
         corenum = corenum__;
         numcores = numcores__;
@@ -82,7 +82,7 @@ class CPUWrapper : public Manageable
         vendor = vendor__;
         flags = flags__;
     }
-    
+
 public:
 
     // Factory like method
