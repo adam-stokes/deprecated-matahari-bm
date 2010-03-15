@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* hal.h - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify

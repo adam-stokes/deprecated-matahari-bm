@@ -28,7 +28,7 @@ matahari.init: matahari.init.in
 	chmod a+x $@-t
 	mv $@-t $@
 
-EXTRA_DIST = 	autogen.sh \
+EXTRA_DIST =	autogen.sh \
 		matahari.init.in \
 		matahari.sysconf
 

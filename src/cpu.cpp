@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Red Hat, Inc.
+/* cpu.cpp - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,9 +39,9 @@ template<typename targetType> targetType convert(const std::string& str)
     if (!(i >> t))
         throw invalid_argument("Conversion failure for " + str);
     return t;
-} 
+}
 
-ostream& operator<<(ostream& output, const CPUWrapper& cpu) 
+ostream& operator<<(ostream& output, const CPUWrapper& cpu)
 {
     output << "Processor" << endl;
     output << "CPU #: " << cpu.cpunum << endl;
@@ -61,7 +61,7 @@ void CPUWrapper::setupQMFObject(ManagementAgent *agent, Manageable *parent)
 {
     mgmt_object = new _qmf::CPU(agent, this, parent);
     agent->addObject(mgmt_object);
-    syncQMFObject();    
+    syncQMFObject();
 }
 
 void CPUWrapper::cleanupQMFObject(void)
@@ -85,7 +85,7 @@ void CPUWrapper::syncQMFObject(void)
 
 /**
  * void fillCPUInfo(vector <CPUWrapper*> &cpus, ManagementAgent *agent)
- * 
+ *
  * Takes in a vector of CPUWrapper object pointers and populates it with
  * CPUs found by querying /proc/cpuinfo. NOTE: This method is very sensitive
  * to the output format of /proc/cpuinfo.
@@ -149,7 +149,7 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
                 string flags = "unknown";
 
                 // Get the cpu # from this line
-                cpunum = convert<int>(line.substr(results[4], 
+                cpunum = convert<int>(line.substr(results[4],
                                        results[5] - results[4]));
                 // And now grab the rest
                 do {
@@ -162,13 +162,13 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
                                       PCRE_NOTEMPTY, // options bitvector
                                       results,       // Results vector
                                       matchArraySize // Vector size
-				                      );
+                                                      );
 
                     if (match == desiredmatches) {
-                        string key = line.substr(results[2], 
+                        string key = line.substr(results[2],
                                                  results[3] - results[2]);
 
-                        string value = line.substr(results[4], 
+                        string value = line.substr(results[4],
                                                     results[5] - results[4]);
 
                         if (key == "core id") {
@@ -191,11 +191,11 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
                         } else if (key == "flags") {
                             flags = value;
                         }
-		            }
-    		    }
-    		    while (line != "");
+                            }
+                    }
+                    while (line != "");
 
-		        // Got all the data. Add the CPU to our list
+                        // Got all the data. Add the CPU to our list
                 CPUWrapper *cpu = new CPUWrapper(cpunum,
                                                 coreid,
                                                 cpucores,
@@ -206,12 +206,11 @@ void CPUWrapper::fillCPUInfo(vector<CPUWrapper*> &cpus, ManagementAgent *agent)
                                                 cache,
                                                 vendor,
                                                 flags);
-    		    cpus.push_back(cpu);
-    		}
+                    cpus.push_back(cpu);
+                }
         }
-    	else
+        else
             continue;
     }
-	cpuinfo.close();
+        cpuinfo.close();
 }
-
