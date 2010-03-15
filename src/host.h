@@ -25,6 +25,7 @@
 
 #include "cpu.h"
 #include "nic.h"
+#include "processors.h"
 
 using namespace qpid::management;
 using namespace std;
@@ -48,6 +49,8 @@ class HostWrapper : public Manageable
     // Aggregated components
     vector<CPUWrapper*> cpus;
     vector<NICWrapper*> nics;
+
+    ProcessorsAgent processors;
 
     // QMF related fields
     ManagementAgent *agent;

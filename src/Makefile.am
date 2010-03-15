@@ -5,14 +5,16 @@ sbin_PROGRAMS = matahari
 first = qmf/com/redhat/matahari/Host.cpp
 
 generated_file_list = \
-	qmf/com/redhat/matahari/CPU.cpp\
-	qmf/com/redhat/matahari/NIC.cpp\
-	qmf/com/redhat/matahari/Package.cpp\
-	qmf/com/redhat/matahari/Host.h\
-	qmf/com/redhat/matahari/CPU.h\
-	qmf/com/redhat/matahari/NIC.h\
-	qmf/com/redhat/matahari/Package.h\
-	qmf/com/redhat/matahari/ArgsNICIdentify_nic.h
+	qmf/com/redhat/matahari/ArgsNICIdentify_nic.h \
+	qmf/com/redhat/matahari/CPU.cpp \
+	qmf/com/redhat/matahari/CPU.h \
+	qmf/com/redhat/matahari/Host.h \
+	qmf/com/redhat/matahari/NIC.cpp \
+	qmf/com/redhat/matahari/NIC.h \
+	qmf/com/redhat/matahari/Package.cpp \
+	qmf/com/redhat/matahari/Package.h \
+	qmf/com/redhat/matahari/Processors.cpp \
+	qmf/com/redhat/matahari/Processors.h
 
 nodist_matahari_SOURCES = $(generated_file_list) $(first)
 
@@ -25,11 +27,13 @@ matahari_SOURCES = \
 	host.h \
 	main.cpp \
 	nic.cpp \
-	nic.h
+	nic.h \
+	processors.cpp \
+	processors.h
 
-$(generated_file_list): $(first)
+$(generated_file_list): $(generated_file_list)
 
-$(first): schema.xml
+$(first): schema.xml $(generated_file_list)
 	qmf-gen -o ./qmf ./schema.xml
 
 BUILT_SOURCES = $(generated_file_list) $(first)
