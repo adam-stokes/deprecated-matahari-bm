@@ -14,6 +14,15 @@
 
   </class>
 
+  <!-- The processor for the node. -->
+  <class name="Processors">
+    <property name="node"   type="objId" access="RO" desc="The managed node." />
+    <property name="model"  type="lstr"  access="RO" desc="The processor label." />
+    <property name="cores"  type="int8"  access="RO" desc="The number of cores." />
+
+    <statistic name="load_average" type="float" desc="The processing load average." />
+  </class>
+
   <class name="CPU">
 
     <property name="host"      type="objId"  access="RO" desc="Host that this cpu belongs to" index="y" references="Host" parentRef="y"/>

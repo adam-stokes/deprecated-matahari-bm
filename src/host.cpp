@@ -68,7 +68,11 @@ void HostWrapper::doLoop(void)
 {
     // Someday we might update statistics too!
     while(1)
+      {
+        // update all statistics
+        processors.update_load_averages();
         sleep(5);
+      }
 }
 
 void HostWrapper::setupQMFObjects(ManagementAgent *agent)
@@ -77,6 +81,8 @@ void HostWrapper::setupQMFObjects(ManagementAgent *agent)
     mgmt_object = new _qmf::Host(agent, this);
     agent->addObject(mgmt_object);
     syncQMFHostObject();
+
+    processors.setup(agent);
 
     // Iterate over list and set up CPU objects
     for (vector<CPUWrapper*>::iterator iter = cpus.begin();
