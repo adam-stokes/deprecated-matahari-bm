@@ -40,7 +40,7 @@ class ProcessorsAgent : public Manageable
 
   ManagementObject* GetManagementObject(void) const { return management_object; }
 
-  void setup(ManagementAgent* agent);
+  void setup(ManagementAgent* agent, Manageable* parent);
 
   // agent methods
   void update_load_averages(void) const;
