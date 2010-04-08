@@ -16,7 +16,7 @@
 
   <!-- The processor for the node. -->
   <class name="Processors">
-    <property name="node"   type="objId" access="RO" desc="The managed node." />
+    <property name="host"   type="objId" access="RC" desc="The host machine." index="y" references="Host" parentRef="y" />
     <property name="model"  type="lstr"  access="RO" desc="The processor label." />
     <property name="cores"  type="int8"  access="RO" desc="The number of cores." />
 

@@ -82,7 +82,7 @@ void HostWrapper::setupQMFObjects(ManagementAgent *agent)
     agent->addObject(mgmt_object);
     syncQMFHostObject();
 
-    processors.setup(agent);
+    processors.setup(agent, this);
 
     // Iterate over list and set up CPU objects
     for (vector<CPUWrapper*>::iterator iter = cpus.begin();

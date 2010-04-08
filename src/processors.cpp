@@ -37,10 +37,10 @@ namespace _qmf = qmf::com::redhat::matahari;
 extern DBusError dbus_error;
 
 void
-ProcessorsAgent::setup(ManagementAgent* agent)
+ProcessorsAgent::setup(ManagementAgent* agent, Manageable* parent)
 {
   // setup the management object
-  management_object = new _qmf::Processors(agent, this);
+  management_object = new _qmf::Processors(agent, this, parent);
   agent->addObject(management_object);
 
   LibHalContext* context = get_hal_ctx();
