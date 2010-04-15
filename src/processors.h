@@ -42,6 +42,9 @@ class ProcessorsAgent : public Manageable
 
   void setup(ManagementAgent* agent, Manageable* parent);
 
+  void update(void) const;
+
+ private:
   // agent methods
   void update_load_averages(void) const;
 };

@@ -47,7 +47,6 @@ class NICWrapper : public Manageable
     qmf::com::redhat::matahari::NIC *mgmt_object;
 
     // Methods to put up / take down QMF Objects
-    void setupQMFObject(ManagementAgent *agent, Manageable *parent);
     void cleanupQMFObject(void);
     void syncQMFObject(void);
 
@@ -77,6 +76,7 @@ class NICWrapper : public Manageable
     int identifyNIC(int seconds);
 public:
 
+    void setupQMFObject(ManagementAgent *agent, Manageable *parent);
     // Factory like method
     static void fillNICInfo(vector<NICWrapper*> &nics,
                             ManagementAgent *agent,

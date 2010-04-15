@@ -1,3 +1,6 @@
+#ifndef __HOST_H
+#define __HOST_H
+
 /* host.h - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
@@ -32,67 +35,25 @@ using namespace std;
 
 using qpid::management::Manageable;
 
-class HostWrapper : public Manageable
+class HostAgent : public Manageable
 {
-    static HostWrapper *hostSingleton;
-
-    friend ostream& operator<<(ostream &output, const HostWrapper& host);
-
-    // Host Parameters
-    string uuid;
-    string hostname;
-    string hypervisor;
-    string arch;
-    bool beeping;
-    int memory;
-
-    // Aggregated components
-    vector<CPUWrapper*> cpus;
-    vector<NICWrapper*> nics;
-
-    ProcessorsAgent processors;
-
-    // QMF related fields
-    ManagementAgent *agent;
-    qmf::com::redhat::matahari::Host *mgmt_object;
-
-    // Methods to put up / take down QMF objects
-    void setupQMFObjects(ManagementAgent *agent);
-    void cleanupQMFObjects(void);
-
-    // Housekeeping methods
-    void syncQMFHostObject(void);
-    void cleanupMemberObjects(void);
-
-    // Host functionality
-    void reboot();
-    void shutdown();
-
-    // Constructors and Destructor are private
-    HostWrapper() {}
-    HostWrapper(const HostWrapper &) {}
-    ~HostWrapper() {}
+ private:
+  qmf::com::redhat::matahari::Host* management_object;
+  ProcessorsAgent processors;
+  vector<NICWrapper*> nics;
 
  public:
-    // Factory methods to create/dispose of the singleton
-    static HostWrapper *setupHostWrapper(ManagementAgent *agent);
-    static void disposeHostWrapper(void);
+  HostAgent() {}
+  virtual ~HostAgent() {}
 
-    // QMF Methods
-    ManagementObject* GetManagementObject(void) const { return mgmt_object; }
-    status_t ManagementMethod(uint32_t methodId, Args& args, string& text);
+  ManagementObject* GetManagementObject(void) const { return management_object; }
 
-    // Field Accessors
-    const string &getUUID(void) { return uuid; }
-    const string &getHostname(void) { return hostname; }
-    const string &getHypervisor(void) { return hypervisor; }
-    const string &getArch(void) { return arch; }
-    bool isBeeping(void) { return beeping; }
-    int getMemory(void) { return memory; }
+  void setup(ManagementAgent* agent);
+  void update(void);
 
-    const vector<CPUWrapper*> &getCPUList(void) { return cpus; }
-    const vector<NICWrapper*> &getNICList(void) { return nics; }
-
-    // Main Loop
-    void doLoop(void);
+  // agent methods
+  void shutdown(void);
+  void reboot(void);
 };
+
+#endif // __HOST_H

@@ -42,18 +42,11 @@ namespace _qmf = qmf::com::redhat::matahari;
 
 // Global Variables
 ManagementAgent::Singleton* singleton;
-HostWrapper* HostWrapper::hostSingleton = NULL;
 
-void cleanup(void)
+void
+shutdown(int /*signal*/)
 {
-    HostWrapper::disposeHostWrapper();
-    delete singleton;
-}
-
-void shutdown(int)
-{
-    cleanup();
-    exit(0);
+  exit(0);
 }
 
 static void
@@ -69,21 +62,22 @@ print_usage()
     printf("\t-p | --port       specify broker port.\n");
 }
 
-int do_main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int arg;
     int idx = 0;
     bool daemonize = false;
     bool gssapi = false;
     bool verbose = false;
-    char *host = NULL;
+    char *servername = NULL;
     char *username = NULL;
     char *service = NULL;
-    int port = 5672;
+    int serverport = 5672;
 
     ConnectionSettings settings;
     ManagementAgent *agent;
-    HostWrapper *hostWrapper;
+    HostAgent host;
 
     struct option opt[] = {
         {"help", no_argument, NULL, 'h'},
@@ -131,7 +125,7 @@ int do_main(int argc, char **argv)
                 break;
             case 'p':
                 if (optarg) {
-                    port = atoi(optarg);
+                    serverport = atoi(optarg);
                 } else {
                     print_usage();
                     exit(1);
@@ -139,7 +133,7 @@ int do_main(int argc, char **argv)
                 break;
             case 'b':
                 if (optarg) {
-                    host = strdup(optarg);
+                    servername = strdup(optarg);
                 } else {
                     print_usage();
                     exit(1);
@@ -169,8 +163,8 @@ int do_main(int argc, char **argv)
     signal(SIGINT, shutdown);
 
     // Connect to the broker
-    settings.host = host ? host : "127.0.0.1";
-    settings.port = port;
+    settings.host = servername ? servername : "127.0.0.1";
+    settings.port = serverport;
 
     if (username != NULL) {
         settings.username = username;
@@ -185,28 +179,13 @@ int do_main(int argc, char **argv)
     agent->init(settings, 5, false, ".magentdata");
 
     // Get the info and post it to the broker
-    try {
-        hostWrapper = HostWrapper::setupHostWrapper(agent);
-    }
-    catch (...) {
-        cleanup();
-            throw;
-    }
+    host.setup(agent);
 
-    // Main loop
-    hostWrapper->doLoop();
+    while(1)
+      {
+        host.update();
+        sleep(5);
+      }
 
-    // And we are done
-    cleanup();
     return 0;
-}
-
-int main(int argc, char** argv)
-{
-    try {
-        return do_main(argc, argv);
-    }
-    catch(std::exception& e) {
-        cout << "Top Level Exception: " << e.what() << endl;
-    }
 }
