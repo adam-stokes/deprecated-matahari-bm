@@ -57,6 +57,12 @@ ProcessorsAgent::setup(ManagementAgent* agent, Manageable* parent)
 }
 
 void
+ProcessorsAgent::update(void) const
+{
+  update_load_averages();
+}
+
+void
 ProcessorsAgent::update_load_averages(void) const
 {
   double load_average;

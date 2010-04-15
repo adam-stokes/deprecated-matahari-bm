@@ -37,213 +37,80 @@ using namespace std;
 using qpid::management::Manageable;
 namespace _qmf = qmf::com::redhat::matahari;
 
-ostream& operator<<(ostream &output, const HostWrapper& host)
+void
+HostAgent::setup(ManagementAgent* agent)
 {
-    output << "Node" << endl << endl;
-    output << "UUID: " << host.uuid << endl;
-    output << "Hostname: " << host.hostname << endl;
-    output << "Memory: " << host.memory << endl;
-    output << "Hypervisor: " << host.hypervisor << endl;
-    output << "Arch: " << host.arch << endl << endl;
+  management_object = new _qmf::Host(agent, this);
+  agent->addObject(management_object);
 
-    vector<CPUWrapper*> cpus = host.cpus;
-    vector<NICWrapper*> nics = host.nics;
+  // discover the aspects of the host
+  processors.setup(agent, this);
 
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin();
-         iter!= cpus.end();
-         iter++) {
-        output << **iter << endl;
-    }
-    for (vector<NICWrapper*>::iterator iter = nics.begin();
-         iter!= nics.end();
-         iter++) {
-        output << **iter << endl;
-    }
+  LibHalContext *hal_ctx;
+  int ret;
 
-    output << "End Node" << endl;
-    return output;
-}
+  // Get our HAL Context or die trying
+  hal_ctx = get_hal_ctx();
+  if (!hal_ctx)
+    throw runtime_error("Unable to get HAL Context Structure.");
 
-void HostWrapper::doLoop(void)
-{
-    // Someday we might update statistics too!
-    while(1)
-      {
-        // update all statistics
-        processors.update_load_averages();
-        sleep(5);
+  try {
+    NICWrapper::fillNICInfo(this->nics, agent, hal_ctx);
+
+    // Host UUID
+    char *uuid_c = get_uuid(hal_ctx);
+    string uuid(uuid_c);
+    management_object->set_uuid(uuid);
+
+    // Hostname
+    char hostname_c[HOST_NAME_MAX];
+    ret = gethostname(hostname_c, sizeof(hostname_c));
+    if (ret != 0)
+      throw runtime_error("Unable to get hostname");
+    string hostname(hostname_c);
+    management_object->set_hostname(hostname);
+
+    // Hypervisor, arch, memory
+    management_object->set_memory(0);
+    management_object->set_hypervisor("unknown");
+    management_object->set_arch("unknown");
+
+    virConnectPtr connection;
+    virNodeInfo info;
+    connection = virConnectOpenReadOnly(NULL);
+    if (connection) {
+      const char *hv = virConnectGetType(connection);
+      if (hv != NULL)
+        management_object->set_hypervisor(hv);
+      ret = virNodeGetInfo(connection, &info);
+      if (ret == 0) {
+        management_object->set_arch(info.model);
+        management_object->set_memory(info.memory);
       }
-}
+    }
+    virConnectClose(connection);
 
-void HostWrapper::setupQMFObjects(ManagementAgent *agent)
-{
-    // Set up Host object
-    mgmt_object = new _qmf::Host(agent, this);
-    agent->addObject(mgmt_object);
-    syncQMFHostObject();
+    management_object->set_beeping(false);
 
-    processors.setup(agent, this);
-
-    // Iterate over list and set up CPU objects
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin();
-         iter!= cpus.end();
-         iter++) {
+    // setup the nic objects
+    for(vector<NICWrapper*>::iterator iter = nics.begin();
+        iter != nics.end();
+        iter++)
+      {
         (*iter)->setupQMFObject(agent, this);
-    }
-    // Iterate over list and set up NIC objects
-    for (vector<NICWrapper*>::iterator iter = nics.begin();
-         iter!= nics.end();
-         iter++) {
-        (*iter)->setupQMFObject(agent, this);
-    }
-}
-
-void HostWrapper::syncQMFHostObject(void)
-{
-    mgmt_object->set_uuid(uuid);
-    mgmt_object->set_hostname(hostname);
-    mgmt_object->set_memory(memory);
-    mgmt_object->set_hypervisor(hypervisor);
-    mgmt_object->set_arch(arch);
-    mgmt_object->set_beeping(beeping);
-}
-
-void HostWrapper::cleanupQMFObjects(void)
-{
-    // Clean up Host object
-    mgmt_object->resourceDestroy();
-
-    // Iterate over list and clean up CPU objects
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin();
-         iter!= cpus.end();
-         iter++) {
-        (*iter)->cleanupQMFObject();
-    }
-    // Iterate over list and clean up NIC objects
-    for (vector<NICWrapper*>::iterator iter = nics.begin();
-         iter!= nics.end();
-         iter++) {
-        (*iter)->cleanupQMFObject();
-    }
-}
-
-void HostWrapper::cleanupMemberObjects(void)
-{
-    // Get rid of the CPUWrapper objects for this host
-    for (vector<CPUWrapper*>::iterator iter = cpus.begin(); iter != cpus.end();) {
-        delete (*iter);
-        iter = cpus.erase(iter);
-    }
-    // Get rid of the NICWrapper objects for this host
-    for (vector<NICWrapper*>::iterator iter = nics.begin(); iter != nics.end();) {
-        delete (*iter);
-        iter = nics.erase(iter);
-    }
-}
-
-void HostWrapper::disposeHostWrapper()
-{
-    if (hostSingleton == NULL)
-        return;
-
-    hostSingleton->cleanupQMFObjects();
-    hostSingleton->cleanupMemberObjects();
-
-    delete hostSingleton;
-    hostSingleton = NULL;
-}
-
-HostWrapper* HostWrapper::setupHostWrapper(ManagementAgent *agent)
-{
-    if (hostSingleton != NULL)
-        return hostSingleton;
-
-    LibHalContext *hal_ctx;
-    int ret;
-
-    // Get our HAL Context or die trying
-    hal_ctx = get_hal_ctx();
-    if (!hal_ctx)
-        throw runtime_error("Unable to get HAL Context Structure.");
-
-    HostWrapper *host = new HostWrapper();
-
-    try {
-        CPUWrapper::fillCPUInfo(host->cpus, agent);
-        NICWrapper::fillNICInfo(host->nics, agent, hal_ctx);
-
-        // Host UUID
-        char *uuid_c = get_uuid(hal_ctx);
-        string uuid(uuid_c);
-        host->uuid = uuid;
-
-        // Hostname
-        char hostname_c[HOST_NAME_MAX];
-        ret = gethostname(hostname_c, sizeof(hostname_c));
-        if (ret != 0)
-            throw runtime_error("Unable to get hostname");
-        string hostname(hostname_c);
-        host->hostname = hostname;
-
-        // Hypervisor, arch, memory
-        host->memory = 0;
-        host->hypervisor = "unknown";
-        host->arch = "unknown";
-
-        virConnectPtr connection;
-        virNodeInfo info;
-        connection = virConnectOpenReadOnly(NULL);
-        if (connection) {
-            const char *hv = virConnectGetType(connection);
-            if (hv != NULL)
-                host->hypervisor = hv;
-            ret = virNodeGetInfo(connection, &info);
-            if (ret == 0) {
-                host->arch = info.model;
-                host->memory = info.memory;
-            }
-        }
-            virConnectClose(connection);
-
-        host->beeping = false;
-    }
-    catch (...) {
-        host->cleanupMemberObjects();
-        put_hal_ctx(hal_ctx);
-        delete host;
-        throw;
-    }
-
-    // Close the Hal Context
+      }
+  }
+  catch (...) {
     put_hal_ctx(hal_ctx);
+    throw;
+  }
 
-    host->setupQMFObjects(agent);
-
-    // Setup singleton reference and return
-    hostSingleton = host;
-    return hostSingleton;
+  // Close the Hal Context
+  put_hal_ctx(hal_ctx);
 }
 
-void HostWrapper::reboot()
+void
+HostAgent::update(void)
 {
-    system("shutdown -r now");
-}
-
-void HostWrapper::shutdown()
-{
-    system("shutdown -h now");
-}
-
-Manageable::status_t
-HostWrapper::ManagementMethod(uint32_t methodId, Args& args, string& text)
-{
-    switch(methodId) {
-        case _qmf::Host::METHOD_SHUTDOWN:
-            shutdown();
-            return Manageable::STATUS_OK;
-        case _qmf::Host::METHOD_REBOOT:
-            reboot();
-            return Manageable::STATUS_OK;
-    }
-    return Manageable::STATUS_NOT_IMPLEMENTED;
+  processors.update();
 }
