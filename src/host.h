@@ -26,7 +26,6 @@
 
 #include "qmf/com/redhat/matahari/Host.h"
 
-#include "cpu.h"
 #include "nic.h"
 #include "processors.h"
 

@@ -6,8 +6,6 @@ first = qmf/com/redhat/matahari/Host.cpp
 
 generated_file_list = \
 	qmf/com/redhat/matahari/ArgsNICIdentify_nic.h \
-	qmf/com/redhat/matahari/CPU.cpp \
-	qmf/com/redhat/matahari/CPU.h \
 	qmf/com/redhat/matahari/Host.h \
 	qmf/com/redhat/matahari/NIC.cpp \
 	qmf/com/redhat/matahari/NIC.h \
@@ -19,8 +17,6 @@ generated_file_list = \
 nodist_matahari_SOURCES = $(generated_file_list) $(first)
 
 matahari_SOURCES = \
-	cpu.cpp \
-	cpu.h \
 	hal.cpp \
 	hal.h \
 	host.cpp \
