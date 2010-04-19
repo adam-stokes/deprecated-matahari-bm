@@ -17,24 +17,18 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <iostream>
+#include "processors.h"
 #include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <stdexcept>
-
-#include <hal/libhal.h>
-
+#include <iostream>
 #include <pcre.h>
 
-#include "hal.h"
-#include "processors.h"
+// TODO remove this wrapper once rhbz#583747 is fixed
+extern "C" {
+#include <libudev.h>
+}
 
 using namespace std;
 namespace _qmf = qmf::com::redhat::matahari;
-
-extern DBusError dbus_error;
 
 void
 ProcessorsAgent::setup(ManagementAgent* agent, Manageable* parent)
@@ -43,17 +37,79 @@ ProcessorsAgent::setup(ManagementAgent* agent, Manageable* parent)
   management_object = new _qmf::Processors(agent, this, parent);
   agent->addObject(management_object);
 
-  LibHalContext* context = get_hal_ctx();
+  int core_count = 0;
+  string model = "unknown";
 
-  int num_results;
-  char** processors = libhal_find_device_by_capability(context,"processor", &num_results, &dbus_error);
+  struct udev* udev = udev_new();
+  struct udev_enumerate* enumerator = udev_enumerate_new(udev);
 
-  if (!processors)
-    throw runtime_error("Error: could not query processors via HAL.");
+  udev_enumerate_add_match_property(enumerator, "DRIVER", "processor");
+  if(!udev_enumerate_scan_devices(enumerator))
+    {
+      struct udev_list_entry* entries = udev_enumerate_get_list_entry(enumerator);
+      struct udev_list_entry* entry;
+
+      udev_list_entry_foreach(entry, entries)
+        {
+          core_count++;
+        }
+    }
+
+  udev_enumerate_unref(enumerator);
+  udev_unref(udev);
+
+  ifstream input("/proc/cpuinfo");
+  if(input.is_open())
+    {
+      string regexstr = "(.*\\S)\\s*:\\s*(\\S.*)";
+      int expected = 3;
+      int found[expected * 3];
+      const char* pcre_error;
+      int pcre_error_offset;
+      pcre* regex;
+      bool done = false;
+      bool started = false;
+
+      regex = pcre_compile(regexstr.c_str(), 0, &pcre_error, &pcre_error_offset, NULL);
+      if(!regex) { throw runtime_error("Unable to compile regular expression."); }
+
+      while(!input.eof() && !done)
+        {
+          string line;
+
+          getline(input, line);
+          int match = pcre_exec(regex, NULL, line.c_str(), line.length(),
+                                0, PCRE_NOTEMPTY,found, expected * 3);
+
+          if(match == expected)
+            {
+              string name = line.substr(found[2], found[3] - found[2]);
+              string value = line.substr(found[4], found[5] - found[4]);
+
+              // if we're at a second processor and we've already started, then we're done
+              if (name == "processor")
+                {
+                  if (started)
+                    {
+                      done = true;
+                    }
+                  else
+                    {
+                      started = true;
+                    }
+                }
+              else
+                {
+                  if(name == "model name") model = value;
+                }
+            }
+        }
+      input.close();
+    }
 
   // populate the managed object's values
-  management_object->set_model(libhal_device_get_property_string(context, processors[0], "info.product", &dbus_error));
-  management_object->set_cores(num_results);
+  management_object->set_model(model);
+  management_object->set_cores(core_count);
 }
 
 void

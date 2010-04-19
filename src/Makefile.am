@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(HAL_CFLAGS) $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS)
+INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(HAL_CFLAGS) $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS) $(UDEV_CFLAGS)
 
 sbin_PROGRAMS = matahari
 
@@ -45,6 +45,5 @@ matahari_LDADD = \
 	-lqmf \
 	-lqpidcommon \
 	-lqpidclient \
-	$(HAL_LIBS) $(LIBVIRT_LIBS) $(PCRE_LIBS)
 
 dist_pkgdata_DATA = schema.xml
