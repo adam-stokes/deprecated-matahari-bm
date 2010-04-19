@@ -23,22 +23,6 @@
     <statistic name="load_average" type="float" desc="The processing load average." />
   </class>
 
-  <class name="CPU">
-
-    <property name="host"      type="objId"  access="RO" desc="Host that this cpu belongs to" index="y" references="Host" parentRef="y"/>
-    <property name="cpunum"    type="int32"  access="RO" desc="CPU # for this host"           index="y"/>
-    <property name="corenum"   type="int32"  access="RO" desc="Index of core within CPU"/>
-    <property name="numcores"  type="int32"  access="RO" desc="Total # of cores for CPU"/>
-    <property name="model"     type="int32"  access="RO" desc="Processor Model"/>
-    <property name="family"    type="int32"  access="RO" desc="Processor Family"/>
-    <property name="cpuid_lvl" type="int32"  access="RO" desc="CPU ID Level"/>
-    <property name="speed"     type="double" access="RO" desc="CPU Speed"      unit="MHz"/>
-    <property name="cache"     type="int32"  access="RO" desc="CPU Cache Size" unit="kb"/>
-    <property name="vendor"    type="sstr"   access="RO" desc="CPU Vendor"/>
-    <property name="flags"     type="lstr"   access="RO" desc="CPU Flags"/>
-
-  </class>
-
   <class name="NIC">
 
     <property name="host"      type="objId" access="RO" desc="Host that this NIC belongs to" index="y" references="Host" parentRef="y"/>
