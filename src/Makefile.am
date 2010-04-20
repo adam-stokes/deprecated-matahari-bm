@@ -1,14 +1,13 @@
-INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(HAL_CFLAGS) $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS) $(UDEV_CFLAGS)
+INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS) $(UDEV_CFLAGS)
 
 sbin_PROGRAMS = matahari
 
 first = qmf/com/redhat/matahari/Host.cpp
 
 generated_file_list = \
-	qmf/com/redhat/matahari/ArgsNICIdentify_nic.h \
 	qmf/com/redhat/matahari/Host.h \
-	qmf/com/redhat/matahari/NIC.cpp \
-	qmf/com/redhat/matahari/NIC.h \
+	qmf/com/redhat/matahari/NetworkDevice.cpp \
+	qmf/com/redhat/matahari/NetworkDevice.h \
 	qmf/com/redhat/matahari/Package.cpp \
 	qmf/com/redhat/matahari/Package.h \
 	qmf/com/redhat/matahari/Processors.cpp \
@@ -17,15 +16,13 @@ generated_file_list = \
 nodist_matahari_SOURCES = $(generated_file_list) $(first)
 
 matahari_SOURCES = \
-	hal.cpp \
-	hal.h \
 	host.cpp \
 	host.h \
 	linux_platform.cpp \
 	linux_platform.h \
 	main.cpp \
-	nic.cpp \
-	nic.h \
+	networkdevice.cpp \
+	networkdevice.h \
 	platform.cpp \
 	platform.h \
 	processors.cpp \
@@ -41,6 +38,6 @@ CLEANFILES = $(generated_file_list) $(first)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDFLAGS = -L/usr/local/lib
-matahari_LDADD = -lqmf $(HAL_LIBS) $(LIBVIRT_LIBS) $(PCRE_LIBS) $(UDEV_LIBS)
+matahari_LDADD = -lqmf $(LIBVIRT_LIBS) $(PCRE_LIBS) $(UDEV_LIBS)
 
 dist_pkgdata_DATA = schema.xml

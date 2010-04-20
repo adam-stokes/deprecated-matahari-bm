@@ -31,7 +31,6 @@
 
 #include <getopt.h>
 
-#include "hal.h"
 #include "host.h"
 #include "qmf/com/redhat/matahari/Package.h"
 

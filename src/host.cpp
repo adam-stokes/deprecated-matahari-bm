@@ -25,6 +25,7 @@
 #include <sys/utsname.h>
 
 #include "host.h"
+#include "platform.h"
 #include "qmf/com/redhat/matahari/Host.h"
 
 using namespace qpid::management;
@@ -41,6 +42,14 @@ HostAgent::setup(ManagementAgent* agent)
 
   // discover the aspects of the host
   processors.setup(agent, this);
+  networkdevices = Platform::instance()->get_network_devices();
+
+  for(vector<NetworkDeviceAgent>::iterator iter = networkdevices.begin();
+      iter != networkdevices.end();
+      iter++)
+    {
+      iter->setup(agent, this);
+    }
 
   struct utsname details;
   string uuid         = "Unknown";
@@ -94,20 +103,17 @@ HostAgent::setup(ManagementAgent* agent)
   management_object->set_arch(architecture);
   management_object->set_memory(memory);
   management_object->set_beeping(beeping);
-
-  NICWrapper::fillNICInfo(this->nics, agent);
-
-  // setup the nic objects
-  for(vector<NICWrapper*>::iterator iter = nics.begin();
-      iter != nics.end();
-      iter++)
-    {
-      (*iter)->setupQMFObject(agent, this);
-    }
 }
 
 void
 HostAgent::update(void)
 {
   processors.update();
+
+  for(vector<NetworkDeviceAgent>::iterator iter = networkdevices.begin();
+      iter != networkdevices.end();
+      iter++)
+    {
+      iter->update();
+    }
 }

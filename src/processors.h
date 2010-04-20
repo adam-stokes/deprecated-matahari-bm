@@ -1,3 +1,6 @@
+#ifndef __PROCESSORS_H
+#define __PROCESSORS_H
+
 /* processor.h - Copyright (C) 2010 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
  *
@@ -48,3 +51,5 @@ class ProcessorsAgent : public Manageable
   // agent methods
   void update_load_averages(void) const;
 };
+
+#endif

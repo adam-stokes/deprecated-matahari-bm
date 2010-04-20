@@ -21,6 +21,8 @@
  */
 
 #include <string>
+#include <vector>
+#include "networkdevice.h"
 
 using namespace std;
 
@@ -57,6 +59,9 @@ class Platform
 
   // returns the load average for the platform
   virtual double get_load_average() const = 0;
+
+  // returns the list of network devices for this platform
+  virtual vector<NetworkDeviceAgent> get_network_devices() const = 0;
 };
 
 #endif

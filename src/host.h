@@ -26,7 +26,7 @@
 
 #include "qmf/com/redhat/matahari/Host.h"
 
-#include "nic.h"
+#include "networkdevice.h"
 #include "processors.h"
 
 using namespace qpid::management;
@@ -39,7 +39,7 @@ class HostAgent : public Manageable
  private:
   qmf::com::redhat::matahari::Host* management_object;
   ProcessorsAgent processors;
-  vector<NICWrapper*> nics;
+  vector<NetworkDeviceAgent> networkdevices;
 
  public:
   HostAgent() {}
