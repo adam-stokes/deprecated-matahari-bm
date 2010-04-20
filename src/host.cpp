@@ -17,16 +17,12 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <qpid/management/Manageable.h>
-
-#include <iostream>
 #include <fstream>
-#include <stdexcept>
-
-#include <cstdlib>
-#include <unistd.h>
 
 #include <libvirt/libvirt.h>
+#include <qpid/management/Manageable.h>
+#include <sys/sysinfo.h>
+#include <sys/utsname.h>
 
 #include "host.h"
 #include "qmf/com/redhat/matahari/Host.h"
@@ -46,67 +42,68 @@ HostAgent::setup(ManagementAgent* agent)
   // discover the aspects of the host
   processors.setup(agent, this);
 
-  LibHalContext *hal_ctx;
-  int ret;
+  struct utsname details;
+  string uuid         = "Unknown";
+  string hostname     = "Unknown";
+  string hypervisor   = "Unknown";
+  string architecture = "None";
+  unsigned long memory = 0;
+  bool beeping        = false;
 
-  // Get our HAL Context or die trying
-  hal_ctx = get_hal_ctx();
-  if (!hal_ctx)
-    throw runtime_error("Unable to get HAL Context Structure.");
+  ifstream input("/var/lib/dbus/machine-id");
 
-  try {
-    NICWrapper::fillNICInfo(this->nics, agent, hal_ctx);
-
-    // Host UUID
-    char *uuid_c = get_uuid(hal_ctx);
-    string uuid(uuid_c);
-    management_object->set_uuid(uuid);
-
-    // Hostname
-    char hostname_c[HOST_NAME_MAX];
-    ret = gethostname(hostname_c, sizeof(hostname_c));
-    if (ret != 0)
-      throw runtime_error("Unable to get hostname");
-    string hostname(hostname_c);
-    management_object->set_hostname(hostname);
-
-    // Hypervisor, arch, memory
-    management_object->set_memory(0);
-    management_object->set_hypervisor("unknown");
-    management_object->set_arch("unknown");
-
-    virConnectPtr connection;
-    virNodeInfo info;
-    connection = virConnectOpenReadOnly(NULL);
-    if (connection) {
-      const char *hv = virConnectGetType(connection);
-      if (hv != NULL)
-        management_object->set_hypervisor(hv);
-      ret = virNodeGetInfo(connection, &info);
-      if (ret == 0) {
-        management_object->set_arch(info.model);
-        management_object->set_memory(info.memory);
-      }
+  if(input.is_open())
+    {
+      getline(input, uuid);
+      input.close();
     }
-    virConnectClose(connection);
 
-    management_object->set_beeping(false);
+  if(!uname(&details))
+    {
+      hostname = string(details.nodename);
+      architecture = string(details.machine);
+    }
+  else
+    {
+      throw runtime_error("Unable to retrieve system details");
+    }
 
-    // setup the nic objects
-    for(vector<NICWrapper*>::iterator iter = nics.begin();
-        iter != nics.end();
-        iter++)
-      {
-        (*iter)->setupQMFObject(agent, this);
-      }
-  }
-  catch (...) {
-    put_hal_ctx(hal_ctx);
-    throw;
-  }
+  virConnectPtr lvconn = virConnectOpenReadOnly(NULL);
 
-  // Close the Hal Context
-  put_hal_ctx(hal_ctx);
+  if(lvconn)
+    {
+      hypervisor = string(virConnectGetType(lvconn));
+      virConnectClose(lvconn);
+    }
+
+  struct sysinfo sysinf;
+  if(!sysinfo(&sysinf))
+    {
+      memory = sysinf.totalram / 1024L;
+    }
+  else
+    {
+      throw runtime_error("Unable to retrieve system memory details.");
+    }
+
+  cout << "memory: " << memory << endl;
+
+  management_object->set_uuid(uuid);
+  management_object->set_hostname(hostname);
+  management_object->set_hypervisor(hypervisor);
+  management_object->set_arch(architecture);
+  management_object->set_memory(memory);
+  management_object->set_beeping(beeping);
+
+  NICWrapper::fillNICInfo(this->nics, agent);
+
+  // setup the nic objects
+  for(vector<NICWrapper*>::iterator iter = nics.begin();
+      iter != nics.end();
+      iter++)
+    {
+      (*iter)->setupQMFObject(agent, this);
+    }
 }
 
 void

@@ -79,8 +79,7 @@ public:
     void setupQMFObject(ManagementAgent *agent, Manageable *parent);
     // Factory like method
     static void fillNICInfo(vector<NICWrapper*> &nics,
-                            ManagementAgent *agent,
-                            LibHalContext *ctx);
+                            ManagementAgent *agent);
 
     // QMF Methods
     ManagementObject *GetManagementObject(void) const { return mgmt_object; }
