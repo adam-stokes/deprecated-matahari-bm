@@ -227,9 +227,9 @@ NICWrapper *NICWrapper::getNIC(ManagementAgent *agent,
  * calls.
  */
 void NICWrapper::fillNICInfo(vector <NICWrapper*> &nics,
-                             ManagementAgent *agent,
-                             LibHalContext *hal_ctx)
+                             ManagementAgent *agent)
 {
+  LibHalContext* hal_ctx = get_hal_ctx();
     char **net_devices;
     int num_results, i;
     net_devices = libhal_find_device_by_capability(hal_ctx,
