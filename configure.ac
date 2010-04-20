@@ -1,6 +1,5 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(matahari, 0.0.5)
-AC_CONFIG_SRCDIR([src/nic.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE
 
@@ -15,8 +14,6 @@ AC_HEADER_STDBOOL
 AC_TYPE_UINT32_T
 
 # Checks for libraries.
-PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.2.12)
-PKG_CHECK_MODULES(HAL, hal >= 0.5.12)
 PKG_CHECK_MODULES(LIBVIRT, libvirt >= 0.6.2)
 PKG_CHECK_MODULES(PCRE, libpcre >= 7.8)
 PKG_CHECK_MODULES(UDEV, libudev >= 145)

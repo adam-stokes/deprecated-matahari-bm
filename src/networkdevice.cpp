@@ -1,7 +1,4 @@
-#ifndef __LINUX_PLATFORM_H
-#define __LINUX_PLATFORM_H
-
-/* linux_platform.h - Copyright (C) 2010 Red Hat, Inc.
+/* networkingdevice.cpp - Copyright (C) 2010 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,20 +17,33 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <string>
-#include <vector>
+#include <qpid/agent/ManagementAgent.h>
+#include <qpid/management/Manageable.h>
 
-#include "platform.h"
 #include "networkdevice.h"
 
-class LinuxPlatform : public Platform
+namespace _qmf = qmf::com::redhat::matahari;
+
+NetworkDeviceAgent::NetworkDeviceAgent(string ifname, string vendor, string model, string macaddr)
+  :ifname(ifname)
+  ,vendor(vendor)
+  ,model(model)
+  ,macaddr(macaddr)
+{}
+
+void
+NetworkDeviceAgent::setup(ManagementAgent* agent, Manageable* parent)
 {
- public:
-  LinuxPlatform();
-  virtual ~LinuxPlatform() {}
+  management_object = new _qmf::NetworkDevice(agent, this, parent);
+  agent->addObject(management_object);
 
-  virtual double get_load_average() const;
-  virtual vector<NetworkDeviceAgent> get_network_devices() const;
-};
+  management_object->set_interface(ifname);
+  management_object->set_vendor(vendor);
+  management_object->set_model(model);
+  management_object->set_mac_address(macaddr);
+}
 
-#endif
+void
+NetworkDeviceAgent::update() const
+{
+}
