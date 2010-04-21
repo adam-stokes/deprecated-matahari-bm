@@ -21,9 +21,13 @@ matahari_SOURCES = \
 	hal.h \
 	host.cpp \
 	host.h \
+	linux_platform.cpp \
+	linux_platform.h \
 	main.cpp \
 	nic.cpp \
 	nic.h \
+	platform.cpp \
+	platform.h \
 	processors.cpp \
 	processors.h
 

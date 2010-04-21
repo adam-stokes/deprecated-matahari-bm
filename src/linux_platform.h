@@ -1,4 +1,7 @@
-/* processor.cpp - Copyright (C) 2010 Red Hat, Inc.
+#ifndef __LINUX_PLATFORM_H
+#define __LINUX_PLATFORM_H
+
+/* linux_platform.h - Copyright (C) 2010 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,33 +20,16 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include "processors.h"
+#include <string>
 #include "platform.h"
 
-using namespace std;
-namespace _qmf = qmf::com::redhat::matahari;
-
-void
-ProcessorsAgent::setup(ManagementAgent* agent, Manageable* parent)
+class LinuxPlatform : public Platform
 {
-  // setup the management object
-  management_object = new _qmf::Processors(agent, this, parent);
-  agent->addObject(management_object);
+ public:
+  LinuxPlatform();
+  virtual ~LinuxPlatform() {}
 
-  Platform* platform = Platform::instance();
+  virtual double get_load_average() const;
+};
 
-  management_object->set_model(platform->get_processor_model());
-  management_object->set_cores(platform->get_number_of_cores());
-}
-
-void
-ProcessorsAgent::update(void) const
-{
-  update_load_averages();
-}
-
-void
-ProcessorsAgent::update_load_averages(void) const
-{
-  management_object->set_load_average(Platform::instance()->get_load_average());
-}
+#endif
