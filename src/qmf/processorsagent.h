@@ -1,4 +1,7 @@
-/* processor.cpp - Copyright (C) 2010 Red Hat, Inc.
+#ifndef __PROCESSORSAGENT_H
+#define __PROCESSORSAGENT_H
+
+/* processoragent.h - Copyright (C) 2010 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,47 +20,31 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#include <qpid/management/Manageable.h>
+#include <qpid/management/ManagementObject.h>
+
 #include "processors.h"
-#include "platform.h"
+#include "processorslistener.h"
+#include "qmf/com/redhat/matahari/Processors.h"
+#include "qmf/hostagent.h"
 
-void
-Processors::addProcessorsListener(ProcessorsListener* listener)
+using namespace qpid::management;
+
+class ProcessorsAgent : public Manageable, public ProcessorsListener
 {
-  _listeners.insert(listener);
-}
+ private:
+  qmf::com::redhat::matahari::Processors* _management_object;
 
-void
-Processors::removeProcessorsListener(ProcessorsListener* listener)
-{
-  _listeners.erase(listener);
-}
+  Processors& _processors;
 
-void
-Processors::update()
-{
-  for(set<ProcessorsListener*>::iterator iter = _listeners.begin();
-      iter != _listeners.end();
-      iter++)
-    {
-      (*iter)->updated();
-    }
-}
+ public:
+  ProcessorsAgent(Processors& processors);
+  virtual ~ProcessorsAgent();
 
-string
-Processors::getModel() const
-{
-  return Platform::instance()->get_processor_model();
-}
+  void setup(ManagementAgent* agent, HostAgent* parent);
+  ManagementObject* GetManagementObject(void) const { return _management_object; }
 
+  virtual void updated();
+};
 
-unsigned int
-Processors::getNumberOfCores() const
-{
-  return Platform::instance()->get_number_of_cores();
-}
-
-float
-Processors::getLoadAverage() const
-{
-  return Platform::instance()->get_load_average();
-}
+#endif

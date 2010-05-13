@@ -32,6 +32,10 @@
 #include <getopt.h>
 
 #include "host.h"
+
+#include "qmf/hostagent.h"
+#include "qmf/processorsagent.h"
+
 #include "qmf/com/redhat/matahari/Package.h"
 
 using namespace qpid::management;
@@ -76,7 +80,9 @@ main(int argc, char **argv)
 
     ConnectionSettings settings;
     ManagementAgent *agent;
-    HostAgent host;
+    Host host;
+    HostAgent hostAgent(host);
+    ProcessorsAgent processorsAgent(host.getProcessors());;
 
     struct option opt[] = {
         {"help", no_argument, NULL, 'h'},
@@ -178,7 +184,8 @@ main(int argc, char **argv)
     agent->init(settings, 5, false, ".magentdata");
 
     // Get the info and post it to the broker
-    host.setup(agent);
+    hostAgent.setup(agent);
+    processorsAgent.setup(agent, &hostAgent);
 
     while(1)
       {

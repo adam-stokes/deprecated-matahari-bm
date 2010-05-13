@@ -18,6 +18,7 @@ nodist_matahari_SOURCES = $(generated_file_list) $(first)
 matahari_SOURCES = \
 	host.cpp \
 	host.h \
+	hostlistener.h \
 	linux_platform.cpp \
 	linux_platform.h \
 	main.cpp \
@@ -26,7 +27,12 @@ matahari_SOURCES = \
 	platform.cpp \
 	platform.h \
 	processors.cpp \
-	processors.h
+	processors.h \
+	processorslistener.h \
+	qmf/hostagent.cpp \
+	qmf/hostagent.h \
+	qmf/processorsagent.cpp \
+	qmf/processorsagent.h
 
 $(generated_file_list): $(generated_file_list)
 

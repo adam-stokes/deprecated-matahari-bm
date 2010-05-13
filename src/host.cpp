@@ -17,60 +17,43 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <fstream>
+#include "host.h"
+#include "platform.h"
 
+#include <fstream>
 #include <libvirt/libvirt.h>
-#include <qpid/management/Manageable.h>
+#include <stdexcept>
+#include <string>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
 
-#include "host.h"
-#include "platform.h"
-#include "qmf/com/redhat/matahari/Host.h"
-
-using namespace qpid::management;
 using namespace std;
 
-using qpid::management::Manageable;
-namespace _qmf = qmf::com::redhat::matahari;
-
-void
-HostAgent::setup(ManagementAgent* agent)
+Host::Host()
 {
-  management_object = new _qmf::Host(agent, this);
-  agent->addObject(management_object);
-
-  // discover the aspects of the host
-  processors.setup(agent, this);
-  networkdevices = Platform::instance()->get_network_devices();
-
-  for(vector<NetworkDeviceAgent>::iterator iter = networkdevices.begin();
-      iter != networkdevices.end();
-      iter++)
-    {
-      iter->setup(agent, this);
-    }
-
   struct utsname details;
-  string uuid         = "Unknown";
-  string hostname     = "Unknown";
-  string hypervisor   = "Unknown";
-  string architecture = "None";
-  unsigned long memory = 0;
-  bool beeping        = false;
+  this->_uuid         = string("Unknown");
+  this->_hostname     = string("Unknown");
+  this->_hypervisor   = string("Unknown");
+  this->_architecture = string("None");
+  this->_memory       = 0;
+  this->_beeping      = false;
 
-  ifstream input("/var/lib/dbus/machine-id");
+  std::ifstream input("/var/lib/dbus/machine-id");
 
   if(input.is_open())
     {
+      string uuid;
+
       getline(input, uuid);
       input.close();
+      this->_uuid = uuid;
     }
 
   if(!uname(&details))
     {
-      hostname = string(details.nodename);
-      architecture = string(details.machine);
+      this->_hostname     = string(details.nodename);
+      this->_architecture = string(details.machine);
     }
   else
     {
@@ -81,39 +64,116 @@ HostAgent::setup(ManagementAgent* agent)
 
   if(lvconn)
     {
-      hypervisor = string(virConnectGetType(lvconn));
+      this->_hypervisor = string(virConnectGetType(lvconn));
       virConnectClose(lvconn);
     }
 
   struct sysinfo sysinf;
   if(!sysinfo(&sysinf))
     {
-      memory = sysinf.totalram / 1024L;
+      this->_memory = sysinf.totalram / 1024L;
     }
   else
     {
       throw runtime_error("Unable to retrieve system memory details.");
     }
-
-  cout << "memory: " << memory << endl;
-
-  management_object->set_uuid(uuid);
-  management_object->set_hostname(hostname);
-  management_object->set_hypervisor(hypervisor);
-  management_object->set_arch(architecture);
-  management_object->set_memory(memory);
-  management_object->set_beeping(beeping);
 }
 
+/*
 void
-HostAgent::update(void)
+Host::setup(ManagementAgent* agent, HostAgent* hostAgent)
 {
-  processors.update();
+  // discover the aspects of the host
+  _processors.setup(agent, hostAgent);
+  _networkdevices = Platform::instance()->get_network_devices();
 
-  for(vector<NetworkDeviceAgent>::iterator iter = networkdevices.begin();
-      iter != networkdevices.end();
+  for(vector<NetworkDeviceAgent>::iterator iter = _networkdevices.begin();
+      iter != _networkdevices.end();
+      iter++)
+    {
+      iter->setup(agent, hostAgent);
+    }
+}
+*/
+
+void
+Host::update()
+{
+  _processors.update();
+
+  for(vector<NetworkDeviceAgent>::iterator iter = _networkdevices.begin();
+      iter != _networkdevices.end();
       iter++)
     {
       iter->update();
     }
+}
+
+void
+Host::addHostListener(HostListener* listener)
+{
+  _listeners.insert(listener);
+}
+
+void
+Host::removeHostListener(HostListener* listener)
+{
+  _listeners.erase(listener);
+}
+
+Processors&
+Host::getProcessors()
+{
+  return _processors;
+}
+
+string
+Host:: getUUID() const
+{
+  return _uuid;
+}
+
+string
+Host::getHostname() const
+{
+  return _hostname;
+}
+
+string
+Host::getHypervisor() const
+{
+  return _hypervisor;
+}
+
+string
+Host::getArchitecture() const
+{
+  return _architecture;
+}
+
+unsigned int
+Host::getMemory() const
+{
+  return _memory;
+}
+
+bool
+Host::isBeeping() const
+{
+  return _beeping;
+}
+
+void
+Host::identify(const int iterations)
+{
+}
+
+void
+Host::shutdown()
+{
+}
+
+void
+Host::reboot()
+{
 }

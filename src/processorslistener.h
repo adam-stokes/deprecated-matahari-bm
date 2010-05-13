@@ -1,8 +1,8 @@
-#ifndef __PROCESSORS_H
-#define __PROCESSORS_H
+#ifndef __PROCESSORSLISTENER_H
+#define __PROCESSORSLISTENER_H
 
-/* processor.h - Copyright (C) 2010 Red Hat, Inc.
- * Written by Darryl L. Pierce <dpierce@redhat.com>
+/* processorslistener.h - Copyright (C) 2009 Red Hat, Inc.
+ * Written by Darryl Pierce <dpierce@redhat.com>.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,27 +20,10 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <set>
-#include <string>
-
-#include "processorslistener.h"
-
-using namespace std;
-
-class Processors
+class ProcessorsListener
 {
- private:
-  set<ProcessorsListener*> _listeners;
-
  public:
-  void addProcessorsListener(ProcessorsListener* listener);
-  void removeProcessorsListener(ProcessorsListener* listener);
-
-  void update();
-
-  string getModel() const;
-  unsigned int getNumberOfCores() const;
-  float getLoadAverage() const;
+  virtual void updated() = 0;
 };
 
 #endif
