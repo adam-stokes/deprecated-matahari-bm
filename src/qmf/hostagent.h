@@ -1,8 +1,8 @@
-#ifndef __PROCESSORS_H
-#define __PROCESSORS_H
+#ifndef __HOSTAGENT_H
+#define __HOSTAGENT_H
 
-/* processor.h - Copyright (C) 2010 Red Hat, Inc.
- * Written by Darryl L. Pierce <dpierce@redhat.com>
+/* hostagent.h - Copyright (C) 2009 Red Hat, Inc.
+ * Written by Arjun Roy <arroy@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,27 +20,32 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <set>
+#include <qpid/management/Manageable.h>
 #include <string>
 
-#include "processorslistener.h"
+#include "host.h"
+#include "hostlistener.h"
 
+#include "qmf/com/redhat/matahari/Host.h"
+
+using namespace qpid::management;
 using namespace std;
 
-class Processors
+class HostAgent : public Manageable, public HostListener
 {
  private:
-  set<ProcessorsListener*> _listeners;
+  qmf::com::redhat::matahari::Host* _management_object;
+  Host& _host;
 
  public:
-  void addProcessorsListener(ProcessorsListener* listener);
-  void removeProcessorsListener(ProcessorsListener* listener);
+  HostAgent(Host& host);
+  virtual ~HostAgent();
 
-  void update();
+  void setup(ManagementAgent* agent);
+  ManagementObject* GetManagementObject() const { return _management_object; }
+  status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
 
-  string getModel() const;
-  unsigned int getNumberOfCores() const;
-  float getLoadAverage() const;
+  virtual void heartbeat(unsigned long timestamp);
 };
 
 #endif

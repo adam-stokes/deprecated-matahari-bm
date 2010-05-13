@@ -20,39 +20,53 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <qpid/management/Manageable.h>
-#include <qpid/management/ManagementObject.h>
-#include <qpid/agent/ManagementAgent.h>
+#include <string>
+#include <set>
 
-#include "qmf/com/redhat/matahari/Host.h"
-
-#include "networkdevice.h"
+#include "hostlistener.h"
 #include "processors.h"
+#include "networkdevice.h"
 
-using namespace qpid::management;
 using namespace std;
 
-using qpid::management::Manageable;
-
-class HostAgent : public Manageable
+/*
+  Host represents the public contract for the set of host APIs.
+ */
+class Host
 {
  private:
-  qmf::com::redhat::matahari::Host* management_object;
-  ProcessorsAgent processors;
-  vector<NetworkDeviceAgent> networkdevices;
+  string          _uuid;
+  string          _hostname;
+  string          _hypervisor;
+  string          _architecture;
+  unsigned int    _memory;
+  bool            _beeping;
+
+  Processors                 _processors;
+  vector<NetworkDeviceAgent> _networkdevices;
+  set<HostListener*>         _listeners;
 
  public:
-  HostAgent() {}
-  virtual ~HostAgent() {}
+  Host();
+  virtual ~Host() {}
 
-  ManagementObject* GetManagementObject(void) const { return management_object; }
+  void update();
 
-  void setup(ManagementAgent* agent);
-  void update(void);
+  void addHostListener(HostListener*);
+  void removeHostListener(HostListener*);
 
-  // agent methods
-  void shutdown(void);
-  void reboot(void);
+  Processors& getProcessors();
+
+  string getUUID() const;
+  string getHostname() const;
+  string getHypervisor() const;
+  string getArchitecture() const;
+  unsigned int getMemory() const;
+
+  bool isBeeping() const;
+  void identify(const int iterations);
+  void shutdown();
+  void reboot();
 };
 
 #endif // __HOST_H
