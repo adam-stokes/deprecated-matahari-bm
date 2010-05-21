@@ -46,6 +46,9 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_arch(_host.getArchitecture());
   _management_object->set_memory(_host.getMemory());
   _management_object->set_beeping(_host.isBeeping());
+
+  _management_object->set_cpu_model(_host.getCPUModel());
+  _management_object->set_cpu_cores(_host.getNumberOfCPUCores());
 }
 
 Manageable::status_t
@@ -68,4 +71,10 @@ void
 HostAgent::heartbeat(unsigned long timestamp, unsigned int sequence)
 {
   this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, sequence));
+}
+
+void
+HostAgent::updated()
+{
+  _management_object->set_load_average(_host.getLoadAverage());
 }

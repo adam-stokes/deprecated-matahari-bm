@@ -36,7 +36,7 @@ extern "C" {
 
 LinuxPlatform::LinuxPlatform()
 {
-  int core_count = 0;
+  int cpu_count = 0;
   string model = "unknown";
 
   struct udev* udev = udev_new();
@@ -50,9 +50,9 @@ LinuxPlatform::LinuxPlatform()
 
       udev_list_entry_foreach(entry, entries)
         {
-          core_count++;
+          cpu_count++;
         }
-      set_number_of_cores(core_count);
+      setNumberOfCPUCores(cpu_count);
     }
 
   udev_enumerate_unref(enumerator);
@@ -100,7 +100,7 @@ LinuxPlatform::LinuxPlatform()
                 }
               else
                 {
-                  if(name == "model name") set_processor_model(value);
+                  if(name == "model name") setCPUModel(value);
                 }
             }
         }
@@ -109,7 +109,7 @@ LinuxPlatform::LinuxPlatform()
 }
 
 double
-LinuxPlatform::get_load_average() const
+LinuxPlatform::getLoadAverage() const
 {
   double load_average;
   ifstream input;

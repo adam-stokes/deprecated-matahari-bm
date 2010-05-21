@@ -49,6 +49,8 @@ class HostAgent : public Manageable, public HostListener
   status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
 
   virtual void heartbeat(unsigned long timestamp, unsigned int sequence);
+
+  virtual void updated();
 };
 
 #endif

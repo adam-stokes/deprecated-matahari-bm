@@ -24,7 +24,6 @@
 #include <set>
 
 #include "hostlistener.h"
-#include "processors.h"
 #include "networkdevice.h"
 
 using namespace std;
@@ -43,7 +42,6 @@ class Host
   bool            _beeping;
   unsigned int    _heartbeat_sequence;
 
-  Processors                 _processors;
   vector<NetworkDeviceAgent> _networkdevices;
   set<HostListener*>         _listeners;
 
@@ -56,13 +54,17 @@ class Host
   void addHostListener(HostListener*);
   void removeHostListener(HostListener*);
 
-  Processors& getProcessors();
-
+  // general host properties
   string getUUID() const;
   string getHostname() const;
   string getHypervisor() const;
   string getArchitecture() const;
   unsigned int getMemory() const;
+
+  // CPU properties
+  string       getCPUModel() const;
+  unsigned int getNumberOfCPUCores() const;
+  double       getLoadAverage() const;
 
   bool isBeeping() const;
   void identify(const int iterations);
