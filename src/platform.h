@@ -37,28 +37,24 @@ class Platform
  private:
   static Platform* _instance;
 
-  string processor_model;
-  unsigned int number_of_cores;
+  string       _cpu_model;
+  unsigned int _cpu_cores;
 
  protected:
   Platform() {}
   virtual~ Platform() {}
 
-  void set_processor_model(const string model) { processor_model = model; }
-  void set_number_of_cores(const int number) { number_of_cores = number; }
+  void setCPUModel(const string model)      { _cpu_model = model; }
+  void setNumberOfCPUCores(const int cores) { _cpu_cores = cores; }
 
  public:
   // the singleton instance
   static Platform* instance();
 
-  // returns text describing the processor model.
-  string get_processor_model() const { return processor_model; }
+  string       getCPUModel() const         { return _cpu_model; }
+  unsigned int getNumberOfCPUCores() const { return _cpu_cores; }
 
-  // returns the number of cores in the processor.
-  int get_number_of_cores() const { return number_of_cores; }
-
-  // returns the load average for the platform
-  virtual double get_load_average() const = 0;
+  virtual double getLoadAverage() const = 0;
 
   // returns the list of network devices for this platform
   virtual vector<NetworkDeviceAgent> get_network_devices() const = 0;

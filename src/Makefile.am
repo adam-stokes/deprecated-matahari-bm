@@ -11,9 +11,7 @@ generated_file_list = \
 	qmf/com/redhat/matahari/NetworkDevice.cpp \
 	qmf/com/redhat/matahari/NetworkDevice.h \
 	qmf/com/redhat/matahari/Package.cpp \
-	qmf/com/redhat/matahari/Package.h \
-	qmf/com/redhat/matahari/Processors.cpp \
-	qmf/com/redhat/matahari/Processors.h
+	qmf/com/redhat/matahari/Package.h
 
 nodist_matahari_SOURCES = $(generated_file_list) $(first)
 
@@ -28,13 +26,8 @@ matahari_SOURCES = \
 	networkdevice.h \
 	platform.cpp \
 	platform.h \
-	processors.cpp \
-	processors.h \
-	processorslistener.h \
 	qmf/hostagent.cpp \
 	qmf/hostagent.h \
-	qmf/processorsagent.cpp \
-	qmf/processorsagent.h \
 	virtio/multiplexer.cpp \
 	virtio/multiplexer.h
 

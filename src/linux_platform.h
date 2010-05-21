@@ -32,7 +32,7 @@ class LinuxPlatform : public Platform
   LinuxPlatform();
   virtual ~LinuxPlatform() {}
 
-  virtual double get_load_average() const;
+  virtual double getLoadAverage() const;
   virtual vector<NetworkDeviceAgent> get_network_devices() const;
 };
 

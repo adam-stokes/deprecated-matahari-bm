@@ -81,29 +81,10 @@ Host::Host()
     }
 }
 
-/*
-void
-Host::setup(ManagementAgent* agent, HostAgent* hostAgent)
-{
-  // discover the aspects of the host
-  _processors.setup(agent, hostAgent);
-  _networkdevices = Platform::instance()->get_network_devices();
-
-  for(vector<NetworkDeviceAgent>::iterator iter = _networkdevices.begin();
-      iter != _networkdevices.end();
-      iter++)
-    {
-      iter->setup(agent, hostAgent);
-    }
-}
-*/
-
 void
 Host::update()
 {
   this->_heartbeat_sequence++;
-
-  _processors.update();
 
   time_t __time;
   time(&__time);
@@ -113,7 +94,14 @@ Host::update()
       iter++)
     {
       (*iter)->heartbeat((unsigned long)__time,
-			 this->_heartbeat_sequence);
+                         this->_heartbeat_sequence);
+    }
+
+  for(set<HostListener*>::iterator iter = _listeners.begin();
+      iter != _listeners.end();
+      iter++)
+    {
+      (*iter)->updated();
     }
 }
 
@@ -127,12 +115,6 @@ void
 Host::removeHostListener(HostListener* listener)
 {
   _listeners.erase(listener);
-}
-
-Processors&
-Host::getProcessors()
-{
-  return _processors;
 }
 
 string
@@ -169,6 +151,24 @@ bool
 Host::isBeeping() const
 {
   return _beeping;
+}
+
+string
+Host::getCPUModel() const
+{
+  return Platform::instance()->getCPUModel();
+}
+
+unsigned int
+Host::getNumberOfCPUCores() const
+{
+  return Platform::instance()->getNumberOfCPUCores();
+}
+
+double
+Host::getLoadAverage() const
+{
+  return Platform::instance()->getLoadAverage();
 }
 
 void
