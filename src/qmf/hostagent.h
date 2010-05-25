@@ -31,11 +31,14 @@
 using namespace qpid::management;
 using namespace std;
 
+namespace _qmf = qmf::com::redhat::matahari;
+
 class HostAgent : public Manageable, public HostListener
 {
  private:
-  qmf::com::redhat::matahari::Host* _management_object;
-  Host& _host;
+  _qmf::Host*      _management_object;
+  Host&            _host;
+  ManagementAgent* _agent;
 
  public:
   HostAgent(Host& host);
@@ -45,7 +48,7 @@ class HostAgent : public Manageable, public HostListener
   ManagementObject* GetManagementObject() const { return _management_object; }
   status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
 
-  virtual void heartbeat(unsigned long timestamp);
+  virtual void heartbeat(unsigned long timestamp, unsigned int sequence);
 };
 
 #endif

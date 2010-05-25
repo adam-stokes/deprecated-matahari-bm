@@ -14,6 +14,13 @@
 
   </class>
 
+  <eventArguments>
+    <arg name="timestamp" type="absTime" />
+    <arg name="sequence"  type="uint32" />
+  </eventArguments>
+
+  <event name="heartbeat" args="timestamp,sequence" />
+
   <!-- The processor for the node. -->
   <class name="Processors">
     <property name="host"   type="objId" access="RC" desc="The host machine." index="y" references="Host" parentRef="y" />

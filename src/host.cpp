@@ -29,16 +29,18 @@
 
 using namespace std;
 
+const string UNKNOWN("Unknow");
+
 Host::Host()
+  :_uuid(UNKNOWN)
+  ,_hostname(UNKNOWN)
+  ,_hypervisor(UNKNOWN)
+  ,_architecture(UNKNOWN)
+  ,_memory(0)
+  ,_beeping(false)
+  ,_heartbeat_sequence(0)
 {
   struct utsname details;
-  this->_uuid         = string("Unknown");
-  this->_hostname     = string("Unknown");
-  this->_hypervisor   = string("Unknown");
-  this->_architecture = string("None");
-  this->_memory       = 0;
-  this->_beeping      = false;
-
   std::ifstream input("/var/lib/dbus/machine-id");
 
   if(input.is_open())
@@ -99,13 +101,19 @@ Host::setup(ManagementAgent* agent, HostAgent* hostAgent)
 void
 Host::update()
 {
+  this->_heartbeat_sequence++;
+
   _processors.update();
 
-  for(vector<NetworkDeviceAgent>::iterator iter = _networkdevices.begin();
-      iter != _networkdevices.end();
+  time_t __time;
+  time(&__time);
+
+  for(set<HostListener*>::iterator iter = _listeners.begin();
+      iter != _listeners.end();
       iter++)
     {
-      iter->update();
+      (*iter)->heartbeat((unsigned long)__time,
+			 this->_heartbeat_sequence);
     }
 }
 
