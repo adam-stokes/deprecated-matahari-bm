@@ -34,7 +34,9 @@ matahari_SOURCES = \
 	qmf/hostagent.cpp \
 	qmf/hostagent.h \
 	qmf/processorsagent.cpp \
-	qmf/processorsagent.h
+	qmf/processorsagent.h \
+	virtio/multiplexer.cpp \
+	virtio/multiplexer.h
 
 $(generated_file_list): $(generated_file_list)
 

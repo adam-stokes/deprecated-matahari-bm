@@ -21,6 +21,7 @@ AC_HEADER_STDBOOL
 AC_TYPE_UINT32_T
 
 # Checks for libraries.
+PKG_CHECK_MODULES(CPPUNIT, cppunit >= 1.12.1)
 PKG_CHECK_MODULES(LIBVIRT, libvirt >= 0.6.2)
 PKG_CHECK_MODULES(PCRE, libpcre >= 7.8)
 PKG_CHECK_MODULES(UDEV, libudev >= 145)
@@ -28,4 +29,4 @@ PKG_CHECK_MODULES(UDEV, libudev >= 145)
 # Checks for library functions.
 AC_CHECK_FUNCS([gethostname inet_ntoa socket])
 
-AC_OUTPUT(Makefile src/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/tests/Makefile)
