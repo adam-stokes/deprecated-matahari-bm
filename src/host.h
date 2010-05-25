@@ -41,6 +41,7 @@ class Host
   string          _architecture;
   unsigned int    _memory;
   bool            _beeping;
+  unsigned int    _heartbeat_sequence;
 
   Processors                 _processors;
   vector<NetworkDeviceAgent> _networkdevices;

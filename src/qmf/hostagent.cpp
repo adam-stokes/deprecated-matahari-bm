@@ -20,7 +20,7 @@
 #include "hostagent.h"
 #include <qpid/agent/ManagementAgent.h>
 
-namespace _qmf = qmf::com::redhat::matahari;
+#include "qmf/com/redhat/matahari/EventHeartbeat.h"
 
 HostAgent::HostAgent(Host& host)
   :_host(host)
@@ -35,6 +35,8 @@ HostAgent::~HostAgent()
 void
 HostAgent::setup(ManagementAgent* agent)
 {
+  this->_agent = agent;
+
   _management_object = new _qmf::Host(agent, this);
   agent->addObject(_management_object);
 
@@ -63,6 +65,7 @@ HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 }
 
 void
-HostAgent::heartbeat(unsigned long timestamp)
+HostAgent::heartbeat(unsigned long timestamp, unsigned int sequence)
 {
+  this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, sequence));
 }
