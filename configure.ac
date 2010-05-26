@@ -7,6 +7,13 @@ AM_INIT_AUTOMAKE
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
+
+AC_CHECK_PROG(HASQMFGEN, qmf-gen, "yes")
+
+if test x"$HASQMFGEN" = "x"; then
+    AC_MSG_ERROR([Missing QMF schema processor.])
+fi
+
 AC_CHECK_HEADERS([arpa/inet.h netinet/in.h sys/ioctl.h sys/socket.h unistd.h libudev.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
