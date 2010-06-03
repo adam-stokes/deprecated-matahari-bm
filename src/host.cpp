@@ -18,73 +18,31 @@
  */
 
 #include "host.h"
-#include "platform.h"
 
-#include <fstream>
-#include <libvirt/libvirt.h>
-#include <stdexcept>
-#include <string>
-#include <sys/sysinfo.h>
-#include <sys/utsname.h>
+#include "platform.h"
+#include <set>
 
 using namespace std;
 
-const string UNKNOWN("Unknow");
+set<HostListener*> _listeners;
+unsigned int         _heartbeat_sequence;
 
-Host::Host()
-  :_uuid(UNKNOWN)
-  ,_hostname(UNKNOWN)
-  ,_hypervisor(UNKNOWN)
-  ,_architecture(UNKNOWN)
-  ,_memory(0)
-  ,_beeping(false)
-  ,_heartbeat_sequence(0)
+void
+host_register_listener(HostListener* listener)
 {
-  struct utsname details;
-  std::ifstream input("/var/lib/dbus/machine-id");
-
-  if(input.is_open())
-    {
-      string uuid;
-
-      getline(input, uuid);
-      input.close();
-      this->_uuid = uuid;
-    }
-
-  if(!uname(&details))
-    {
-      this->_hostname     = string(details.nodename);
-      this->_architecture = string(details.machine);
-    }
-  else
-    {
-      throw runtime_error("Unable to retrieve system details");
-    }
-
-  virConnectPtr lvconn = virConnectOpenReadOnly(NULL);
-
-  if(lvconn)
-    {
-      this->_hypervisor = string(virConnectGetType(lvconn));
-      virConnectClose(lvconn);
-    }
-
-  struct sysinfo sysinf;
-  if(!sysinfo(&sysinf))
-    {
-      this->_memory = sysinf.totalram / 1024L;
-    }
-  else
-    {
-      throw runtime_error("Unable to retrieve system memory details.");
-    }
+  _listeners.insert(listener);
 }
 
 void
-Host::update()
+host_remove_listener(HostListener* listener)
 {
-  this->_heartbeat_sequence++;
+  _listeners.erase(listener);
+}
+
+void
+host_update_event()
+{
+  _heartbeat_sequence++;
 
   time_t __time;
   time(&__time);
@@ -94,7 +52,7 @@ Host::update()
       iter++)
     {
       (*iter)->heartbeat((unsigned long)__time,
-                         this->_heartbeat_sequence);
+                         _heartbeat_sequence);
     }
 
   for(set<HostListener*>::iterator iter = _listeners.begin();
@@ -105,83 +63,60 @@ Host::update()
     }
 }
 
-void
-Host::addHostListener(HostListener* listener)
+string
+host_get_uuid()
 {
-  _listeners.insert(listener);
-}
-
-void
-Host::removeHostListener(HostListener* listener)
-{
-  _listeners.erase(listener);
+  return Platform::instance()->getUUID();
 }
 
 string
-Host:: getUUID() const
+host_get_hostname()
 {
-  return _uuid;
+  return Platform::instance()->getHostname();
 }
 
 string
-Host::getHostname() const
+host_get_hypervisor()
 {
-  return _hostname;
+  return Platform::instance()->getHypervisor();
 }
 
 string
-Host::getHypervisor() const
+host_get_architecture()
 {
-  return _hypervisor;
-}
-
-string
-Host::getArchitecture() const
-{
-  return _architecture;
+  return Platform::instance()->getArchitecture();
 }
 
 unsigned int
-Host::getMemory() const
+host_get_memory()
 {
-  return _memory;
-}
-
-bool
-Host::isBeeping() const
-{
-  return _beeping;
+  return Platform::instance()->getMemory();
 }
 
 string
-Host::getCPUModel() const
+host_get_cpu_model()
 {
   return Platform::instance()->getCPUModel();
 }
 
 unsigned int
-Host::getNumberOfCPUCores() const
+host_get_number_of_cpu_cores()
 {
   return Platform::instance()->getNumberOfCPUCores();
 }
 
 double
-Host::getLoadAverage() const
+host_get_load_average()
 {
   return Platform::instance()->getLoadAverage();
 }
 
 void
-Host::identify(const int iterations)
+host_reboot()
 {
 }
 
 void
-Host::shutdown()
-{
-}
-
-void
-Host::reboot()
+host_shutdown()
 {
 }

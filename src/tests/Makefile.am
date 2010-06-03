@@ -1,5 +1,7 @@
 
-bin_PROGRAMS = testmultiplexer
+bin_PROGRAMS = \
+	testhostapis \
+	testmultiplexer
 
 INCLUDES = \
 	-I$(top_srcdir)/src
@@ -11,3 +13,16 @@ testmultiplexer_SOURCES = \
 	testmultiplexer.h
 
 testmultiplexer_LDADD = -lcppunit
+
+testhostapis_SOURCES = \
+	$(top_srcdir)/src/host.cpp \
+	$(top_srcdir)/src/host.h \
+	$(top_srcdir)/src/linux_platform.cpp \
+	$(top_srcdir)/src/linux_platform.h \
+	$(top_srcdir)/src/platform.cpp \
+	$(top_srcdir)/src/platform.h \
+	testhostapis.cpp \
+	testhostapis.h
+
+testhostapis_LDFLAGS = -L/usr/local/lib
+testhostapis_LDADD = -lcppunit $(LIBVIRT_LIBS) $(PCRE_LIBS) $(UDEV_LIBS)

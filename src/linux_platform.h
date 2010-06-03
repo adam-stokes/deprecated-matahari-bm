@@ -20,11 +20,7 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <string>
-#include <vector>
-
 #include "platform.h"
-#include "networkdevice.h"
 
 class LinuxPlatform : public Platform
 {
@@ -33,7 +29,6 @@ class LinuxPlatform : public Platform
   virtual ~LinuxPlatform() {}
 
   virtual double getLoadAverage() const;
-  virtual vector<NetworkDeviceAgent> get_network_devices() const;
 };
 
 #endif

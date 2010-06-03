@@ -28,13 +28,4 @@
 
   <event name="heartbeat" args="timestamp,sequence" />
 
-  <!-- represents a physical network device -->
-  <class name="NetworkDevice">
-    <property name="host"        type="objId" access="RC" desc="The host machine." index="y" references="Host" parentRef="y" />
-    <property name="mac_address" type="sstr"  access="RO" desc="The device's MAC address" index="y" />
-    <property name="vendor"      type="sstr"  access="RO" desc="The device vendor." />
-    <property name="model"       type="sstr"  access="RO" desc="The device model." />
-    <property name="interface"   type="sstr"  access="RO" desc="The interface name for the device." />
-  </class>
-
 </schema>

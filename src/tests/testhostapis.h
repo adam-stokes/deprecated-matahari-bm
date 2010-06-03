@@ -1,7 +1,7 @@
-#ifndef __NETWORKDEVICE_H
-#define __NETWORKDEVICE_H
+#ifndef __TESTHOSTAPIS_H
+#define __TESTHOSTAPIS_H
 
-/* networkdevice.h - Copyright (C) 2010 Red Hat, Inc.
+/* testhostapis.h - Copyright (C) 2010 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,33 +20,35 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <qpid/management/Manageable.h>
+#include <cppunit/TestCase.h>
+#include <cppunit/TestSuite.h>
 
-#include "qmf/com/redhat/matahari/NetworkDevice.h"
+#include "platform.h"
 
-using namespace qpid::management;
-using namespace std;
+using namespace CppUnit;
 
-class NetworkDeviceAgent : public Manageable
+class TestHostApis : public TestCase
 {
  private:
-  qmf::com::redhat::matahari::NetworkDevice* management_object;
-
-  string ifname;
-  string vendor;
-  string model;
-  string macaddr;
+  Platform* platform;
 
  public:
-  NetworkDeviceAgent(string ifname, string vendor, string model, string macaddr);
-  virtual ~NetworkDeviceAgent() {}
+  TestHostApis();
+  virtual ~TestHostApis();
 
-  string get_mac_address() const { return macaddr; }
+  static TestSuite* suite();
 
-  ManagementObject* GetManagementObject(void) const { return management_object; }
+  void setUp();
 
-  void setup(ManagementAgent* agent, Manageable* parent);
-  void update() const;
+  void testHostGetUUID();
+  void testHostGetHostname();
+  void testHostGetHypervisor();
+  void testHostGetArchitecture();
+  void testHostGetMemory();
+  void testHostGetCpuModel();
+  void testHostGetNumberOfCpuCores();
+  void testHostGetLoadAverage();
+  void testHostIsBeeping();
 };
 
 #endif
