@@ -24,52 +24,35 @@
 #include <set>
 
 #include "hostlistener.h"
-#include "networkdevice.h"
 
 using namespace std;
 
-/*
-  Host represents the public contract for the set of host APIs.
- */
-class Host
-{
- private:
-  string          _uuid;
-  string          _hostname;
-  string          _hypervisor;
-  string          _architecture;
-  unsigned int    _memory;
-  bool            _beeping;
-  unsigned int    _heartbeat_sequence;
+void host_register_listener(HostListener* listener);
 
-  vector<NetworkDeviceAgent> _networkdevices;
-  set<HostListener*>         _listeners;
+void host_remove_istener(HostListener* listener);
 
- public:
-  Host();
-  virtual ~Host() {}
+void host_update_event();
 
-  void update();
+string host_get_uuid();
 
-  void addHostListener(HostListener*);
-  void removeHostListener(HostListener*);
+string host_get_hostname();
 
-  // general host properties
-  string getUUID() const;
-  string getHostname() const;
-  string getHypervisor() const;
-  string getArchitecture() const;
-  unsigned int getMemory() const;
+string host_get_hypervisor();
 
-  // CPU properties
-  string       getCPUModel() const;
-  unsigned int getNumberOfCPUCores() const;
-  double       getLoadAverage() const;
+string host_get_architecture();
 
-  bool isBeeping() const;
-  void identify(const int iterations);
-  void shutdown();
-  void reboot();
-};
+unsigned int host_get_memory();
+
+string host_get_cpu_model();
+
+unsigned int host_get_number_of_cpu_cores();
+
+double host_get_load_average();
+
+void host_identify(const unsigned int iterations);
+
+void host_shutdown();
+
+void host_reboot();
 
 #endif // __HOST_H

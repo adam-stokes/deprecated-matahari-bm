@@ -22,10 +22,9 @@
 
 #include "qmf/com/redhat/matahari/EventHeartbeat.h"
 
-HostAgent::HostAgent(Host& host)
-  :_host(host)
+HostAgent::HostAgent()
 {
-  this->_host.addHostListener(this);
+  host_register_listener(this);
 }
 
 HostAgent::~HostAgent()
@@ -40,15 +39,15 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object = new _qmf::Host(agent, this);
   agent->addObject(_management_object);
 
-  _management_object->set_uuid(_host.getUUID());
-  _management_object->set_hostname(_host.getHostname());
-  _management_object->set_hypervisor(_host.getHypervisor());
-  _management_object->set_arch(_host.getArchitecture());
-  _management_object->set_memory(_host.getMemory());
-  _management_object->set_beeping(_host.isBeeping());
+  _management_object->set_uuid(host_get_uuid());
+  _management_object->set_hostname(host_get_hostname());
+  _management_object->set_hypervisor(host_get_hypervisor());
+  _management_object->set_arch(host_get_architecture());
+  _management_object->set_memory(host_get_memory());
+  _management_object->set_beeping(false);
 
-  _management_object->set_cpu_model(_host.getCPUModel());
-  _management_object->set_cpu_cores(_host.getNumberOfCPUCores());
+  _management_object->set_cpu_model(host_get_cpu_model());
+  _management_object->set_cpu_cores(host_get_number_of_cpu_cores());
 }
 
 Manageable::status_t
@@ -57,10 +56,10 @@ HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
   switch(method)
     {
     case _qmf::Host::METHOD_SHUTDOWN:
-      _host.shutdown();
+      host_shutdown();
       return Manageable::STATUS_OK;
     case _qmf::Host::METHOD_REBOOT:
-      _host.reboot();
+      host_reboot();
       return Manageable::STATUS_OK;
     }
 
@@ -76,5 +75,5 @@ HostAgent::heartbeat(unsigned long timestamp, unsigned int sequence)
 void
 HostAgent::updated()
 {
-  _management_object->set_load_average(_host.getLoadAverage());
+  _management_object->set_load_average(host_get_load_average());
 }

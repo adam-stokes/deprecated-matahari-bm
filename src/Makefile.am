@@ -8,8 +8,6 @@ generated_file_list = \
 	qmf/com/redhat/matahari/EventHeartbeat.cpp \
 	qmf/com/redhat/matahari/EventHeartbeat.h \
 	qmf/com/redhat/matahari/Host.h \
-	qmf/com/redhat/matahari/NetworkDevice.cpp \
-	qmf/com/redhat/matahari/NetworkDevice.h \
 	qmf/com/redhat/matahari/Package.cpp \
 	qmf/com/redhat/matahari/Package.h
 
@@ -22,8 +20,6 @@ matahari_SOURCES = \
 	linux_platform.cpp \
 	linux_platform.h \
 	main.cpp \
-	networkdevice.cpp \
-	networkdevice.h \
 	platform.cpp \
 	platform.h \
 	qmf/hostagent.cpp \
@@ -40,7 +36,6 @@ BUILT_SOURCES = $(generated_file_list) $(first)
 CLEANFILES = $(generated_file_list) $(first)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
-matahari_LDFLAGS = -L/usr/local/lib
 matahari_LDADD = -lqmf -lqpidclient -lqpidcommon $(LIBVIRT_LIBS) $(PCRE_LIBS) $(UDEV_LIBS)
 
 dist_pkgdata_DATA = schema.xml

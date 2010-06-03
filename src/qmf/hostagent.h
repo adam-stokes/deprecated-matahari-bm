@@ -37,11 +37,10 @@ class HostAgent : public Manageable, public HostListener
 {
  private:
   _qmf::Host*      _management_object;
-  Host&            _host;
   ManagementAgent* _agent;
 
  public:
-  HostAgent(Host& host);
+  HostAgent();
   virtual ~HostAgent();
 
   void setup(ManagementAgent* agent);

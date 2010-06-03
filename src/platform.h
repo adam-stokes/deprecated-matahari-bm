@@ -22,7 +22,6 @@
 
 #include <string>
 #include <vector>
-#include "networkdevice.h"
 
 using namespace std;
 
@@ -37,12 +36,24 @@ class Platform
  private:
   static Platform* _instance;
 
+  string          _uuid;
+  string          _hostname;
+  string          _hypervisor;
+  string          _architecture;
+  unsigned int    _memory;
+
   string       _cpu_model;
   unsigned int _cpu_cores;
 
  protected:
   Platform() {}
   virtual~ Platform() {}
+
+  void setUUID(const string uuid)             { _uuid = uuid; }
+  void setHostname(const string hostname)     { _hostname = hostname; }
+  void setHypervisor(const string hypervisor) { _hypervisor = hypervisor; }
+  void setArchitecture(const string arch)     { _architecture = arch; }
+  void setMemory(unsigned int memory)         { _memory = memory; }
 
   void setCPUModel(const string model)      { _cpu_model = model; }
   void setNumberOfCPUCores(const int cores) { _cpu_cores = cores; }
@@ -51,13 +62,16 @@ class Platform
   // the singleton instance
   static Platform* instance();
 
+  string       getUUID() const         { return _uuid; }
+  string       getHostname() const     { return _hostname; }
+  string       getHypervisor() const   { return _hypervisor; }
+  string       getArchitecture() const { return _architecture; }
+  unsigned int getMemory() const       { return _memory; }
+
   string       getCPUModel() const         { return _cpu_model; }
   unsigned int getNumberOfCPUCores() const { return _cpu_cores; }
 
   virtual double getLoadAverage() const = 0;
-
-  // returns the list of network devices for this platform
-  virtual vector<NetworkDeviceAgent> get_network_devices() const = 0;
 };
 
 #endif

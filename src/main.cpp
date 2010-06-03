@@ -79,8 +79,7 @@ main(int argc, char **argv)
 
     ConnectionSettings settings;
     ManagementAgent *agent;
-    Host host;
-    HostAgent hostAgent(host);
+    HostAgent hostAgent;
 
     struct option opt[] = {
         {"help", no_argument, NULL, 'h'},
@@ -186,7 +185,7 @@ main(int argc, char **argv)
 
     while(1)
       {
-        host.update();
+        host_update_event();
         sleep(5);
       }
 
