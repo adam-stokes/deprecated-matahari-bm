@@ -1,5 +1,3 @@
-#include "multiplexer.h"
-
 /* multiplexer.cpp - Copyright (C) 2010 Red Hat, Inc.
  * Written by Darryl L. Pierce <dpierce@redhat.com>
  *
@@ -19,6 +17,7 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#include <config.h>
 #include "multiplexer.h"
 
 // the singleton
@@ -60,3 +59,4 @@ Multiplexer::invokeAPI(string name, string input)
 
   return result;
 }
+

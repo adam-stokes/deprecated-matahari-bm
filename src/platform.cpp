@@ -17,6 +17,7 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#include <config.h>
 #include "platform.h"
 #include "linux_platform.h"
 

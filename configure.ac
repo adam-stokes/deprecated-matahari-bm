@@ -5,6 +5,7 @@ dnl ---------------------------------------------------------------------
 AC_PREREQ([2.65])
 AC_INIT([Matahari], [0.1.0], [matahari@lists.fedorahosted.org])
 AC_CONFIG_SRCDIR([src/linux_platform.cpp])
+AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 dnl Make automake keep quiet about wildcards & other GNUmake-isms
@@ -19,7 +20,11 @@ AC_PROG_CC
 AC_PROG_CPP
 CFLAGS="$cflags_save"
 
+gl_EARLY
+
 AC_PROG_CC_C_O
+
+gl_INIT
 
 AC_CHECK_PROG(HASQMFGEN, qmf-gen, "yes")
 if test x"$HASQMFGEN" = "x"; then
@@ -59,6 +64,7 @@ dnl ---------------------------------------------------------------------
 AC_CHECK_FUNCS([strdup strerror sysinfo uname])
 
 AC_CONFIG_FILES([Makefile
+                 lib/Makefile
                  src/Makefile
                  src/tests/Makefile])
 AC_OUTPUT

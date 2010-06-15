@@ -1,4 +1,6 @@
-SUBDIRS = src
+ACLOCAL_AMFLAGS = -I m4
+
+SUBDIRS = lib src
 
 rpm: clean
 	@(unset CDPATH ; $(MAKE) dist && cp $(distdir).tar.gz \
