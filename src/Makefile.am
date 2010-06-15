@@ -36,6 +36,6 @@ BUILT_SOURCES = $(generated_file_list) $(first)
 CLEANFILES = $(generated_file_list) $(first)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
-matahari_LDADD = -lqmf -lqpidclient -lqpidcommon $(LIBVIRT_LIBS) $(PCRE_LIBS) $(UDEV_LIBS)
+matahari_LDADD = -lpcre -lqmf -lqpidclient -lqpidcommon -ludev -lvirt
 
 dist_pkgdata_DATA = schema.xml
