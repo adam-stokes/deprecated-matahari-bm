@@ -1,4 +1,7 @@
-INCLUDES = -I$(top_srcdir)/src/qmf/com/redhat/matahari $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS) $(UDEV_CFLAGS)
+NCLUDES = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(top_srcdir)/src/qmf/com/redhat/matahari $(LIBVIRT_CFLAGS) $(PCRE_CFLAGS) $(UDEV_CFLAGS)
+
+AM_CFLAGS = $(INCLUDES)
+AM_CXXFLAGS = $(INCLUDES)
 
 sbin_PROGRAMS = matahari
 
@@ -37,5 +40,6 @@ CLEANFILES = $(generated_file_list) $(first)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDADD = -lpcre -lqmf -lqpidclient -lqpidcommon -ludev -lvirt
+matahari_LDADD += ../lib/libmatahari.a
 
 dist_pkgdata_DATA = schema.xml

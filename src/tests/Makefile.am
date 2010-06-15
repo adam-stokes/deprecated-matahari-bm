@@ -4,7 +4,10 @@ bin_PROGRAMS = \
 	testmultiplexer
 
 INCLUDES = \
+	-I$(top_builddir)/lib \
+	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/src
+
 
 testmultiplexer_SOURCES = \
 	$(top_srcdir)/src/virtio/multiplexer.cpp \
@@ -13,6 +16,7 @@ testmultiplexer_SOURCES = \
 	testmultiplexer.h
 
 testmultiplexer_LDADD = -lcppunit
+testmultiplexer_LDADD += ../../lib/libgnu.a
 
 testhostapis_SOURCES = \
 	$(top_srcdir)/src/host.cpp \
@@ -26,3 +30,4 @@ testhostapis_SOURCES = \
 
 testhostapis_LDFLAGS = -L/usr/local/lib
 testhostapis_LDADD = -lcppunit $(LIBVIRT_LIBS) $(PCRE_LIBS) $(UDEV_LIBS)
+testhostapis_LDADD += ../../lib/libmatahari.a

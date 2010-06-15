@@ -17,6 +17,7 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#include <config.h>
 #include "testhostapis.h"
 
 #include "host.h"
