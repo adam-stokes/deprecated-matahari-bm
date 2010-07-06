@@ -20,11 +20,7 @@ matahari_SOURCES = \
 	host.cpp \
 	host.h \
 	hostlistener.h \
-	linux_platform.cpp \
-	linux_platform.h \
 	main.cpp \
-	platform.cpp \
-	platform.h \
 	qmf/hostagent.cpp \
 	qmf/hostagent.h \
 	virtio/multiplexer.cpp \
