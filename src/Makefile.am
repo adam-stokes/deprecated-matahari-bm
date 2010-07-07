@@ -37,6 +37,10 @@ CLEANFILES = $(generated_file_list) $(first)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDFLAGS = -L/usr/local/lib
-matahari_LDADD = -lqmf $(HAL_LIBS) $(LIBVIRT_LIBS) $(PCRE_LIBS)
+matahari_LDADD = \
+	-lqmf \
+	-lqpidcommon \
+	-lqpidclient \
+	$(HAL_LIBS) $(LIBVIRT_LIBS) $(PCRE_LIBS)
 
 dist_pkgdata_DATA = schema.xml
