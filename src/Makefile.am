@@ -10,12 +10,12 @@ AM_CXXFLAGS = $(INCLUDES)
 sbin_PROGRAMS = matahari
 
 generated_file_list = \
-	qmf/com/redhat/matahari/EventHeartbeat.cpp \
-	qmf/com/redhat/matahari/EventHeartbeat.h \
-	qmf/com/redhat/matahari/Host.cpp \
-	qmf/com/redhat/matahari/Host.h \
-	qmf/com/redhat/matahari/Package.cpp \
-	qmf/com/redhat/matahari/Package.h
+	qmf/com/redhat/matahari/host/EventHeartbeat.cpp \
+	qmf/com/redhat/matahari/host/EventHeartbeat.h \
+	qmf/com/redhat/matahari/host/Host.cpp \
+	qmf/com/redhat/matahari/host/Host.h \
+	qmf/com/redhat/matahari/host/Package.cpp \
+	qmf/com/redhat/matahari/host/Package.h
 
 nodist_matahari_SOURCES = $(generated_file_list) config.h
 
@@ -30,8 +30,8 @@ matahari_SOURCES = \
 $(generated_file_list): schema.xml
 	qmf-gen -o ./qmf ./schema.xml
 
-BUILT_SOURCES = $(generated_file_list) $(first)
-CLEANFILES = $(generated_file_list) $(first)
+BUILT_SOURCES = $(generated_file_list)
+CLEANFILES = $(generated_file_list)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDADD = -lpcre -lqmf -lqpidclient -lqpidcommon -ludev -lvirt

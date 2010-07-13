@@ -21,7 +21,7 @@
 #include "hostagent.h"
 #include <qpid/agent/ManagementAgent.h>
 
-#include "qmf/com/redhat/matahari/EventHeartbeat.h"
+#include "qmf/com/redhat/matahari/host/EventHeartbeat.h"
 
 HostAgent::HostAgent()
 {
@@ -45,7 +45,6 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_hypervisor(host_get_hypervisor());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
-  _management_object->set_beeping(false);
 
   _management_object->set_cpu_model(host_get_cpu_model());
   _management_object->set_cpu_cores(host_get_number_of_cpu_cores());
@@ -76,5 +75,11 @@ HostAgent::heartbeat(unsigned long timestamp, unsigned int sequence)
 void
 HostAgent::updated()
 {
-  _management_object->set_load_average(host_get_load_average());
+  // update the load averages
+  double one, five, fifteen;
+
+  host_get_load_averages(one, five, fifteen);
+  _management_object->set_load_average_1(one);
+  _management_object->set_load_average_5(five);
+  _management_object->set_load_average_15(fifteen);
 }

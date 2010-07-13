@@ -36,12 +36,12 @@
 
 #include "qmf/hostagent.h"
 
-#include "qmf/com/redhat/matahari/Package.h"
+#include "qmf/com/redhat/matahari/host/Package.h"
 
 using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
-namespace _qmf = qmf::com::redhat::matahari;
+namespace _qmf = qmf::com::redhat::matahari::host;
 
 // Global Variables
 ManagementAgent::Singleton* singleton;

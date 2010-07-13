@@ -1,31 +1,38 @@
-<schema package="com.redhat.matahari">
+<schema package="com.redhat.matahari.host">
 
-  <class name="Host">
+ <class name="Host">
+   <!-- properties -->
+   <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" index="y" />
+   <property name="hostname"         type="sstr"  access="RO" desc="Hostname" />
+   <property name="is_virtual"       type="bool"  access="RO" desc="Is this machine virtual?" />
+   <property name="operating_system" type="sstr"  access="RO" desc="The installed operating system." />
+   <property name="memory"           type="int64" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
+   <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
+   <property name="hypervisor"       type="sstr"  access="RO" desc="Hypervisor used by host" />
+   <property name="platform"         type="sstr"  access="RO" desc="The wordsize for the host." />
+   <property name="cpu_model"        type="lstr"  access="RO" desc="The process model description." />
+   <property name="cpu_count"        type="uint8" access="RO" desc="The number of physical CPUs." />
+   <property name="cpu_cores"        type="uint8" access="RO" desc="The total number of processor cores." />
 
-    <!-- general properties -->
-    <property name="uuid"       type="sstr"  access="RO" desc="Host UUID" index="y"/>
-    <property name="hostname"   type="sstr"  access="RO" desc="Hostname"/>
-    <property name="memory"     type="int64" access="RO" desc="Amount of primary memory for host (kb)" unit="kb"/>
-    <property name="hypervisor" type="sstr"  access="RO" desc="Hypervisor used by host"/>
-    <property name="arch"       type="sstr"  access="RO" desc="Architecture of host"/>
-    <property name="beeping"    type="bool"  access="RW" desc="speaker beep loop active? (used to identify host)"/>
+   <!-- statistics -->
+   <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
+   <statistic name="load_average_1"  type="double"  desc="The one minute load average." />
+   <statistic name="load_average_5"  type="double"  desc="The five minute load average." />
+   <statistic name="load_average_15" type="double"  desc="The fiften minute load average" />
 
-    <!-- CPU properties -->
-    <property  name="cpu_model"    type="lstr"   access="RO" desc="The process model description." />
-    <property  name="cpu_cores"    type="uint8"  access="RO" desc="The number of processor cores." />
-    <statistic name="load_average" type="double"             desc="The current processing load average." />
+   <!-- APIs -->
+   <method name="list_network_interfaces" desc="Returns the list of all network interfaces." />
+   <method name="identify"                desc="Tells the host to beep its pc speaker." />
+   <method name="shutdown"                desc="Shutdown node" />
+   <method name="reboot"                  desc="Reboot node" />
 
-    <!-- APIs -->
-    <method name="shutdown" desc="Shutdown node" />
-    <method name="reboot" desc="Reboot node" />
+ </class>
 
-  </class>
+ <eventArguments>
+   <arg name="timestamp" type="absTime" />
+   <arg name="sequence"  type="uint32" />
+ </eventArguments>
 
-  <eventArguments>
-    <arg name="timestamp" type="absTime" />
-    <arg name="sequence"  type="uint32" />
-  </eventArguments>
-
-  <event name="heartbeat" args="timestamp,sequence" />
+ <event name="heartbeat" args="timestamp,sequence" />
 
 </schema>

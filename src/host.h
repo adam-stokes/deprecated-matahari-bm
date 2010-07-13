@@ -47,7 +47,7 @@ string host_get_cpu_model();
 
 unsigned int host_get_number_of_cpu_cores();
 
-double host_get_load_average();
+void host_get_load_averages(double& one, double& five, double& fifteen);
 
 void host_identify(const unsigned int iterations);
 

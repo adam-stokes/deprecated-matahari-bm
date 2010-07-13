@@ -287,21 +287,16 @@ host_get_number_of_cpu_cores()
   return cores;
 }
 
-double
-host_get_load_average()
+void
+host_get_load_averages(double& one, double& five, double& fifteen)
 {
-  double result = 0.0;
-
 #ifdef __linux__
-  double load_average;
   ifstream input;
 
   input.open("/proc/loadavg", ios::in);
-  input >> result;
+  input >> one >> five >> fifteen;
   input.close();
 #endif
-
-  return result;
 }
 
 void
