@@ -45,6 +45,8 @@ unsigned int host_get_memory();
 
 string host_get_cpu_model();
 
+unsigned int host_get_number_of_cpus();
+
 unsigned int host_get_number_of_cpu_cores();
 
 void host_get_load_averages(double& one, double& five, double& fifteen);

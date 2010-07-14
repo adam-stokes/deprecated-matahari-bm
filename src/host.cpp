@@ -36,6 +36,18 @@ extern "C" {
 
 using namespace std;
 
+typedef struct cpuinfo_
+{
+  static bool initialized;
+  string model;
+  unsigned int cpus;
+  unsigned int cores;
+} cpuinfo_t;
+
+bool cpuinfo_t::initialized = false;
+
+cpuinfo_t cpuinfo;
+
 set<HostListener*>   _listeners;
 unsigned int         _heartbeat_sequence;
 
@@ -186,105 +198,94 @@ host_get_memory()
   return memory;
 }
 
-string
-host_get_cpu_model()
+void
+host_get_cpu_details()
 {
-  static string model;
+  if(cpuinfo.initialized) return;
 
-  if(model.empty())
+  cpuinfo.initialized = true;
+
+#if __linux__
+  ifstream input("/proc/cpuinfo");
+
+  if(input.is_open())
     {
+      string regexstr = "(.*\\S)\\s*:\\s*(\\S.*)";
+      int expected = 3;
+      int found[expected * 3];
+      const char* pcre_error;
+      int pcre_error_offset;
+      pcre* regex;
+      bool done = false;
+      bool started = false;
 
-#ifdef __linux__
-      ifstream* input = new ifstream("/proc/cpuinfo");
+      regex = pcre_compile(regexstr.c_str(), 0, &pcre_error, &pcre_error_offset, NULL);
+      if(!regex) { throw runtime_error("Unable to compile regular expression."); }
 
-      if(input->is_open())
+      while(!input.eof())
 	{
-	  string regexstr = "(.*\\S)\\s*:\\s*(\\S.*)";
-	  int expected = 3;
-	  int found[expected * 3];
-	  const char* pcre_error;
-	  int pcre_error_offset;
-	  pcre* regex;
-	  bool done = false;
-	  bool started = false;
+	  string line;
 
-	  regex = pcre_compile(regexstr.c_str(), 0, &pcre_error, &pcre_error_offset, NULL);
-	  if(!regex) { throw runtime_error("Unable to compile regular expression."); }
+	  getline(input, line);
+	  int match = pcre_exec(regex, NULL, line.c_str(), line.length(),
+				0, PCRE_NOTEMPTY,found, expected * 3);
 
-	  while(!input->eof() && !done)
+	  if(match == expected)
 	    {
-	      string line;
+	      string name = line.substr(found[2], found[3] - found[2]);
+	      string value = line.substr(found[4], found[5] - found[4]);
 
-	      getline(*input, line);
-	      int match = pcre_exec(regex, NULL, line.c_str(), line.length(),
-				    0, PCRE_NOTEMPTY,found, expected * 3);
-
-	      if(match == expected)
+	      /* If we're at a second processor and we've already started,
+		 then we're done.
+	      */
+	      if (name == "processor")
 		{
-		  string name = line.substr(found[2], found[3] - found[2]);
-		  string value = line.substr(found[4], found[5] - found[4]);
-
-		  /* If we're at a second processor and we've already started,
-		     then we're done.
-		  */
-		  if (name == "processor")
+		  cpuinfo.cpus++;
+		  if (started)
 		    {
-		      if (started)
-			{
-			  done = true;
-			}
-		      else
-			{
-			  started = true;
-			}
+		      done = true;
 		    }
 		  else
 		    {
-		      if(name == "model name") model = value;
+		      started = true;
 		    }
 		}
+	      else if (!done)
+		{
+		  if      (name == "cpu cores")  cpuinfo.cores = atoi(value.c_str());
+		  else if (name == "model name") cpuinfo.model = value;
+		}
 	    }
-	  input->close();
-	  delete input;
 	}
+      input.close();
+      cpuinfo.cpus /= cpuinfo.cores;
+    }
 #endif
 
-    }
+}
 
-  return model;
+string
+host_get_cpu_model()
+{
+  host_get_cpu_details();
+
+  return cpuinfo.model;
+}
+
+unsigned int
+host_get_number_of_cpus()
+{
+  host_get_cpu_details();
+
+  return cpuinfo.cpus;
 }
 
 unsigned int
 host_get_number_of_cpu_cores()
 {
-  unsigned int cores = 0;
+  host_get_cpu_details();
 
-  if(!cores)
-    {
-
-#ifdef __linux__
-      struct udev* udev = udev_new();
-      struct udev_enumerate* enumerator = udev_enumerate_new(udev);
-
-      udev_enumerate_add_match_property(enumerator, "DRIVER", "processor");
-      if(!udev_enumerate_scan_devices(enumerator))
-	{
-	  struct udev_list_entry* entries = udev_enumerate_get_list_entry(enumerator);
-	  struct udev_list_entry* entry;
-
-	  udev_list_entry_foreach(entry, entries)
-	    {
-	      cores++;
-	    }
-	}
-
-      udev_enumerate_unref(enumerator);
-      udev_unref(udev);
-#endif
-
-    }
-
-  return cores;
+  return cpuinfo.cores;
 }
 
 void
