@@ -71,6 +71,7 @@ void
 HostAgent::heartbeat(unsigned long timestamp, unsigned int sequence)
 {
   this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, sequence));
+  _management_object->set_last_updated(timestamp * 1000000000L);
 }
 
 void
