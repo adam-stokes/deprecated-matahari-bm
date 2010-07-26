@@ -27,7 +27,16 @@
 #include <stdexcept>
 #include <string>
 #include <sys/sysinfo.h>
+
+#ifdef __linux__
+
 #include <sys/utsname.h>
+
+#elif defined WIN32
+
+#include <winsock.h>
+
+#endif
 
 // TODO remove this wrapper once rhbz#583747 is fixed
 extern "C" {
@@ -117,16 +126,32 @@ host_get_hostname()
 
   if(hostname.empty())
     {
-
 #ifdef __linux__
+
       struct utsname details;
 
       if(!uname(&details))
 	{
 	  hostname = string(details.nodename);
 	}
- #endif
 
+#elif defined WIN32
+
+      char buffer[512];
+      WORD verreq;
+      WSADATA wsadata;
+
+      verreq = MAKEWORD(2, 2);
+      if(!WSAStartup(verreq, &wsadata))
+	{
+	  if(!gethostname(buffer, 512))
+	    {
+	      hostname = string(buffer);
+	    }
+	  WSACleanup();
+	}
+
+ #endif
     }
 
   return hostname;
