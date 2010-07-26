@@ -27,8 +27,11 @@ matahari_SOURCES = \
 	qmf/hostagent.cpp \
 	qmf/hostagent.h
 
-$(generated_file_list): schema.xml
-	qmf-gen -o ./qmf ./schema.xml
+SCHEMAS = \
+	schema-host.xml
+
+$(generated_file_list): $(SCHEMAS)
+	qmf-gen -o ./qmf $(SCHEMAS)
 
 BUILT_SOURCES = $(generated_file_list)
 CLEANFILES = $(generated_file_list)
@@ -37,4 +40,4 @@ matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDADD = -lpcre -lqmf -lqpidclient -lqpidcommon -ludev -lvirt
 matahari_LDADD += ../lib/libmatahari.a
 
-dist_pkgdata_DATA = schema.xml
+dist_pkgdata_DATA = schema-host.xml
