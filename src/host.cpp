@@ -45,6 +45,56 @@ extern "C" {
 
 using namespace std;
 
+#ifdef WIN32
+
+/* The following definitions make up for what is lacking currently
+ * in the MinGW packages, and should be moved out to them at some
+ * point in future.
+ */
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+  RelationProcessorCore,
+  RelationNumaNode,
+  RelationCache,
+  RelationProcessorPackage,
+  RelationGroup,
+  RelationAll                = 0xffff
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+typedef enum _PROCESSOR_CACHE_TYPE {
+  CacheUnified,
+  CacheInstruction,
+  CacheData,
+  CacheTrace
+} PROCESSOR_CACHE_TYPE;
+
+typedef struct _CACHE_DESCRIPTOR {
+  BYTE                 Level;
+  BYTE                 Associativity;
+  WORD                 LineSize;
+  DWORD                Size;
+  PROCESSOR_CACHE_TYPE Type;
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
+  ULONG_PTR                      ProcessorMask;
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  union {
+    struct {
+      BYTE Flags;
+    } ProcessorCore;
+    struct {
+      DWORD NodeNumber;
+    } NumaNode;
+    CACHE_DESCRIPTOR Cache;
+    ULONGLONG        Reserved[2];
+  } ;
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
+
+typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
+
+#endif
+
 typedef struct cpuinfo_
 {
   static bool initialized;
@@ -298,8 +348,60 @@ host_get_cpu_details()
       input.close();
       cpuinfo.cpus /= cpuinfo.cores;
     }
-#endif
+#elif defined WIN32
+  LPFN_GLPI proc;
+  DWORD ret_length;
+  PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer, ptr;
 
+  proc = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
+				    "GetLogicalProcessorInformation");
+  if(proc)
+    {
+      BOOL done = FALSE;
+
+      while (!done)
+	{
+	  DWORD rc = proc(buffer, &ret_length);
+
+	  if(rc == FALSE)
+	    {
+	      if(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		{
+		  if(buffer)
+		    {
+		      free(buffer);
+		      buffer = NULL;
+		    }
+
+		  buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(ret_length);
+		}
+	    }
+	  else
+	    {
+	      done = TRUE;
+	    }
+	}
+
+      ptr = buffer;
+
+      DWORD offset = 0;
+
+      while(offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= ret_length)
+	{
+	  switch(ptr->Relationship)
+	    {
+	    case RelationProcessorCore:    cpuinfo.cores++; break;
+	    case RelationProcessorPackage: cpuinfo.cpus++;  break;
+	    }
+	}
+
+      if(buffer)
+	{
+	  free(buffer);
+	  buffer = NULL;
+	}
+    }
+#endif
 }
 
 string
