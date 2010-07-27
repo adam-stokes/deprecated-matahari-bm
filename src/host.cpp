@@ -187,16 +187,22 @@ host_get_architecture()
 
   if(architecture.empty())
     {
-
 #ifdef __linux__
+
       struct utsname details;
 
       if(!uname(&details))
 	{
 	  architecture = string(details.machine);
 	}
-#endif
 
+#elif defined WIN32
+
+      // TODO this should be more explicit and determine if
+      // the compiler is using a 64-bit target in future.
+      architecture = string("Win32");
+
+#endif
     }
 
   return architecture;
@@ -209,15 +215,22 @@ host_get_memory()
 
   if(!memory)
     {
-
 #ifdef __linux__
+
       struct sysinfo sysinf;
       if(!sysinfo(&sysinf))
 	{
 	  memory = sysinf.totalram / 1024L;
 	}
-#endif
 
+#elif defined WIN32
+
+      MEMORYSTATUS status;
+
+      GlobalMemoryStatus(&status);
+      memory = status.dwTotalPhys / 1024L;
+
+#endif
     }
 
   return memory;
