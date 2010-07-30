@@ -43,6 +43,7 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_uuid(host_get_uuid());
   _management_object->set_hostname(host_get_hostname());
   _management_object->set_hypervisor(host_get_hypervisor());
+  _management_object->set_platform(host_get_platform());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
 

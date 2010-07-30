@@ -50,6 +50,8 @@ string host_get_hostname();
 
 string host_get_hypervisor();
 
+unsigned int host_get_platform();
+
 string host_get_architecture();
 
 unsigned int host_get_memory();

@@ -22,6 +22,7 @@
 #include <fstream>
 #include "host.h"
 #include <libvirt/libvirt.h>
+#include <limits.h>
 #include "processor.h"
 #include <set>
 #include <string>
@@ -215,6 +216,19 @@ host_get_hypervisor()
     }
 
   return hypervisor;
+}
+
+unsigned int
+host_get_platform()
+{
+  static unsigned int wordsize = 0;
+
+  if(wordsize == 0)
+    {
+      wordsize = sizeof(void *) * CHAR_BIT;
+    }
+
+  return wordsize;
 }
 
 string
