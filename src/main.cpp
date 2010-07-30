@@ -35,6 +35,7 @@
 #include "host.h"
 
 #include "qmf/hostagent.h"
+#include "qmf/processoragent.h"
 
 #include "qmf/com/redhat/matahari/host/Package.h"
 
@@ -81,6 +82,7 @@ main(int argc, char **argv)
     ConnectionSettings settings;
     ManagementAgent *agent;
     HostAgent hostAgent;
+    ProcessorAgent processorAgent;
 
     struct option opt[] = {
         {"help", no_argument, NULL, 'h'},
@@ -183,6 +185,7 @@ main(int argc, char **argv)
 
     // Get the info and post it to the broker
     hostAgent.setup(agent);
+    processorAgent.setup(agent, hostAgent);
 
     while(1)
       {

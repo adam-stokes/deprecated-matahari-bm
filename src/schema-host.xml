@@ -25,7 +25,12 @@
    <method name="identify"                desc="Tells the host to beep its pc speaker." />
    <method name="shutdown"                desc="Shutdown node" />
    <method name="reboot"                  desc="Reboot node" />
+ </class>
 
+ <class name="Processor">
+   <!-- properties -->
+   <property name="host"     type="objId" access="RO" desc="The host agent." />
+   <property name="wordsize" type="uint8" access="RO" desc="The wordsize for the processor." />
  </class>
 
  <eventArguments>

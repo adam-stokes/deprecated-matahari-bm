@@ -15,7 +15,9 @@ generated_file_list = \
 	qmf/com/redhat/matahari/host/Host.cpp \
 	qmf/com/redhat/matahari/host/Host.h \
 	qmf/com/redhat/matahari/host/Package.cpp \
-	qmf/com/redhat/matahari/host/Package.h
+	qmf/com/redhat/matahari/host/Package.h \
+	qmf/com/redhat/matahari/host/Processor.cpp \
+	qmf/com/redhat/matahari/host/Processor.h
 
 nodist_matahari_SOURCES = $(generated_file_list) config.h
 
@@ -24,8 +26,12 @@ matahari_SOURCES = \
 	host.h \
 	hostlistener.h \
 	main.cpp \
+	processor.cpp \
+	processor.h \
 	qmf/hostagent.cpp \
-	qmf/hostagent.h
+	qmf/hostagent.h \
+	qmf/processoragent.cpp \
+	qmf/processoragent.h
 
 SCHEMAS = \
 	schema-host.xml

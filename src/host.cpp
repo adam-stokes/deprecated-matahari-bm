@@ -22,9 +22,8 @@
 #include <fstream>
 #include "host.h"
 #include <libvirt/libvirt.h>
-#include <pcre.h>
+#include "processor.h"
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <sys/sysinfo.h>
 
@@ -94,18 +93,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
 typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 
 #endif
-
-typedef struct cpuinfo_
-{
-  static bool initialized;
-  string model;
-  unsigned int cpus;
-  unsigned int cores;
-} cpuinfo_t;
-
-bool cpuinfo_t::initialized = false;
-
-cpuinfo_t cpuinfo;
 
 set<HostListener*>   _listeners;
 unsigned int         _heartbeat_sequence;
@@ -286,128 +273,10 @@ host_get_memory()
   return memory;
 }
 
-void
-host_get_cpu_details()
-{
-  if(cpuinfo.initialized) return;
-
-  cpuinfo.initialized = true;
-
-#if __linux__
-  ifstream input("/proc/cpuinfo");
-
-  if(input.is_open())
-    {
-      string regexstr = "(.*\\S)\\s*:\\s*(\\S.*)";
-      int expected = 3;
-      int found[expected * 3];
-      const char* pcre_error;
-      int pcre_error_offset;
-      pcre* regex;
-      bool done = false;
-      bool started = false;
-
-      regex = pcre_compile(regexstr.c_str(), 0, &pcre_error, &pcre_error_offset, NULL);
-      if(!regex) { throw runtime_error("Unable to compile regular expression."); }
-
-      while(!input.eof())
-	{
-	  string line;
-
-	  getline(input, line);
-	  int match = pcre_exec(regex, NULL, line.c_str(), line.length(),
-				0, PCRE_NOTEMPTY,found, expected * 3);
-
-	  if(match == expected)
-	    {
-	      string name = line.substr(found[2], found[3] - found[2]);
-	      string value = line.substr(found[4], found[5] - found[4]);
-
-	      /* If we're at a second processor and we've already started,
-		 then we're done.
-	      */
-	      if (name == "processor")
-		{
-		  cpuinfo.cpus++;
-		  if (started)
-		    {
-		      done = true;
-		    }
-		  else
-		    {
-		      started = true;
-		    }
-		}
-	      else if (!done)
-		{
-		  if      (name == "cpu cores")  cpuinfo.cores = atoi(value.c_str());
-		  else if (name == "model name") cpuinfo.model = value;
-		}
-	    }
-	}
-      input.close();
-      cpuinfo.cpus /= cpuinfo.cores;
-    }
-#elif defined WIN32
-  LPFN_GLPI proc;
-  DWORD ret_length;
-  PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer, ptr;
-
-  proc = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
-				    "GetLogicalProcessorInformation");
-  if(proc)
-    {
-      BOOL done = FALSE;
-
-      while (!done)
-	{
-	  DWORD rc = proc(buffer, &ret_length);
-
-	  if(rc == FALSE)
-	    {
-	      if(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-		{
-		  if(buffer)
-		    {
-		      free(buffer);
-		      buffer = NULL;
-		    }
-
-		  buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(ret_length);
-		}
-	    }
-	  else
-	    {
-	      done = TRUE;
-	    }
-	}
-
-      ptr = buffer;
-
-      DWORD offset = 0;
-
-      while(offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= ret_length)
-	{
-	  switch(ptr->Relationship)
-	    {
-	    case RelationProcessorCore:    cpuinfo.cores++; break;
-	    case RelationProcessorPackage: cpuinfo.cpus++;  break;
-	    }
-	}
-
-      if(buffer)
-	{
-	  free(buffer);
-	  buffer = NULL;
-	}
-    }
-#endif
-}
-
 string
 host_get_cpu_model()
 {
-  host_get_cpu_details();
+  cpu_get_details();
 
   return cpuinfo.model;
 }
@@ -415,7 +284,7 @@ host_get_cpu_model()
 unsigned int
 host_get_number_of_cpus()
 {
-  host_get_cpu_details();
+  cpu_get_details();
 
   return cpuinfo.cpus;
 }
@@ -423,7 +292,7 @@ host_get_number_of_cpus()
 unsigned int
 host_get_number_of_cpu_cores()
 {
-  host_get_cpu_details();
+  cpu_get_details();
 
   return cpuinfo.cores;
 }

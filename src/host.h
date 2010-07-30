@@ -27,6 +27,17 @@
 
 using namespace std;
 
+typedef struct cpuinfo_
+{
+  static bool initialized;
+  string model;
+  unsigned int cpus;
+  unsigned int cores;
+  unsigned int wordsize;
+} cpuinfo_t;
+
+extern cpuinfo_t cpuinfo;
+
 void host_register_listener(HostListener* listener);
 
 void host_remove_istener(HostListener* listener);
