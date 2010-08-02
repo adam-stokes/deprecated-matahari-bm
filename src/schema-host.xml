@@ -10,9 +10,6 @@
    <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
    <property name="hypervisor"       type="sstr"  access="RO" desc="Hypervisor used by host" />
    <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." />
-   <property name="cpu_model"        type="lstr"  access="RO" desc="The process model description." />
-   <property name="cpu_count"        type="uint8" access="RO" desc="The number of physical CPUs." />
-   <property name="cpu_cores"        type="uint8" access="RO" desc="The total number of processor cores." />
 
    <!-- statistics -->
    <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
@@ -31,6 +28,9 @@
    <!-- properties -->
    <property name="host"     type="objId" access="RO" desc="The host agent." />
    <property name="wordsize" type="uint8" access="RO" desc="The wordsize for the processor." />
+   <property name="model"    type="lstr"  access="RO" desc="The process model description." />
+   <property name="count"    type="uint8" access="RO" desc="The number of physical CPUs." />
+   <property name="cores"    type="uint8" access="RO" desc="The total number of processor cores." />
  </class>
 
  <eventArguments>

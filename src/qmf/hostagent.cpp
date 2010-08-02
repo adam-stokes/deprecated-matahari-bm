@@ -46,10 +46,6 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_platform(host_get_platform());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
-
-  _management_object->set_cpu_model(host_get_cpu_model());
-  _management_object->set_cpu_count(host_get_number_of_cpus());
-  _management_object->set_cpu_cores(host_get_number_of_cpu_cores());
 }
 
 Manageable::status_t

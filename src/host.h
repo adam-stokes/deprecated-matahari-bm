@@ -27,17 +27,6 @@
 
 using namespace std;
 
-typedef struct cpuinfo_
-{
-  static bool initialized;
-  string model;
-  unsigned int cpus;
-  unsigned int cores;
-  unsigned int wordsize;
-} cpuinfo_t;
-
-extern cpuinfo_t cpuinfo;
-
 void host_register_listener(HostListener* listener);
 
 void host_remove_istener(HostListener* listener);
@@ -55,12 +44,6 @@ unsigned int host_get_platform();
 string host_get_architecture();
 
 unsigned int host_get_memory();
-
-string host_get_cpu_model();
-
-unsigned int host_get_number_of_cpus();
-
-unsigned int host_get_number_of_cpu_cores();
 
 void host_get_load_averages(double& one, double& five, double& fifteen);
 

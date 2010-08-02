@@ -287,30 +287,6 @@ host_get_memory()
   return memory;
 }
 
-string
-host_get_cpu_model()
-{
-  cpu_get_details();
-
-  return cpuinfo.model;
-}
-
-unsigned int
-host_get_number_of_cpus()
-{
-  cpu_get_details();
-
-  return cpuinfo.cpus;
-}
-
-unsigned int
-host_get_number_of_cpu_cores()
-{
-  cpu_get_details();
-
-  return cpuinfo.cores;
-}
-
 void
 host_get_load_averages(double& one, double& five, double& fifteen)
 {

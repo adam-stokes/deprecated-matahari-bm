@@ -24,6 +24,18 @@
 #include <pcre.h>
 #include "processor.h"
 #include <stdexcept>
+#include <string>
+
+using namespace std;
+
+typedef struct cpuinfo_
+{
+  static bool initialized;
+  string model;
+  unsigned int cpus;
+  unsigned int cores;
+  unsigned int wordsize;
+} cpuinfo_t;
 
 cpuinfo_t cpuinfo;
 bool cpuinfo_t::initialized = false;
@@ -166,4 +178,28 @@ cpu_get_wordsize()
     }
 
   return wordsize;
+}
+
+string
+cpu_get_model()
+{
+  cpu_get_details();
+
+  return cpuinfo.model;
+}
+
+unsigned int
+cpu_get_count()
+{
+  cpu_get_details();
+
+  return cpuinfo.cpus;
+}
+
+unsigned int
+cpu_get_number_of_cores()
+{
+  cpu_get_details();
+
+  return cpuinfo.cores;
 }

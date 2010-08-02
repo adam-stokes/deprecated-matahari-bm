@@ -20,7 +20,13 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-void cpu_get_details();
 unsigned int cpu_get_wordsize();
+
+string cpu_get_model();
+
+unsigned int cpu_get_count();
+
+unsigned int cpu_get_number_of_cores();
+
 
 #endif

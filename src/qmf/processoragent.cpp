@@ -36,6 +36,9 @@ ProcessorAgent::setup(ManagementAgent* agent, HostAgent& parent)
 
   _management_object->set_host(parent.GetManagementObject()->getObjectId());
   _management_object->set_wordsize(cpu_get_wordsize());
+  _management_object->set_model(cpu_get_model());
+  _management_object->set_count(cpu_get_count());
+  _management_object->set_cores(cpu_get_number_of_cores());
 }
 
 ManagementObject*
