@@ -37,6 +37,8 @@ string host_get_uuid();
 
 string host_get_hostname();
 
+string host_get_operating_system();
+
 string host_get_hypervisor();
 
 unsigned int host_get_platform();

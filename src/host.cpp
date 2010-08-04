@@ -196,6 +196,58 @@ host_get_hostname()
 }
 
 string
+host_get_operating_system()
+{
+  static string operating_system;
+
+  if(operating_system.empty())
+    {
+#ifdef __linux__
+
+      struct utsname details;
+
+      if(!uname(&details))
+	{
+	  operating_system = string(details.sysname) +
+	    " (" + details.release + ")";
+	}
+
+#elif defined WIN32
+
+      HINSTANCE dll;
+
+      dll = LoadLibrary("kernel32");
+
+      if(dll != NULL)
+	{
+	  typedef DWORD(WINAPI *version_function)(void);
+	  version_function proc;
+	  DWORD version;
+
+	  proc = (version_function)GetProcAddress(dll,"GetVersion");
+
+	  if(proc)
+	    {
+	      version = (*proc)();
+
+	      DWORD major, minor, build;
+
+	      major = (DWORD)(LOBYTE(LOWORD(version)));
+	      minor = (DWORD)(HIBYTE(LOWORD(version)));
+	      build = (DWORD)(HIWORD(version));
+
+	      operating_system = string("Windows ") +
+		"(" + major + "." + minor + "." + build + ")";
+	    }
+	}
+
+#endif
+    }
+
+  return operating_system;
+}
+
+string
 host_get_hypervisor()
 {
   static string hypervisor;
