@@ -249,10 +249,25 @@ host_get_architecture()
 
 #elif defined WIN32
 
-      // TODO this should be more explicit and determine if
-      // the compiler is using a 64-bit target in future.
-      architecture = string("Win32");
+      LPSYSTEM_INFO system_info;
 
+      GetSystemInfo(&system_info);
+
+      switch(system_info.wProcessorArchitecture)
+	{
+	case PROCESSOR_ARCHITECTURE_AMD64:
+	  architecture = "x86 (AMD)";
+	  break;
+	case PROCESSOR_ARCHITECTURE_IA64:
+	  architecture = "ia64";
+	  break;
+	case PROCESSOR_ARCHITECTURE_INTEL:
+	  architecture = "x86 (Intel)";
+	  break;
+	case PROCESSOR_ARCHITECTURE_UNKNOWN:
+	  architecture = "Unknown";
+	  break;
+	}
 #endif
     }
 
