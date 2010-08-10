@@ -25,6 +25,7 @@
 #include "processor.h"
 #include <stdexcept>
 #include <string>
+#include "util.h"
 
 using namespace std;
 
@@ -162,6 +163,17 @@ cpu_get_details()
 	  free(buffer);
 	  buffer = NULL;
 	}
+
+      // get the processor model
+      char* model = NULL;
+
+      if(!exec_and_capture_text("cscript.exe /nologo win_get_cpu_model.vbs",
+				model)
+	{
+	  cpuinfo.model = string(model);
+	}
+
+	 free(model);
     }
 #endif
 }

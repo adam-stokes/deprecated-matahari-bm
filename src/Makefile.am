@@ -28,10 +28,13 @@ matahari_SOURCES = \
 	main.cpp \
 	processor.cpp \
 	processor.h \
+	util.c \
+	util.h \
 	qmf/hostagent.cpp \
 	qmf/hostagent.h \
 	qmf/processoragent.cpp \
-	qmf/processoragent.h
+	qmf/processoragent.h \
+	windows/win_get_cpu_model.vbs
 
 SCHEMAS = \
 	schema-host.xml
@@ -39,7 +42,7 @@ SCHEMAS = \
 $(generated_file_list): $(SCHEMAS)
 	qmf-gen -o ./qmf $(SCHEMAS)
 
-BUILT_SOURCES = $(generated_file_list)
+BUILT_SOURCES = $(generated_file_list) $(windows_scripts)
 CLEANFILES = $(generated_file_list)
 
 matahari_CPPFLAGS = -fno-strict-aliasing
