@@ -17,7 +17,14 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#ifndef WIN32
 #include "config.h"
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <fstream>
 #include "host.h"
 #include <limits.h>
@@ -112,9 +119,13 @@ cpu_get_details()
       cpuinfo.cpus /= cpuinfo.cores;
     }
 #elif defined WIN32
+  typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
   LPFN_GLPI proc;
   DWORD ret_length;
   PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer, ptr;
+
+  buffer = NULL;
+  ptr    = NULL;
 
   proc = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
 				    "GetLogicalProcessorInformation");
@@ -167,11 +178,13 @@ cpu_get_details()
       // get the processor model
       char* model = NULL;
 
+      /*
       if(!exec_and_capture_text("cscript.exe /nologo win_get_cpu_model.vbs",
 				model)
 	{
 	  cpuinfo.model = string(model);
 	}
+      */
 
 	 free(model);
     }

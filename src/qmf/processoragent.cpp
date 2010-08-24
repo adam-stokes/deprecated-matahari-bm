@@ -17,7 +17,10 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#ifndef WIN32
 #include "config.h"
+#endif
+
 #include "processoragent.h"
 #include "processor.h"
 

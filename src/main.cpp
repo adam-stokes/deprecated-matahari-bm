@@ -17,7 +17,17 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
+#ifndef WIN32
 #include <config.h>
+#include <getopt.h>
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+
+#define sleep(x) {Sleep(x);}
+#endif
+
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
 
@@ -29,8 +39,6 @@
 
 #include <signal.h>
 #include <cstdlib>
-
-#include <getopt.h>
 
 #include "host.h"
 
@@ -84,80 +92,82 @@ main(int argc, char **argv)
     HostAgent hostAgent;
     ProcessorAgent processorAgent;
 
+#ifdef __linux__
     struct option opt[] = {
-        {"help", no_argument, NULL, 'h'},
-        {"daemon", no_argument, NULL, 'd'},
-        {"broker", required_argument, NULL, 'b'},
-        {"gssapi", no_argument, NULL, 'g'},
-        {"username", required_argument, NULL, 'u'},
-        {"service", required_argument, NULL, 's'},
-        {"port", required_argument, NULL, 'p'},
-        {0, 0, 0, 0}
+	{"help", no_argument, NULL, 'h'},
+	{"daemon", no_argument, NULL, 'd'},
+	{"broker", required_argument, NULL, 'b'},
+	{"gssapi", no_argument, NULL, 'g'},
+	{"username", required_argument, NULL, 'u'},
+	{"service", required_argument, NULL, 's'},
+	{"port", required_argument, NULL, 'p'},
+	{0, 0, 0, 0}
     };
 
     // Get args
     while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:", opt, &idx)) != -1) {
-        switch (arg) {
-            case 'h':
-            case '?':
-                print_usage();
-                exit(0);
-                break;
-            case 'd':
-                daemonize = true;
-                break;
-            case 'v':
-                verbose = true;
-                break;
-            case 's':
-                if (optarg) {
-                    service = strdup(optarg);
-                } else {
-                    print_usage();
-                    exit(1);
-                }
-                break;
-            case 'u':
-                if (optarg) {
-                    username = strdup(optarg);
-                } else {
-                    print_usage();
-                    exit(1);
-                }
-                break;
-            case 'g':
-                gssapi = true;
-                break;
-            case 'p':
-                if (optarg) {
-                    serverport = atoi(optarg);
-                } else {
-                    print_usage();
-                    exit(1);
-                }
-                break;
-            case 'b':
-                if (optarg) {
-                    servername = strdup(optarg);
-                } else {
-                    print_usage();
-                    exit(1);
-                }
-                break;
-            default:
-                fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
-                print_usage();
-                exit(0);
-            break;
-        }
+	switch (arg) {
+	    case 'h':
+	    case '?':
+		print_usage();
+		exit(0);
+		break;
+	    case 'd':
+		daemonize = true;
+		break;
+	    case 'v':
+		verbose = true;
+		break;
+	    case 's':
+		if (optarg) {
+		    service = strdup(optarg);
+		} else {
+		    print_usage();
+		    exit(1);
+		}
+		break;
+	    case 'u':
+		if (optarg) {
+		    username = strdup(optarg);
+		} else {
+		    print_usage();
+		    exit(1);
+		}
+		break;
+	    case 'g':
+		gssapi = true;
+		break;
+	    case 'p':
+		if (optarg) {
+		    serverport = atoi(optarg);
+		} else {
+		    print_usage();
+		    exit(1);
+		}
+		break;
+	    case 'b':
+		if (optarg) {
+		    servername = strdup(optarg);
+		} else {
+		    print_usage();
+		    exit(1);
+		}
+		break;
+	    default:
+		fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
+		print_usage();
+		exit(0);
+	    break;
+	}
     }
 
     if (daemonize == true) {
-        if (daemon(0, 0) < 0) {
-            fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
-            exit(1);
-        }
+	if (daemon(0, 0) < 0) {
+	    fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
+	    exit(1);
+	}
     }
+#endif
 
     // Get our management agent
     singleton = new ManagementAgent::Singleton();
@@ -172,13 +182,13 @@ main(int argc, char **argv)
     settings.port = serverport;
 
     if (username != NULL) {
-        settings.username = username;
+	settings.username = username;
     }
     if (service != NULL) {
-        settings.service = service;
+	settings.service = service;
     }
     if (gssapi == true) {
-        settings.mechanism = "GSSAPI";
+	settings.mechanism = "GSSAPI";
     }
 
     agent->init(settings, 5, false, ".magentdata");
@@ -189,8 +199,8 @@ main(int argc, char **argv)
 
     while(1)
       {
-        host_update_event();
-        sleep(5);
+	host_update_event();
+	sleep(5);
       }
 
     return 0;

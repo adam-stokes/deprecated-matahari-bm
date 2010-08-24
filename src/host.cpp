@@ -17,83 +17,40 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <config.h>
-#include <cstdlib>
-#include <fstream>
-#include "host.h"
-#include <libvirt/libvirt.h>
-#include <limits.h>
-#include "processor.h"
-#include <set>
-#include <string>
-#include <sys/sysinfo.h>
+#ifndef WIN32
+#include "config.h"
+#endif
+
+#ifdef WIN32
+#include <sstream>
+#include <winsock.h>
+#endif
 
 #ifdef __linux__
-
+#include <sys/sysinfo.h>
 #include <sys/utsname.h>
-
-#elif defined WIN32
-
-#include <winsock.h>
-
-#endif
 
 // TODO remove this wrapper once rhbz#583747 is fixed
 extern "C" {
 #include <libudev.h>
 }
 
-using namespace std;
-
-#ifdef WIN32
-
-/* The following definitions make up for what is lacking currently
- * in the MinGW packages, and should be moved out to them at some
- * point in future.
- */
-
-typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
-  RelationProcessorCore,
-  RelationNumaNode,
-  RelationCache,
-  RelationProcessorPackage,
-  RelationGroup,
-  RelationAll                = 0xffff
-} LOGICAL_PROCESSOR_RELATIONSHIP;
-
-typedef enum _PROCESSOR_CACHE_TYPE {
-  CacheUnified,
-  CacheInstruction,
-  CacheData,
-  CacheTrace
-} PROCESSOR_CACHE_TYPE;
-
-typedef struct _CACHE_DESCRIPTOR {
-  BYTE                 Level;
-  BYTE                 Associativity;
-  WORD                 LineSize;
-  DWORD                Size;
-  PROCESSOR_CACHE_TYPE Type;
-} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
-
-typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
-  ULONG_PTR                      ProcessorMask;
-  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
-  union {
-    struct {
-      BYTE Flags;
-    } ProcessorCore;
-    struct {
-      DWORD NodeNumber;
-    } NumaNode;
-    CACHE_DESCRIPTOR Cache;
-    ULONGLONG        Reserved[2];
-  } ;
-} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
-
-typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
-
 #endif
+
+#include <cstdlib>
+#include <fstream>
+#include "host.h"
+
+#ifdef HAVE_LIBVIRT1
+#include <libvirt/libvirt.h>
+#endif
+
+#include <limits.h>
+#include "processor.h"
+#include <set>
+#include <string>
+
+using namespace std;
 
 set<HostListener*>   _listeners;
 unsigned int         _heartbeat_sequence;
@@ -115,8 +72,16 @@ host_update_event()
 {
   _heartbeat_sequence++;
 
+#ifdef WIN32
+  // TODO: get the right date/time
+  unsigned long __time;
+
+  __time = 0L;
+#elif defined __linux__
   time_t __time;
+
   time(&__time);
+#endif
 
   for(set<HostListener*>::iterator iter = _listeners.begin();
       iter != _listeners.end();
@@ -216,7 +181,7 @@ host_get_operating_system()
 
       HINSTANCE dll;
 
-      dll = LoadLibrary("kernel32");
+      dll = LoadLibrary(TEXT("kernel32"));
 
       if(dll != NULL)
 	{
@@ -236,8 +201,10 @@ host_get_operating_system()
 	      minor = (DWORD)(HIBYTE(LOWORD(version)));
 	      build = (DWORD)(HIWORD(version));
 
-	      operating_system = string("Windows ") +
-		"(" + major + "." + minor + "." + build + ")";
+		  stringstream sstr;
+
+		  sstr << "Windows (" << major << "." << minor << "." << build << ")";
+		  operating_system = sstr.str();
 	    }
 	}
 
@@ -255,7 +222,7 @@ host_get_hypervisor()
   if(hypervisor.empty())
     {
 
-#ifdef HAVE_LIBVIRT
+#ifdef HAVE_LIBVIRT1
       virConnectPtr lvconn = virConnectOpenReadOnly(NULL);
 
       if(lvconn)
@@ -301,11 +268,11 @@ host_get_architecture()
 
 #elif defined WIN32
 
-      LPSYSTEM_INFO system_info;
+      LPSYSTEM_INFO system_info = NULL;
 
-      GetSystemInfo(&system_info);
+      GetSystemInfo(system_info);
 
-      switch(system_info.wProcessorArchitecture)
+      switch(system_info->wProcessorArchitecture)
 	{
 	case PROCESSOR_ARCHITECTURE_AMD64:
 	  architecture = "x86 (AMD)";

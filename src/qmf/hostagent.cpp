@@ -17,7 +17,10 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <config.h>
+#ifndef WIN32
+#include "config.h"
+#endif
+
 #include "hostagent.h"
 #include <qpid/agent/ManagementAgent.h>
 

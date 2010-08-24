@@ -49,4 +49,4 @@ matahari_CPPFLAGS = -fno-strict-aliasing
 matahari_LDADD = -lpcre -lqmf -lqpidclient -lqpidcommon -ludev -lvirt
 matahari_LDADD += ../lib/libmatahari.a
 
-dist_pkgdata_DATA = schema-host.xml
+dist_pkgdata_DATA = $(SCHEMAS) $(generated_file_list) CMakeLists.txt
