@@ -24,8 +24,6 @@
 
 #ifdef WIN32
 #include <windows.h>
-
-#define sleep(x) {Sleep(x);}
 #endif
 
 #include <qpid/agent/ManagementAgent.h>
@@ -61,6 +59,7 @@ shutdown(int /*signal*/)
   exit(0);
 }
 
+#ifdef __linux__
 static void
 print_usage()
 {
@@ -73,15 +72,18 @@ print_usage()
     printf("\t-s | --service    service name to use for authentication purproses.\n");
     printf("\t-p | --port       specify broker port.\n");
 }
+#endif
 
 int
 main(int argc, char **argv)
 {
+#ifdef __linux__
     int arg;
     int idx = 0;
-    bool daemonize = false;
-    bool gssapi = false;
     bool verbose = false;
+    bool daemonize = false;
+#endif
+    bool gssapi = false;
     char *servername = NULL;
     char *username = NULL;
     char *service = NULL;
@@ -200,7 +202,7 @@ main(int argc, char **argv)
     while(1)
       {
 	host_update_event();
-	sleep(5);
+	qpid::sys::sleep(5);
       }
 
     return 0;
