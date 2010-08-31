@@ -1,92 +1,127 @@
 cmake_minimum_required(VERSION 2.6)
 project (MATAHARI)
 
-# set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
+include(FindPkgConfig)
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/qmf")
 
+set(PCRE_PATH "D:/Users/mcpierce/Programming/pcre-7.0")
+set(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
+
 set(SCHEMAS
-	schema-host.xml)
+        schema-host.xml)
 
 set(MAIN_SOURCES
-	host.cpp
-	main.cpp
-	processor.cpp
-	util.c
-	qmf/hostagent.cpp
-	qmf/processoragent.cpp)
+        host.cpp
+        main.cpp
+        processor.cpp
+        util.c
+        qmf/hostagent.cpp
+        qmf/processoragent.cpp)
 
-set(GENERATED_SOURCES
-	qmf/com/redhat/matahari/host/EventHeartbeat.cpp
-	qmf/com/redhat/matahari/host/EventHeartbeat.h
-	qmf/com/redhat/matahari/host/Host.cpp
-	qmf/com/redhat/matahari/host/Host.h
-	qmf/com/redhat/matahari/host/Package.cpp
-	qmf/com/redhat/matahari/host/Package.h
-	qmf/com/redhat/matahari/host/Processor.cpp
-	qmf/com/redhat/matahari/host/Processor.h)
+set(GENERATED_SCHEMA_SOURCES
+        qmf/com/redhat/matahari/host/EventHeartbeat.cpp
+        qmf/com/redhat/matahari/host/EventHeartbeat.h
+        qmf/com/redhat/matahari/host/Host.cpp
+        qmf/com/redhat/matahari/host/Host.h
+        qmf/com/redhat/matahari/host/Package.cpp
+        qmf/com/redhat/matahari/host/Package.h
+        qmf/com/redhat/matahari/host/Processor.cpp
+        qmf/com/redhat/matahari/host/Processor.h)
 
-IF(WIN32)
-	set(PCRE_PATH "D:/Users/mcpierce/Programming/pcre-7.0")
-	set(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
+add_executable(matahari ${MAIN_SOURCES} ${GENERATED_SCHEMA_SOURCES})
 
-	find_path(PCRE_INCLUDE pcre.h "${PCRE_PATH}/include")
+pkg_check_modules(pcre REQUIRED libpcre)
 
-	if(PCRE_INCLUDE)
-		include_directories(${PCRE_INCLUDE})
-	else(PCRE_INCLUDE)
-		message(FATAL_ERROR "PCRE include files not found.")
-	endif(PCRE_INCLUDE)
+if(NOT PKG_CONFIG_FOUND)
+   message("pkg-config not found")
+endif(NOT PKG_CONFIG_FOUND)
 
-	#find_path(QPID_INCLUDE NAMES qpid/Address.h "${QPID_PATH}/include")
+if(WIN32)
+   target_link_libraries(matahari wsock32)
+else(WIN32)
+   find_library(VIRT virt)
+   target_link_libraries(matahari ${VIRT})
+endif(WIN32)
 
-	#if(QPID_INCLUDE)
-	#	include_directories(${QPID_INCLUDE})
-	#else(QPID_INCLUDE)
-	#	message(FATAL_ERROR "Qpid include files not found.")
-	#endif(QPID_INCLUDE)
-ENDIF(WIN32)
+if(MSVC)
+   find_path(QPID_INCLUDE Address.h "${QPID_PATH}")
+   find_library(QMFCONSOLE qmfconsole.lib "${QPID_PATH}")
+   find_library(QPIDCLIENT qpidclient.lib "${QPID_PATH}")
+   find_library(QPIDCOMMON qpidcommon.lib "${QPID_PATH}")
+else(MSVC)
+   find_library(QMF qmf)
+   find_library(QPIDCLIENT qpidclient)
+   find_library(QPIDCOMMON qpidcommon)	
+endif(MSVC)
 
-add_executable(matahari ${MAIN_SOURCES} ${GENERATED_SOURCES})
+if(NOT QMF)
+   message(FATAL_ERROR "QMF library not found.")
+endif(NOT QMF)
 
-IF(WIN32)
-	find_library(PCRE_LIBRARY NAMES pcre.lib PATHS ${PCRE_PATH}/lib)
+if(NOT QPIDCLIENT)
+   message(FATAL_ERROR "QPIDCLIENT library not found.")
+endif(NOT QPIDCLIENT)
 
-	if(PCRE_LIBRARY)
-		target_link_libraries(matahari "${PCRE_LIBRARY}")
-	else(PCRE_LIBRARY)
-		message(FATAL_ERROR "PCRE library file not found.")
-	endif(PCRE_LIBRARY)
+if(NOT QPIDCOMMON)
+   message(FATAL_ERROR "QPIDCOMMON library not found.")
+endif(NOT QPIDCOMMON)
 
-	find_library(QMFCONSOLE_LIBRARY
-		NAME qmfconsole.lib
-		PATHS ${QPID_PATH}/bin)
-	find_library(QPIDCLIENT_LIBRARY
-		NAME qpidclient.lib
-		PATHS ${QPID_PATH}/bin)
-	find_library(QPIDCOMMON_LIBRARY
-		NAME qpidcommon.lib
-		PATHS ${QPID_PATH}/bin)
+target_link_libraries(matahari ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
 
-	if(QMFCONSOLE_LIBRARY AND QPIDCLIENT_LIBRARY AND QPIDCOMMON_LIBRARY)
-		target_link_libraries(matahari "${QMFCONSOLE}")
-		target_link_libraries(matahari "${QPIDCLIENT}")
-		target_link_libraries(matahari "${QPIDCOMMON}")
-	else(QMFCONSOLE_LIBRARY AND QPIDCLIENT_LIBRARY AND QPIDCOMMON_LIBRARY)
-		message(FATAL_ERROR "Missing Qpid libraries")
-	endif(QMFCONSOLE_LIBRARY AND QPIDCLIENT_LIBRARY AND QPIDCOMMON_LIBRARY)
-ELSE(WIN32)
-	find_library(PCRE pcre)
-	target_link_libraries(matahari ${PCRE})
+if(NOT pcre_FOUND)
+   IF(MSVC)
+        find_path(pcre_FOUND pcre.h "${PCRE_PATH}")
+        find_library(pcre_LIBRARIES pcre.lib "${PCRE_PATH}")
+   ELSE(MSVC)
+        find_path(pcre_FOUND pcre.h)
+        find_library(pcre_LIBRARIES pcre)
+	string(REPLACE "pcre.h" "" pcre_INCLUDE_DIRS ${pcre_FOUND})
+   endif(MSVC)
+   string(REPLACE "pcre.h" "" pcre_INCLUDE_DIRS ${pcre_FOUND})
+endif(NOT pcre_FOUND)
 
-	find_library(QPIDCLIENT qpidclient)
-	find_library(QPIDCOMMON  qpidcommon)
-	target_link_libraries(matahari ${QPIDCLIENT} ${QPIDCOMMON})
+if(pcre_FOUND)
+   target_link_libraries(matahari ${pcre_LIBRARIES})
+   include_directories(${pcre_INCLUDE_DIRS})
+else(pcre_FOUND)
+   message(FATAL_ERROR "PCRE header/library not found.")
+endif(pcre_FOUND)
 
-	find_library(QMF qmf)
-	target_link_libraries(matahari ${QMF})
+set(simple_libs check libvirt udev_new)
+foreach(lib ${simple_libs}) 
+    find_library(${lib}_LIBRARIES ${lib})
+    if(${lib}_LIBRARIES) 
+        target_link_libraries(matahari ${${lib}_LIBRARIES}})
+    else(${lib}_LIBRARIES) 
+    	message("Library ${lib} not found")
+    endif(${lib}_LIBRARIES) 
+endforeach(lib ${simple_libs})
 
-	find_library(VIRT virt)
-	target_link_libraries(matahari ${VIRT})
-ENDIF(WIN32)
+find_program(QMFGEN qmf-gen)
+if(QMFGEN-NOTFOUND)
+   message(FATAL_ERROR Missing QMF schema processor.)
+endif(QMFGEN-NOTFOUND)
+
+set(regen_schema OFF)
+message(STATUS "Regenerating QMF schemas")
+foreach (schema_file ${SCHEMAS} ${QMFGEN})
+    foreach (file ${GENERATED_SCHEMA_SOURCES})
+        if (${schema_file} IS_NEWER_THAN ${file})
+            set(regen_schema ON)
+	    message("${schema_file} is newer than ${file}")
+        endif (${schema_file} IS_NEWER_THAN ${file})
+    endforeach (file ${GENERATED_SCHEMA_SOURCES})
+endforeach (schema_file ${SCHEMAS})
+
+if (regen_schema)
+    # Regenerate everything 
+    execute_process(COMMAND rm -f ${GENERATED_SCHEMA_SOURCES})
+    execute_process(COMMAND ${QMFGEN} -o ./qmf ${SCHEMAS}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+else (regen_schema)
+    message(STATUS "No need to generate QMF schema")
+endif (regen_schema)
+
