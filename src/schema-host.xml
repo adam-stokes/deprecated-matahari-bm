@@ -12,6 +12,7 @@
    <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." />
 
    <!-- statistics -->
+   <statistic name="last_updated_seq" type="uint32" desc="The heartbeat sequence number." />
    <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
    <statistic name="load_average_1"  type="double"  desc="The one minute load average." />
    <statistic name="load_average_5"  type="double"  desc="The five minute load average." />

@@ -74,6 +74,7 @@ HostAgent::heartbeat(uint64_t timestamp, uint32_t sequence)
   uint64_t now = timestamp * 1000000000;
   this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, sequence));
   _management_object->set_last_updated(now);
+  _management_object->set_last_updated_seq(sequence);
 }
 
 void
