@@ -268,11 +268,11 @@ host_get_architecture()
 
 #elif defined WIN32
 
-      LPSYSTEM_INFO system_info = NULL;
+      _SYSTEM_INFO system_info;
+      system_info.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
+      GetSystemInfo(&system_info);
 
-      GetSystemInfo(system_info);
-
-      switch(system_info->wProcessorArchitecture)
+      switch(system_info.wProcessorArchitecture)
 	{
 	case PROCESSOR_ARCHITECTURE_AMD64:
 	  architecture = "x86 (AMD)";
