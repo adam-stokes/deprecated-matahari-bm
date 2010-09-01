@@ -49,11 +49,12 @@ extern "C" {
 #include "processor.h"
 #include <set>
 #include <string>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace std;
 
 set<HostListener*>   _listeners;
-unsigned int         _heartbeat_sequence;
+uint32_t             _heartbeat_sequence;
 
 void
 host_register_listener(HostListener* listener)
@@ -70,26 +71,19 @@ host_remove_listener(HostListener* listener)
 void
 host_update_event()
 {
+  uint64_t now = 0L;
   _heartbeat_sequence++;
 
-#ifdef WIN32
-  // TODO: get the right date/time
-  unsigned long __time;
-
-  __time = 0L;
-#elif defined __linux__
-  time_t __time;
-
-  time(&__time);
+#ifndef MSVC
+  now = ::time(NULL);
 #endif
 
   for(set<HostListener*>::iterator iter = _listeners.begin();
       iter != _listeners.end();
       iter++)
-    {
-      (*iter)->heartbeat((unsigned long)__time,
-			 _heartbeat_sequence);
-    }
+  {
+      (*iter)->heartbeat(now, _heartbeat_sequence);
+  }
 
   for(set<HostListener*>::iterator iter = _listeners.begin();
       iter != _listeners.end();

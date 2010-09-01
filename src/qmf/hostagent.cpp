@@ -69,10 +69,11 @@ HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 }
 
 void
-HostAgent::heartbeat(unsigned long timestamp, unsigned int sequence)
+HostAgent::heartbeat(uint64_t timestamp, uint32_t sequence)
 {
+  uint64_t now = timestamp * 1000000000;
   this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, sequence));
-  _management_object->set_last_updated(timestamp * 1000000000L);
+  _management_object->set_last_updated(now);
 }
 
 void

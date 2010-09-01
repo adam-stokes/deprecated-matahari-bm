@@ -47,7 +47,7 @@ class HostAgent : public Manageable, public HostListener
   ManagementObject* GetManagementObject() const { return _management_object; }
   status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
 
-  virtual void heartbeat(unsigned long timestamp, unsigned int sequence);
+  virtual void heartbeat(uint64_t timestamp, unsigned int sequence);
 
   virtual void updated();
 };

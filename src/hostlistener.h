@@ -27,7 +27,7 @@
 class HostListener
 {
  public:
-  virtual void heartbeat(unsigned long timestamp, unsigned int sequence) = 0;
+  virtual void heartbeat(uint64_t timestamp, uint32_t sequence) = 0;
   virtual void updated() = 0;
 };
 
