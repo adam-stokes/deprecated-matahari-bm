@@ -72,6 +72,7 @@ typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 #endif
 
 #include <fstream>
+#include <iostream>
 #include "host.h"
 #include <limits.h>
 #include <pcre.h>
@@ -169,9 +170,8 @@ cpu_get_details()
   DWORD ret_length;
   PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer, ptr;
 
-  buffer = NULL;
   ptr    = NULL;
-
+  buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(256);
   proc = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")),
 				    "GetLogicalProcessorInformation");
   if(proc)
@@ -192,8 +192,15 @@ cpu_get_details()
 		      buffer = NULL;
 		    }
 
-		  buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(ret_length);
+		  buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(ret_length + 1);
 		}
+	      else
+	      {
+		  done = TRUE;
+		  ret_length = 0;
+		  cout << "Call to 'GetLogicalProcessorInformation' failed (" << rc << ", " << GetLastError() << ", " << ret_length << "): " << __FUNCTION__ << endl;
+	      }
+	      
 	    }
 	  else
 	    {
@@ -214,6 +221,8 @@ cpu_get_details()
 		default:
 		    break;
 	    }
+	  offset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+	  ptr++;
 	}
 
       if(buffer)
@@ -223,17 +232,18 @@ cpu_get_details()
 	}
 
       // get the processor model
+      cpuinfo.model = string("unknown");
+      /*
       char* model = NULL;
 
-      /*
       if(!exec_and_capture_text("cscript.exe /nologo win_get_cpu_model.vbs",
 				model)
 	{
 	  cpuinfo.model = string(model);
 	}
-      */
 
 	 free(model);
+      */
     }
 #endif
 }
