@@ -330,6 +330,10 @@ host_get_load_averages(double& one, double& five, double& fifteen)
   input.open("/proc/loadavg", ios::in);
   input >> one >> five >> fifteen;
   input.close();
+#else
+  one = 0.0;
+  five = 0.0;
+  fifteen = 0.0;
 #endif
 }
 
