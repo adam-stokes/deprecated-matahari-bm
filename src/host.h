@@ -29,7 +29,7 @@ using namespace std;
 
 void host_register_listener(HostListener* listener);
 
-void host_remove_istener(HostListener* listener);
+void host_remove_listener(HostListener* listener);
 
 void host_update_event();
 
