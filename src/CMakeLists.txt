@@ -10,10 +10,15 @@ include_directories("${PROJECT_SOURCE_DIR}/qmf")
 set(PCRE_PATH "D:/Users/mcpierce/Programming/pcre-7.0")
 set(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
 
+# set service name var's
+set(M_HOST "matahari-host")
+set(M_NET "matahari-net")
+set(M_PKG "matahari-package")
+
 set(SCHEMAS
         schema-host.xml)
 
-set(MAIN_SOURCES
+set(HOST_SOURCES
         host.cpp
         main.cpp
         processor.cpp
@@ -31,7 +36,7 @@ set(GENERATED_SCHEMA_SOURCES
         qmf/com/redhat/matahari/host/Processor.cpp
         qmf/com/redhat/matahari/host/Processor.h)
 
-add_executable(matahari ${MAIN_SOURCES} ${GENERATED_SCHEMA_SOURCES})
+add_executable(${M_HOST} ${HOST_SOURCES} ${GENERATED_SCHEMA_SOURCES})
 
 pkg_check_modules(pcre REQUIRED libpcre)
 
@@ -40,10 +45,10 @@ if(NOT PKG_CONFIG_FOUND)
 endif(NOT PKG_CONFIG_FOUND)
 
 if(WIN32)
-   target_link_libraries(matahari wsock32)
+   target_link_libraries(${M_HOST} wsock32)
 else(WIN32)
    find_library(VIRT virt)
-   target_link_libraries(matahari ${VIRT})
+   target_link_libraries(${M_HOST} ${VIRT})
 endif(WIN32)
 
 if(MSVC)
@@ -69,7 +74,7 @@ if(NOT QPIDCOMMON)
    message(FATAL_ERROR "QPIDCOMMON library not found.")
 endif(NOT QPIDCOMMON)
 
-target_link_libraries(matahari ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
+target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
 
 if(NOT pcre_FOUND)
    IF(MSVC)
@@ -84,7 +89,7 @@ if(NOT pcre_FOUND)
 endif(NOT pcre_FOUND)
 
 if(pcre_FOUND)
-   target_link_libraries(matahari ${pcre_LIBRARIES})
+   target_link_libraries(${M_HOST} ${pcre_LIBRARIES})
    include_directories(${pcre_INCLUDE_DIRS})
 else(pcre_FOUND)
    message(FATAL_ERROR "PCRE header/library not found.")
@@ -94,7 +99,7 @@ set(simple_libs check libvirt udev_new)
 foreach(lib ${simple_libs}) 
     find_library(${lib}_LIBRARIES ${lib})
     if(${lib}_LIBRARIES) 
-        target_link_libraries(matahari ${${lib}_LIBRARIES}})
+        target_link_libraries(${M_HOST} ${${lib}_LIBRARIES}})
     else(${lib}_LIBRARIES) 
     	message("Library ${lib} not found")
     endif(${lib}_LIBRARIES) 
