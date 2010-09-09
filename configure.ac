@@ -66,5 +66,6 @@ AC_CHECK_FUNCS([strdup strerror sysinfo uname])
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  src/Makefile
-                 src/tests/Makefile])
+                 src/tests/Makefile
+                 mingw32-matahari.spec])
 AC_OUTPUT
