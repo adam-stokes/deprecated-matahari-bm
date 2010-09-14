@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 2.6)
 project (MATAHARI)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "4")
+set(MINGW_ROOT "/usr/i686-pc-mingw32/sys-root/mingw")
 
 include(FindPkgConfig)
 include_directories("${PROJECT_SOURCE_DIR}")
@@ -14,6 +18,7 @@ set(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
 set(M_HOST "matahari-host")
 set(M_NET "matahari-net")
 set(M_PKG "matahari-package")
+set(M_VERSION "0.0.4")
 
 set(SCHEMAS
         schema-host.xml)
@@ -130,3 +135,55 @@ else (regen_schema)
     message(STATUS "No need to generate QMF schema")
 endif (regen_schema)
 
+set (CPACK_GENERATOR "NSIS")
+set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
+
+set (CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/../matahari-icon.ico")
+set (CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/../matahari-icon.ico")
+set (CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/../matahari-install-banner.bmp")
+set (CPACK_NSIS_URL_INFO_ABOUT "https://fedorahosted.org/matahari/wiki")
+# Needs this to correctly set up Start menu links later.
+set (CPACK_PACKAGE_EXECUTABLES "")
+
+# Cant supply arguments within quotes, use batch files to support --port etc
+set (CPACK_NSIS_MENU_LINKS "")
+
+set(CPACK_PACKAGE_NAME "matahari")
+set(CPACK_PACKAGE_VENDOR "Apache Software Foundation")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Matahari QMF Agent")
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "matahari-${CPACK_PACKAGE_VERSION}")
+
+set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS "")
+
+set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS ${CPACK_NSIS_EXTRA_INSTALL_COMMANDS} "ExecWait '\\\"$INSTDIR\\\\sbin\\\\install.bat\\\"' ")
+
+#WriteRegStr HKCU \\\"Environment\\\" \\\"OGITOR_HOME\\\" $INSTDIR
+#configure_file(autorun.in arun )
+
+install(TARGETS ${M_HOST}  DESTINATION sbin)
+if(WIN32)
+  # Find qpid files needed by matahari
+  file(GLOB_RECURSE QPID_EXE  ${MINGW_ROOT}/*/qpidd.exe)
+  file(GLOB_RECURSE QMF_DLL   ${MINGW_ROOT}/*/libqmf*.dll)
+  file(GLOB_RECURSE QPID_DLL  ${MINGW_ROOT}/*/libqpid*.dll)
+  install(FILES ${QPID_EXE} ${QMF_DLL} ${QPID_DLL} DESTINATION sbin)
+
+  # Find additional libraries needed by matahari/qpid
+  file(GLOB_RECURSE GCC_DLL   ${MINGW_ROOT}/*/libgcc_*.dll)
+  file(GLOB_RECURSE PCRE_DLL  ${MINGW_ROOT}/*/libpcre*.dll)
+  file(GLOB_RECURSE VIRT_DLL  ${MINGW_ROOT}/*/libvirt*.dll)
+  file(GLOB_RECURSE BOOST_DLL ${MINGW_ROOT}/*/boost_*-mt-1*.dll)
+  install(FILES ${GCC_DLL} ${PCRE_DLL} ${VIRT_DLL} ${BOOST_DLL} DESTINATION sbin)
+
+  # Util for creating services
+  file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
+  install(FILES ${SRVANY_EXE} DESTINATION sbin)
+  install(FILES install.bat DESTINATION sbin)
+
+endif(WIN32)
+
+INCLUDE(InstallRequiredSystemLibraries)
+
+
+INCLUDE(CPack)
