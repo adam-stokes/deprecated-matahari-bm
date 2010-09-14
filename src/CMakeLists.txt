@@ -138,9 +138,9 @@ endif (regen_schema)
 set (CPACK_GENERATOR "NSIS")
 set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
 
-set (CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/../matahari-icon.ico")
-set (CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/../matahari-icon.ico")
-set (CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/../matahari-install-banner.bmp")
+set (CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/matahari-icon.ico")
+set (CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/matahari-icon.ico")
+set (CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/matahari-install-banner.bmp")
 set (CPACK_NSIS_URL_INFO_ABOUT "https://fedorahosted.org/matahari/wiki")
 # Needs this to correctly set up Start menu links later.
 set (CPACK_PACKAGE_EXECUTABLES "")
