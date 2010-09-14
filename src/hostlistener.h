@@ -1,5 +1,6 @@
 #ifndef __HOSTLISTENER_H
 #define __HOSTLISTENER_H
+#include <stdint.h>
 
 /* hostlistener.h - Copyright (C) 2009 Red Hat, Inc.
  * Written by Darryl Pierce <dpierce@redhat.com>.
