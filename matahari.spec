@@ -60,6 +60,9 @@ make DESTDIR=%{buildroot} install
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari.init $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
 
+%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
+%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-host
+
 %post
 /sbin/chkconfig --level 2345 matahari-host on
 /sbin/service matahari-host condrestart
@@ -85,7 +88,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %attr(755, root, root) %{_sbindir}/matahari-host
 %attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari-host
-#%config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
 
 %doc AUTHORS COPYING
 
