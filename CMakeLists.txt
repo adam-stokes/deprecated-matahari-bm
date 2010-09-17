@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project (MATAHARI)
-set (PROJECT_VERSION "0.0.5")
-
-# install docs
-install(FILES COPYING AUTHORS DESTINATION doc/matahari-${PROJECT_VERSION})
+set (PROJECT_VERSION "0.4.0")
 
 # add sub-directories
 add_subdirectory(src)
