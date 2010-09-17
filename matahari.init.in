@@ -11,8 +11,8 @@
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-SERVICE=matahari
-PROCESS=matahari
+SERVICE=`basename "$0"`
+PROCESS=`echo $SERVICE | tr '-' '_'`
 
 RETVAL=0
 
@@ -23,7 +23,7 @@ start() {
     daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+    [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$SERVICE
 }
 
 stop() {
