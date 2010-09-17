@@ -1,6 +1,8 @@
 
 *.o
 *.patch
+*.orig
+*.rej
 *~
 .deps
 /GNUmakefile
@@ -9,18 +11,13 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
-build-aux
 config.h
-config.h.in
-config.log
-config.status
-configure
-depcomp
 INSTALL
 install-sh
-lib
-m4
 missing
-src/matahari
+src/matahari-host
 src/qmf/com
-stamp-h1
+matahari*.tbz2
+CMakeFiles
+CMakeCache.txt
+*.cmake
