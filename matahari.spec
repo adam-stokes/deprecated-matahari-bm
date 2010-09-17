@@ -1,27 +1,38 @@
-Summary: Qpid QMF Agent for Ovirt Nodes
-Name: matahari
-Version: 0.0.4
-Release: 7%{?dist}
-Source: http://arjunroy.fedorapeople.org/matahari/matahari-0.0.4.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-License: GPLv2
-Group: Applications/System
-URL: http://arjunroy.fedorapeople.org/matahari/index.html
+%global specversion 1
+%global upstream_version 9fc30e4
 
-Requires: dbus >= 1.2.12
-Requires: hal >= 0.5.12
-Requires: qpidc >= 0.5.819819
-Requires: qmf >= 0.5.819819
-Requires: libvirt >= 0.6.2
-Requires: pcre >= 7.8
+# Keep around for when/if required
+%global alphatag %{upstream_version}.git
 
-BuildRequires: gcc-c++ >= 4.4.0
-BuildRequires: dbus-devel >= 1.2.12
-BuildRequires: hal-devel >= 0.5.12
-BuildRequires: qpidc-devel >= 0.5.819819
-BuildRequires: qmf-devel >= 0.5.819819
-BuildRequires: libvirt-devel >= 0.6.2
-BuildRequires: pcre-devel >= 7.8
+%global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
+
+Name:		matahari
+Version:	0.4.0
+Release:	%{mh_release}
+Summary:	Matahari QMF Agents for Linux guests
+
+Group:		Applications/System
+License:	GPLv2
+URL:		http://fedorahosted.org/matahari
+Source0:	matahari-%{version}.tbz2
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+Requires:	dbus >= 1.2.12
+Requires:	hal >= 0.5.12
+Requires:	qpidc >= 0.5.819819
+Requires:	qmf >= 0.5.819819
+Requires:	libvirt >= 0.6.2
+Requires:	pcre >= 7.8
+
+BuildRequires:	cmake
+BuildRequires:	libudev-devel
+BuildRequires:	gcc-c++ >= 4.4.0
+BuildRequires:	dbus-devel >= 1.2.12
+BuildRequires:	hal-devel >= 0.5.12
+BuildRequires:	qpidc-devel >= 0.5.819819
+BuildRequires:	qmf-devel >= 0.5.819819
+BuildRequires:	libvirt-devel >= 0.6.2
+BuildRequires:	pcre-devel >= 7.8
 
 %description
 
@@ -39,26 +50,29 @@ as a set of objects with properties and methods.
 %setup -q
 
 %build
-%configure
+%{cmake} .
 make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
+%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
+%{__install} matahari.init $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+
 %post
-/sbin/chkconfig --level 2345 matahari on
-/sbin/service matahari condrestart
+/sbin/chkconfig --level 2345 matahari-host on
+/sbin/service matahari-host condrestart
 
 %preun
 if [ $1 = 0 ]; then
-    /sbin/service matahari stop >/dev/null 2>&1 || :
-    chkconfig --del matahari
+    /sbin/service matahari-host stop >/dev/null 2>&1 || :
+    chkconfig --del matahari-host
 fi
 
 %postun
 if [ "$1" -ge "1" ]; then
-    /sbin/service matahari condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-host condrestart >/dev/null 2>&1 || :
 fi
 
 %clean
@@ -67,15 +81,18 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files
 %defattr(644, root, root, 755)
 %dir %{_datadir}/matahari/
-%{_datadir}/matahari/schema.xml
+%{_datadir}/matahari/schema-host.xml
 
-%attr(755, root, root) %{_sbindir}/matahari
-%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari
-%config(noreplace) %{_sysconfdir}/sysconfig/matahari
+%attr(755, root, root) %{_sbindir}/matahari-host
+%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari-host
+#%config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
 
 %doc AUTHORS COPYING
 
 %changelog
+
+* Fri Sep 17 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.1.9fc30e4.git
+- Pre-release of the new cross platform version of Matahari
 
 * Thu Oct 08 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-7
 - Refactored for new version of qpidc.
