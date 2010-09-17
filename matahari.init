@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# the following is chkconfig init header
+# matahari: host qmf agent
+# chkconfig: - 99 01
+# description: This is a daemon acts as a host qmf agent
+# processname: matahari-host
+# pidfile: /var/run/matahari.pid
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+SERVICE=`basename "$0"`
+PROCESS=`echo $SERVICE | tr '-' '_'`
+RETVAL=0
+
+[ -f /etc/sysconfig/$SERVICE ] && . /etc/sysconfig/$SERVICE
+
+start() {
+    echo -n $"Starting $SERVICE daemon: "
+    daemon $PROCESS $MATAHARI_ARGS
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+}
+
+stop() {
+    echo -n $"Stopping $SERVICE daemon: "
+
+    killproc $PROCESS
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        rm -f /var/lock/subsys/$SERVICE
+        rm -f /var/run/$SERVICE.pid
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading $SERVICE configuration: "
+
+    killproc $PROCESS -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start|stop|restart|reload)
+        $1
+        ;;
+    status)
+        status $PROCESS
+        RETVAL=$?
+        ;;
+    force-reload)
+        reload
+        ;;
+    condrestart|try-restart)
+        [ -f /var/lock/subsys/$SERVICE ] && restart || :
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+        exit 1
+        ;;
+esac
+exit $RETVAL
