@@ -29,15 +29,17 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 
 TAG    ?= next
 WITH   ?= 
+VARIANT ?=
+PROFILE ?= fedora-13-x86_64
 
 export:
 	rm -f $(TARFILE)
 	git archive --prefix=$(PACKAGE)-$(VERSION)/ $(TAG) | bzip2 > $(TARFILE)
 	echo `date`: Rebuilt $(TARFILE)
 
-srpm:	export $(PACKAGE).spec
+srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
-	rpmbuild -bs $(RPM_OPTS) $(PACKAGE).spec
+	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
 rpm:	srpm
@@ -46,6 +48,9 @@ rpm:	srpm
 
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
-	mock --root=fedora-13-x86_64 --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
+	mock --root=$(PROFILE) --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
 
 mock:   srpm mock-nodeps
+
+mock-win:   
+	make PROFILE=matahari VARIANT=mingw32- srpm mock-nodeps
