@@ -63,7 +63,7 @@ rm -rf $RPM_BUILD_ROOT
 pushd src
 
 make VERBOSE=1 %{?_smp_mflags} package
-genisoimage -o matahari-%{version}-win32.iso matahari-%{version}-win32.exe autorun.inf
+genisoimage -o matahari-%{version}-win32.iso matahari-%{version}-win32.exe windows/autorun.inf
 
 %{__install} -d $RPM_BUILD_ROOT/%{_mingw32_datadir}/matahari
 %{__install} matahari-%{version}-win32.iso $RPM_BUILD_ROOT/%{_mingw32_datadir}/matahari

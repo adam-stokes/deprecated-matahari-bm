@@ -140,10 +140,10 @@ endif (regen_schema)
 set (CPACK_GENERATOR "NSIS")
 set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../COPYING")
 
-set (CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/matahari-icon.ico")
-set (CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/matahari-icon.ico")
-set (CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/matahari-install-banner.bmp")
-set (CPACK_NSIS_URL_INFO_ABOUT "https://fedorahosted.org/matahari/wiki")
+set (CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/windows/matahari-icon.ico")
+set (CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/windows/matahari-icon.ico")
+set (CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/windows/matahari-install-banner.bmp")
+set (CPACK_NSIS_URL_INFO_ABOUT "http://fedorahosted.org/matahari")
 # Needs this to correctly set up Start menu links later.
 set (CPACK_PACKAGE_EXECUTABLES "")
 
@@ -184,7 +184,7 @@ if(WIN32)
   # Util for creating services
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
-  install(FILES install.bat DESTINATION sbin)
+  install(FILES windows/install.bat DESTINATION sbin)
 
 endif(WIN32)
 
