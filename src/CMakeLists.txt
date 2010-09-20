@@ -20,16 +20,23 @@ set(M_NET "matahari-net")
 set(M_PKG "matahari-package")
 set(M_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
-set(SCHEMAS
-        schema-host.xml)
+file(GLOB SCHEMAS "*.xml")
+install(FILES ${SCHEMAS} DESTINATION share/matahari)
 
+# Main function plus QMF models
 set(HOST_SOURCES
-        host.cpp
-        main.cpp
-        processor.cpp
-        util.c
+        matahari-host.cpp
         qmf/hostagent.cpp
         qmf/processoragent.cpp)
+
+# TODO: host.cpp and processor.cpp need to be re-written in C
+#       and then combined with util.c into a library/dll
+#
+#       Refer to qpid CMake control file for how to do this
+set(HOST_LIBRARY
+        host.cpp
+        processor.cpp
+        util.c)
 
 set(GENERATED_SCHEMA_SOURCES
         qmf/com/redhat/matahari/host/EventHeartbeat.cpp
@@ -41,7 +48,7 @@ set(GENERATED_SCHEMA_SOURCES
         qmf/com/redhat/matahari/host/Processor.cpp
         qmf/com/redhat/matahari/host/Processor.h)
 
-add_executable(${M_HOST} ${HOST_SOURCES} ${GENERATED_SCHEMA_SOURCES})
+add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${GENERATED_SCHEMA_SOURCES})
 
 pkg_check_modules(pcre REQUIRED libpcre)
 
