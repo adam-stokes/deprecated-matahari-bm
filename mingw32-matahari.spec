@@ -52,7 +52,8 @@ PATH=%{_mingw32_bindir}:$PATH
 
 ls -al
 pushd src
-%{_mingw32_cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo
+#%{_mingw32_cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo
+%{_mingw32_cmake} -DCMAKE_BUILD_TYPE=Release
 make %{?_smp_mflags}
 
 popd
