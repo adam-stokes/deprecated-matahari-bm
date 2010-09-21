@@ -59,23 +59,30 @@ make DESTDIR=%{buildroot} install
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari.init $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+%{__install} matahari-broker.init $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-host
+%{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 
 %post
 /sbin/chkconfig --level 2345 matahari-host on
 /sbin/service matahari-host condrestart
+/sbin/chkconfig --level 2345 matahari-broker on
+/sbin/service matahari-broker condrestart
 
 %preun
 if [ $1 = 0 ]; then
     /sbin/service matahari-host stop >/dev/null 2>&1 || :
     chkconfig --del matahari-host
+    /sbin/service matahari-broker stop >/dev/null 2>&1 || :
+    chkconfig --del matahari-broker
 fi
 
 %postun
 if [ "$1" -ge "1" ]; then
     /sbin/service matahari-host condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
 %clean
@@ -88,14 +95,18 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %attr(755, root, root) %{_sbindir}/matahari-host
 %attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari-host
+%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
+%config(noreplace) %{_sysconfdir}/matahari-broker.conf
 
 %doc AUTHORS COPYING
 
 %changelog
 
-* Fri Sep 17 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.1.9fc30e4.git
+* Tue Sep 21 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.1.9fc30e4.git
 - Pre-release of the new cross platform version of Matahari
+- Add matahari broker scripts
 
 * Thu Oct 08 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-7
 - Refactored for new version of qpidc.
