@@ -2,6 +2,14 @@
 
 # the following is chkconfig init header
 # matahari: host qmf agent for ovirt node
+### BEGIN INIT INFO
+# Required-Start: $local_fs matahari-broker
+# Default-Start 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: start/stop matahari agents
+# Description: Matahari agents provide host information using AMQP protocol
+### END INIT INFO
+
 # chkconfig: - 99 01
 # description: This is a daemon for interacting with an ovirt server.
 # processname: matahari
