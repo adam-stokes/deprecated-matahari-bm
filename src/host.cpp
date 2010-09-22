@@ -24,6 +24,7 @@
 #include <stdexcept>
 
 #include <cstdlib>
+#include <limits.h>
 #include <unistd.h>
 
 #include <libvirt/libvirt.h>

@@ -22,12 +22,13 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <cstring>
 #include <vector>
 #include <exception>
 
 #include <signal.h>
 #include <cstdlib>
+#include <cerrno>
 
 #include <getopt.h>
 
@@ -81,7 +82,7 @@ int do_main(int argc, char **argv)
     char *service = NULL;
     int port = 5672;
 
-    ConnectionSettings settings;
+    qpid::management::ConnectionSettings settings;
     ManagementAgent *agent;
     HostWrapper *hostWrapper;
 

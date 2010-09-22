@@ -18,7 +18,7 @@
  */
 
 #include <iostream>
-#include <string>
+#include <cstring>
 #include <sstream>
 #include <vector>
 #include <stdexcept>
