@@ -18,4 +18,5 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari.init.in
 	${CMAKE_CURRENT_BINARY_DIR}/matahari.init)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.init.in
 	${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.init)
-
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.sysconf.in
+	${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf
