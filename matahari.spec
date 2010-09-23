@@ -94,8 +94,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/matahari/schema-host.xml
 
 %attr(755, root, root) %{_sbindir}/matahari-host
-%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari-host
-%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari-broker
+%attr(755, root, root) %{_initddir}/matahari-host
+%attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
