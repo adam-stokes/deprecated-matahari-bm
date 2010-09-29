@@ -58,7 +58,7 @@ start() {
 	    touch $pidfile
 	    chown qpidd.qpidd $pidfile
             [ -x /sbin/restorecon ] && /sbin/restorecon $pidfile
-	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check --pid-dir @localstatedir@/run/qpidd > $pidfile"
+	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check --pid-dir @localstatedir@/run/qpidd $QPIDD_OPTIONS > $pidfile"
 	fi
 	return $RETVAL
 }
