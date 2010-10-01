@@ -1,0 +1,40 @@
+<schema package="com.redhat.matahari.net">
+
+ <class name="Interface">
+   <!-- properties -->
+   <property name="name"             type="sstr"  access="RO" desc="Interface name" />
+   <property name="mac_address"      type="sstr"  access="RO" desc="Physical hardware address" />
+
+   <!-- APIs -->
+   <method name="identify"                desc="Tell network device to blink light">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="add_address"             desc="Applies new IP address to device">
+     <arg name="address" dir="IO" type="uint32" />
+     <arg name="netmask" dir="IO" type="uint32" />
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="remove_address"          desc="Remove IP address">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="list_addresses"          desc="List IP addresses">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="list_dns_servers"        desc="List of DNS servers">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="destroy"                 desc="Remove network interface">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="start"                   desc="Starts network interface">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="restart"                 desc="Restarts network interface">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="stop"                    desc="Stops network interface">
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+ </class>
+
+</schema>
