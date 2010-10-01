@@ -20,6 +20,7 @@
 . @sysconfdir@/rc.d/init.d/functions
 
 SERVICE=`basename "$0"`
+PROCESS=`echo "$SERVICE"d`
 
 RETVAL=0
 
@@ -27,7 +28,7 @@ test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
 
 start() {
     echo -n $"Starting $SERVICE daemon: "
-    daemon $SERVICE $MATAHARI_ARGS --daemon
+    daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$SERVICE
@@ -36,7 +37,7 @@ start() {
 stop() {
     echo -n $"Stopping $SERVICE daemon: "
 
-    killproc $SERVICE
+    killproc $PROCESS
     RETVAL=$?
     echo
     if [ $RETVAL -eq 0 ]; then
@@ -53,7 +54,7 @@ restart() {
 reload() {
     echo -n $"Reloading $SERVICE configuration: "
 
-    killproc $SERVICE -HUP
+    killproc $PROCESS -HUP
     RETVAL=$?
     echo
     return $RETVAL
@@ -65,7 +66,7 @@ case "$1" in
         $1
         ;;
     status)
-        status $SERVICE
+        status $PROCESS
         RETVAL=$?
         ;;
     force-reload)

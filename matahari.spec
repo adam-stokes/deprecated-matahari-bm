@@ -1,5 +1,5 @@
 %global specversion 1
-%global upstream_version 9fc30e4
+%global upstream_version 5e26232
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -92,8 +92,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %dir %{_datadir}/matahari/
 %{_datadir}/matahari/schema-host.xml
+%{_datadir}/matahari/schema-net.xml
 
-%attr(755, root, root) %{_sbindir}/matahari-host
+%attr(755, root, root) %{_sbindir}/matahari-hostd
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
@@ -103,6 +104,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %changelog
+* Fri Oct 01 2010 Adam Stokes <astokes@fedoraproject.org> - 0.4.0-0.1.5e26232.git
+- Add schema-net for network api
 
 * Tue Sep 21 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.1.9fc30e4.git
 - Pre-release of the new cross platform version of Matahari

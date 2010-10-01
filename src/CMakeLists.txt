@@ -15,9 +15,9 @@ set(PCRE_PATH "D:/Users/mcpierce/Programming/pcre-7.0")
 set(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
 
 # set service name var's
-set(M_HOST "matahari-host")
-set(M_NET "matahari-net")
-set(M_PKG "matahari-package")
+set(M_HOST "matahari-hostd")
+set(M_NET "matahari-netd")
+set(M_PKG "matahari-packaged")
 set(M_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
 file(GLOB SCHEMAS "*.xml")
