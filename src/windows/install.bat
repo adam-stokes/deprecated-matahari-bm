@@ -15,4 +15,4 @@ copy rhsrvany.exe mh_broker.exe
 mh_broker.exe install "%target%\qpidd.exe --auth 0 --log-to-file broker.log" "%target%"
 
 copy rhsrvany.exe mh_host.exe
-mh_host.exe install "%target%\matahari-host.exe" "%target%"
+mh_host.exe install "%target%\matahari-hostd.exe" "%target%"
