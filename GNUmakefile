@@ -39,6 +39,7 @@ export:
 
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(shell git show --pretty="format: %h" | head -n1)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
