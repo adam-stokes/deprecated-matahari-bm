@@ -1,5 +1,5 @@
 %global specversion 2
-%global upstream_version df09c8a
+%global upstream_version  c2d5804
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -104,6 +104,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
+%config(noreplace) %{_sysconfdir}/matahari-broker.conf
 
 %doc AUTHORS COPYING
 

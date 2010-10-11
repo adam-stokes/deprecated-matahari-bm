@@ -71,9 +71,6 @@ if(WIN32)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES windows/install.bat DESTINATION sbin)
 
-  # Windows configs
-  install(FILES matahari-broker.conf DESTINATION /etc)
-
 else(WIN32)
 
   set (CPACK_GENERATOR "TGZ")
@@ -88,6 +85,9 @@ else(WIN32)
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
 
 endif(WIN32)
+
+# Broker config - used on linux and windows
+install(FILES matahari-broker.conf DESTINATION /etc)
 
 INCLUDE(InstallRequiredSystemLibraries)
 INCLUDE(CPack)
