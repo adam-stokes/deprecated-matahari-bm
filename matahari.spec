@@ -58,8 +58,9 @@ rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
-%{__install} matahari.init $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
-%{__install} matahari-broker.init $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-net
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+%{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-host
