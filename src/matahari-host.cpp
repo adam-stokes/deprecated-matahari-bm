@@ -92,7 +92,11 @@ main(int argc, char **argv)
     char *service = NULL;
     int serverport = 5672;
 
+#if QPID_VERSION < 07
+    ConnectionSettings settings;
+#else
     qpid::management::ConnectionSettings settings;
+#endif
     ManagementAgent *agent;
     HostAgent hostAgent;
     ProcessorAgent processorAgent;
