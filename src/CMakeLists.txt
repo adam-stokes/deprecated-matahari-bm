@@ -8,6 +8,7 @@ set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(MINGW_ROOT "/usr/i686-pc-mingw32/sys-root/mingw")
 
 include(FindPkgConfig)
+include_directories("${CMAKE_BINARY_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/qmf")
 
@@ -20,7 +21,7 @@ set(M_NET "matahari-netd")
 set(M_PKG "matahari-packaged")
 set(M_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
-file(GLOB SCHEMAS "*.xml")
+file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 
 # Main function plus QMF models
@@ -38,17 +39,17 @@ set(HOST_LIBRARY
         processor.cpp
         util.c)
 
-set(GENERATED_SCHEMA_SOURCES
-        qmf/com/redhat/matahari/host/EventHeartbeat.cpp
-        qmf/com/redhat/matahari/host/EventHeartbeat.h
-        qmf/com/redhat/matahari/host/Host.cpp
-        qmf/com/redhat/matahari/host/Host.h
-        qmf/com/redhat/matahari/host/Package.cpp
-        qmf/com/redhat/matahari/host/Package.h
-        qmf/com/redhat/matahari/host/Processor.cpp
-        qmf/com/redhat/matahari/host/Processor.h)
+set(HOST_SCHEMA_SOURCES
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.cpp
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.h
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.cpp
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.h
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.cpp
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.h
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Processor.cpp
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Processor.h)
 
-add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${GENERATED_SCHEMA_SOURCES})
+add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${HOST_SCHEMA_SOURCES})
 
 pkg_check_modules(pcre REQUIRED libpcre)
 
@@ -94,8 +95,11 @@ target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
 
 execute_process(COMMAND ${QPIDD} --version  OUTPUT_VARIABLE QPID_VERSION_LONG)
 string(STRIP QPID_VERSION_LONG ${QPID_VERSION_LONG})
+string(REGEX REPLACE "d \\(.*\\)" "" QPID_VERSION_LONG ${QPID_VERSION_LONG})
+message("Building against: ${QPID_VERSION_LONG}")
+
 string(REGEX REPLACE ".* " "" QPID_VERSION ${QPID_VERSION_LONG})
-string(REGEX REPLACE "\." "" QPID_VERSION ${QPID_VERSION})
+string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 add_definitions(-DQPID_VERSION=${QPID_VERSION})
 
 if(NOT pcre_FOUND)
@@ -133,19 +137,19 @@ if(QMFGEN-NOTFOUND)
 endif(QMFGEN-NOTFOUND)
 
 set(regen_schema OFF)
-message(STATUS "Regenerating QMF schemas")
+message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
 foreach (schema_file ${SCHEMAS} ${QMFGEN})
-    foreach (file ${GENERATED_SCHEMA_SOURCES})
+    foreach (file ${HOST_SCHEMA_SOURCES})
         if (${schema_file} IS_NEWER_THAN ${file})
             set(regen_schema ON)
 	    message("${schema_file} is newer than ${file}")
         endif (${schema_file} IS_NEWER_THAN ${file})
-    endforeach (file ${GENERATED_SCHEMA_SOURCES})
+    endforeach (file ${HOST_SCHEMA_SOURCES})
 endforeach (schema_file ${SCHEMAS})
 
 if (regen_schema)
     # Regenerate everything 
-    execute_process(COMMAND rm -f ${GENERATED_SCHEMA_SOURCES})
+    execute_process(COMMAND rm -f ${HOST_SCHEMA_SOURCES})
     execute_process(COMMAND ${QMFGEN} -o ./qmf ${SCHEMAS}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else (regen_schema)
