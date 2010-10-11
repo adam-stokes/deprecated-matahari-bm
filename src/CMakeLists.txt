@@ -41,17 +41,24 @@ set(HOST_LIBRARY
 
 set(HOST_SCHEMA_SOURCES
         ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.cpp
-        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.h
         ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.cpp
-        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.h
         ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.cpp
-        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.h
-        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Processor.cpp
-        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Processor.h)
+        ${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/host/Processor.cpp)
 
 add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${HOST_SCHEMA_SOURCES})
 
+set(NET_SOURCES
+	matahari-netd.cpp
+	qmf/netagent.cpp)
+
+set(NET_SCHEMA_SOURCES
+	${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/net/Package.cpp
+	${CMAKE_BINARY_DIR}/qmf/com/redhat/matahari/net/Network.cpp)
+
+add_executable(${M_NET} ${NET_SOURCES} ${NET_SCHEMA_SOURCES})
+
 pkg_check_modules(pcre REQUIRED libpcre)
+pkg_check_modules(netcf REQUIRED netcf)
 
 if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
@@ -92,6 +99,7 @@ if(NOT QPIDCOMMON)
 endif(NOT QPIDCOMMON)
 
 target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
+target_link_libraries(${M_NET} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
 
 execute_process(COMMAND ${QPIDD} --version  OUTPUT_VARIABLE QPID_VERSION_LONG)
 string(STRIP QPID_VERSION_LONG ${QPID_VERSION_LONG})
@@ -121,6 +129,13 @@ else(pcre_FOUND)
    message(FATAL_ERROR "PCRE header/library not found.")
 endif(pcre_FOUND)
 
+if(netcf_FOUND)
+   target_link_libraries(${M_NET} ${netcf_LIBRARIES})
+   include_directories(${netcf_INCLUDE_DIRS})
+else(netcf_FOUND)
+   message(FATAL_ERROR "NETCF header/library not found.")
+endif(netcf_FOUND)
+
 set(simple_libs check libvirt udev_new)
 foreach(lib ${simple_libs}) 
     find_library(${lib}_LIBRARIES ${lib})
@@ -139,12 +154,12 @@ endif(QMFGEN-NOTFOUND)
 set(regen_schema OFF)
 message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
 foreach (schema_file ${SCHEMAS} ${QMFGEN})
-    foreach (file ${HOST_SCHEMA_SOURCES})
+    foreach (file ${HOST_SCHEMA_SOURCES} ${NET_SCHEMA_SOURCES})
         if (${schema_file} IS_NEWER_THAN ${file})
             set(regen_schema ON)
 	    message("${schema_file} is newer than ${file}")
         endif (${schema_file} IS_NEWER_THAN ${file})
-    endforeach (file ${HOST_SCHEMA_SOURCES})
+    endforeach (file ${HOST_SCHEMA_SOURCES} ${NET_SCHEMA_SOURCES})
 endforeach (schema_file ${SCHEMAS})
 
 if (regen_schema)
@@ -186,6 +201,8 @@ set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} 
 #configure_file(autorun.in arun )
 
 install(TARGETS ${M_HOST}  DESTINATION sbin)
+install(TARGETS ${M_NET}   DESTINATION sbin)
+
 if(WIN32)
   # Find qpid files needed by matahari
   file(GLOB_RECURSE QPID_EXE  ${MINGW_ROOT}/*/qpidd.exe)
