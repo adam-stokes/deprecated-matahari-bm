@@ -26,9 +26,8 @@
 #include <windows.h>
 #endif
 
-#include <qpid/agent/ManagementAgent.h>
-#include <qpid/client/ConnectionSettings.h>
-
+#include <errno.h>
+#include <string.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -39,6 +38,10 @@
 #include <cstdlib>
 
 #include "host.h"
+
+#include <qpid/sys/Time.h>
+#include <qpid/agent/ManagementAgent.h>
+#include <qpid/client/ConnectionSettings.h>
 
 #include "qmf/hostagent.h"
 #include "qmf/processoragent.h"
@@ -89,7 +92,7 @@ main(int argc, char **argv)
     char *service = NULL;
     int serverport = 5672;
 
-    ConnectionSettings settings;
+    qpid::management::ConnectionSettings settings;
     ManagementAgent *agent;
     HostAgent hostAgent;
     ProcessorAgent processorAgent;
