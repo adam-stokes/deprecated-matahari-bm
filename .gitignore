@@ -16,3 +16,7 @@ matahari*.tbz2
 CMakeFiles
 CMakeCache.txt
 mock
+matahari-broker.init
+matahari-broker.sysconf
+build
+build-win
