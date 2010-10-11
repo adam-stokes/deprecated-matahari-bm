@@ -1,5 +1,5 @@
-%global specversion 1
-%global upstream_version 5e26232
+%global specversion 2
+%global upstream_version df09c8a
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -25,11 +25,11 @@ Requires:	libvirt >= 0.6.2
 Requires:	pcre >= 7.8
 
 BuildRequires:	cmake
-BuildRequires:	libudev-devel
+BuildRequires:	libudev-devel netcf-devel
 BuildRequires:	gcc-c++ >= 4.4.0
 BuildRequires:	dbus-devel >= 1.2.12
 BuildRequires:	hal-devel >= 0.5.12
-BuildRequires:	qpidc-devel >= 0.5.819819
+BuildRequires:	qpid-cpp-server-devel >= 0.5.819819
 BuildRequires:	qmf-devel >= 0.5.819819
 BuildRequires:	libvirt-devel >= 0.6.2
 BuildRequires:	pcre-devel >= 7.8
@@ -95,12 +95,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/matahari/schema-host.xml
 %{_datadir}/matahari/schema-net.xml
 
-%attr(755, root, root) %{_sbindir}/matahari-hostd
+%attr(755, root, root) %{_initddir}/matahari-net
+%attr(755, root, root) %{_sbindir}/matahari-netd
+
 %attr(755, root, root) %{_initddir}/matahari-host
-%attr(755, root, root) %{_initddir}/matahari-broker
+%attr(755, root, root) %{_sbindir}/matahari-hostd
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
+
+%attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
-%config(noreplace) %{_sysconfdir}/matahari-broker.conf
 
 %doc AUTHORS COPYING
 
