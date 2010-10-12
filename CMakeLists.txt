@@ -39,6 +39,11 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Matahari QMF Agent")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "matahari-${CPACK_PACKAGE_VERSION}")
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari.sysconf.in
+	       ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.conf.in
+	       ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf)
 
 if(WIN32)
 
@@ -85,6 +90,8 @@ if(WIN32)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES windows/install.bat DESTINATION sbin)
 
+  install(FILES matahari-broker.conf DESTINATION etc)
+
 else(WIN32)
 
   set (CPACK_GENERATOR "TGZ")
@@ -98,16 +105,9 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.sysconf.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
 
+  install(FILES matahari-broker.conf DESTINATION ${sysconfdir})
+
 endif(WIN32)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari.sysconf.in
-	       ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.conf.in
-	       ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf)
-
-# Broker config - used on linux and windows
-install(FILES matahari-broker.conf DESTINATION /etc)
 
 INCLUDE(InstallRequiredSystemLibraries)
 INCLUDE(CPack)
