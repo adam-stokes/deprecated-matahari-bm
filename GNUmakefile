@@ -60,6 +60,14 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
+overlay: export
+	cp $(TARFILE) ~/rpmbuild/SOURCES
+	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
+	make -C ~/rpmbuild/SOURCES $(VARIANT)$(PACKAGE)
+
+overlay-win:   
+	make VARIANT=mingw32- overlay
+
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
 	mock --root=$(PROFILE) --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
