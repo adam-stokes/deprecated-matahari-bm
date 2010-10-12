@@ -113,8 +113,6 @@ cpu_get_details()
       const char* pcre_error;
       int pcre_error_offset;
       pcre* regex;
-      bool done = false;
-      bool started = false;
 
       regex = pcre_compile(regexstr.c_str(), 0, &pcre_error, &pcre_error_offset, NULL);
       if(!regex) { throw runtime_error("Unable to compile regular expression."); }
@@ -127,43 +125,32 @@ cpu_get_details()
 	  int match = pcre_exec(regex, NULL, line.c_str(), line.length(),
 				0, PCRE_NOTEMPTY,found, expected * 3);
 
-	  if(match == expected)
-	    {
+	  if(match == expected) {
 	      string name = line.substr(found[2], found[3] - found[2]);
 	      string value = line.substr(found[4], found[5] - found[4]);
 
 	      /* If we're at a second processor and we've already started,
 		 then we're done.
 	      */
-	      if (name == "processor")
-		{
+	      if (name == "processor") {
 		  cpuinfo.cpus++;
-		  if (started)
-		    {
-		      done = true;
-		    }
-		  else
-		    {
-		      started = true;
-		    }
-		}
-	      else if (!done)
-		{
-		  if      (name == "cpu cores")  cpuinfo.cores = atoi(value.c_str());
-		  else if (name == "model name") cpuinfo.model = value;
-		  else if (name == "flags")
-		    {
-		      string flags(value);
 
-		      // if the cpuflags contain "lm" then it's a 64 bit CPU
-		      // http://www.brandonhutchinson.com/Understanding_proc_cpuinfo.html
-		      cpuinfo.wordsize = (flags.find(" lm ") ? 64 : 32);
-		    }
-		}
-	    }
+	      } else if (name == "cpu cores")  {
+		  cpuinfo.cores += atoi(value.c_str());
+
+	      } else if (name == "model name") {
+		  cpuinfo.model = value;
+	      
+	      } else if (name == "flags") {
+		  string flags(value);
+		  
+		  // if the cpuflags contain "lm" then it's a 64 bit CPU
+		  // http://www.brandonhutchinson.com/Understanding_proc_cpuinfo.html
+		  cpuinfo.wordsize = (flags.find(" lm ") ? 64 : 32);
+	      }
+	  }
 	}
       input.close();
-      cpuinfo.cpus /= cpuinfo.cores;
     }
 #elif defined WIN32
   LPFN_GLPI proc;
