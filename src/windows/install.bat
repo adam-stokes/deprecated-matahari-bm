@@ -12,7 +12,7 @@ cd "%target%"
 
 rem Change the arguments to specify an alternate config file
 copy rhsrvany.exe mh_broker.exe
-mh_broker.exe install "%target%\qpidd.exe --auth 0 --log-to-file broker.log" "%target%"
+mh_broker.exe install "%target%\qpidd.exe --config %target%\etc\matahari-broker.conf" "%target%"
 
 copy rhsrvany.exe mh_host.exe
 mh_host.exe install "%target%\matahari-hostd.exe" "%target%"
