@@ -12,6 +12,10 @@ set(M_PKG  "matahari-packaged")
 
 file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 
+# Defines
+add_definitions(-DMATAHARI_PORT=${MATAHARI_PORT})
+add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
+
 # Build targets
 ## Host
 set(HOST_SOURCES
@@ -153,10 +157,14 @@ set(regen_schema OFF)
 message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
 foreach (schema_file ${SCHEMAS} ${QMFGEN})
     foreach (file ${HOST_SCHEMA_SOURCES} ${NET_SCHEMA_SOURCES})
-        if (${schema_file} IS_NEWER_THAN ${file})
+        if (EXISTS ${file})
+            if (${schema_file} IS_NEWER_THAN ${file})
+                set(regen_schema ON)
+	        message("${schema_file} is newer than ${file}")
+            endif (${schema_file} IS_NEWER_THAN ${file})
+        else (EXISTS ${file})
             set(regen_schema ON)
-	    message("${schema_file} is newer than ${file}")
-        endif (${schema_file} IS_NEWER_THAN ${file})
+        endif (EXISTS ${file})
     endforeach (file ${HOST_SCHEMA_SOURCES} ${NET_SCHEMA_SOURCES})
 endforeach (schema_file ${SCHEMAS})
 
@@ -172,7 +180,6 @@ endif (regen_schema)
 # Add QF libraries
 target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
 target_link_libraries(${M_NET} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
-
 
 # Install targets
 install(TARGETS ${M_HOST}  DESTINATION sbin)

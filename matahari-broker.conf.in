@@ -23,4 +23,4 @@
 # "qpidd --help" or "man qpidd" for more details.
 cluster-mechanism=ANONYMOUS
 auth=no
-port=49000
+port=@MATAHARI_PORT@

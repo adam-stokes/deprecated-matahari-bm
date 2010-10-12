@@ -16,6 +16,19 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
+build:
+	@echo "Building for Linux under build/"
+	-test ! -d build && mkdir build
+	-test ! -e build/CMakeFiles && cd build && cmake ..
+	make -C build all
+
+build-win:
+	@echo "Building for Windows under build-win/"
+	-test ! -d build-win && mkdir build-win
+	-test ! -e build-win/CMakeFiles && cd build-win && mingw32-cmake ..
+	make -C build-win all
+
+
 -include Makefile
 
 PACKAGE		?= matahari
@@ -31,6 +44,7 @@ TAG    ?= next
 WITH   ?= 
 VARIANT ?=
 PROFILE ?= fedora-13-x86_64
+
 
 export:
 	rm -f $(TARFILE)
@@ -55,3 +69,5 @@ mock:   srpm mock-nodeps
 
 mock-win:   
 	make PROFILE=matahari VARIANT=mingw32- srpm mock-nodeps
+
+.PHONY: build build-win

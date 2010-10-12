@@ -81,10 +81,10 @@ main(int argc, char **argv)
     bool daemonize = false;
 #endif
     bool gssapi = false;
-    char *servername = NULL;
+    char *servername = strdup(MATAHARI_BROKER);
     char *username = NULL;
     char *service = NULL;
-    int serverport = 5672;
+    int serverport = MATAHARI_PORT;
 
 #if QPID_VERSION < 07
     ConnectionSettings settings;
@@ -179,7 +179,7 @@ main(int argc, char **argv)
     signal(SIGINT, shutdown);
 
     // Connect to the broker
-    settings.host = servername ? servername : "127.0.0.1";
+    settings.host = servername;
     settings.port = serverport;
 
     if (username != NULL) {

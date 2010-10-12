@@ -7,25 +7,38 @@ set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "4")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(PROJECT_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-message("top: ${CMAKE_BINARY_DIR} - ${CMAKE_CURRENT_BINARY_DIR} - ${PROJECT_BINARY_DIR}")
+
+MACRO (inherit_value theSymbol theValue)
+    if (NOT DEFINED ${theSymbol})
+        set (${theSymbol} ${theValue})
+        # message ("Set symbol '${theSymbol}' to value '${theValue}'")
+        set (${theSymbol}_inherited = "true")
+    endif (NOT DEFINED ${theSymbol})
+ENDMACRO (inherit_value)
 
 # Various defines 
-set(MINGW_ROOT "/usr/i686-pc-mingw32/sys-root/mingw")
-set(PCRE_PATH "D:/Users/mcpierce/Programming/pcre-7.0")
-set(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
+inherit_value(MATAHARI_PORT "49000")
+inherit_value(MATAHARI_BROKER "127.0.0.1")
 
-# add sub-directories
+# Build Paths
+inherit_value(MINGW_ROOT "/usr/i686-pc-mingw32/sys-root/mingw")
+inherit_value(PCRE_PATH "D:/Users/mcpierce/Programming/pcre-7.0")
+inherit_value(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
+
+# Build Prefixes
+inherit_value(localstatedir "/var")
+inherit_value(sysconfdir    "/etc")
+
+# Add sub-directories
 add_subdirectory(src)
 
-# Set some prefixes
-set(localstatedir "/var")
-set(sysconfdir    "/etc")
-
+# Installer
 set(CPACK_PACKAGE_NAME "matahari")
 set(CPACK_PACKAGE_VENDOR "Red Hat")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Matahari QMF Agent")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "matahari-${CPACK_PACKAGE_VERSION}")
+
 
 if(WIN32)
 
@@ -85,6 +98,12 @@ else(WIN32)
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
 
 endif(WIN32)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari.sysconf.in
+	       ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.conf.in
+	       ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf)
 
 # Broker config - used on linux and windows
 install(FILES matahari-broker.conf DESTINATION /etc)
