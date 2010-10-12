@@ -129,9 +129,6 @@ cpu_get_details()
 	      string name = line.substr(found[2], found[3] - found[2]);
 	      string value = line.substr(found[4], found[5] - found[4]);
 
-	      /* If we're at a second processor and we've already started,
-		 then we're done.
-	      */
 	      if (name == "processor") {
 		  cpuinfo.cpus++;
 
