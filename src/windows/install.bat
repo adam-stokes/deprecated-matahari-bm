@@ -16,3 +16,6 @@ mh_broker.exe install "%target%\qpidd.exe --config %target%\etc\matahari-broker.
 
 copy rhsrvany.exe mh_host.exe
 mh_host.exe install "%target%\matahari-hostd.exe" "%target%"
+
+copy rhsrvany.exe mh_net.exe
+mh_net.exe install "%target%\matahari-netd.exe" "%target%"
