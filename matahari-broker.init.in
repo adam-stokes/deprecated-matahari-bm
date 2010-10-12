@@ -65,10 +65,10 @@ start() {
 
 stop() {
 	echo -n $"Stopping Matahari broker daemon: "
-	killproc -p ${pidfile} $prog
+	killproc -p $pidfile $prog
 	RETVAL=$?
 	echo
-	[ $RETVAL = 0 ] && rm -f ${lockfile} ${pidfile}
+	[ $RETVAL = 0 ] && rm -f $lockfile $pidfile
 }
 
 reload() {
