@@ -37,7 +37,7 @@ class NetAgent : public Manageable
     _qmf::Network* _management_object;
 
  public:
-    NetAgent(ManagementAgent* _agent, char *_name);
+    NetAgent(ManagementAgent* _agent);
     virtual ~NetAgent();
     
     static int setup(ManagementAgent* agent);

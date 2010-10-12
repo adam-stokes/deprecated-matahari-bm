@@ -194,14 +194,23 @@ main(int argc, char **argv)
 
     agent->init(settings, 5, false, ".magentdata");
 
-    // Get the info and post it to the broker
+    /* Do any setup required by our agent */
     if(NetAgent::setup(agent) < 0) {
+	fprintf(stderr, "Failed to set up agent\n");
 	return -1;
-    }
 
-    while (true) {
-        qpid::sys::sleep(1);
+    } else {
+	/* Need to create our agent here, not in ::setup() so that it
+	 * stays in scope and isn't deallocated by the garbage collector
+	 *
+	 * Why do I hate C++ again?
+	 */
+	NetAgent mh(agent);
+	
+	while (true) {
+	    qpid::sys::sleep(1);
+	}
     }
-
+    
     return 0;
 }

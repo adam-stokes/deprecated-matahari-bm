@@ -32,19 +32,26 @@
 
 extern "C" { 
 #include <netcf.h> 
-};
 #include <string.h>
-
+#include <sys/utsname.h>
+};
 
 struct netcf *ncf;
 
-NetAgent::NetAgent(ManagementAgent* agent, char *_name)
+NetAgent::NetAgent(ManagementAgent* agent)
 {
+    struct utsname name;
     if(	ncf == NULL) {
 	return;
     }
+    if(uname(&name) < 0) {
+	return;
+    }
+
     this->_agent = agent;
     this->_management_object = new _qmf::Network(agent, this);
+    this->_management_object->set_hostname(name.nodename);
+
     agent->addObject(this->_management_object);
 }
 
@@ -56,6 +63,7 @@ NetAgent::setup(ManagementAgent* agent)
     if (ncf_init(&ncf, NULL) < 0) {
 	return -1;
     }
+    return 0;
 }
 
 Manageable::status_t
