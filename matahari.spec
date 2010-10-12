@@ -1,5 +1,5 @@
 %global specversion 2
-%global upstream_version  c2d5804
+%global upstream_version  ecd7019
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -63,7 +63,7 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
-%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-host
+%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 
 %post
@@ -95,12 +95,13 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/matahari/schema-host.xml
 %{_datadir}/matahari/schema-net.xml
 
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari
+
 %attr(755, root, root) %{_initddir}/matahari-net
 %attr(755, root, root) %{_sbindir}/matahari-netd
 
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-hostd
-%config(noreplace) %{_sysconfdir}/sysconfig/matahari-host
 
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
