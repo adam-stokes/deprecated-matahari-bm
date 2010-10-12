@@ -79,7 +79,6 @@ typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 #include "processor.h"
 #include <stdexcept>
 #include <string>
-#include "util.h"
 
 using namespace std;
 
