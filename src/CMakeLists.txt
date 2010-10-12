@@ -180,13 +180,13 @@ endif (regen_schema)
 
 # Add QF libraries
 target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
-target_link_libraries(${M_NET} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
+target_link_libraries(${M_NET}  ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
 
 # Install targets
 install(TARGETS ${M_HOST}  DESTINATION sbin)
 install(TARGETS ${M_NET}   DESTINATION sbin)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
-install(FILES matahari.h DESTINATION include)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.h DESTINATION include)
 
 
