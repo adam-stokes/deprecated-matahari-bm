@@ -9,7 +9,7 @@
    <property name="memory"           type="int64" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
    <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
    <property name="hypervisor"       type="sstr"  access="RO" desc="Hypervisor used by host" />
-   <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." unit="bits"/>
+   <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." unit="bit"/>
    <property name="processors"       type="uint8" access="RO" desc="The number of physical CPUs." />
    <property name="cores"            type="uint8" access="RO" desc="The total number of processor cores." />
    <property name="model"            type="lstr"  access="RO" desc="The processor(s) model description." />
