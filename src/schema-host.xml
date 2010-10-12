@@ -9,29 +9,22 @@
    <property name="memory"           type="int64" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
    <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
    <property name="hypervisor"       type="sstr"  access="RO" desc="Hypervisor used by host" />
-   <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." />
+   <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." unit="bits"/>
+   <property name="processors"       type="uint8" access="RO" desc="The number of physical CPUs." />
+   <property name="cores"            type="uint8" access="RO" desc="The total number of processor cores." />
+   <property name="model"            type="lstr"  access="RO" desc="The processor(s) model description." />
 
    <!-- statistics -->
-   <statistic name="last_updated_seq" type="uint32" desc="The heartbeat sequence number." />
-   <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
-   <statistic name="load_average_1"  type="double"  desc="The one minute load average." />
-   <statistic name="load_average_5"  type="double"  desc="The five minute load average." />
-   <statistic name="load_average_15" type="double"  desc="The fiften minute load average" />
+   <statistic name="last_updated_seq" type="uint32"  desc="The heartbeat sequence number." />
+   <statistic name="last_updated"     type="absTime" desc="The last time a heartbeat occurred." />
+   <statistic name="load_average_1"   type="double"  desc="The one minute load average." />
+   <statistic name="load_average_5"   type="double"  desc="The five minute load average." />
+   <statistic name="load_average_15"  type="double"  desc="The fiften minute load average" />
 
    <!-- APIs -->
-   <method name="list_network_interfaces" desc="Returns the list of all network interfaces." />
    <method name="identify"                desc="Tells the host to beep its pc speaker." />
    <method name="shutdown"                desc="Shutdown node" />
    <method name="reboot"                  desc="Reboot node" />
- </class>
-
- <class name="Processor">
-   <!-- properties -->
-   <property name="host"     type="objId" access="RO" desc="The host agent." />
-   <property name="wordsize" type="uint8" access="RO" desc="The wordsize for the processor." />
-   <property name="model"    type="lstr"  access="RO" desc="The process model description." />
-   <property name="count"    type="uint8" access="RO" desc="The number of physical CPUs." />
-   <property name="cores"    type="uint8" access="RO" desc="The total number of processor cores." />
  </class>
 
  <eventArguments>

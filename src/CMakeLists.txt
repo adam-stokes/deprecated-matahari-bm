@@ -20,8 +20,7 @@ add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 ## Host
 set(HOST_SOURCES
         matahari-host.cpp
-        qmf/hostagent.cpp
-        qmf/processoragent.cpp)
+        qmf/hostagent.cpp)
 
 # TODO: host.cpp and processor.cpp need to be re-written in C
 #       and then combined with util.c into a library/dll
@@ -33,10 +32,9 @@ set(HOST_LIBRARY
         util.c)
 
 set(HOST_SCHEMA_SOURCES
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Processor.cpp)
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.cpp)
 
 add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${HOST_SCHEMA_SOURCES})
 

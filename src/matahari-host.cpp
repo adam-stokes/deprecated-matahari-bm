@@ -44,8 +44,6 @@
 #include <qpid/client/ConnectionSettings.h>
 
 #include "qmf/hostagent.h"
-#include "qmf/processoragent.h"
-
 #include "qmf/com/redhat/matahari/host/Package.h"
 
 using namespace qpid::management;
@@ -99,7 +97,6 @@ main(int argc, char **argv)
 #endif
     ManagementAgent *agent;
     HostAgent hostAgent;
-    ProcessorAgent processorAgent;
 
 #ifdef __linux__
     struct option opt[] = {
@@ -204,7 +201,6 @@ main(int argc, char **argv)
 
     // Get the info and post it to the broker
     hostAgent.setup(agent);
-    processorAgent.setup(agent, hostAgent);
 
     while(1)
       {

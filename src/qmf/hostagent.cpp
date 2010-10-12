@@ -22,6 +22,7 @@
 #endif
 
 #include "hostagent.h"
+#include "processor.h"
 #include <qpid/agent/ManagementAgent.h>
 
 #include "qmf/com/redhat/matahari/host/EventHeartbeat.h"
@@ -50,6 +51,9 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_platform(host_get_platform());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
+  _management_object->set_processors(cpu_get_count());
+  _management_object->set_cores(cpu_get_number_of_cores());
+  _management_object->set_model(cpu_get_model());
 }
 
 Manageable::status_t
