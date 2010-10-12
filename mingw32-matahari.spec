@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 1
-%global upstream_version 9fc30e4
+%global specversion 5
+%global upstream_version e1d0d9a
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -26,7 +26,7 @@ BuildArch:      noarch
 BuildRequires:  redhat-rpm-config cmake make qmf-devel
 BuildRequires:  mingw32-filesystem >= 57
 BuildRequires:  mingw32-gcc-c++ mingw32-nsis genisoimage
-BuildRequires:  mingw32-pcre mingw32-qpid-cpp mingw32-libvirt mingw32-srvany
+BuildRequires:  mingw32-pcre mingw32-qpid-cpp mingw32-libvirt mingw32-srvany mingw32-netcf
 
 %description
 
@@ -50,26 +50,20 @@ MinGW cross-compiled Windows application.
 %build
 PATH=%{_mingw32_bindir}:$PATH
 
-ls -al
-pushd src
+ls -al /usr/i686-pc-mingw32/sys-root/mingw/lib/pkgconfig
 #%{_mingw32_cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo
-%{_mingw32_cmake} -DCMAKE_BUILD_TYPE=Release
-make %{?_smp_mflags}
-
-popd
+%{_mingw32_cmake} --debug-output -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=on
+make VERBOSE=1 %{?_smp_mflags}
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
-pushd src
 
 make VERBOSE=1 %{?_smp_mflags} package
-genisoimage -o matahari-%{version}-win32.iso matahari-%{version}-win32.exe windows/autorun.inf
+genisoimage -o matahari-%{version}-win32.iso matahari-%{version}-win32.exe src/windows/autorun.inf
 
 %{__install} -d $RPM_BUILD_ROOT/%{_mingw32_datadir}/matahari
 %{__install} matahari-%{version}-win32.iso $RPM_BUILD_ROOT/%{_mingw32_datadir}/matahari
-
-popd
 
 %files
 %defattr(-,root,root,-)
@@ -78,6 +72,9 @@ popd
 %doc AUTHORS COPYING
 
 %changelog
-* Fri Sep 10 2010 Andrew Beekhof <andrew@beekhof.net> - matahari-1
+* Tue Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - matahari-0.4.0-0.3.e1d0d9a.git
+- Initial build.
+
+* Fri Sep 10 2010 Andrew Beekhof <andrew@beekhof.net> - matahari-0.4.0-0.1
 - Initial build.
 
