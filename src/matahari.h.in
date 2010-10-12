@@ -1,0 +1,5 @@
+/*
+ * External Matahari header file
+ * Used by people/projects building against matahari
+ */
+#define MATAHARI_PORT @MATAHARI_PORT@

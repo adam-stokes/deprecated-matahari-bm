@@ -57,6 +57,7 @@ include (CheckIncludeFiles)
 check_include_files (string.h HAVE_STRING_H)
 check_include_files (sys/ioctl.h HAVE_SYS_IOCTL_H)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/matahari.h)
 
 ## Modules
 pkg_check_modules(pcre REQUIRED libpcre)
@@ -186,5 +187,6 @@ install(TARGETS ${M_HOST}  DESTINATION sbin)
 install(TARGETS ${M_NET}   DESTINATION sbin)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
+install(FILES matahari.h DESTINATION include)
 
 
