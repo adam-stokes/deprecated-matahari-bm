@@ -103,7 +103,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		_qmf::ArgsNetworkStart& ioArgs = (_qmf::ArgsNetworkStart&) arguments;
 		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
 		if(nif == NULL) {
-		    ioArgs.o_status = -1;
+		    ioArgs.o_status = 3;
 		    return Manageable::STATUS_OK;
 
 		} else if(ncf_if_status(nif, &flags) == 0) {
@@ -126,7 +126,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		_qmf::ArgsNetworkStop& ioArgs = (_qmf::ArgsNetworkStop&) arguments;
 		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
 		if(nif == NULL) {
-		    ioArgs.o_status = -1;
+		    ioArgs.o_status = 3;
 		    return Manageable::STATUS_OK;
 
 		} else if(ncf_if_status(nif, &flags) < 0) {
@@ -149,7 +149,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		_qmf::ArgsNetworkStatus& ioArgs = (_qmf::ArgsNetworkStatus&) arguments;
 		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
 		if(nif == NULL) {
-		    ioArgs.o_status = -1;
+		    ioArgs.o_status = 3;
 		} else if(ncf_if_status(nif, &flags) == 0) {
 		    ioArgs.o_status = 1;
 		} else {
