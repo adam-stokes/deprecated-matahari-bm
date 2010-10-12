@@ -64,7 +64,8 @@ if(WIN32)
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_broker\\\"' ")
   
   #WriteRegStr HKCU \\\"Environment\\\" \\\"OGITOR_HOME\\\" $INSTDIR
-  #configure_file(autorun.in arun )
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/windows/autorun.inf.in 
+                 ${CMAKE_CURRENT_BINARY_DIR}/src/windows/autorun.inf)
   
   # Find qpid files needed by matahari
   file(GLOB_RECURSE QPID_EXE  ${MINGW_ROOT}/*/qpidd.exe)
