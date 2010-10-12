@@ -37,6 +37,20 @@ extern "C" {
 };
 
 struct netcf *ncf;
+static int interface_status(struct netcf_if *nif) 
+{
+    unsigned int flags = 0;
+    if(nif == NULL) {
+	return 3;
+	
+    } else if(ncf_if_status(nif, &flags) < 0) {
+	return 4;
+
+    } else if(flags & NETCF_IFACE_ACTIVE) {
+	return 0;
+    }
+    return 1; /* Inactive */
+}
 
 NetAgent::NetAgent(ManagementAgent* agent)
 {
@@ -102,21 +116,10 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsNetworkStart& ioArgs = (_qmf::ArgsNetworkStart&) arguments;
 		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		if(nif == NULL) {
-		    ioArgs.o_status = 3;
-		    return Manageable::STATUS_OK;
-
-		} else if(ncf_if_status(nif, &flags) == 0) {
-		    return Manageable::STATUS_OK;
-		    
-		} else if(ncf_if_up(nif) < 0)  {
-		    return Manageable::STATUS_EXCEPTION;
-		}
-
-		if(ncf_if_status(nif, &flags) == 0) {
-		    ioArgs.o_status = 1;
-		} else {
-		    ioArgs.o_status = 0;
+		ioArgs.o_status = interface_status(nif);
+		if(ioArgs.o_status == 1) {
+		    ncf_if_up(nif);
+		    ioArgs.o_status = interface_status(nif);
 		}
 	    }
 	    return Manageable::STATUS_OK;
@@ -125,21 +128,10 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsNetworkStop& ioArgs = (_qmf::ArgsNetworkStop&) arguments;
 		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		if(nif == NULL) {
-		    ioArgs.o_status = 3;
-		    return Manageable::STATUS_OK;
-
-		} else if(ncf_if_status(nif, &flags) < 0) {
-		    return Manageable::STATUS_OK;
-		    
-		} else if(ncf_if_down(nif) < 0)  {
-		    return Manageable::STATUS_EXCEPTION;
-		}
-
-		if(ncf_if_status(nif, &flags) == 0) {
-		    ioArgs.o_status = 1;
-		} else {
-		    ioArgs.o_status = 0;
+		ioArgs.o_status = interface_status(nif);
+		if(ioArgs.o_status == 0) {
+		    ncf_if_down(nif);
+		    ioArgs.o_status = interface_status(nif);
 		}
 	    }
 	    return Manageable::STATUS_OK;
@@ -148,13 +140,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsNetworkStatus& ioArgs = (_qmf::ArgsNetworkStatus&) arguments;
 		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		if(nif == NULL) {
-		    ioArgs.o_status = 3;
-		} else if(ncf_if_status(nif, &flags) == 0) {
-		    ioArgs.o_status = 1;
-		} else {
-		    ioArgs.o_status = 0;
-		}
+		ioArgs.o_status = interface_status(nif);
 	    }
 	    return Manageable::STATUS_OK;
 
