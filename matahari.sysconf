@@ -1,1 +1,1 @@
-# MATAHARI_ARGS="--broker 127.0.0.1 --port 5672"
+MATAHARI_ARGS="--broker 127.0.0.1 --port 49000"
