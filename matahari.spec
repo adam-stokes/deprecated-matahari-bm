@@ -1,5 +1,5 @@
-%global specversion 4
-%global upstream_version 5e77d1b
+%global specversion 9
+%global upstream_version d2645bc
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -67,23 +67,24 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 
 %post
-/sbin/chkconfig --level 2345 matahari-host on
-/sbin/service matahari-host condrestart
-/sbin/chkconfig --level 2345 matahari-broker on
-/sbin/service matahari-broker condrestart
+for svc in net host broker; do
+    /sbin/chkconfig --level 2345 matahari-$svc on
+    /sbin/service matahari-$svc condrestart
+done
 
 %preun
 if [ $1 = 0 ]; then
-    /sbin/service matahari-host stop >/dev/null 2>&1 || :
-    chkconfig --del matahari-host
-    /sbin/service matahari-broker stop >/dev/null 2>&1 || :
-    chkconfig --del matahari-broker
+    for svc in net host broker; do
+       /sbin/service matahari-$svc stop >/dev/null 2>&1 || :
+       chkconfig --del matahari-$svc
+    done
 fi
 
 %postun
 if [ "$1" -ge "1" ]; then
-    /sbin/service matahari-host condrestart >/dev/null 2>&1 || :
-    /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
+    for svc in net host broker; do
+        /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
+    done
 fi
 
 %clean
@@ -94,6 +95,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %dir %{_datadir}/matahari/
 %{_datadir}/matahari/schema-host.xml
 %{_datadir}/matahari/schema-net.xml
+%{_includedir}/matahari.h
 
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari
 
@@ -110,6 +112,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %changelog
+* Wed Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.8.ad8b81b.git
+- Added the Network agent
+- Removed unnecessary OO-ness from existing Host agent/schema
+
 * Fri Oct 01 2010 Adam Stokes <astokes@fedoraproject.org> - 0.4.0-0.1.5e26232.git
 - Add schema-net for network api
 
