@@ -25,11 +25,10 @@ set(HOST_SOURCES
 # TODO: host.cpp and processor.cpp need to be re-written in C
 #       and then combined with util.c into a library/dll
 #
-#       Refer to qpid CMake control file for how to do this
+#       Refer to the qpid CMake control file for how to do this
 set(HOST_LIBRARY
         host.cpp
-        processor.cpp
-        util.c)
+        processor.cpp)
 
 set(HOST_SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.cpp

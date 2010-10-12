@@ -217,17 +217,6 @@ cpu_get_details()
 
       // get the processor model
       cpuinfo.model = string("unknown");
-      /*
-      char* model = NULL;
-
-      if(!exec_and_capture_text("cscript.exe /nologo win_get_cpu_model.vbs",
-				model)
-	{
-	  cpuinfo.model = string(model);
-	}
-
-	 free(model);
-      */
     }
 #endif
 }
