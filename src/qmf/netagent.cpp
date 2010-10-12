@@ -29,11 +29,11 @@
 #include "qmf/com/redhat/matahari/net/ArgsNetworkStatus.h"
 #include "qmf/com/redhat/matahari/net/ArgsNetworkDescribe.h"
 #include "qmf/com/redhat/matahari/net/ArgsNetworkDestroy.h"
+#include "host.h" 
 
 extern "C" { 
 #include <netcf.h> 
 #include <string.h>
-#include <sys/utsname.h>
 };
 
 struct netcf *ncf;
@@ -54,17 +54,13 @@ static int interface_status(struct netcf_if *nif)
 
 NetAgent::NetAgent(ManagementAgent* agent)
 {
-    struct utsname name;
     if(	ncf == NULL) {
-	return;
-    }
-    if(uname(&name) < 0) {
 	return;
     }
 
     this->_agent = agent;
     this->_management_object = new _qmf::Network(agent, this);
-    this->_management_object->set_hostname(name.nodename);
+    this->_management_object->set_hostname(host_get_hostname());
 
     agent->addObject(this->_management_object);
 }
@@ -83,9 +79,7 @@ NetAgent::setup(ManagementAgent* agent)
 Manageable::status_t
 NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 {
-    int rc = 0;
     struct netcf_if *nif;
-    unsigned int flags = NETCF_IFACE_ACTIVE;
 
     if(	ncf == NULL) {
 	return Manageable::STATUS_NOT_IMPLEMENTED;
@@ -96,7 +90,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Network::METHOD_LIST:
 	    {
 		_qmf::ArgsNetworkList& ioArgs = (_qmf::ArgsNetworkList&) arguments;
-		int lpc = 0;
+		uint32_t lpc = 0;
 		char **iface_list = NULL;
 		ioArgs.o_max = ncf_num_of_interfaces(ncf, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE);
 		

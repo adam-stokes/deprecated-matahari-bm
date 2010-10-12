@@ -39,6 +39,7 @@ add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${HOST_SCHEMA_SOURCES})
 
 ## Network
 set(NET_SOURCES
+        host.cpp
 	matahari-net.cpp
 	qmf/netagent.cpp)
 
@@ -66,6 +67,7 @@ endif(NOT PKG_CONFIG_FOUND)
 
 if(WIN32)
    target_link_libraries(${M_HOST} wsock32)
+   target_link_libraries(${M_NET} wsock32)
 else(WIN32)
    find_library(VIRT virt)
    if(VIRT_FOUND)
@@ -112,16 +114,39 @@ endforeach(lib ${simple_libs})
 ## qpid
 
 if(MSVC)
-   find_file(QPIDD qpidd "${QPID_PATH}")
+   find_file(QPIDD qpidd.exe "${QPID_PATH}")
    find_path(QPID_INCLUDE Address.h "${QPID_PATH}")
    find_library(QMFCONSOLE qmfconsole.lib "${QPID_PATH}")
    find_library(QPIDCLIENT qpidclient.lib "${QPID_PATH}")
    find_library(QPIDCOMMON qpidcommon.lib "${QPID_PATH}")
+
+   # Figure out some way to do this automatically on windows
+   # Perhaps with the strings command
+   set(QPID_VERSION_LONG "qpidd (qpidc) version 0.6")
+
 else(MSVC)
-   find_file(QPIDD qpidd)
    find_library(QMF qmf)
    find_library(QPIDCLIENT qpidclient)
    find_library(QPIDCOMMON qpidcommon)	
+
+   # Figure out the qpid version
+   if(WIN32)
+      find_file(QPIDD qpidd.exe)
+      execute_process(COMMAND strings ${QPIDD} OUTPUT_VARIABLE QPID_VERSION_LONG)
+      string(REGEX REPLACE ".*BUILD/qpid" " qpid" QPID_VERSION_LONG ${QPID_VERSION_LONG})
+      string(REGEX REPLACE "/cpp.*" "" QPID_VERSION_LONG ${QPID_VERSION_LONG})
+
+      #version: qpid-cpp-0.6.895736
+      string(REGEX REPLACE "qpid-cpp-" "" QPID_VERSION ${QPID_VERSION_LONG})
+      string(REGEX REPLACE ".[0-9]*$" "" QPID_VERSION ${QPID_VERSION})
+
+   else(WIN32)
+      find_file(QPIDD qpidd)
+      execute_process(COMMAND ${QPIDD} --version  OUTPUT_VARIABLE QPID_VERSION_LONG)
+      string(STRIP QPID_VERSION_LONG ${QPID_VERSION_LONG})
+      string(REGEX REPLACE "d \\(.*\\)" "" QPID_VERSION_LONG ${QPID_VERSION_LONG})
+      string(REGEX REPLACE ".* " "" QPID_VERSION ${QPID_VERSION_LONG})
+   endif(WIN32)
 endif(MSVC)
 
 if(NOT QMF)
@@ -141,14 +166,9 @@ if(QMFGEN-NOTFOUND)
    message(FATAL_ERROR Missing QMF schema processor.)
 endif(QMFGEN-NOTFOUND)
 
-# Figure out the qpid version
-execute_process(COMMAND ${QPIDD} --version  OUTPUT_VARIABLE QPID_VERSION_LONG)
-string(STRIP QPID_VERSION_LONG ${QPID_VERSION_LONG})
-string(REGEX REPLACE "d \\(.*\\)" "" QPID_VERSION_LONG ${QPID_VERSION_LONG})
-string(REGEX REPLACE ".* " "" QPID_VERSION ${QPID_VERSION_LONG})
 string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 
-message("Building against: ${QPID_VERSION_LONG}")
+message("Building against: ${QPID_VERSION_LONG} (${QPID_VERSION} )")
 add_definitions(-DQPID_VERSION=${QPID_VERSION})
 
 set(regen_schema OFF)
