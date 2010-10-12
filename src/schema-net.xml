@@ -1,6 +1,8 @@
-<!--  -->
+<!-- https://cwiki.apache.org/qpid/qpid-management-framework.html -->
 <schema package="com.redhat.matahari.net">
  <class name="Network">
+   <property name="hostname"   type="sstr"  access="RO" desc="Hostname" index="y"/>
+
    <!-- APIs -
    <method name="identify"                desc="Tell network device to blink light"/>
    <method name="add_address"             desc="Applies new IP address to device">
