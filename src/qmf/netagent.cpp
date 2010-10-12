@@ -82,7 +82,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Network::METHOD_LIST:
 	    {
 		_qmf::ArgsNetworkList& ioArgs = (_qmf::ArgsNetworkList&) arguments;
-		int max = 0, lpc = 0;
+		int lpc = 0;
 		char **iface_list = NULL;
 		ioArgs.o_max = ncf_num_of_interfaces(ncf, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE);
 		
@@ -92,9 +92,8 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		}
 		
 		for(lpc = 0; lpc < ioArgs.o_max; lpc++) {
-		    char *name = iface_list[lpc];
-		    nif = ncf_lookup_by_name(ncf, name);
-		    // ioArgs.o_iface_map[string(name)] = ncf_if_mac_string(nif);
+		    nif = ncf_lookup_by_name(ncf, iface_list[lpc]);
+		    ioArgs.o_iface_map.setString(iface_list[lpc], ncf_if_mac_string(nif));
 		}
 	    }
 	    return Manageable::STATUS_OK;
