@@ -74,17 +74,13 @@ if(WIN32)
   
   # Find qpid files needed by matahari
   file(GLOB_RECURSE QPID_EXE  ${MINGW_ROOT}/*/qpidd.exe)
-  file(GLOB_RECURSE QMF_DLL   ${MINGW_ROOT}/*/libqmf*.dll)
-  file(GLOB_RECURSE QPID_DLL  ${MINGW_ROOT}/*/libqpid*.dll)
-  install(FILES ${QPID_EXE} ${QMF_DLL} ${QPID_DLL} DESTINATION sbin)
+  install(FILES ${QPID_EXE} DESTINATION sbin)
   
-  # Find additional libraries needed by matahari/qpid
-  file(GLOB_RECURSE GCC_DLL   ${MINGW_ROOT}/*/libgcc_*.dll)
-  file(GLOB_RECURSE PCRE_DLL  ${MINGW_ROOT}/*/libpcre*.dll)
-  file(GLOB_RECURSE VIRT_DLL  ${MINGW_ROOT}/*/libvirt*.dll)
-  file(GLOB_RECURSE BOOST_DLL ${MINGW_ROOT}/*/boost_*-mt-1*.dll)
-  install(FILES ${GCC_DLL} ${PCRE_DLL} ${VIRT_DLL} ${BOOST_DLL} DESTINATION sbin)
-  
+  # Assume all installed DLLs are needed by matahari/qpid
+  # Finding the minimal list is excruciatingly painful and unreliable
+  file(GLOB_RECURSE DLL_LIST ${MINGW_ROOT}/*/*.dll)
+  install(FILES ${DLL_LIST} DESTINATION sbin)
+
   # Util for creating services
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
