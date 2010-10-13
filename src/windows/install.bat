@@ -13,9 +13,12 @@ cd "%target%"
 rem Change the arguments to specify an alternate config file
 copy rhsrvany.exe mh_broker.exe
 mh_broker.exe install "%target%\qpidd.exe --config matahari-broker.conf" "%target%"
+sc start mh_broker
 
 copy rhsrvany.exe mh_host.exe
 mh_host.exe install "%target%\matahari-hostd.exe" "%target%"
+sc start mh_host
 
 copy rhsrvany.exe mh_net.exe
 mh_net.exe install "%target%\matahari-netd.exe" "%target%"
+sc start mh_net
