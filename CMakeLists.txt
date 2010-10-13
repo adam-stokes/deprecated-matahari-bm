@@ -89,8 +89,7 @@ if(WIN32)
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES src/windows/install.bat DESTINATION sbin)
-
-  install(FILES matahari-broker.conf DESTINATION etc)
+  install(FILES matahari-broker.conf DESTINATION sbin)
 
 else(WIN32)
 
