@@ -1,4 +1,4 @@
-# Install Matahari services
+rem Install Matahari services
 echo
 
 rem Get the install directory 
@@ -10,7 +10,8 @@ set target=%target:"=%
 
 cd "%target%"
 
-rem Change the arguments to specify an alternate config file
+rem Now install the agents and broker as services and start them
+
 copy rhsrvany.exe mh_broker.exe
 mh_broker.exe install "%target%\qpidd.exe --config matahari-broker.conf" "%target%"
 sc start mh_broker
