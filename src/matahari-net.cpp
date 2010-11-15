@@ -36,6 +36,7 @@
 #include <signal.h>
 #include <cstdlib>
 
+#include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
 
