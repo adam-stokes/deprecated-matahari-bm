@@ -33,6 +33,7 @@
 
 extern "C" { 
 #include <netcf.h> 
+#include <stdlib.h>
 #include <string.h>
 };
 
