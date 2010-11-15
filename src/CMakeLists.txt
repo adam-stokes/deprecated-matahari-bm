@@ -30,12 +30,19 @@ set(HOST_LIBRARY
         host.cpp
         processor.cpp)
 
-set(HOST_SCHEMA_SOURCES
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Package.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/Host.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/host/EventHeartbeat.cpp)
+set(SCHEMA_SOURCES
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkList.h
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkDestroy.h
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkStart.h
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkStop.h
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkStatus.h
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkDescribe.h
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Package.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Host.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventHeartbeat.cpp
+		${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Network.cpp)
 
-add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${HOST_SCHEMA_SOURCES})
+add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${SCHEMA_SOURCES})
 
 ## Network
 set(NET_SOURCES
@@ -43,11 +50,7 @@ set(NET_SOURCES
 	matahari-net.cpp
 	qmf/netagent.cpp)
 
-set(NET_SCHEMA_SOURCES
-	${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/net/Package.cpp
-	${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/net/Network.cpp)
-
-add_executable(${M_NET} ${NET_SOURCES} ${NET_SCHEMA_SOURCES})
+add_executable(${M_NET} ${NET_SOURCES} ${SCHEMA_SOURCES})
 
 # Configure checks
 ## Includes
@@ -174,7 +177,7 @@ add_definitions(-DQPID_VERSION=${QPID_VERSION})
 set(regen_schema OFF)
 message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
 foreach (schema_file ${SCHEMAS} ${QMFGEN})
-    foreach (file ${HOST_SCHEMA_SOURCES} ${NET_SCHEMA_SOURCES})
+    foreach (file ${SCHEMA_SOURCES})
         if (EXISTS ${file})
             if (${schema_file} IS_NEWER_THAN ${file})
                 set(regen_schema ON)
@@ -183,12 +186,12 @@ foreach (schema_file ${SCHEMAS} ${QMFGEN})
         else (EXISTS ${file})
             set(regen_schema ON)
         endif (EXISTS ${file})
-    endforeach (file ${HOST_SCHEMA_SOURCES} ${NET_SCHEMA_SOURCES})
+    endforeach (file ${SCHEMA_SOURCES})
 endforeach (schema_file ${SCHEMAS})
 
 if (regen_schema)
     # Regenerate everything 
-    execute_process(COMMAND rm -f ${HOST_SCHEMA_SOURCES})
+    execute_process(COMMAND rm -f ${SCHEMA_SOURCES})
     execute_process(COMMAND ${QMFGEN} -o ./qmf ${SCHEMAS}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else (regen_schema)

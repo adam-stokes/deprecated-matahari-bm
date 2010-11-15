@@ -25,7 +25,7 @@
 #include "processor.h"
 #include <qpid/agent/ManagementAgent.h>
 
-#include "qmf/com/redhat/matahari/host/EventHeartbeat.h"
+#include "qmf/com/redhat/matahari/EventHeartbeat.h"
 
 HostAgent::HostAgent()
 {

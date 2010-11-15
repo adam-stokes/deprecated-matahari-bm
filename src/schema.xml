@@ -1,0 +1,84 @@
+<schema package="com.redhat.matahari">
+
+<!-- HOST SCHEMA -->
+ <class name="Host">
+   <!-- properties -->
+   <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" index="y" />
+   <property name="hostname"         type="sstr"  access="RO" desc="Hostname" />
+   <property name="is_virtual"       type="bool"  access="RO" desc="Is this machine virtual?" />
+   <property name="operating_system" type="sstr"  access="RO" desc="The installed operating system." />
+   <property name="memory"           type="uint32" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
+   <property name="swap"             type="uint32" access="RO" desc="Amount of swap for host (kb)" unit="kb" />
+   <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
+   <property name="hypervisor"       type="sstr"  access="RO" desc="Hypervisor used by host" />
+   <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." unit="bit"/>
+   <property name="processors"       type="uint8" access="RO" desc="The number of physical CPUs." />
+   <property name="cores"            type="uint8" access="RO" desc="The total number of processor cores." />
+   <property name="model"            type="lstr"  access="RO" desc="The processor(s) model description." />
+
+   <!-- statistics -->
+   <statistic name="last_updated_seq" type="uint32"  desc="The heartbeat sequence number." />
+   <statistic name="last_updated"     type="absTime" desc="The last time a heartbeat occurred." />
+   <statistic name="load_average_1"   type="double"  desc="The one minute load average." />
+   <statistic name="load_average_5"   type="double"  desc="The five minute load average." />
+   <statistic name="load_average_15"  type="double"  desc="The fiften minute load average" />
+   <statistic name="memFree"          type="uint32"   desc="Amount of available memory for host (kb)" />
+   <statistic name="swapFree"         type="uint32"   desc="Amount of available swap for host (kb)" />
+   <statistic name="procTotal"        type="uint32"  desc="Total processes" />
+   <statistic name="procRunning"      type="uint32"  desc="Total running processes" />
+   <!-- APIs -->
+   <method name="identify"                desc="Tells the host to beep its pc speaker." />
+   <method name="shutdown"                desc="Shutdown node" />
+   <method name="reboot"                  desc="Reboot node" />
+ </class>
+
+ <eventArguments>
+   <arg name="timestamp" type="absTime" />
+   <arg name="sequence"  type="uint32" />
+ </eventArguments>
+
+ <event name="heartbeat" args="timestamp,sequence" />
+
+ <!-- NETWORK SCHEMA -->
+  <class name="Network">
+   <property name="hostname"   type="sstr"  access="RO" desc="Hostname" index="y"/>
+
+   <!-- APIs -
+   <method name="identify"                desc="Tell network device to blink light"/>
+   <method name="add_address"             desc="Applies new IP address to device">
+     <arg name="address" dir="IO" type="uint32" />
+     <arg name="netmask" dir="IO" type="uint32" />
+     <arg name="intf" dir="IO" type="sstr" />
+   </method>
+   <method name="remove_address"          desc="Remove IP address"/>
+   <method name="list_dns_servers"        desc="List of DNS servers">
+     <arg name="iface" dir="IO" type="sstr" />
+   </method-->
+
+   <method name="list"          desc="List IP addresses">
+     <arg name="max"            dir="O"  type="uint32" />
+     <arg name="iface_map"      dir="O"  type="list" />
+   </method>
+
+   <method name="destroy"       desc="Remove network interface">
+     <arg name="iface"          dir="I"  type="sstr" />
+   </method>
+
+   <method name="start"         desc="Start a network interface">
+     <arg name="iface"          dir="I"  type="sstr" />
+     <arg name="status"         dir="O"  type="uint32" />
+   </method>
+   <method name="stop"          desc="Stop a network interface">
+     <arg name="iface"          dir="I"  type="sstr" />
+     <arg name="status"         dir="O"  type="uint32" />
+   </method>
+   <method name="status"        desc="Check a network interface">
+     <arg name="iface"          dir="I"  type="sstr" />
+     <arg name="status"         dir="O"  type="uint32" />
+   </method>
+   <method name="describe"      desc="Obtain XML description of a network interface status">
+     <arg name="iface"          dir="I"  type="sstr" />
+     <arg name="xml"            dir="O"  type="sstr" />
+   </method>
+ </class>
+</schema>

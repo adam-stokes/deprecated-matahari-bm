@@ -23,12 +23,12 @@
 #include <qpid/management/Manageable.h>
 #include <string>
 
-#include "qmf/com/redhat/matahari/net/Network.h"
+#include "qmf/com/redhat/matahari/Network.h"
 
 using namespace qpid::management;
 using namespace std;
 
-namespace _qmf = qmf::com::redhat::matahari::net;
+namespace _qmf = qmf::com::redhat::matahari;
 
 class NetAgent : public Manageable
 {

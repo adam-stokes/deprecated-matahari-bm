@@ -23,12 +23,12 @@
 
 #include "netagent.h"
 #include <qpid/agent/ManagementAgent.h>
-#include "qmf/com/redhat/matahari/net/ArgsNetworkList.h"
-#include "qmf/com/redhat/matahari/net/ArgsNetworkStop.h"
-#include "qmf/com/redhat/matahari/net/ArgsNetworkStart.h"
-#include "qmf/com/redhat/matahari/net/ArgsNetworkStatus.h"
-#include "qmf/com/redhat/matahari/net/ArgsNetworkDescribe.h"
-#include "qmf/com/redhat/matahari/net/ArgsNetworkDestroy.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkList.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkStop.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkStart.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkStatus.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkDescribe.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkDestroy.h"
 #include "host.h" 
 
 extern "C" { 

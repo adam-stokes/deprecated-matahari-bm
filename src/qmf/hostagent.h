@@ -26,12 +26,12 @@
 #include "host.h"
 #include "hostlistener.h"
 
-#include "qmf/com/redhat/matahari/host/Host.h"
+#include "qmf/com/redhat/matahari/Host.h"
 
 using namespace qpid::management;
 using namespace std;
 
-namespace _qmf = qmf::com::redhat::matahari::host;
+namespace _qmf = qmf::com::redhat::matahari;
 
 class HostAgent : public Manageable, public HostListener
 {
