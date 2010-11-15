@@ -122,6 +122,7 @@ if(MSVC)
    find_library(QMFCONSOLE qmfconsole.lib "${QPID_PATH}")
    find_library(QPIDCLIENT qpidclient.lib "${QPID_PATH}")
    find_library(QPIDCOMMON qpidcommon.lib "${QPID_PATH}")
+   find_library(QPIDCOMMON qpidtypes.lib "${QPID_PATH}")
 
    # Figure out some way to do this automatically on windows
    # Perhaps with the strings command
@@ -131,6 +132,7 @@ else(MSVC)
    find_library(QMF qmf)
    find_library(QPIDCLIENT qpidclient)
    find_library(QPIDCOMMON qpidcommon)	
+   find_library(QPIDTYPES qpidtypes)	
 
    # Figure out the qpid version
    if(WIN32)
@@ -163,6 +165,10 @@ endif(NOT QPIDCLIENT)
 if(NOT QPIDCOMMON)
    message(FATAL_ERROR "QPIDCOMMON library not found.")
 endif(NOT QPIDCOMMON)
+
+if(NOT QPIDTYPES)
+   message(FATAL_ERROR "QPIDTYPES library not found.")
+endif(NOT QPIDTYPES)
 
 find_program(QMFGEN qmf-gen)
 if(QMFGEN-NOTFOUND)
@@ -199,8 +205,8 @@ else (regen_schema)
 endif (regen_schema)
 
 # Add QF libraries
-target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
-target_link_libraries(${M_NET}  ${QPIDCOMMON} ${QPIDCLIENT} ${QMF})
+target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QPIDTYPES} ${QMF})
+target_link_libraries(${M_NET}  ${QPIDCOMMON} ${QPIDCLIENT} ${QPIDTYPES} ${QMF})
 
 # Install targets
 install(TARGETS ${M_HOST}  DESTINATION sbin)
