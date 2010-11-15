@@ -102,7 +102,7 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		
 		for(lpc = 0; lpc < ioArgs.o_max; lpc++) {
 		    nif = ncf_lookup_by_name(ncf, iface_list[lpc]);
-		    ioArgs.o_iface_map.setString(iface_list[lpc], ncf_if_mac_string(nif));
+		    ioArgs.o_iface_map.push_back(iface_list[lpc]);
 		}
 	    }
 	    return Manageable::STATUS_OK;
