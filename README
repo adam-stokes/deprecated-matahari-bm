@@ -1,17 +1,23 @@
-QMF System Agent
+Matahari Agents
+ 
+To manually build core agents:
+mkdir build
+cd build
+cmake ../.
+make
+make install
+ 
+Fedora:
+yum install matahari
+ 
+Windows:
+On your Fedora box first:
+  yum install mingw32-matahari
 
-To build the system agent:
-./autogen.sh
-./configure
-make rpm
-
-The resulting rpm can then be installed.
-
-To test, ensure the qpidd service is running. Then, run the matahari service
-(defaults to port 5672 on 127.0.0.1 with no authentication). qpid-tool
-from the qpid project is a quick and easy way to manipulate the functionality
-exposed by this agent.
-
-Edit parameters passed to the script by editing the corresponding sysconfig file,
-or by running from the command line.
-
+  copy the /usr/share/matahari*/*iso to Windows machine.( or burn iso )
+  load iso/cd; run setup
+  
+Please see: https://fedorahosted.org/matahari/
+Join the mailing lists for help
+- Matahari https://fedorahosted.org/mailman/listinfo/matahari
+- Cloud APIS http://www.redhat.com/mailman/listinfo/cloud-apis
