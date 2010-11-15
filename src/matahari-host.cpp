@@ -90,11 +90,7 @@ main(int argc, char **argv)
     char *service = NULL;
     int serverport = MATAHARI_PORT;
 
-#if QPID_VERSION < 07
-    ConnectionSettings settings;
-#else
     qpid::management::ConnectionSettings settings;
-#endif
     ManagementAgent *agent;
     HostAgent hostAgent;
 
