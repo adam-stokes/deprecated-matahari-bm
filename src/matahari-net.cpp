@@ -1,4 +1,4 @@
-/* matahari-netd.cpp - Copyright (C) 2010 Red Hat, Inc.
+/* netagent.cpp - Copyright (C) 2010 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,196 +18,162 @@
  */
 
 #ifndef WIN32
-#include <config.h>
-#include <getopt.h>
+#include "config.h"
 #endif
 
-#ifdef WIN32
-#include <windows.h>
-#endif
+#include "mh_agent.h"
 
-#include <iostream>
-#include <fstream>
+#include "qmf/com/redhat/matahari/Network.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkList.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkStop.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkStart.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkStatus.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkDescribe.h"
+#include "qmf/com/redhat/matahari/ArgsNetworkDestroy.h"
+#include "host.h" 
+
+extern "C" { 
+#include <netcf.h> 
+#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <vector>
-#include <exception>
+};
 
-#include <signal.h>
-#include <cstdlib>
-
-#include <qpid/sys/Time.h>
-#include <qpid/agent/ManagementAgent.h>
-#include <qpid/client/ConnectionSettings.h>
-
-#include "qmf/netagent.h"
-#include "qmf/com/redhat/matahari/Package.h"
-
-using namespace qpid::management;
-using namespace qpid::client;
-using namespace std;
-namespace _qmf = qmf::com::redhat::matahari;
-
-// Global Variables
-ManagementAgent::Singleton* singleton;
-
-void
-shutdown(int /*signal*/)
+class NetAgent : public MatahariAgent
 {
-  exit(0);
-}
-
-#ifdef __linux__
-static void
-print_usage()
-{
-    printf("Usage:\tmatahari-netd <options>\n");
-    printf("\t-d | --daemon     run as a daemon.\n");
-    printf("\t-h | --help       print this help message.\n");
-    printf("\t-b | --broker     specify broker host name..\n");
-    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
-    printf("\t-u | --username   username to use for authentication purproses.\n");
-    printf("\t-s | --service    service name to use for authentication purproses.\n");
-    printf("\t-p | --port       specify broker port.\n");
-}
-#endif
+    private:
+	ManagementAgent* _agent;
+	_qmf::Network* _management_object;
+	
+    public:
+	int setup(ManagementAgent* agent);
+	ManagementObject* GetManagementObject() const { return _management_object; }
+	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
+};
 
 int
 main(int argc, char **argv)
 {
-#ifdef __linux__
-    int arg;
-    int idx = 0;
-    bool verbose = false;
-    bool daemonize = false;
-#endif
-    bool gssapi = false;
-    char *servername = strdup(MATAHARI_BROKER);
-    char *username = NULL;
-    char *service = NULL;
-    int serverport = MATAHARI_PORT;
-
-    qpid::management::ConnectionSettings settings;
-    ManagementAgent *agent;
-
-#ifdef __linux__
-    struct option opt[] = {
-	{"help", no_argument, NULL, 'h'},
-	{"daemon", no_argument, NULL, 'd'},
-	{"broker", required_argument, NULL, 'b'},
-	{"gssapi", no_argument, NULL, 'g'},
-	{"username", required_argument, NULL, 'u'},
-	{"service", required_argument, NULL, 's'},
-	{"port", required_argument, NULL, 'p'},
-	{0, 0, 0, 0}
-    };
-
-    // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:", opt, &idx)) != -1) {
-	switch (arg) {
-	    case 'h':
-	    case '?':
-		print_usage();
-		exit(0);
-		break;
-	    case 'd':
-		daemonize = true;
-		break;
-	    case 'v':
-		verbose = true;
-		break;
-	    case 's':
-		if (optarg) {
-		    service = strdup(optarg);
-		} else {
-		    print_usage();
-		    exit(1);
-		}
-		break;
-	    case 'u':
-		if (optarg) {
-		    username = strdup(optarg);
-		} else {
-		    print_usage();
-		    exit(1);
-		}
-		break;
-	    case 'g':
-		gssapi = true;
-		break;
-	    case 'p':
-		if (optarg) {
-		    serverport = atoi(optarg);
-		} else {
-		    print_usage();
-		    exit(1);
-		}
-		break;
-	    case 'b':
-		if (optarg) {
-		    servername = strdup(optarg);
-		} else {
-		    print_usage();
-		    exit(1);
-		}
-		break;
-	    default:
-		fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
-		print_usage();
-		exit(0);
-	    break;
-	}
+    NetAgent agent;
+    int rc = agent.init(argc, argv);
+    while (rc == 0) {
+	qpid::sys::sleep(1);
     }
+    return rc;
+}
 
-    if (daemonize == true) {
-	if (daemon(0, 0) < 0) {
-	    fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
-	    exit(1);
-	}
-    }
-#endif
-
-    // Get our management agent
-    singleton = new ManagementAgent::Singleton();
-    agent = singleton->getInstance();
-    _qmf::Package packageInit(agent);
-
-    // Set up the cleanup handler for sigint
-    signal(SIGINT, shutdown);
-
-    // Connect to the broker
-    settings.host = servername;
-    settings.port = serverport;
-
-    if (username != NULL) {
-	settings.username = username;
-    }
-    if (service != NULL) {
-	settings.service = service;
-    }
-    if (gssapi == true) {
-	settings.mechanism = "GSSAPI";
-    }
-
-    agent->init(settings, 5, false, ".magentdata");
-
-    /* Do any setup required by our agent */
-    if(NetAgent::setup(agent) < 0) {
-	fprintf(stderr, "Failed to set up agent\n");
-	return -1;
-
-    } else {
-	/* Need to create our agent here, not in ::setup() so that it
-	 * stays in scope and isn't deallocated by the garbage collector
-	 *
-	 * Why do I hate C++ again?
-	 */
-	NetAgent mh(agent);
+struct netcf *ncf;
+static int interface_status(struct netcf_if *nif) 
+{
+    unsigned int flags = 0;
+    if(nif == NULL) {
+	return 3;
 	
-	while (true) {
-	    qpid::sys::sleep(1);
-	}
+    } else if(ncf_if_status(nif, &flags) < 0) {
+	return 4;
+
+    } else if(flags & NETCF_IFACE_ACTIVE) {
+	return 0;
+    }
+    return 1; /* Inactive */
+}
+
+
+int
+NetAgent::setup(ManagementAgent* agent)
+{
+    if (ncf_init(&ncf, NULL) < 0) {
+	return -1;
+    }
+
+    this->_agent = agent;
+    this->_management_object = new _qmf::Network(agent, this);
+    this->_management_object->set_hostname(host_get_hostname());
+
+    agent->addObject(this->_management_object);
+    return 0;
+}
+
+Manageable::status_t
+NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
+{
+    struct netcf_if *nif;
+
+    if(	ncf == NULL) {
+	return Manageable::STATUS_NOT_IMPLEMENTED;
     }
     
-    return 0;
+    switch(method)
+	{
+	case _qmf::Network::METHOD_LIST:
+	    {
+		_qmf::ArgsNetworkList& ioArgs = (_qmf::ArgsNetworkList&) arguments;
+		uint32_t lpc = 0;
+		char **iface_list = NULL;
+		ioArgs.o_max = ncf_num_of_interfaces(ncf, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE);
+		
+		iface_list = (char**)calloc(ioArgs.o_max+1, sizeof(char*));
+		if(ncf_list_interfaces(ncf, ioArgs.o_max, iface_list, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE) < 0) {
+		    ioArgs.o_max = 0;
+		}
+		
+		for(lpc = 0; lpc < ioArgs.o_max; lpc++) {
+		    nif = ncf_lookup_by_name(ncf, iface_list[lpc]);
+		    ioArgs.o_iface_map.push_back(iface_list[lpc]);
+		}
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Network::METHOD_START:
+	    {
+		_qmf::ArgsNetworkStart& ioArgs = (_qmf::ArgsNetworkStart&) arguments;
+		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
+		ioArgs.o_status = interface_status(nif);
+		if(ioArgs.o_status == 1) {
+		    ncf_if_up(nif);
+		    ioArgs.o_status = interface_status(nif);
+		}
+	    }
+	    return Manageable::STATUS_OK;
+	    
+	case _qmf::Network::METHOD_STOP:
+	    {
+		_qmf::ArgsNetworkStop& ioArgs = (_qmf::ArgsNetworkStop&) arguments;
+		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
+		ioArgs.o_status = interface_status(nif);
+		if(ioArgs.o_status == 0) {
+		    ncf_if_down(nif);
+		    ioArgs.o_status = interface_status(nif);
+		}
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Network::METHOD_STATUS:
+	    {
+		_qmf::ArgsNetworkStatus& ioArgs = (_qmf::ArgsNetworkStatus&) arguments;
+		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
+		ioArgs.o_status = interface_status(nif);
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Network::METHOD_DESCRIBE:
+	    {
+		_qmf::ArgsNetworkDescribe& ioArgs = (_qmf::ArgsNetworkDescribe&) arguments;
+		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
+		if(nif != NULL) {
+		    ioArgs.o_xml = ncf_if_xml_desc(nif);
+		}
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Network::METHOD_DESTROY:
+	    {
+		_qmf::ArgsNetworkDestroy& ioArgs = (_qmf::ArgsNetworkDestroy&) arguments;
+		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
+		if(nif != NULL) {
+		    ncf_if_undefine(nif);
+		}
+	    }
+	    return Manageable::STATUS_OK;
+	}
+    return Manageable::STATUS_NOT_IMPLEMENTED;
 }

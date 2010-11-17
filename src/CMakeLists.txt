@@ -8,7 +8,9 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/qmf")
 # set service name var's
 set(M_HOST "matahari-hostd")
 set(M_NET  "matahari-netd")
-set(M_PKG  "matahari-packaged")
+set(M_SRV  "matahari-serviced")
+
+set(DAEMONS ${M_HOST} ${M_NET})
 
 file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 
@@ -17,10 +19,17 @@ add_definitions(-DMATAHARI_PORT=${MATAHARI_PORT})
 add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 
 # Build targets
+## Schema
+set(SCHEMA_SOURCES
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Host.cpp
+	${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Network.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventHeartbeat.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Package.cpp)
+
 ## Host
 set(HOST_SOURCES
-        matahari-host.cpp
-        qmf/hostagent.cpp)
+	mh_agent.cpp
+        matahari-host.cpp)
 
 # TODO: host.cpp and processor.cpp need to be re-written in C
 #       and then combined with util.c into a library/dll
@@ -30,25 +39,13 @@ set(HOST_LIBRARY
         host.cpp
         processor.cpp)
 
-set(SCHEMA_SOURCES
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkList.h
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkDestroy.h
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkStart.h
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkStop.h
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkStatus.h
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/ArgsNetworkDescribe.h
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Package.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Host.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventHeartbeat.cpp
-		${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Network.cpp)
-
 add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${SCHEMA_SOURCES})
 
 ## Network
 set(NET_SOURCES
         host.cpp
-	matahari-net.cpp
-	qmf/netagent.cpp)
+	mh_agent.cpp
+	matahari-net.cpp)
 
 add_executable(${M_NET} ${NET_SOURCES} ${SCHEMA_SOURCES})
 
@@ -69,8 +66,10 @@ if(NOT PKG_CONFIG_FOUND)
 endif(NOT PKG_CONFIG_FOUND)
 
 if(WIN32)
-   target_link_libraries(${M_HOST} wsock32)
-   target_link_libraries(${M_NET} wsock32)
+   foreach(daemon ${DAEMONS}) 
+      target_link_libraries(${daemon} wsock32)
+   endforeach(daemon ${DAEMONS}) 
+   
 else(WIN32)
    find_library(VIRT virt)
    if(VIRT_FOUND)
@@ -167,7 +166,8 @@ if(NOT QPIDCOMMON)
 endif(NOT QPIDCOMMON)
 
 if(NOT QPIDTYPES)
-   message(FATAL_ERROR "QPIDTYPES library not found.")
+   message("QPIDTYPES library not found.")
+   set(QPIDTYPES "")
 endif(NOT QPIDTYPES)
 
 find_program(QMFGEN qmf-gen)
@@ -205,8 +205,9 @@ else (regen_schema)
 endif (regen_schema)
 
 # Add QF libraries
-target_link_libraries(${M_HOST} ${QPIDCOMMON} ${QPIDCLIENT} ${QPIDTYPES} ${QMF})
-target_link_libraries(${M_NET}  ${QPIDCOMMON} ${QPIDCLIENT} ${QPIDTYPES} ${QMF})
+foreach(daemon ${DAEMONS}) 
+    target_link_libraries(${daemon} ${QPIDCOMMON} ${QPIDCLIENT} ${QPIDTYPES} ${QMF})
+endforeach(daemon ${DAEMONS}) 
 
 # Install targets
 install(TARGETS ${M_HOST}  DESTINATION sbin)
