@@ -1,6 +1,25 @@
 <schema package="com.redhat.matahari">
 
-<!-- HOST SCHEMA -->
+ <eventArguments>
+
+   <!-- Common -->
+   <arg name="timestamp" type="absTime" />
+   <arg name="sequence"  type="uint32" />
+
+   <!-- Services API -->
+   <arg name="name"             type="sstr" />
+   <arg name="action"           type="sstr" />
+   <arg name="interval"         type="uint32"/>
+
+   <arg name="rc"               type="uint32" />
+
+   <arg name="rsc_type"         type="sstr" />
+   <arg name="rsc_class"        type="sstr" />
+   <arg name="rsc_provider"     type="sstr" />
+
+ </eventArguments>
+
+<!-- Host API -->
  <class name="Host">
    <!-- properties -->
    <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" index="y" />
@@ -32,14 +51,9 @@
    <method name="reboot"                  desc="Reboot node" />
  </class>
 
- <eventArguments>
-   <arg name="timestamp" type="absTime" />
-   <arg name="sequence"  type="uint32" />
- </eventArguments>
-
  <event name="heartbeat" args="timestamp,sequence" />
 
- <!-- NETWORK SCHEMA -->
+ <!-- Network API -->
   <class name="Network">
    <property name="hostname"   type="sstr"  access="RO" desc="Hostname" index="y"/>
 
@@ -81,4 +95,148 @@
      <arg name="xml"            dir="O"  type="sstr" />
    </method>
  </class>
+
+ <!-- Services API -->
+
+ <!-- Is sequence needed? How to tie to the async method call seq? -->
+ <!-- Is timestamp needed? Possibly available for all events already -->
+ <event name="service_op"	args="name,action,interval,rc,sequence,timestamp" />
+ <event name="resource_op"	args="name,action,interval,rc,sequence,timestamp,rsc_type,rsc_class,rsc_provider" />
+
+ <class name="Services">
+   <property name="hostname"    type="sstr"  access="RO" desc="Hostname" index="y"/>
+
+   <method name="list"          desc="List known system services">
+     <arg name="services"       dir="O"  type="list" />
+   </method>
+   <method name="enable"        desc="Configure a system service to start at boot">
+     <arg name="name"           dir="I"  type="sstr" />
+   </method>
+   <method name="disable"       desc="Configure a system service _not_ to start at boot">
+     <arg name="name"           dir="I"  type="sstr" />
+   </method>
+   <method name="start"         desc="Start a system service">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="stop"          desc="Stop a system service">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="status"        desc="Check the health of a system service">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="interval"       dir="IO"  type="uint32" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="cancel"        desc="Cancel a pending or running action on a system service">
+     <arg name="name"           dir="I"  type="sstr" />
+     <arg name="action"         dir="I"  type="sstr" />
+     <arg name="interval"       dir="I"  type="uint32" />
+   </method>
+   <method name="fail"          desc="Raise a failure event for a system service">
+     <arg name="name"           dir="IO" type="sstr" />
+   </method>
+   <method name="describe"      desc="Obtain XML description of a system service">
+     <arg name="name"           dir="I"  type="sstr" />
+     <arg name="xml"            dir="O"  type="sstr" />
+   </method>
+ </class>
+
+ <class name="Resources">
+   <property name="hostname"    type="sstr"  access="RO" desc="Hostname" index="y"/>
+
+   <method name="list_classes"  desc="List known resource classes (OCF, LSB, Upstart, etc)">
+     <arg name="classes"        dir="O"  type="list" />
+   </method>
+   <method name="list_ocf_providers"  desc="List known OCF providers (if supported)">
+     <arg name="providers"      dir="O"  type="list" />
+   </method>
+   <method name="list"          desc="List known resource types for a given class/provider combination">
+     <arg name="class"          dir="I"  type="sstr" />
+     <arg name="provider"       dir="I"  type="sstr" />
+     <arg name="types"          dir="O"  type="list" />
+   </method>
+   <!-- Something we can add later if necessary 
+    method name="list_variants" desc="List known implementations of a given resource type">
+     <arg name="type"           dir="I"  type="sstr" />
+     <arg name="class"          dir="O"  type="list" />
+     <arg name="providers"      dir="O"  type="list" />
+   </method-->
+
+   <method name="describe"      desc="Obtain XML description of a resource">
+     <arg name="class"          dir="I"  type="sstr" />
+     <arg name="provider"       dir="I"  type="sstr" />
+     <arg name="type"           dir="I"  type="sstr" />
+     <arg name="xml"            dir="O"  type="sstr" />
+   </method>
+   <method name="start"         desc="Start a resource">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="parameters"     dir="I"  type="map" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="stop"          desc="Stop a resource">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="parameters"     dir="I"  type="map" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="monitor"       desc="Check the health of a resource">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="interval"       dir="IO" type="uint32" />
+     <arg name="parameters"     dir="I"  type="map" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="invoke"        desc="Perform a custom action on a resource">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="action"         dir="IO" type="sstr" />
+     <arg name="interval"       dir="IO" type="uint32" />
+     <arg name="parameters"     dir="I"  type="map" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+   </method>
+   <method name="cancel"        desc="Cancel a pending or running action on a resource">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="action"         dir="IO" type="sstr" />
+     <arg name="interval"       dir="IO" type="uint32" />
+     <arg name="timeout"        dir="I"  type="uint32" />
+   </method>
+   <method name="fail"          desc="Indicate a resource has failed">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+   </method>
+   <!-- Something we can add later if necessary
+    method name="last"          desc="Retrieve the last action for a resource">
+     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="class"          dir="IO" type="sstr" />
+     <arg name="provider"       dir="IO" type="sstr" />
+     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="action"         dir="O"  type="sstr" />
+     <arg name="parameters"     dir="O"  type="map" />
+     <arg name="interval"       dir="O"  type="uint32" />
+     <arg name="timeout"        dir="O"  type="uint32" />
+   </method-->
+ </class>
+
 </schema>

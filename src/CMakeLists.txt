@@ -10,7 +10,7 @@ set(M_HOST "matahari-hostd")
 set(M_NET  "matahari-netd")
 set(M_SRV  "matahari-serviced")
 
-set(DAEMONS ${M_HOST} ${M_NET})
+set(DAEMONS ${M_HOST} ${M_NET} ${M_SRV})
 
 file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 
@@ -23,7 +23,11 @@ add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 set(SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Host.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Network.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Services.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Resources.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventHeartbeat.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventService_op.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventResource_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Package.cpp)
 
 ## Host
@@ -48,6 +52,12 @@ set(NET_SOURCES
 	matahari-net.cpp)
 
 add_executable(${M_NET} ${NET_SOURCES} ${SCHEMA_SOURCES})
+
+set(SRV_SOURCES
+        host.cpp
+	mh_agent.cpp
+	matahari-srv.cpp)
+add_executable(${M_SRV} ${SRV_SOURCES} ${SCHEMA_SOURCES})
 
 # Configure checks
 ## Includes
