@@ -41,7 +41,7 @@
 #include <qpid/client/ConnectionSettings.h>
 
 #include "qmf/com/redhat/matahari/Package.h"
-#include "mh_agent.h"
+#include "matahari/mh_agent.h"
 
 using namespace qpid::management;
 using namespace qpid::client;

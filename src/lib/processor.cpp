@@ -73,12 +73,13 @@ typedef BOOL (WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 
 #include <fstream>
 #include <iostream>
-#include "host.h"
 #include <limits.h>
 #include <pcre.h>
-#include "processor.h"
 #include <stdexcept>
 #include <string>
+
+#include "matahari/host.h"
+#include "matahari/processor.h"
 
 using namespace std;
 

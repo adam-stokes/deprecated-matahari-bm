@@ -39,17 +39,18 @@ extern "C" {
 
 #include <cstdlib>
 #include <fstream>
-#include "host.h"
 
 #ifdef HAVE_LIBVIRT1
 #include <libvirt/libvirt.h>
 #endif
 
 #include <limits.h>
-#include "processor.h"
 #include <set>
 #include <string>
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+#include "matahari/host.h"
+#include "matahari/processor.h"
 
 using namespace std;
 

@@ -22,12 +22,12 @@
 #endif
 
 
-#include "mh_agent.h"
+#include "matahari/mh_agent.h"
 #include "qmf/com/redhat/matahari/Host.h"
 #include "qmf/com/redhat/matahari/EventHeartbeat.h"
 
-#include "host.h"
-#include "processor.h"
+#include "matahari/host.h"
+#include "matahari/processor.h"
 
 class HostAgent : public MatahariAgent, public HostListener
 {

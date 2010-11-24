@@ -24,8 +24,7 @@
 #include <string>
 #include <qpid/management/Manageable.h>
 #include <qpid/agent/ManagementAgent.h>
-#include "mh_agent.h"
-#include "host.h"
+#include "matahari/mh_agent.h"
 
 #include "qmf/com/redhat/matahari/Services.h"
 #include "qmf/com/redhat/matahari/Resources.h"
@@ -39,6 +38,10 @@
 #include "qmf/com/redhat/matahari/ArgsServicesDisable.h"
 #include "qmf/com/redhat/matahari/ArgsServicesCancel.h"
 #include "qmf/com/redhat/matahari/ArgsServicesFail.h"
+
+extern "C" { 
+#include "matahari/logging.h"
+}
 
 class SrvAgent : public MatahariAgent
 {
@@ -74,12 +77,12 @@ SrvAgent::setup(ManagementAgent* agent)
 {
     this->_agent = agent;
     this->_srv_management_object = new _qmf::Services(agent, this);
-    this->_srv_management_object->set_hostname(host_get_hostname());
+    this->_srv_management_object->set_hostname(get_hostname());
 
     agent->addObject(this->_srv_management_object);
 
     this->_rsc_management_object = new _qmf::Resources(agent, this);
-    this->_rsc_management_object->set_hostname(host_get_hostname());
+    this->_rsc_management_object->set_hostname(get_hostname());
 
     agent->addObject(this->_rsc_management_object);
     return 0;

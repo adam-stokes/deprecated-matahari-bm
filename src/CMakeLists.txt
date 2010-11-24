@@ -2,8 +2,8 @@
 
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/qmf")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # set service name var's
 set(M_HOST "matahari-hostd")
@@ -30,44 +30,36 @@ set(SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventResource_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Package.cpp)
 
-## Host
-set(HOST_SOURCES
-	mh_agent.cpp
-        matahari-host.cpp)
+## "Libraries"
+set(COMMON_SOURCES
+	lib/mh_agent.cpp
+        lib/utilities.c
+	lib/mainloop.c
+	)
 
 # TODO: host.cpp and processor.cpp need to be re-written in C
 #       and then combined with util.c into a library/dll
 #
 #       Refer to the qpid CMake control file for how to do this
 set(HOST_LIBRARY
-        host.cpp
-        processor.cpp)
+        lib/host.cpp
+        lib/processor.cpp)
 
-add_executable(${M_HOST} ${HOST_SOURCES} ${HOST_LIBRARY} ${SCHEMA_SOURCES})
-
-## Network
-set(NET_SOURCES
-        host.cpp
-	mh_agent.cpp
-	matahari-net.cpp)
-
-add_executable(${M_NET} ${NET_SOURCES} ${SCHEMA_SOURCES})
-
-set(SRV_SOURCES
-        host.cpp
-	mh_agent.cpp
-	matahari-srv.cpp)
-add_executable(${M_SRV} ${SRV_SOURCES} ${SCHEMA_SOURCES})
+## Daemons
+add_executable(${M_HOST} host/matahari-host.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES} ${HOST_LIBRARY} )
+add_executable(${M_NET}  net/matahari-net.cpp  ${SCHEMA_SOURCES} ${COMMON_SOURCES})
+add_executable(${M_SRV}  service/matahari-srv.cpp lib/services_linux.c ${SCHEMA_SOURCES} ${COMMON_SOURCES})
 
 # Configure checks
 ## Includes
 include (CheckIncludeFiles)
 check_include_files (string.h HAVE_STRING_H)
 check_include_files (sys/ioctl.h HAVE_SYS_IOCTL_H)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/matahari.h)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h)
 
 ## Modules
+pkg_check_modules(glib REQUIRED glib-2.0)
 pkg_check_modules(pcre REQUIRED libpcre)
 pkg_check_modules(netcf REQUIRED netcf)
 
@@ -112,6 +104,15 @@ if(netcf_FOUND)
 else(netcf_FOUND)
    message(FATAL_ERROR "NETCF header/library not found.")
 endif(netcf_FOUND)
+
+if(glib_FOUND)
+   include_directories(${glib_INCLUDE_DIRS})
+   foreach(daemon ${DAEMONS}) 
+      target_link_libraries(${daemon} ${glib_LIBRARIES})
+   endforeach(daemon ${DAEMONS}) 
+else(glib_FOUND)
+   message(FATAL_ERROR "Glib2 header/library not found.")
+endif(glib_FOUND)
 
 set(simple_libs check libvirt udev_new)
 foreach(lib ${simple_libs}) 

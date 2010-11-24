@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "mh_agent.h"
+#include "matahari/mh_agent.h"
 
 #include "qmf/com/redhat/matahari/Network.h"
 #include "qmf/com/redhat/matahari/ArgsNetworkList.h"
@@ -30,12 +30,12 @@
 #include "qmf/com/redhat/matahari/ArgsNetworkStatus.h"
 #include "qmf/com/redhat/matahari/ArgsNetworkDescribe.h"
 #include "qmf/com/redhat/matahari/ArgsNetworkDestroy.h"
-#include "host.h" 
 
 extern "C" { 
 #include <netcf.h> 
 #include <stdlib.h>
 #include <string.h>
+#include "matahari/logging.h"
 };
 
 class NetAgent : public MatahariAgent
@@ -87,7 +87,7 @@ NetAgent::setup(ManagementAgent* agent)
 
     this->_agent = agent;
     this->_management_object = new _qmf::Network(agent, this);
-    this->_management_object->set_hostname(host_get_hostname());
+    this->_management_object->set_hostname(get_hostname());
 
     agent->addObject(this->_management_object);
     return 0;
