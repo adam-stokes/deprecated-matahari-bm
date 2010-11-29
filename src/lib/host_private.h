@@ -27,3 +27,17 @@ typedef struct cpuinfo_
 
 extern cpuinfo_t cpuinfo;
 
+extern const char *host_os_get_uuid(void);
+extern const char *host_os_get_hostname(void);
+extern const char *host_os_get_operating_system(void);
+extern const char *host_os_get_hypervisor(void);
+extern const char *host_os_get_architecture(void);
+
+extern unsigned int host_os_get_memory(void);
+extern unsigned int host_os_get_platform(void);
+
+extern void host_os_reboot(void);
+extern void host_os_shutdown(void);
+extern void host_os_get_load_averages(double *one, double *five, double *fifteen);
+
+extern void host_os_get_cpu_details(void);
