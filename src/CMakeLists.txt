@@ -59,7 +59,7 @@ target_link_libraries(${M_HOST} mhost)
 add_executable(${M_NET}  net/matahari-net.cpp  ${SCHEMA_SOURCES} ${COMMON_SOURCES})
 
 add_executable(${M_SRV}  service/matahari-srv.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES})
-target_link_libraries(${M_HOST} msrv)
+target_link_libraries(${M_SRV} msrv)
 
 foreach(daemon ${DAEMONS}) 
    target_link_libraries(${daemon} mcommon)
