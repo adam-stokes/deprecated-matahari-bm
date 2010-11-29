@@ -20,3 +20,5 @@ matahari-broker.init
 matahari-broker.sysconf
 build
 build-win
+src/include/matahari.h
+src/matahari-*

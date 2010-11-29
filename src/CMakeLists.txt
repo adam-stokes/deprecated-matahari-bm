@@ -39,10 +39,13 @@ set(SCHEMA_SOURCES
 ## Libraries and Common code
 set(COMMON_SOURCES lib/mh_agent.cpp)
 
-add_library (mcommon lib/utilities.c)
+add_library (mcommon lib/utilities.c lib/mainloop.c)
 
 add_library (mhost lib/host.c lib/host_${VARIANT}.c)
 target_link_libraries(mhost mcommon)
+
+add_library (msrv lib/services.c lib/services_${VARIANT}.c)
+target_link_libraries(msrv mcommon)
 
 if(WIN32)
    target_link_libraries(mhost wsock32)
@@ -56,6 +59,7 @@ target_link_libraries(${M_HOST} mhost)
 add_executable(${M_NET}  net/matahari-net.cpp  ${SCHEMA_SOURCES} ${COMMON_SOURCES})
 
 add_executable(${M_SRV}  service/matahari-srv.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES})
+target_link_libraries(${M_HOST} msrv)
 
 foreach(daemon ${DAEMONS}) 
    target_link_libraries(${daemon} mcommon)
