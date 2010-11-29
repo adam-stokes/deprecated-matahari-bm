@@ -1,5 +1,5 @@
-/* Copyright (C) 2009 Red Hat, Inc.
- * Written by Arjun Roy <arroy@redhat.com>
+/* netagent.cpp - Copyright (C) 2010 Red Hat, Inc.
+ * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,28 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <hal/libhal.h>
+#ifndef __MATAHARI_DAEMON_H
+#define __MATAHARI_DAEMON_H
 
-LibHalContext *get_hal_ctx(void);
-void put_hal_ctx(LibHalContext *hal_ctx);
-char* get_uuid(LibHalContext *hal_ctx);
+#include <string>
+#include <qpid/sys/Time.h>
+#include <qpid/agent/ManagementAgent.h>
+#include <qpid/management/Manageable.h>
+
+using namespace qpid::management;
+using namespace std;
+
+#include "qmf/com/redhat/matahari/Package.h"
+namespace _qmf = qmf::com::redhat::matahari;
+
+class MatahariAgent : public Manageable
+{
+  public:
+    MatahariAgent() {};
+    ~MatahariAgent() {};
+    
+    virtual int setup(ManagementAgent *agent) { return 0; };
+    int init(int argc, char **argv);
+};
+
+#endif // __MATAHARI_DAEMON_H

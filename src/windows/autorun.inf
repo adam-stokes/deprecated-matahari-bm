@@ -1,0 +1,5 @@
+; Autorun.inf - http://en.wikipedia.org/wiki/Autorun.inf
+[autorun] 
+open=matahari.exe 
+icon=matahari.exe,0
+label=Matahari-0.0.4 Installation CD

@@ -1,37 +1,48 @@
-Summary: Qpid QMF Agent for Ovirt Nodes
-Name: matahari
-Version: 0.0.4
-Release: 7%{?dist}
-Source: http://arjunroy.fedorapeople.org/matahari/matahari-0.0.4.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-License: GPLv2
-Group: Applications/System
-URL: http://arjunroy.fedorapeople.org/matahari/index.html
+%global specversion 9
+%global upstream_version d2645bc
 
-Requires: dbus >= 1.2.12
-Requires: hal >= 0.5.12
-Requires: qpidc >= 0.5.819819
-Requires: qmf >= 0.5.819819
-Requires: libvirt >= 0.6.2
-Requires: pcre >= 7.8
+# Keep around for when/if required
+%global alphatag %{upstream_version}.git
 
-BuildRequires: gcc-c++ >= 4.4.0
-BuildRequires: dbus-devel >= 1.2.12
-BuildRequires: hal-devel >= 0.5.12
-BuildRequires: qpidc-devel >= 0.5.819819
-BuildRequires: qmf-devel >= 0.5.819819
-BuildRequires: libvirt-devel >= 0.6.2
-BuildRequires: pcre-devel >= 7.8
+%global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
+
+Name:		matahari
+Version:	0.4.0
+Release:	%{mh_release}
+Summary:	Matahari QMF Agents for Linux guests
+
+Group:		Applications/System
+License:	GPLv2
+URL:		http://fedorahosted.org/matahari
+Source0:	matahari-%{version}.tbz2
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+Requires:	dbus >= 1.2.12
+Requires:	hal >= 0.5.12
+Requires:	qpidc >= 0.5.819819
+Requires:	qmf >= 0.5.819819
+Requires:	libvirt >= 0.6.2
+Requires:	pcre >= 7.8
+
+BuildRequires:	cmake
+BuildRequires:	libudev-devel netcf-devel
+BuildRequires:	gcc-c++ >= 4.4.0
+BuildRequires:	dbus-devel >= 1.2.12
+BuildRequires:	hal-devel >= 0.5.12
+BuildRequires:	qpid-cpp-server-devel >= 0.5.819819
+BuildRequires:	qmf-devel >= 0.5.819819
+BuildRequires:	libvirt-devel >= 0.6.2
+BuildRequires:	pcre-devel >= 7.8
 
 %description
 
 matahari provides a QMF Agent that can be used to control and manage
 various pieces of functionality for an ovirt node, using the AMQP protocol.
 
-The Advanced Message Queuing Protocol (AMQP) is an open standard application 
+The Advanced Message Queuing Protocol (AMQP) is an open standard application
 layer protocol providing reliable transport of messages.
 
-QMF provides a modeling framework layer on top of qpid (which implements 
+QMF provides a modeling framework layer on top of qpid (which implements
 AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
@@ -39,26 +50,41 @@ as a set of objects with properties and methods.
 %setup -q
 
 %build
-%configure
+%{cmake} .
 make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
+%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-net
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+%{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
+
+%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
+%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
+%{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
+
 %post
-/sbin/chkconfig --level 2345 matahari on
-/sbin/service matahari condrestart
+for svc in net host broker; do
+    /sbin/chkconfig --level 2345 matahari-$svc on
+    /sbin/service matahari-$svc condrestart
+done
 
 %preun
 if [ $1 = 0 ]; then
-    /sbin/service matahari stop >/dev/null 2>&1 || :
-    chkconfig --del matahari
+    for svc in net host broker; do
+       /sbin/service matahari-$svc stop >/dev/null 2>&1 || :
+       chkconfig --del matahari-$svc
+    done
 fi
 
 %postun
 if [ "$1" -ge "1" ]; then
-    /sbin/service matahari condrestart >/dev/null 2>&1 || :
+    for svc in net host broker; do
+        /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
+    done
 fi
 
 %clean
@@ -67,15 +93,35 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files
 %defattr(644, root, root, 755)
 %dir %{_datadir}/matahari/
-%{_datadir}/matahari/schema.xml
+%{_datadir}/matahari/schema-host.xml
+%{_datadir}/matahari/schema-net.xml
+%{_includedir}/matahari.h
 
-%attr(755, root, root) %{_sbindir}/matahari
-%attr(755, root, root) %{_sysconfdir}/rc.d/init.d/matahari
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari
+
+%attr(755, root, root) %{_initddir}/matahari-net
+%attr(755, root, root) %{_sbindir}/matahari-netd
+
+%attr(755, root, root) %{_initddir}/matahari-host
+%attr(755, root, root) %{_sbindir}/matahari-hostd
+
+%attr(755, root, root) %{_initddir}/matahari-broker
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
+%config(noreplace) %{_sysconfdir}/matahari-broker.conf
 
 %doc AUTHORS COPYING
 
 %changelog
+* Wed Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.8.ad8b81b.git
+- Added the Network agent
+- Removed unnecessary OO-ness from existing Host agent/schema
+
+* Fri Oct 01 2010 Adam Stokes <astokes@fedoraproject.org> - 0.4.0-0.1.5e26232.git
+- Add schema-net for network api
+
+* Tue Sep 21 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.1.9fc30e4.git
+- Pre-release of the new cross platform version of Matahari
+- Add matahari broker scripts
 
 * Thu Oct 08 2009 Arjun Roy <arroy@redhat.com> - 0.0.4-7
 - Refactored for new version of qpidc.
@@ -115,4 +161,3 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 * Tue Jun 23 2009 Arjun Roy <arroy@redhat.com> - 0.0.1-1
 - Initial rpmspec packaging
-

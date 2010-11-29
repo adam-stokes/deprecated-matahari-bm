@@ -2,6 +2,14 @@
 
 # the following is chkconfig init header
 # matahari: host qmf agent for ovirt node
+### BEGIN INIT INFO
+# Required-Start: $local_fs matahari-broker
+# Default-Start 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: start/stop matahari agents
+# Description: Matahari agents provide host information using AMQP protocol
+### END INIT INFO
+
 # chkconfig: - 99 01
 # description: This is a daemon for interacting with an ovirt server.
 # processname: matahari
@@ -11,8 +19,8 @@
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-SERVICE=matahari
-PROCESS=matahari
+SERVICE=`basename "$0"`
+PROCESS=`echo "$SERVICE"d`
 
 RETVAL=0
 
@@ -23,7 +31,7 @@ start() {
     daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+    [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$SERVICE
 }
 
 stop() {
@@ -63,14 +71,13 @@ case "$1" in
         ;;
     force-reload)
         reload
-	;;
+        ;;
     condrestart|try-restart)
         [ -f @localstatedir@/lock/subsys/$SERVICE ] && restart || :
         ;;
     *)
         echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
-	exit 1
+        exit 1
         ;;
 esac
 exit $RETVAL
-
