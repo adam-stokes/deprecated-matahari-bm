@@ -23,13 +23,13 @@
 
 #include "matahari/mh_agent.h"
 
-#include "qmf/com/redhat/matahari/Network.h"
-#include "qmf/com/redhat/matahari/ArgsNetworkList.h"
-#include "qmf/com/redhat/matahari/ArgsNetworkStop.h"
-#include "qmf/com/redhat/matahari/ArgsNetworkStart.h"
-#include "qmf/com/redhat/matahari/ArgsNetworkStatus.h"
-#include "qmf/com/redhat/matahari/ArgsNetworkDescribe.h"
-#include "qmf/com/redhat/matahari/ArgsNetworkDestroy.h"
+#include "qmf/org/matahariproject/Network.h"
+#include "qmf/org/matahariproject/ArgsNetworkList.h"
+#include "qmf/org/matahariproject/ArgsNetworkStop.h"
+#include "qmf/org/matahariproject/ArgsNetworkStart.h"
+#include "qmf/org/matahariproject/ArgsNetworkStatus.h"
+#include "qmf/org/matahariproject/ArgsNetworkDescribe.h"
+#include "qmf/org/matahariproject/ArgsNetworkDestroy.h"
 
 extern "C" { 
 #include <netcf.h> 

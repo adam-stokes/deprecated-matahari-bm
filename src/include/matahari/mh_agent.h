@@ -28,8 +28,8 @@
 using namespace qpid::management;
 using namespace std;
 
-#include "qmf/com/redhat/matahari/Package.h"
-namespace _qmf = qmf::com::redhat::matahari;
+#include "qmf/org/matahariproject/Package.h"
+namespace _qmf = qmf::org::matahariproject;
 
 class MatahariAgent : public Manageable
 {

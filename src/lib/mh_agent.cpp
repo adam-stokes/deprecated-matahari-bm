@@ -40,13 +40,13 @@
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
 
-#include "qmf/com/redhat/matahari/Package.h"
+#include "qmf/org/matahariproject/Package.h"
 #include "matahari/mh_agent.h"
 
 using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
-namespace _qmf = qmf::com::redhat::matahari;
+namespace _qmf = qmf::org::matahariproject;
 
 // Global Variables
 ManagementAgent::Singleton* singleton;

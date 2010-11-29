@@ -23,8 +23,8 @@
 
 #include <set>
 #include "matahari/mh_agent.h"
-#include "qmf/com/redhat/matahari/Host.h"
-#include "qmf/com/redhat/matahari/EventHeartbeat.h"
+#include "qmf/org/matahariproject/Host.h"
+#include "qmf/org/matahariproject/EventHeartbeat.h"
 
 extern "C" {
 #include "matahari/host.h"
