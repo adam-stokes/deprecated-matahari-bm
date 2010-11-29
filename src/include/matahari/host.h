@@ -20,39 +20,46 @@
  * also available at http://www.gnu.org/copyleft/gpl.html.
  */
 
-#include <string>
-#include <set>
+extern void host_os_get_cpu_details(void);
 
-#include "hostlistener.h"
+extern const char *host_get_uuid(void);
+extern const char *host_os_get_uuid(void);
 
-using namespace std;
+extern const char *host_get_hostname(void);
+extern const char *host_os_get_hostname(void);
 
-void host_register_listener(HostListener* listener);
+extern const char *host_get_operating_system(void);
+extern const char *host_os_get_operating_system(void);
 
-void host_remove_listener(HostListener* listener);
+extern const char *host_get_hypervisor(void);
+extern const char *host_os_get_hypervisor(void);
 
-void host_update_event();
+extern unsigned int host_get_platform(void);
+extern unsigned int host_os_get_platform(void);
 
-string host_get_uuid();
+extern const char *host_get_architecture(void);
+extern const char *host_os_get_architecture(void);
 
-string host_get_hostname();
+extern unsigned int host_get_cpu_wordsize(void);
 
-string host_get_operating_system();
+extern const char *host_get_cpu_model(void);
 
-string host_get_hypervisor();
+extern unsigned int host_get_cpu_count(void);
 
-unsigned int host_get_platform();
+extern unsigned int host_get_cpu_number_of_cores(void);
 
-string host_get_architecture();
+extern void host_identify(const unsigned int iterations);
 
-unsigned int host_get_memory();
+extern void host_shutdown(void);
+extern void host_os_shutdown(void);
 
-void host_get_load_averages(double& one, double& five, double& fifteen);
+extern void host_reboot(void);
+extern void host_os_reboot(void);
 
-void host_identify(const unsigned int iterations);
+extern unsigned int host_get_memory(void);
+extern unsigned int host_os_get_memory(void);
 
-void host_shutdown();
-
-void host_reboot();
+extern void host_get_load_averages(double *one, double *five, double *fifteen);
+extern void host_os_get_load_averages(double *one, double *five, double *fifteen);
 
 #endif // __HOST_H

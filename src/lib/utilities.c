@@ -18,13 +18,16 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <sys/wait.h>
-#include <sys/utsname.h>
 
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
 
+#if __linux__
+#include <sys/wait.h>
+#include <sys/utsname.h>
+
 int mh_log_level = LOG_INFO;
+
 void mh_log_init(const char *ident, int level)
 {
     mh_log_level = level;
@@ -76,6 +79,14 @@ mh_abort(const char *file, const char *function, int line,
 	    break;
     }
 }
+#endif
+
+#ifdef WIN32
+int mh_log_level = 0;
+#include <winsock.h>
+#include <windows.h>
+#include <winbase.h>
+#endif
 
 char *get_hostname(void)
 {

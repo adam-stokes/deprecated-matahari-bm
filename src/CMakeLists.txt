@@ -1,5 +1,11 @@
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+if(WIN32)
+   set(VARIANT "windows")
+else(WIN32)
+   set(VARIANT "linux")
+endif(WIN32)
+
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
@@ -30,25 +36,33 @@ set(SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/EventResource_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/com/redhat/matahari/Package.cpp)
 
-## "Libraries"
-set(COMMON_SOURCES
-	lib/mh_agent.cpp
-        lib/utilities.c
-	lib/mainloop.c
-	)
+## Libraries and Common code
+set(COMMON_SOURCES lib/mh_agent.cpp)
 
-# TODO: host.cpp and processor.cpp need to be re-written in C
-#       and then combined with util.c into a library/dll
-#
-#       Refer to the qpid CMake control file for how to do this
-set(HOST_LIBRARY
-        lib/host.cpp
-        lib/processor.cpp)
+add_library (mcommon lib/utilities.c)
+
+add_library (mhost lib/host.c lib/host_${VARIANT}.c)
+target_link_libraries(mhost mcommon)
+
+if(WIN32)
+   target_link_libraries(mhost wsock32)
+   target_link_libraries(mcommon wsock32)
+endif(WIN32)
 
 ## Daemons
-add_executable(${M_HOST} host/matahari-host.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES} ${HOST_LIBRARY} )
+add_executable(${M_HOST} host/matahari-host.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES} )
+target_link_libraries(${M_HOST} mhost)
+
 add_executable(${M_NET}  net/matahari-net.cpp  ${SCHEMA_SOURCES} ${COMMON_SOURCES})
-add_executable(${M_SRV}  service/matahari-srv.cpp lib/services_linux.c ${SCHEMA_SOURCES} ${COMMON_SOURCES})
+
+add_executable(${M_SRV}  service/matahari-srv.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES})
+
+foreach(daemon ${DAEMONS}) 
+   target_link_libraries(${daemon} mcommon)
+   if(WIN32)
+      target_link_libraries(${daemon} wsock32)
+   endif(WIN32)
+endforeach(daemon ${DAEMONS}) 
 
 # Configure checks
 ## Includes
@@ -67,17 +81,10 @@ if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
 endif(NOT PKG_CONFIG_FOUND)
 
-if(WIN32)
-   foreach(daemon ${DAEMONS}) 
-      target_link_libraries(${daemon} wsock32)
-   endforeach(daemon ${DAEMONS}) 
-   
-else(WIN32)
-   find_library(VIRT virt)
-   if(VIRT_FOUND)
-	target_link_libraries(${M_HOST} ${VIRT})
-   endif(VIRT_FOUND)
-endif(WIN32)
+find_library(VIRT virt)
+if(VIRT_FOUND)
+   target_link_libraries(${M_HOST} ${VIRT})
+endif(VIRT_FOUND)
 
 if(NOT pcre_FOUND)
    IF(MSVC)

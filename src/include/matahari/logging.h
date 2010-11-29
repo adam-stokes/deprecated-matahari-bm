@@ -1,10 +1,25 @@
 #ifndef __MH_LOGGING__
 #define __MH_LOGGING__
+
+#ifdef __linux__
 #include <syslog.h>
+#define mh_log_fn syslog
+#else
+ /* Broken but will compile
+  * TODO - Use sigar logging wrappers
+  */
+#define mh_log_fn fprintf
+#define LOG_CRIT stderr
+#define LOG_ERR stderr
+#define LOG_WARNING stderr
+#define LOG_NOTICE stderr
+#define LOG_INFO stderr
+#define LOG_DEBUG stderr
+#endif
+
 #include <stdio.h>
 #include "matahari/utilities.h"
 
-#define mh_log_fn syslog
 #define LOG_TRACE    12
 
 extern int mh_log_level;

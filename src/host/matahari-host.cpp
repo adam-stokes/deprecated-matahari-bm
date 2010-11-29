@@ -21,24 +21,24 @@
 #include "config.h"
 #endif
 
-
+#include <set>
 #include "matahari/mh_agent.h"
 #include "qmf/com/redhat/matahari/Host.h"
 #include "qmf/com/redhat/matahari/EventHeartbeat.h"
 
+extern "C" {
 #include "matahari/host.h"
-#include "matahari/processor.h"
+}
+uint32_t _heartbeat_sequence;
 
-class HostAgent : public MatahariAgent, public HostListener
+class HostAgent : public MatahariAgent
 {
     private:
 	ManagementAgent* _agent;
 	_qmf::Host* _management_object;
-
-	void heartbeat(uint64_t timestamp, uint32_t sequence);
-	void updated();	
 	
     public:
+	void heartbeat();
 	int setup(ManagementAgent* agent);
 	ManagementObject* GetManagementObject() const { return _management_object; }
 	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
@@ -51,7 +51,7 @@ main(int argc, char **argv)
     int rc = agent.init(argc, argv);
     while (rc == 0) {
 	qpid::sys::sleep(5);
-	host_update_event();
+	agent.heartbeat();
     }
     
     return rc;
@@ -61,7 +61,6 @@ int
 HostAgent::setup(ManagementAgent* agent)
 {
   this->_agent = agent;
-  host_register_listener(this);
 
   _management_object = new _qmf::Host(agent, this);
   agent->addObject(_management_object);
@@ -73,9 +72,9 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_platform(host_get_platform());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
-  _management_object->set_processors(cpu_get_count());
-  _management_object->set_cores(cpu_get_number_of_cores());
-  _management_object->set_model(cpu_get_model());
+  _management_object->set_processors(host_get_cpu_count());
+  _management_object->set_cores(host_get_cpu_number_of_cores());
+  _management_object->set_model(host_get_cpu_model());
 }
 
 Manageable::status_t
@@ -95,22 +94,25 @@ HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 }
 
 void
-HostAgent::heartbeat(uint64_t timestamp, uint32_t sequence)
+HostAgent::heartbeat()
 {
-  uint64_t now = timestamp * 1000000000;
-  this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, sequence));
-  _management_object->set_last_updated(now);
-  _management_object->set_last_updated_seq(sequence);
-}
+    double one, five, fifteen;
+    uint64_t timestamp = 0L, now = 0L;
 
-void
-HostAgent::updated()
-{
-  // update the load averages
-  double one, five, fifteen;
+    _heartbeat_sequence++;
 
-  host_get_load_averages(one, five, fifteen);
-  _management_object->set_load_average_1(one);
-  _management_object->set_load_average_5(five);
-  _management_object->set_load_average_15(fifteen);
+#ifndef MSVC
+    timestamp = ::time(NULL);
+#endif
+
+    now = timestamp * 1000000000;
+    this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, _heartbeat_sequence));
+    _management_object->set_last_updated(now);
+    _management_object->set_last_updated_seq(_heartbeat_sequence);
+
+    // update the load averages
+    host_get_load_averages(&one, &five, &fifteen);
+    _management_object->set_load_average_1(one);
+    _management_object->set_load_average_5(five);
+    _management_object->set_load_average_15(fifteen);
 }
