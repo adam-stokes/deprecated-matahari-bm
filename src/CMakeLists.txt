@@ -6,6 +6,9 @@ else(WIN32)
    set(VARIANT "linux")
 endif(WIN32)
 
+set(CMAKE_C_FLAGS "-Wall")
+set(CMAKE_CXX_FLAGS "-Wall")
+
 set(MCOMMON_VERSION 0.0.1)
 set(MHOST_VERSION 0.0.1)
 set(MSRV_VERSION 0.0.1)
