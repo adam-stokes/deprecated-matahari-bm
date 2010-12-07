@@ -6,6 +6,10 @@ else(WIN32)
    set(VARIANT "linux")
 endif(WIN32)
 
+set(MCOMMON_VERSION 0.0.1)
+set(MHOST_VERSION 0.0.1)
+set(MSRV_VERSION 0.0.1)
+
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
@@ -39,12 +43,15 @@ set(SCHEMA_SOURCES
 ## Libraries and Common code
 set(COMMON_SOURCES lib/mh_agent.cpp)
 
-add_library (mcommon lib/utilities.c lib/mainloop.c)
+add_library (mcommon SHARED lib/utilities.c lib/mainloop.c)
+set_target_properties(mcommon PROPERTIES SOVERSION ${MCOMMON_VERSION})
 
-add_library (mhost lib/host.c lib/host_${VARIANT}.c)
+add_library (mhost SHARED lib/host.c lib/host_${VARIANT}.c)
+set_target_properties(mhost PROPERTIES SOVERSION ${MHOST_VERSION})
 target_link_libraries(mhost mcommon)
 
-add_library (msrv lib/services.c lib/services_${VARIANT}.c)
+add_library (msrv SHARED lib/services.c lib/services_${VARIANT}.c)
+set_target_properties(msrv PROPERTIES SOVERSION ${MSRV_VERSION})
 target_link_libraries(msrv mcommon)
 
 if(WIN32)
@@ -234,6 +241,8 @@ endforeach(daemon ${DAEMONS})
 # Install targets
 install(TARGETS ${M_HOST}  DESTINATION sbin)
 install(TARGETS ${M_NET}   DESTINATION sbin)
+
+install(TARGETS mcommon mhost msrv DESTINATION lib)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.h DESTINATION include)
