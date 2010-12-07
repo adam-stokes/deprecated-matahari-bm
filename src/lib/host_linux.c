@@ -29,10 +29,6 @@
 
 #include <linux/reboot.h>
 
-#ifdef HAVE_LIBVIRT1
-#include <libvirt/libvirt.h>
-#endif
-
 #include <pcre.h>
 
 #include "matahari/logging.h"
@@ -104,26 +100,6 @@ host_os_get_operating_system(void)
     }
 
     return operating_system;
-}
-
-const char *
-host_os_get_hypervisor(void)
-{
-    static char * hypervisor;
-
-    if(hypervisor == NULL) {
-
-#ifdef HAVE_LIBVIRT1
-	virConnectPtr lvconn = virConnectOpenReadOnly(NULL);
-      
-	if(lvconn) {
-	    hypervisor = strdup(virConnectGetType(lvconn));
-	    virConnectClose(lvconn);
-	}
-#endif
-      
-    }
-    return hypervisor;
 }
 
 const char *

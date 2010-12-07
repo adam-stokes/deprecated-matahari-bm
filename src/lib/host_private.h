@@ -30,7 +30,6 @@ extern cpuinfo_t cpuinfo;
 extern const char *host_os_get_uuid(void);
 extern const char *host_os_get_hostname(void);
 extern const char *host_os_get_operating_system(void);
-extern const char *host_os_get_hypervisor(void);
 extern const char *host_os_get_architecture(void);
 
 extern unsigned int host_os_get_memory(void);

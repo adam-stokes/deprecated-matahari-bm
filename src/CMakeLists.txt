@@ -92,11 +92,6 @@ if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
 endif(NOT PKG_CONFIG_FOUND)
 
-find_library(VIRT virt)
-if(VIRT_FOUND)
-   target_link_libraries(${M_HOST} ${VIRT})
-endif(VIRT_FOUND)
-
 if(NOT pcre_FOUND)
    IF(MSVC)
         find_path(pcre_FOUND pcre.h "${PCRE_PATH}")
@@ -132,16 +127,6 @@ if(glib_FOUND)
 else(glib_FOUND)
    message(FATAL_ERROR "Glib2 header/library not found.")
 endif(glib_FOUND)
-
-set(simple_libs check libvirt)
-foreach(lib ${simple_libs}) 
-    find_library(${lib}_LIBRARIES ${lib})
-    if(${lib}_LIBRARIES) 
-        target_link_libraries(${M_HOST} ${${lib}_LIBRARIES})
-    else(${lib}_LIBRARIES) 
-    	message("Library ${lib} not found")
-    endif(${lib}_LIBRARIES) 
-endforeach(lib ${simple_libs})
 
 ## qpid
 

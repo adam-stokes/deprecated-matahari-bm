@@ -137,12 +137,6 @@ host_os_get_operating_system(void)
 }
 
 const char *
-host_os_get_hypervisor()
-{
-  return NULL;
-}
-
-const char *
 host_os_get_architecture()
 {
   static char *architecture = NULL;

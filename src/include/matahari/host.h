@@ -23,7 +23,6 @@ extern const char *host_get_uuid(void);
 extern const char *host_get_hostname(void);
 extern const char *host_get_operating_system(void);
 
-extern const char *host_get_hypervisor(void);
 extern const char *host_get_architecture(void);
 extern const char *host_get_cpu_model(void);
 

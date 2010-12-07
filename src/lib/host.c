@@ -25,10 +25,6 @@
 #include <sys/utsname.h>
 #endif
 
-#ifdef HAVE_LIBVIRT1
-#include <libvirt/libvirt.h>
-#endif
-
 #include <limits.h>
 #include "matahari/host.h"
 #include "host_private.h"
@@ -51,12 +47,6 @@ const char *
 host_get_operating_system(void)
 {
     return host_os_get_operating_system();
-}
-
-const char *
-host_get_hypervisor(void)
-{
-    return host_os_get_hypervisor();
 }
 
 unsigned int
