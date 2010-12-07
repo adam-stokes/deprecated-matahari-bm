@@ -34,7 +34,6 @@
 #endif
 
 #include <pcre.h>
-#include <libudev.h>
 
 #include "matahari/logging.h"
 #include "matahari/host.h"

@@ -23,10 +23,6 @@
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
-
-// TODO remove this wrapper once rhbz#583747 is fixed
-#include <libudev.h>
-
 #endif
 
 #ifdef HAVE_LIBVIRT1

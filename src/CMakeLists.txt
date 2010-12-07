@@ -132,7 +132,7 @@ else(glib_FOUND)
    message(FATAL_ERROR "Glib2 header/library not found.")
 endif(glib_FOUND)
 
-set(simple_libs check libvirt udev_new)
+set(simple_libs check libvirt)
 foreach(lib ${simple_libs}) 
     find_library(${lib}_LIBRARIES ${lib})
     if(${lib}_LIBRARIES) 
