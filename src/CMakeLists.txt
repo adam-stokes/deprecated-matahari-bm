@@ -18,6 +18,8 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH} )
+
 # set service name var's
 set(M_HOST "matahari-hostd")
 set(M_NET  "matahari-netd")
@@ -133,65 +135,7 @@ endif(glib_FOUND)
 
 ## qpid
 
-if(MSVC)
-   find_file(QPIDD qpidd.exe "${QPID_PATH}")
-   find_path(QPID_INCLUDE Address.h "${QPID_PATH}")
-   find_library(QMFCONSOLE qmfconsole.lib "${QPID_PATH}")
-   find_library(QPIDCLIENT qpidclient.lib "${QPID_PATH}")
-   find_library(QPIDCOMMON qpidcommon.lib "${QPID_PATH}")
-   find_library(QPIDCOMMON qpidtypes.lib "${QPID_PATH}")
-
-   # Figure out some way to do this automatically on windows
-   # Perhaps with the strings command
-   set(QPID_VERSION_LONG "qpidd (qpidc) version 0.6")
-
-else(MSVC)
-   find_library(QMF qmf)
-   find_library(QPIDCLIENT qpidclient)
-   find_library(QPIDCOMMON qpidcommon)	
-   find_library(QPIDTYPES qpidtypes)	
-
-   # Figure out the qpid version
-   if(WIN32)
-      find_file(QPIDD qpidd.exe)
-      execute_process(COMMAND strings ${QPIDD} OUTPUT_VARIABLE QPID_VERSION_LONG)
-      string(REGEX REPLACE ".*BUILD/qpid" " qpid" QPID_VERSION_LONG ${QPID_VERSION_LONG})
-      string(REGEX REPLACE "/cpp.*" "" QPID_VERSION_LONG ${QPID_VERSION_LONG})
-
-      #version: qpid-cpp-0.6.895736
-      string(REGEX REPLACE "qpid-cpp-" "" QPID_VERSION ${QPID_VERSION_LONG})
-      string(REGEX REPLACE ".[0-9]*$" "" QPID_VERSION ${QPID_VERSION})
-
-   else(WIN32)
-      find_file(QPIDD qpidd)
-      execute_process(COMMAND ${QPIDD} --version  OUTPUT_VARIABLE QPID_VERSION_LONG)
-      string(STRIP QPID_VERSION_LONG ${QPID_VERSION_LONG})
-      string(REGEX REPLACE "d \\(.*\\)" "" QPID_VERSION_LONG ${QPID_VERSION_LONG})
-      string(REGEX REPLACE ".* " "" QPID_VERSION ${QPID_VERSION_LONG})
-   endif(WIN32)
-endif(MSVC)
-
-if(NOT QMF)
-   message(FATAL_ERROR "QMF library not found.")
-endif(NOT QMF)
-
-if(NOT QPIDCLIENT)
-   message(FATAL_ERROR "QPIDCLIENT library not found.")
-endif(NOT QPIDCLIENT)
-
-if(NOT QPIDCOMMON)
-   message(FATAL_ERROR "QPIDCOMMON library not found.")
-endif(NOT QPIDCOMMON)
-
-if(NOT QPIDTYPES)
-   message("QPIDTYPES library not found.")
-   set(QPIDTYPES "")
-endif(NOT QPIDTYPES)
-
-find_program(QMFGEN qmf-gen)
-if(QMFGEN-NOTFOUND)
-   message(FATAL_ERROR Missing QMF schema processor.)
-endif(QMFGEN-NOTFOUND)
+find_package(QPID REQUIRED)
 
 string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 
@@ -224,7 +168,7 @@ endif (regen_schema)
 
 # Add QF libraries
 foreach(daemon ${DAEMONS}) 
-    target_link_libraries(${daemon} ${QPIDCOMMON} ${QPIDCLIENT} ${QPIDTYPES} ${QMF})
+    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY})
 endforeach(daemon ${DAEMONS}) 
 
 # Install targets
