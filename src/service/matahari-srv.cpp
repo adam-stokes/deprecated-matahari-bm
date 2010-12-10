@@ -40,6 +40,7 @@
 
 extern "C" { 
 #include "matahari/logging.h"
+#include "matahari/services.h"
 }
 
 class SrvAgent : public MatahariAgent
@@ -79,11 +80,13 @@ SrvAgent::setup(ManagementAgent* agent)
     this->_srv_management_object->set_hostname(get_hostname());
 
     agent->addObject(this->_srv_management_object);
-
+/*
+  Seems we can only manage one object/class per agent...
     this->_rsc_management_object = new _qmf::Resources(agent, this);
     this->_rsc_management_object->set_hostname(get_hostname());
 
     agent->addObject(this->_rsc_management_object);
+*/
     return 0;
 }
 
@@ -92,28 +95,28 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 {
     switch(method)
 	{
-	case _qmf::Resources::METHOD_LIST:
-	    break;
-	    
 	case _qmf::Services::METHOD_LIST:
-/*
 	    {
+		GList *gIter = NULL;
+		GList *services = list_services();
 		_qmf::ArgsServicesList& ioArgs = (_qmf::ArgsServicesList&) arguments;
-		uint32_t lpc = 0;
-		char **iface_list = NULL;
-		ioArgs.o_max = ncf_num_of_interfaces(ncf, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE);
 		
-		iface_list = (char**)calloc(ioArgs.o_max+1, sizeof(char*));
-		if(ncf_list_interfaces(ncf, ioArgs.o_max, iface_list, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE) < 0) {
-		    ioArgs.o_max = 0;
-		}
-		
-		for(lpc = 0; lpc < ioArgs.o_max; lpc++) {
-		    nif = ncf_lookup_by_name(ncf, iface_list[lpc]);
-		    ioArgs.o_iface_map.push_back(iface_list[lpc]);
+		for(gIter = services; gIter != NULL; gIter = gIter->next) {
+		    ioArgs.o_services.push_back(gIter->data);
 		}
 	    }
-*/
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Services::METHOD_ENABLE:
+	    {
+		// _qmf::ArgsServicesDescribe& ioArgs = (_qmf::ArgsServicesDescribe&) arguments;
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Services::METHOD_DISABLE:
+	    {
+		// _qmf::ArgsServicesDescribe& ioArgs = (_qmf::ArgsServicesDescribe&) arguments;
+	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_START:
@@ -129,6 +132,12 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_STATUS:
+	    {
+		// _qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Services::METHOD_CANCEL:
 	    {
 		// _qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
 	    }
