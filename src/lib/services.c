@@ -180,9 +180,11 @@ pipe_err_done(gpointer user_data)
 static void
 set_ocf_env(gpointer key, gpointer value, gpointer user_data)
 {
+#if __linux__
     if (setenv(key, value, 1) != 0) {
 	mh_err("setenv failed in raexecocf.");
     }
+#endif
 }
 
 static void
@@ -224,6 +226,7 @@ add_OCF_env_vars(rsc_op_t *op)
 static void
 operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 {
+#if __linux__
     char *next = NULL;
     char *offset = NULL;
     rsc_op_t *op = p->privatedata;
@@ -268,11 +271,13 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 	
     }
     op->pid = -1;
+#endif
 }
 
 gboolean
 perform_async_action(rsc_op_t* op)
 {
+#if __linux__
     int rc, lpc;
     int stdout_fd[2];
     int stderr_fd[2];
@@ -364,13 +369,14 @@ perform_async_action(rsc_op_t* op)
     set_fd_opts(op->stderr_fd, O_NONBLOCK);
     op->stderr_gsource = mainloop_add_fd(
 	G_PRIORITY_LOW, op->stderr_fd, read_output, pipe_err_done, op);
-
+#endif
     return TRUE;
 }
 
 gboolean
 perform_sync_action(rsc_op_t* op)
 {
+#if __linux__
     FILE* file = NULL;
 
     /* Setup environment correctly */
@@ -389,14 +395,16 @@ perform_sync_action(rsc_op_t* op)
     if( pclose(file) ) {
 	mh_perror(LOG_ERR, "pclose() failed");
     }
+#endif
     return TRUE;
 }
 
 GList *
 get_directory_list(const char *root, gboolean files)
 {
-    struct dirent **namelist;
     GList* list = NULL;
+#if __linux__
+    struct dirent **namelist;
     int entries = 0, lpc = 0;
     char buffer[FILENAME_MAX+1];
 
@@ -438,5 +446,6 @@ get_directory_list(const char *root, gboolean files)
     }
     
     free(namelist);
+#endif
     return list;
 }

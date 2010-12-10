@@ -23,6 +23,7 @@
 #include "matahari/utilities.h"
 
 #if __linux__
+#include <unistd.h>
 #include <sys/wait.h>
 #include <sys/utsname.h>
 
@@ -86,6 +87,18 @@ int mh_log_level = 0;
 #include <winsock.h>
 #include <windows.h>
 #include <winbase.h>
+
+void mh_log_init(const char *ident, int level)
+{
+    mh_log_level = level;
+}
+
+void
+mh_abort(const char *file, const char *function, int line,
+	 const char *assert_condition, int do_core, int do_fork)
+{
+    mh_err("%s: Triggered assert at %s:%d : %s", function, file, line, assert_condition);
+}
 #endif
 
 char *get_hostname(void)

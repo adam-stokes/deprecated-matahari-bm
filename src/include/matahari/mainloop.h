@@ -20,7 +20,6 @@
 
 #include <glib.h>
 #include <sys/types.h>
-#include <sys/times.h>
 
 extern gboolean mainloop_signal(int sig, void (*dispatch)(int sig));
 

@@ -26,8 +26,10 @@
 #include <signal.h>
 #include <time.h>
 
+#if __linux__
 #include <sys/wait.h>
-#include <sys/types.h>
+#include <sys/times.h>
+#endif
 
 #include "matahari/mainloop.h"
 #include "matahari/logging.h"
@@ -132,9 +134,10 @@ static gboolean
 mainloop_signal_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
 {
     mainloop_signal_t *sig = (mainloop_signal_t*)source;
+#if __linux__
     mh_info("Invoking handler for signal %d: %s",
 	     sig->signal, strsignal(sig->signal));
-
+#endif
     sig->trigger.trigger = FALSE;
     if(sig->handler) {
 	sig->handler(sig->signal);
@@ -158,6 +161,7 @@ static GSourceFuncs mainloop_signal_funcs = {
 
 gboolean mainloop_signal(int sig, void (*dispatch)(int sig)) 
 {
+#if __linux__
     sigset_t mask;
     struct sigaction sa;
     struct sigaction old;    
@@ -177,6 +181,10 @@ gboolean mainloop_signal(int sig, void (*dispatch)(int sig))
     }
     
     return TRUE;
+#else
+    mh_perror(LOG_ERR, "Could not install signal handler for signal %d", sig);
+    return FALSE;
+#endif
 }
 
 gboolean
@@ -367,6 +375,7 @@ static gboolean child_timeout_callback(gpointer p)
     pinfo->timeout = TRUE;
     mh_warn("%s process (PID %d) timed out", pinfo->desc, (int)pid);
 
+#if __linux__
     if (kill(pinfo->pid, SIGKILL) < 0) {
 	if (errno == ESRCH) {
 	    /* Nothing left to do */
@@ -376,6 +385,7 @@ static gboolean child_timeout_callback(gpointer p)
     }
 
     pinfo->timerid = g_timeout_add(5000, child_timeout_callback, p);
+#endif
     return FALSE;
 }
 
@@ -409,6 +419,7 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
 static void
 child_death_dispatch(int sig)
 {
+#if __linux__
     int status = 0;
     while(TRUE) {
 	pid_t pid = wait3(&status, WNOHANG, NULL);
@@ -448,10 +459,13 @@ child_death_dispatch(int sig)
 	    break;
 	}
     }
+#endif
 }
 
 void
 mainloop_track_children(int priority, unsigned long maxdisptime)
 {
+#if __linux__
     mainloop_add_signal(SIGCHLD, child_death_dispatch);
+#endif
 }
