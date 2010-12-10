@@ -169,6 +169,9 @@ endif (regen_schema)
 # Add QF libraries
 foreach(daemon ${DAEMONS}) 
     target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY})
+    IF(QPIDTYPES_FOUND)
+        target_link_libraries(${daemon} ${QPIDTYPES_LIBRARY})
+    ENDIF(QPIDTYPES_FOUND)
 endforeach(daemon ${DAEMONS}) 
 
 # Install targets
