@@ -181,6 +181,6 @@ install(TARGETS ${M_NET}   DESTINATION sbin)
 install(TARGETS mcommon mhost msrv DESTINATION lib)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.h DESTINATION include)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
 
 
