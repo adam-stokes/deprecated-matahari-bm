@@ -49,7 +49,7 @@ rsc_op_t *create_service_op(
     op->interval = interval;
     op->timeout = timeout;
 
-    op->class = strdup("lsb");
+    op->rclass = strdup("lsb");
     op->agent = strdup(name);
 
     op->id = malloc(500);
@@ -73,7 +73,7 @@ rsc_op_t *create_ocf_op(
     op->interval = interval;
     op->timeout = timeout;
 
-    op->class = strdup("ocf");
+    op->rclass = strdup("ocf");
     op->agent = strdup(agent);
     op->provider = strdup(provider);
 
@@ -100,7 +100,7 @@ void free_operation(rsc_op_t *op)
     free(op->rsc);
     free(op->action);
 
-    free(op->class);
+    free(op->rclass);
     free(op->agent);
     free(op->provider);
 
@@ -197,7 +197,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_OCF_env_vars(rsc_op_t *op)
 {
-    if (strcmp("ocf", op->class) != 0) {
+    if (strcmp("ocf", op->rclass) != 0) {
 	return;
     }
 

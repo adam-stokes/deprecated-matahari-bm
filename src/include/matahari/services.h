@@ -20,6 +20,7 @@
 
 #include <glib.h>
 #include <stdio.h>
+#include "matahari/mainloop.h"
 
 /* TODO: Autodetect these two in CMakeList.txt */
 #define OCF_ROOT "/usr/lib/ocf"
@@ -54,7 +55,7 @@ typedef struct rsc_op_s
 	char *action;
 	int   interval;
 
-	char *class;
+	char *rclass;
 	char *provider;
 	char *agent;
 
@@ -112,7 +113,7 @@ extern gboolean perform_async_action(rsc_op_t* op);
 static inline enum ocf_exitcode convert_lsb_exitcode(char *action, int lsb) 
 {
     if(lsb == OCF_NOT_INSTALLED) {
-	return lsb;
+	return OCF_NOT_INSTALLED;
 
     } else if(action != NULL && strcmp("status", action) == 0) {
 	switch(lsb) {
