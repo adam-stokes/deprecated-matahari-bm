@@ -19,6 +19,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <sigar.h>
+
 extern const char *host_get_uuid(void);
 extern const char *host_get_hostname(void);
 extern const char *host_get_operating_system(void);
@@ -26,17 +30,24 @@ extern const char *host_get_operating_system(void);
 extern const char *host_get_architecture(void);
 extern const char *host_get_cpu_model(void);
 
-extern unsigned int host_get_memory(void);
-extern unsigned int host_get_cpu_count(void);
-extern unsigned int host_get_cpu_number_of_cores(void);
+extern uint64_t host_get_memory(void);
+extern uint64_t host_get_mem_free(void);
+extern uint64_t host_get_swap(void);
+extern uint64_t host_get_swap_free(void);
 
-extern unsigned int host_get_platform(void);
-extern unsigned int host_get_cpu_wordsize(void);
+extern int host_get_cpu_count(void);
+extern int host_get_cpu_number_of_cores(void);
+
+extern uint32_t host_get_platform(void);
+extern int host_get_cpu_wordsize(void);
 
 extern void host_identify(const unsigned int iterations);
 
 extern void host_reboot(void);
 extern void host_shutdown(void);
-extern void host_get_load_averages(double *one, double *five, double *fifteen);
+extern void host_get_load_averages(sigar_loadavg_t *avg);
+extern void host_get_processes(sigar_proc_stat_t *procs);
+
+extern void host_get_cpu_details(void);
 
 #endif // __HOST_H

@@ -26,10 +26,28 @@
 #endif
 
 #include <limits.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <glib.h>
+#include <glib/gprintf.h>
 #include "matahari/host.h"
 #include "host_private.h"
 
+#include <sigar.h>
+#include <sigar_private.h>
+#include <sigar_format.h>
+
+host_init_t host_init = { NULL, FALSE };
 cpuinfo_t cpuinfo = { 0, 0, 0, 0, 0 };
+
+static void
+init(void)
+{
+    if(host_init.sigar_init) return;
+    sigar_open(&host_init.sigar);
+    host_init.sigar_init = TRUE;
+}
 
 const char *
 host_get_uuid(void)
@@ -40,31 +58,53 @@ host_get_uuid(void)
 const char *
 host_get_hostname(void)
 {
-    return host_os_get_hostname();
+    init();
+    sigar_net_info_t netinfo;
+    char *host_name = NULL;
+
+    if(host_name == NULL) {
+        sigar_net_info_get(host_init.sigar, &netinfo);
+        host_name = g_strdup(netinfo.host_name);
+    }
+    return host_name;
 }
 
 const char *
 host_get_operating_system(void)
 {
-    return host_os_get_operating_system();
+    init();
+    sigar_sys_info_t sysinfo;
+    char *operating_system = NULL;
+
+    if(operating_system == NULL) {
+        sigar_sys_info_get(host_init.sigar, &sysinfo);
+        operating_system = g_strdup_printf("%s (%s)", sysinfo.vendor_name, sysinfo.version);
+    }
+    return operating_system;
 }
 
-unsigned int
+uint32_t
 host_get_platform(void)
 {
-  static unsigned int wordsize = 0;
+    uint32_t platform;
 
-  if(wordsize == 0) {
-      wordsize = sizeof(void *) * CHAR_BIT;
-  }
+    platform = CHAR_BIT * sizeof(size_t);
 
-  return wordsize;
+    return platform;
 }
 
 const char *
 host_get_architecture(void)
 {
-    return host_os_get_architecture();
+    init();
+    sigar_sys_info_t sysinfo;
+    char *arch = NULL;
+
+    if(arch == NULL) {
+        sigar_sys_info_get(host_init.sigar, &sysinfo);
+        arch = g_strdup(sysinfo.arch);
+    }
+    return arch;
 }
 
 void
@@ -79,50 +119,116 @@ host_shutdown(void)
     host_os_shutdown();
 }
 
-
-unsigned int
-host_get_cpu_wordsize()
+/* TODO: Discuss removing wordsize
+int
+host_get_cpu_wordsize(void)
 {
-  static unsigned int wordsize = 0;
-
-  if(wordsize == 0) {
-      host_os_get_cpu_details();
-      return cpuinfo.wordsize;
-  }
-
-  return wordsize;
+    return 0;
 }
+*/
 
 const char*
-host_get_cpu_model()
+host_get_cpu_model(void)
 {
-  host_os_get_cpu_details();
+    init();
+    host_get_cpu_details();
   return cpuinfo.model;
 }
 
-unsigned int
-host_get_cpu_count()
+int
+host_get_cpu_count(void)
 {
-  host_os_get_cpu_details();
+    init();
+    host_get_cpu_details();
   return cpuinfo.cpus;
 }
 
-unsigned int
-host_get_cpu_number_of_cores()
+int
+host_get_cpu_number_of_cores(void)
 {
-  host_os_get_cpu_details();
+    init();
+    host_get_cpu_details();
   return cpuinfo.cores;
 }
 
 void
-host_get_load_averages(double *one, double *five, double *fifteen)
+host_get_load_averages(sigar_loadavg_t *avg)
 {
-    host_os_get_load_averages(one, five, fifteen);
+    init();
+    sigar_loadavg_get(host_init.sigar, avg);
 }
 
-unsigned int
+void
+host_get_processes(sigar_proc_stat_t *procs)
+{
+    init();
+    sigar_proc_stat_get(host_init.sigar, procs);
+}
+
+uint64_t
 host_get_memory(void) 
 {
-    return host_os_get_memory();
+    sigar_mem_t mem;
+    uint64_t total;
+    init();
+
+    sigar_mem_get(host_init.sigar, &mem);
+    total = mem.total / 1024;
+    return total;
 }
 
+uint64_t
+host_get_mem_free(void)
+{
+    sigar_mem_t mem;
+    uint64_t free;
+    init();
+
+    sigar_mem_get(host_init.sigar, &mem);
+    free = mem.free / 1024;
+    return free;
+}
+
+uint64_t
+host_get_swap(void)
+{
+    sigar_swap_t swap;
+    uint64_t total;
+    init();
+
+    sigar_swap_get(host_init.sigar, &swap);
+    total = swap.total / 1024;
+    return total;
+}
+
+uint64_t
+host_get_swap_free(void)
+{
+    sigar_swap_t swap;
+    uint64_t free;
+    init();
+
+    sigar_swap_get(host_init.sigar, &swap);
+    free = swap.free / 1024;
+    return free;
+}
+
+void
+host_get_cpu_details(void)
+{
+    sigar_cpu_info_list_t cpus;
+    sigar_cpu_info_t *cpu;
+    
+    if(cpuinfo.initialized) return;
+    cpuinfo.initialized = 1;
+
+    sigar_cpu_info_list_get(host_init.sigar, &cpus);
+    cpu = (sigar_cpu_info_t *) cpus.data;
+
+    cpuinfo.model = g_strdup(cpu->model);
+    cpuinfo.cpus = cpu->total_cores;
+    cpuinfo.cores = cpu->cores_per_socket;
+
+    sigar_cpu_info_list_destroy(host_init.sigar, &cpus);
+
+}

@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 					
+#include <glib.h>
+
 typedef struct cpuinfo_
 {
   int initialized;
@@ -27,6 +29,14 @@ typedef struct cpuinfo_
 
 extern cpuinfo_t cpuinfo;
 
+typedef struct host_init_
+{
+    sigar_t *sigar;
+    gboolean sigar_init;
+} host_init_t;
+
+extern host_init_t host_init;
+
 extern const char *host_os_get_uuid(void);
 extern const char *host_os_get_hostname(void);
 extern const char *host_os_get_operating_system(void);
@@ -37,6 +47,5 @@ extern unsigned int host_os_get_platform(void);
 
 extern void host_os_reboot(void);
 extern void host_os_shutdown(void);
-extern void host_os_get_load_averages(double *one, double *five, double *fifteen);
 
 extern void host_os_get_cpu_details(void);

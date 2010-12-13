@@ -1,4 +1,4 @@
-/* hostagent.cpp - Copyright (C) 2009 Red Hat, Inc.
+/* matahari-host.cpp - Copyright (C) 2009 Red Hat, Inc.
  * Written by Arjun Roy <arroy@redhat.com>
  *
  *
@@ -25,6 +25,7 @@
 #include "matahari/mh_agent.h"
 #include "qmf/org/matahariproject/Host.h"
 #include "qmf/org/matahariproject/EventHeartbeat.h"
+#include <sigar.h>
 
 extern "C" {
 #include "matahari/host.h"
@@ -97,8 +98,9 @@ HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 void
 HostAgent::heartbeat()
 {
-    double one, five, fifteen;
     uint64_t timestamp = 0L, now = 0L;
+    sigar_loadavg_t avg;
+    sigar_proc_stat_t procs;
 
     _heartbeat_sequence++;
 
@@ -112,8 +114,17 @@ HostAgent::heartbeat()
     _management_object->set_last_updated_seq(_heartbeat_sequence);
 
     // update the load averages
-    host_get_load_averages(&one, &five, &fifteen);
-    _management_object->set_load_average_1(one);
-    _management_object->set_load_average_5(five);
-    _management_object->set_load_average_15(fifteen);
+    host_get_load_averages(&avg);
+    host_get_processes(&procs);
+    _management_object->set_load_average_1(avg.loadavg[0]);
+    _management_object->set_load_average_5(avg.loadavg[1]);
+    _management_object->set_load_average_15(avg.loadavg[2]);
+    _management_object->set_proc_total(procs.total);
+    _management_object->set_proc_sleeping(procs.sleeping);
+    _management_object->set_proc_running(procs.running);
+    _management_object->set_proc_zombie(procs.zombie);
+    _management_object->set_proc_stopped(procs.stopped);
+    _management_object->set_proc_idle(procs.idle);
+    _management_object->set_swap_free(host_get_swap_free());
+    _management_object->set_mem_free(host_get_mem_free());
 }
