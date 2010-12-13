@@ -321,7 +321,7 @@ mainloop_add_fd(int priority, int fd,
     GSource *source = NULL;
     mainloop_fd_t *fd_source = NULL;
     MH_ASSERT(sizeof(mainloop_fd_t) > sizeof(GSource));
-    source = g_source_new(&mainloop_trigger_funcs, sizeof(mainloop_fd_t));
+    source = g_source_new(&mainloop_fd_funcs, sizeof(mainloop_fd_t));
     MH_ASSERT(source != NULL);
 
     fd_source = (mainloop_fd_t*)source;
