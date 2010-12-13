@@ -1,5 +1,5 @@
-%global specversion 9
-%global upstream_version d2645bc
+%global specversion 17
+%global upstream_version bc6056d
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -17,22 +17,20 @@ URL:		http://fedorahosted.org/matahari
 Source0:	matahari-%{version}.tbz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Requires:	dbus >= 1.2.12
-Requires:	hal >= 0.5.12
-Requires:	qpidc >= 0.5.819819
-Requires:	qmf >= 0.5.819819
-Requires:	libvirt >= 0.6.2
-Requires:	pcre >= 7.8
+Requires:	dbus
+Requires:	hal
+Requires:	qmf > 0.7
+Requires:	pcre
 
 BuildRequires:	cmake
 BuildRequires:	libudev-devel netcf-devel
-BuildRequires:	gcc-c++ >= 4.4.0
-BuildRequires:	dbus-devel >= 1.2.12
-BuildRequires:	hal-devel >= 0.5.12
-BuildRequires:	qpid-cpp-server-devel >= 0.5.819819
-BuildRequires:	qmf-devel >= 0.5.819819
-BuildRequires:	libvirt-devel >= 0.6.2
-BuildRequires:	pcre-devel >= 7.8
+BuildRequires:	gcc-c++
+BuildRequires:	dbus-devel
+BuildRequires:	hal-devel
+BuildRequires:	qpid-cpp-server-devel > 0.7
+BuildRequires:	qmf-devel > 0.7
+BuildRequires:	pcre-devel
+BuildRequires:	glib2-devel
 
 %description
 
@@ -46,11 +44,23 @@ QMF provides a modeling framework layer on top of qpid (which implements
 AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
+%package devel 
+License:	GPLv2+
+Summary:	Matahari development package
+Group:		Development/Libraries
+Requires:	%{name} = %{version}-%{release}
+Requires:	qpid-cpp-server-devel > 0.7
+Requires:	qmf-devel > 0.7
+Requires:	glib2-devel
+
+%description devel
+Headers and shared libraries for developing Matahari agents.
+
 %prep
 %setup -q
 
 %build
-%{cmake} .
+%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo .
 make %{?_smp_mflags}
 
 %install
@@ -93,9 +103,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files
 %defattr(644, root, root, 755)
 %dir %{_datadir}/matahari/
-%{_datadir}/matahari/schema-host.xml
-%{_datadir}/matahari/schema-net.xml
-%{_includedir}/matahari.h
+%{_libdir}/libm*.so.*
 
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari
 
@@ -110,6 +118,12 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 
 %doc AUTHORS COPYING
+
+%files devel
+%defattr(644, root, root, 755)
+%{_datadir}/matahari/schema.xml
+%{_includedir}/matahari.h
+%{_libdir}/libm*.so
 
 %changelog
 * Wed Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.8.ad8b81b.git
