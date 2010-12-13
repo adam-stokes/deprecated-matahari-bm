@@ -42,6 +42,10 @@
 #include "qmf/org/matahariproject/Package.h"
 #include "matahari/mh_agent.h"
 
+extern "C" {
+#include "matahari/logging.h"
+}
+
 using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
@@ -100,6 +104,7 @@ MatahariAgent::init(int argc, char **argv)
 	{"port", required_argument, NULL, 'p'},
 	{0, 0, 0, 0}
     };
+    mh_log_init(basename(argv[0]), LOG_DEBUG);
 
     // Get args
     while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:", opt, &idx)) != -1) {
