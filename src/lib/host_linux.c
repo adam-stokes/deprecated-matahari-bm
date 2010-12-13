@@ -40,7 +40,7 @@ host_os_get_uuid()
 {
     static char * uuid = NULL;
 
-    if(uuid != NULL) {
+    if(uuid == NULL) {
 	FILE *input = fopen("/var/lib/dbus/machine-id", "r");
 	char *buffer = NULL;
 	int chunk = 512, data_length = 0, read_chars = 0;
@@ -214,12 +214,14 @@ host_os_get_cpu_details(void)
 	buffer[data_length] = '\0';
 	regex = pcre_compile(regexstr, 0, &pcre_error, &pcre_error_offset, NULL);
 	if(!regex) {
-	    mh_err("Unable to compile regular expression.");
+	    mh_err("Unable to compile regular expression '%s' at offset %s: %s",
+		   regexstr, pcre_error_offset, pcre_error);
 	    goto done;
 	}
 
 	for(lpc = 0; lpc < data_length; lpc++) {
-	    switch(offset) {
+	    
+	    switch(buffer[lpc]) {
 		case '\n':
 		case '\0':
 		    match = pcre_exec(regex, NULL, buffer+offset, lpc-offset,
@@ -229,22 +231,22 @@ host_os_get_cpu_details(void)
 			char *name = NULL;
 			char *value = NULL;
 
-			name = malloc(1 + found[3] - found[2]);
-			snprintf(name, found[3] - found[2], "%s", buffer + offset + found[2]);
+			name = malloc(2 + found[3] - found[2]);
+			snprintf(name, 1 + found[3] - found[2], "%s", buffer + offset + found[2]);
 			
-			value = malloc(1 + found[5] - found[4]);
-			snprintf(value, found[5] - found[4], "%s", buffer + offset + found[4]);
+			value = malloc(2 + found[5] - found[4]);
+			snprintf(value, 1 + found[5] - found[4], "%s", buffer + offset + found[4]);
 		
-			if (name == "processor") {
+			if (strcmp(name, "processor") == 0) {
 			    cpuinfo.cpus++;
 			    
-			} else if (name == "cpu cores")  {
+			} else if (strcmp(name, "cpu cores") == 0)  {
 			    cpuinfo.cores += atoi(value);
 			    
-			} else if (name == "model name") {
+			} else if (strcmp(name, "model name") == 0) {
 			    cpuinfo.model = strdup(value);
 			    
-			} else if (name == "flags") {
+			} else if (strcmp(name, "flags") == 0) {
 			    /* if the cpuflags contain "lm" then it's a 64 bit CPU
 			     * http://www.brandonhutchinson.com/Understanding_proc_cpuinfo.html
 			     */
@@ -261,6 +263,7 @@ host_os_get_cpu_details(void)
 	    }
 	}
     }
+
   done:
     fclose(input);
     free(buffer);
