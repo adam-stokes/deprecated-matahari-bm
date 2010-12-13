@@ -27,14 +27,21 @@
 #include "qmf/org/matahariproject/ArgsNetworkStop.h"
 #include "qmf/org/matahariproject/ArgsNetworkStart.h"
 #include "qmf/org/matahariproject/ArgsNetworkStatus.h"
-#include "qmf/org/matahariproject/ArgsNetworkDescribe.h"
-#include "qmf/org/matahariproject/ArgsNetworkDestroy.h"
+#include "qmf/org/matahariproject/ArgsNetworkGet_ip_address.h"
+#include "qmf/org/matahariproject/ArgsNetworkGet_mac_address.h"
+
+#include <qpid/agent/ManagementAgent.h>
 
 extern "C" { 
-#include <netcf.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <glib.h>
+#include <glib/gprintf.h>
 #include "matahari/logging.h"
+#include "matahari/network.h"
+#include "matahari/host.h"
+#include <sigar.h>
+#include <sigar_format.h>
 };
 
 class NetAgent : public MatahariAgent
@@ -60,30 +67,23 @@ main(int argc, char **argv)
     return rc;
 }
 
-struct netcf *ncf;
-static int interface_status(struct netcf_if *nif) 
+static int interface_status(const char *iface)
 {
-    unsigned int flags = 0;
-    if(nif == NULL) {
+    uint64_t flags = 0;
+    if(iface == NULL)
 	return 3;
 	
-    } else if(ncf_if_status(nif, &flags) < 0) {
-	return 4;
+    network_status(iface, &flags);
 
-    } else if(flags & NETCF_IFACE_ACTIVE) {
+    if(flags & SIGAR_IFF_UP) {
 	return 0;
     }
     return 1; /* Inactive */
 }
 
-
 int
 NetAgent::setup(ManagementAgent* agent)
 {
-    if (ncf_init(&ncf, NULL) < 0) {
-	return -1;
-    }
-
     this->_agent = agent;
     this->_management_object = new _qmf::Network(agent, this);
     this->_management_object->set_hostname(get_hostname());
@@ -95,29 +95,19 @@ NetAgent::setup(ManagementAgent* agent)
 Manageable::status_t
 NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 {
-    struct netcf_if *nif;
-
-    if(	ncf == NULL) {
-	return Manageable::STATUS_NOT_IMPLEMENTED;
-    }
-    
     switch(method)
 	{
 	case _qmf::Network::METHOD_LIST:
 	    {
+                GList *interface_list = NULL;
+                GList *plist = NULL;
+                sigar_net_interface_config_t *ifconfig = NULL;
+		
 		_qmf::ArgsNetworkList& ioArgs = (_qmf::ArgsNetworkList&) arguments;
-		uint32_t lpc = 0;
-		char **iface_list = NULL;
-		ioArgs.o_max = ncf_num_of_interfaces(ncf, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE);
-		
-		iface_list = (char**)calloc(ioArgs.o_max+1, sizeof(char*));
-		if(ncf_list_interfaces(ncf, ioArgs.o_max, iface_list, NETCF_IFACE_ACTIVE|NETCF_IFACE_INACTIVE) < 0) {
-		    ioArgs.o_max = 0;
-		}
-		
-		for(lpc = 0; lpc < ioArgs.o_max; lpc++) {
-		    nif = ncf_lookup_by_name(ncf, iface_list[lpc]);
-		    ioArgs.o_iface_map.push_back(iface_list[lpc]);
+                interface_list = network_get_interfaces();
+                for(plist = g_list_first(interface_list); plist; plist = g_list_next(plist)) {
+                    ifconfig = (sigar_net_interface_config_t *)plist->data;
+                    ioArgs.o_iface_map.push_back(ifconfig->name);
 		}
 	    }
 	    return Manageable::STATUS_OK;
@@ -125,11 +115,10 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Network::METHOD_START:
 	    {
 		_qmf::ArgsNetworkStart& ioArgs = (_qmf::ArgsNetworkStart&) arguments;
-		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		ioArgs.o_status = interface_status(nif);
-		if(ioArgs.o_status == 1) {
-		    ncf_if_up(nif);
-		    ioArgs.o_status = interface_status(nif);
+                ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
+		if((ioArgs.o_status) == 1) {
+		    network_start(ioArgs.i_iface.c_str());
+		    ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
 		}
 	    }
 	    return Manageable::STATUS_OK;
@@ -137,11 +126,10 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Network::METHOD_STOP:
 	    {
 		_qmf::ArgsNetworkStop& ioArgs = (_qmf::ArgsNetworkStop&) arguments;
-		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		ioArgs.o_status = interface_status(nif);
+                ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
 		if(ioArgs.o_status == 0) {
-		    ncf_if_down(nif);
-		    ioArgs.o_status = interface_status(nif);
+		    network_stop(ioArgs.i_iface.c_str());
+		    ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
 		}
 	    }
 	    return Manageable::STATUS_OK;
@@ -149,28 +137,26 @@ NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Network::METHOD_STATUS:
 	    {
 		_qmf::ArgsNetworkStatus& ioArgs = (_qmf::ArgsNetworkStatus&) arguments;
-		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		ioArgs.o_status = interface_status(nif);
+		ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
+
 	    }
 	    return Manageable::STATUS_OK;
 
-	case _qmf::Network::METHOD_DESCRIBE:
+	case _qmf::Network::METHOD_GET_IP_ADDRESS:
 	    {
-		_qmf::ArgsNetworkDescribe& ioArgs = (_qmf::ArgsNetworkDescribe&) arguments;
-		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		if(nif != NULL) {
-		    ioArgs.o_xml = ncf_if_xml_desc(nif);
-		}
+		_qmf::ArgsNetworkGet_ip_address& ioArgs = (_qmf::ArgsNetworkGet_ip_address&) arguments;
+
+                ioArgs.o_ip = g_strdup((network_get_ip_address(ioArgs.i_iface.c_str())));
 	    }
 	    return Manageable::STATUS_OK;
 
-	case _qmf::Network::METHOD_DESTROY:
+	case _qmf::Network::METHOD_GET_MAC_ADDRESS:
 	    {
-		_qmf::ArgsNetworkDestroy& ioArgs = (_qmf::ArgsNetworkDestroy&) arguments;
-		nif = ncf_lookup_by_name(ncf, ioArgs.i_iface.c_str());
-		if(nif != NULL) {
-		    ncf_if_undefine(nif);
-		}
+                const char *mac_str;
+		_qmf::ArgsNetworkGet_mac_address& ioArgs = (_qmf::ArgsNetworkGet_mac_address&) arguments;
+
+                mac_str = network_get_mac_address(ioArgs.i_iface.c_str());
+                ioArgs.o_mac = g_strdup(mac_str);
 	    }
 	    return Manageable::STATUS_OK;
 	}

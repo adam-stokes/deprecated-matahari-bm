@@ -59,6 +59,9 @@ add_library (msrv SHARED lib/services.c lib/services_${VARIANT}.c)
 set_target_properties(msrv PROPERTIES SOVERSION ${MSRV_VERSION})
 target_link_libraries(msrv mcommon)
 
+add_library (mnet lib/network.c lib/network_${VARIANT}.c)
+target_link_libraries(mnet mcommon)
+
 if(WIN32)
    target_link_libraries(mhost wsock32)
    target_link_libraries(mcommon wsock32)
@@ -69,6 +72,7 @@ add_executable(${M_HOST} host/matahari-host.cpp ${SCHEMA_SOURCES} ${COMMON_SOURC
 target_link_libraries(${M_HOST} mhost)
 
 add_executable(${M_NET}  net/matahari-net.cpp  ${SCHEMA_SOURCES} ${COMMON_SOURCES})
+target_link_libraries(${M_NET} mnet)
 
 add_executable(${M_SRV}  service/matahari-srv.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES})
 target_link_libraries(${M_SRV} msrv)
@@ -91,7 +95,6 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURREN
 ## Modules
 pkg_check_modules(glib REQUIRED glib-2.0)
 pkg_check_modules(pcre REQUIRED libpcre)
-pkg_check_modules(netcf REQUIRED netcf)
 
 if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
@@ -116,13 +119,6 @@ else(pcre_FOUND)
    message(FATAL_ERROR "PCRE header/library not found.")
 endif(pcre_FOUND)
 
-if(netcf_FOUND)
-   target_link_libraries(${M_NET} ${netcf_LIBRARIES})
-   include_directories(${netcf_INCLUDE_DIRS})
-else(netcf_FOUND)
-   message(FATAL_ERROR "NETCF header/library not found.")
-endif(netcf_FOUND)
-
 if(glib_FOUND)
    include_directories(${glib_INCLUDE_DIRS})
    foreach(daemon ${DAEMONS}) 
@@ -136,6 +132,13 @@ endif(glib_FOUND)
 ## qpid
 
 find_package(QPID REQUIRED)
+
+## sigar
+find_library(SIGAR sigar)
+if(NOT_SIGAR)
+   message("SIGAR library not found.")
+   set(SIGAR "")
+endif(NOT SIGAR)
 
 string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 
@@ -168,7 +171,7 @@ endif (regen_schema)
 
 # Add QF libraries
 foreach(daemon ${DAEMONS}) 
-    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY})
+    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY} ${SIGAR})
     IF(QPIDTYPES_FOUND)
         target_link_libraries(${daemon} ${QPIDTYPES_LIBRARY})
     ENDIF(QPIDTYPES_FOUND)
