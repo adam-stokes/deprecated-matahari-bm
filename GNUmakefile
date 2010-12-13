@@ -27,7 +27,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
 		  --define "_srcrpmdir $(RPM_ROOT)" 	\
 
-TAG    ?= next
+TAG    ?= master
 WITH   ?= 
 VARIANT ?=
 PROFILE ?= fedora-13-x86_64
