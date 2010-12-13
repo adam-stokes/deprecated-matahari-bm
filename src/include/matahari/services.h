@@ -66,6 +66,7 @@ typedef struct rsc_op_s
 	int pid;
 	int status;
 	char *exec;
+	char *args[4];
 	
 	int            stderr_fd;
 	char          *stderr_data;
@@ -100,13 +101,14 @@ static inline GList *list_ocf_agents(const char *provider)
 }
 
 extern rsc_op_t *create_service_op(
-    const char *name, const char *action, int interval, int timeout);
+    const char *name, const char *action, int interval /* ms */, int timeout /* ms */);
 
 extern rsc_op_t *create_ocf_op(
     const char *name, const char *provider, const char *agent,
-    const char *action, int interval, int timeout, GHashTable *params);
+    const char *action, int interval /* ms */, int timeout /* ms */, GHashTable *params);
 
 extern void free_operation(rsc_op_t *op);
+
 extern gboolean perform_sync_action(rsc_op_t* op);
 extern gboolean perform_async_action(rsc_op_t* op);
 

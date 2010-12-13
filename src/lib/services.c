@@ -23,6 +23,10 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#if __linux__
+#include <sys/wait.h>
+#endif
+
 #include "matahari/logging.h"
 #include "matahari/mainloop.h"
 #include "matahari/services.h"
@@ -55,9 +59,28 @@ rsc_op_t *create_service_op(
     op->id = malloc(500);
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
 
-    op->exec = malloc(500);
-    snprintf(op->id, 500, "%s/%s %s", LSB_ROOT, name, action);
+    if(strcmp("enable", action) == 0) {
+	op->exec = strdup("/sbin/chkconfig");
+	op->args[0] = strdup(op->exec);
+	op->args[1] = strdup(name);
+	op->args[2] = strdup("on");
+	op->args[3] = NULL;
+	
+    } else if(strcmp("disable", action) == 0) {
+	op->exec = strdup("/sbin/chkconfig");
+	op->args[0] = strdup(op->exec);
+	op->args[1] = strdup(name);
+	op->args[2] = strdup("off");
+	op->args[3] = NULL;
 
+    } else {
+	op->exec = malloc(500);
+	snprintf(op->exec, 500, "%s/%s", LSB_ROOT, name);
+	op->args[0] = strdup(op->exec);
+	op->args[1] = strdup(action);
+	op->args[2] = NULL;
+    }
+    
     return op;
 }
 
@@ -83,7 +106,7 @@ rsc_op_t *create_ocf_op(
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
 
     op->exec = malloc(500);
-    snprintf(op->id, 500, "%s/%s/%s %s", OCF_ROOT, name, provider, action);
+    snprintf(op->id, 500, "%s/%s/%s", OCF_ROOT, name, provider);
 
     return op;
 }
@@ -275,7 +298,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 }
 
 gboolean
-perform_async_action(rsc_op_t* op)
+perform_action(rsc_op_t* op, gboolean synchronous)
 {
 #if __linux__
     int rc, lpc;
@@ -330,7 +353,7 @@ perform_async_action(rsc_op_t* op)
 	    add_OCF_env_vars(op);
 	    
 	    /* execute the RA */
-	    execl(op->exec, op->exec, op->action, (const char *)NULL);
+	    execvp(op->exec, op->args);
 
 	    switch (errno) { /* see execve(2) */
 		case ENOENT:  /* No such file or directory */
@@ -350,7 +373,6 @@ perform_async_action(rsc_op_t* op)
     /* Only the parent reaches here */
     close(stdout_fd[1]);
     close(stderr_fd[1]);
-    mainloop_add_child(-(op->pid), op->timeout, op->id, op, operation_finished);
 
     /*
      * No any obviouse proof of lrmd hang in pipe read yet.
@@ -362,41 +384,76 @@ perform_async_action(rsc_op_t* op)
 
     op->stdout_fd = stdout_fd[0];
     set_fd_opts(op->stdout_fd, O_NONBLOCK);
-    op->stdout_gsource = mainloop_add_fd(
-	G_PRIORITY_LOW, op->stdout_fd, read_output, pipe_out_done, op);
 
     op->stderr_fd = stderr_fd[0];
     set_fd_opts(op->stderr_fd, O_NONBLOCK);
-    op->stderr_gsource = mainloop_add_fd(
-	G_PRIORITY_LOW, op->stderr_fd, read_output, pipe_err_done, op);
+
+    if(synchronous) {
+	int status = 0;
+	mh_err("Waiting for %d", op->pid);
+	while(waitpid(op->pid, &status, WNOHANG) <= 0) {
+	    sleep(1);
+	}
+
+	mh_err("Child done: %d", op->pid);
+	if (WIFEXITED(status)) {
+	    op->status = LRM_OP_DONE;
+	    op->rc = WEXITSTATUS(status);
+	    mh_err("Managed %s process %d exited with rc=%d", op->id, op->pid, op->rc);
+	    
+	} else if (WIFSIGNALED(status)) {
+	    int signo = WTERMSIG(status);
+	    op->status = LRM_OP_ERROR;
+#if 0
+	    /* How to do outside of mainloop? */
+	    if( p->timeout ) {
+		mh_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+		op->status = LRM_OP_TIMEOUT;
+	    }
+#endif
+	    mh_err("Managed %s process %d exited with signal=%d", op->id, op->pid, signo);
+	}
+#ifdef WCOREDUMP
+	if (WCOREDUMP(status)) {
+	    mh_err("Managed %s process %d dumped core", op->id, op->pid);
+	}
+#endif
+	
+	read_output(op->stdout_fd, op);
+	read_output(op->stderr_fd, op);
+	
+    } else {
+	mainloop_add_child(-(op->pid), op->timeout, op->id, op, operation_finished);
+
+	op->stdout_gsource = mainloop_add_fd(
+	    G_PRIORITY_LOW, op->stdout_fd, read_output, pipe_out_done, op);
+
+	op->stderr_gsource = mainloop_add_fd(
+	    G_PRIORITY_LOW, op->stderr_fd, read_output, pipe_err_done, op);
+    }
+    
 #endif
     return TRUE;
 }
 
 gboolean
+perform_async_action(rsc_op_t* op)
+{
+    return perform_action(op, FALSE);
+}
+    
+gboolean
 perform_sync_action(rsc_op_t* op)
 {
-#if __linux__
-    FILE* file = NULL;
-
-    /* Setup environment correctly */
-    add_OCF_env_vars(op);
-
-    file = popen(op->exec, "re");
-    if (file == NULL) {
-	mh_perror(LOG_ERR, "popen() failed");
-	return FALSE;
+    gboolean rc = perform_action(op, TRUE);
+    mh_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->exec, op->rc);
+    if(op->stdout_data) {
+	mh_trace("   > stdout: %s", op->stdout_data);
     }
-
-    op->stdout_fd = fileno(file);
-    read_output(op->stdout_fd, op);
-    op->stdout_fd = -1;
-
-    if( pclose(file) ) {
-	mh_perror(LOG_ERR, "pclose() failed");
+    if(op->stderr_data) {
+	mh_trace("   > stderr: %s", op->stderr_data);
     }
-#endif
-    return TRUE;
+    return rc;
 }
 
 GList *
@@ -442,7 +499,7 @@ get_directory_list(const char *root, gboolean files)
 	    }
 	}
 
-	list = g_list_append(list, namelist[lpc]);
+	list = g_list_append(list, namelist[lpc]->d_name);
     }
     
     free(namelist);
