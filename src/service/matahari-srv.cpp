@@ -93,6 +93,7 @@ SrvAgent::setup(ManagementAgent* agent)
 Manageable::status_t
 SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 {
+    int default_timeout_ms = 60000;
     switch(method)
 	{
 	case _qmf::Services::METHOD_LIST:
@@ -109,45 +110,56 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 
 	case _qmf::Services::METHOD_ENABLE:
 	    {
-		// _qmf::ArgsServicesDescribe& ioArgs = (_qmf::ArgsServicesDescribe&) arguments;
+		_qmf::ArgsServicesEnable& ioArgs = (_qmf::ArgsServicesEnable&) arguments;
+		rsc_op_t * op = create_service_op(ioArgs.i_name.c_str(), "enable", 0, default_timeout_ms);
+		perform_sync_action(op);
+		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_DISABLE:
 	    {
-		// _qmf::ArgsServicesDescribe& ioArgs = (_qmf::ArgsServicesDescribe&) arguments;
+		_qmf::ArgsServicesDisable& ioArgs = (_qmf::ArgsServicesDisable&) arguments;
+		rsc_op_t * op = create_service_op(ioArgs.i_name.c_str(), "disable", 0, default_timeout_ms);
+		perform_sync_action(op);
+		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_START:
 	    {
-		// _qmf::ArgsServicesStart& ioArgs = (_qmf::ArgsServicesStart&) arguments;
+		_qmf::ArgsServicesStart& ioArgs = (_qmf::ArgsServicesStart&) arguments;
+		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
+		perform_sync_action(op);
+		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
 	    
 	case _qmf::Services::METHOD_STOP:
 	    {
-		// _qmf::ArgsServicesStop& ioArgs = (_qmf::ArgsServicesStop&) arguments;
+		_qmf::ArgsServicesStop& ioArgs = (_qmf::ArgsServicesStop&) arguments;
+		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "stop", 0, ioArgs.i_timeout);
+		perform_sync_action(op);
+		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_STATUS:
 	    {
-		// _qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
+		_qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
+		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
+		perform_sync_action(op);
+		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_CANCEL:
-	    {
-		// _qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
-	    }
-	    return Manageable::STATUS_OK;
+	    /* We don't support recurring or asynchronous actions yet */
+	    return Manageable::STATUS_NOT_IMPLEMENTED;
 
 	case _qmf::Services::METHOD_DESCRIBE:
-	    {
-		// _qmf::ArgsServicesDescribe& ioArgs = (_qmf::ArgsServicesDescribe&) arguments;
-	    }
-	    return Manageable::STATUS_OK;
+	    /* We don't support describe yet */
+	    return Manageable::STATUS_NOT_IMPLEMENTED;
 
 	}
     return Manageable::STATUS_NOT_IMPLEMENTED;
