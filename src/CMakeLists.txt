@@ -1,5 +1,7 @@
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+
+
 if(WIN32)
    set(VARIANT "windows")
    set(SUPPORT_TRACING 0)
@@ -205,3 +207,4 @@ install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
 
 
+add_subdirectory(host)
