@@ -26,8 +26,8 @@
    <property name="hostname"         type="sstr"  access="RO" desc="Hostname" />
    <property name="is_virtual"       type="bool"  access="RO" desc="Is this machine virtual?" />
    <property name="operating_system" type="sstr"  access="RO" desc="The installed operating system." />
-   <property name="memory"           type="uint32" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
-   <property name="swap"             type="uint32" access="RO" desc="Amount of swap for host (kb)" unit="kb" />
+   <property name="memory"           type="uint64" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
+   <property name="swap"             type="uint64" access="RO" desc="Amount of swap for host (kb)" unit="kb" />
    <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
    <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." unit="bit"/>
    <property name="processors"       type="uint8" access="RO" desc="The number of physical CPUs." />
@@ -40,10 +40,14 @@
    <statistic name="load_average_1"   type="double"  desc="The one minute load average." />
    <statistic name="load_average_5"   type="double"  desc="The five minute load average." />
    <statistic name="load_average_15"  type="double"  desc="The fiften minute load average" />
-   <statistic name="memFree"          type="uint32"   desc="Amount of available memory for host (kb)" />
-   <statistic name="swapFree"         type="uint32"   desc="Amount of available swap for host (kb)" />
-   <statistic name="procTotal"        type="uint32"  desc="Total processes" />
-   <statistic name="procRunning"      type="uint32"  desc="Total running processes" />
+   <statistic name="mem_free"          type="uint64"  desc="Amount of available memory for host (kb)" />
+   <statistic name="swap_free"         type="uint64"  desc="Amount of available swap for host (kb)" />
+   <statistic name="proc_total"        type="uint64"  desc="Total processes" />
+   <statistic name="proc_running"      type="uint64"  desc="Total running processes" />
+   <statistic name="proc_sleeping"     type="uint64"  desc="Total sleeping processes" />
+   <statistic name="proc_zombie"       type="uint64"  desc="Total zombie processes" />
+   <statistic name="proc_stopped"      type="uint64"  desc="Total stopped processes" />
+   <statistic name="proc_idle"         type="uint64"  desc="Total idle processes" />
    <!-- APIs -->
    <method name="identify"                desc="Tells the host to beep its pc speaker." />
    <method name="shutdown"                desc="Shutdown node" />
