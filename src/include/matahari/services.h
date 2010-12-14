@@ -27,6 +27,7 @@
 #define LSB_ROOT "/etc/init.d"
 
 enum ocf_exitcode {
+	OCF_PENDING = -1,
 	OCF_OK = 0,
 	OCF_UNKNOWN_ERROR = 1,
 	OCF_INVALID_PARAM = 2,
@@ -48,6 +49,7 @@ enum op_status {
 	LRM_OP_ERROR
 };
 
+typedef struct rsc_op_private_s rsc_op_private_t;
 typedef struct rsc_op_s 
 {
 	char *id;
@@ -65,16 +67,11 @@ typedef struct rsc_op_s
 	int rc;
 	int pid;
 	int status;
-	char *exec;
-	char *args[4];
 	
-	int            stderr_fd;
 	char          *stderr_data;
-	mainloop_fd_t *stderr_gsource;
-
-	int            stdout_fd;
 	char          *stdout_data;
-	mainloop_fd_t *stdout_gsource;
+
+	rsc_op_private_t *opaque;
 	
 } rsc_op_t;
 
@@ -110,7 +107,9 @@ extern rsc_op_t *create_ocf_op(
 extern void free_operation(rsc_op_t *op);
 
 extern gboolean perform_sync_action(rsc_op_t* op);
-extern gboolean perform_async_action(rsc_op_t* op);
+extern gboolean perform_async_action(rsc_op_t* op, void (*action_callback)(rsc_op_t*));
+
+extern gboolean cancel_action(const char *name, const char *action, int interval);
 
 static inline enum ocf_exitcode convert_lsb_exitcode(char *action, int lsb) 
 {

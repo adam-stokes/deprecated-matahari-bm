@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -31,6 +31,22 @@
 #include "matahari/mainloop.h"
 #include "matahari/services.h"
 
+struct rsc_op_private_s 
+{
+	char *exec;
+	char *args[4];
+	gboolean cancel;
+	
+	guint repeat_timer;
+	void (*callback)(rsc_op_t *op);
+	
+	int            stderr_fd;
+	mainloop_fd_t *stderr_gsource;
+
+	int            stdout_fd;
+	mainloop_fd_t *stdout_gsource;
+};
+
 #define set_fd_opts(fd,opts) do {				    \
 	int flag;						    \
 	if ((flag = fcntl(fd, F_GETFL)) >= 0) {			    \
@@ -42,12 +58,17 @@
 	}							    \
     } while(0)
 
+GHashTable *recurring_actions = NULL;
+
 rsc_op_t *create_service_op(
     const char *name, const char *action, int interval, int timeout)
 {
     rsc_op_t *op = malloc(sizeof(rsc_op_t));
     memset(op, 0, sizeof(rsc_op_t));
 
+    op->opaque = malloc(sizeof(rsc_op_private_t));
+    memset(op->opaque, 0, sizeof(rsc_op_private_t));
+    
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
@@ -60,25 +81,25 @@ rsc_op_t *create_service_op(
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
 
     if(strcmp("enable", action) == 0) {
-	op->exec = strdup("/sbin/chkconfig");
-	op->args[0] = strdup(op->exec);
-	op->args[1] = strdup(name);
-	op->args[2] = strdup("on");
-	op->args[3] = NULL;
+	op->opaque->exec = strdup("/sbin/chkconfig");
+	op->opaque->args[0] = strdup(op->opaque->exec);
+	op->opaque->args[1] = strdup(name);
+	op->opaque->args[2] = strdup("on");
+	op->opaque->args[3] = NULL;
 	
     } else if(strcmp("disable", action) == 0) {
-	op->exec = strdup("/sbin/chkconfig");
-	op->args[0] = strdup(op->exec);
-	op->args[1] = strdup(name);
-	op->args[2] = strdup("off");
-	op->args[3] = NULL;
+	op->opaque->exec = strdup("/sbin/chkconfig");
+	op->opaque->args[0] = strdup(op->opaque->exec);
+	op->opaque->args[1] = strdup(name);
+	op->opaque->args[2] = strdup("off");
+	op->opaque->args[3] = NULL;
 
     } else {
-	op->exec = malloc(500);
-	snprintf(op->exec, 500, "%s/%s", LSB_ROOT, name);
-	op->args[0] = strdup(op->exec);
-	op->args[1] = strdup(action);
-	op->args[2] = NULL;
+	op->opaque->exec = malloc(500);
+	snprintf(op->opaque->exec, 500, "%s/%s", LSB_ROOT, name);
+	op->opaque->args[0] = strdup(op->opaque->exec);
+	op->opaque->args[1] = strdup(action);
+	op->opaque->args[2] = NULL;
     }
     
     return op;
@@ -105,7 +126,7 @@ rsc_op_t *create_ocf_op(
     op->id = malloc(500);
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
 
-    op->exec = malloc(500);
+    op->opaque->exec = malloc(500);
     snprintf(op->id, 500, "%s/%s/%s", OCF_ROOT, name, provider);
 
     return op;
@@ -118,7 +139,12 @@ void free_operation(rsc_op_t *op)
     }
     
     free(op->id);
-    free(op->exec);
+    free(op->opaque->exec);
+
+    free(op->opaque->args[0]);
+    free(op->opaque->args[1]);
+    free(op->opaque->args[2]);
+    free(op->opaque->args[3]);
 
     free(op->rsc);
     free(op->action);
@@ -146,8 +172,15 @@ read_output(int fd, gpointer user_data)
     gboolean is_err = FALSE;
     rsc_op_t* op = (rsc_op_t *)user_data;
 
-    if(fd == op->stderr_fd) {
+    if(fd == op->opaque->stderr_fd) {
 	is_err = TRUE;
+	if(op->stderr_data) {
+	    len = strlen(op->stderr_data);
+	    data = op->stderr_data;
+	}
+    } else if(op->stdout_data) {
+	len = strlen(op->stdout_data);
+	data = op->stdout_data;
     }
 
     do {
@@ -182,22 +215,22 @@ static void
 pipe_out_done(gpointer user_data)
 {
     rsc_op_t* op = (rsc_op_t *)user_data;
-    op->stdout_gsource = NULL;
-    if (op->stdout_fd > STDERR_FILENO) {
-	close(op->stdout_fd);
+    op->opaque->stdout_gsource = NULL;
+    if (op->opaque->stdout_fd > STDERR_FILENO) {
+	close(op->opaque->stdout_fd);
     }
-    op->stdout_fd = -1;
+    op->opaque->stdout_fd = -1;
 }
 
 static void
 pipe_err_done(gpointer user_data)
 {
     rsc_op_t* op = (rsc_op_t *)user_data;
-    op->stderr_gsource = NULL;
-    if (op->stderr_fd > STDERR_FILENO) {
-	close(op->stderr_fd);
+    op->opaque->stderr_gsource = NULL;
+    if (op->opaque->stderr_fd > STDERR_FILENO) {
+	close(op->opaque->stderr_fd);
     }
-    op->stderr_fd = -1;
+    op->opaque->stderr_fd = -1;
 }
 
 static void
@@ -246,6 +279,42 @@ add_OCF_env_vars(rsc_op_t *op)
     }
 }
 
+static gboolean recurring_op_timer(gpointer data)
+{
+    rsc_op_t *op = data;
+    mh_debug("Scheduling another invokation of %s", op->id);
+
+    /* Clean out the old result */
+    free(op->stdout_data); op->stdout_data = NULL;
+    free(op->stderr_data); op->stderr_data = NULL;
+    
+    perform_async_action(op, NULL);
+    return FALSE;
+}
+
+gboolean cancel_action(const char *name, const char *action, int interval)
+{
+    rsc_op_t* op = NULL;
+    gboolean found = FALSE;
+    char *id = malloc(500);
+
+    snprintf(id, 500, "%s_%s_%d", name, action, interval);
+    op = g_hash_table_lookup(recurring_actions, id);
+    free(id);
+
+    if(op) {
+	found = TRUE;
+	op->opaque->cancel = TRUE;
+	mh_debug("Removing %s", op->id);
+	if(op->opaque->repeat_timer) {
+	    g_source_remove(op->opaque->repeat_timer);
+	}
+	free_operation(op);
+    }
+    
+    return found;
+}
+
 static void
 operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 {
@@ -277,7 +346,10 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 	    do {
 		offset = next;
 		next = strchrnul(offset, '\n');
-		mh_debug("%s:%d [ %*s ]", op->id, op->pid, (int)(next-offset), offset);
+		mh_debug("%s:%d [ %.*s ]", op->id, op->pid, (int)(next-offset), offset);
+		if(next[0] != 0) {
+		    next++;
+		}
 		
 	    } while(next != NULL && next[0] != 0);
 	}
@@ -287,13 +359,30 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 	    do {
 		offset = next;
 		next = strchrnul(offset, '\n');
-		mh_notice("%s:%d [ %*s ]", op->id, op->pid, (int)(next-offset), offset);
+		mh_notice("%s:%d [ %.*s ]", op->id, op->pid, (int)(next-offset), offset);
+		if(next[0] != 0) {
+		    next++;
+		}
 		
 	    } while(next != NULL && next[0] != 0);
 	}
-	
     }
-    op->pid = -1;
+    
+    if(op->interval && op->opaque->cancel == FALSE) {
+	op->opaque->repeat_timer = g_timeout_add(op->interval, recurring_op_timer, (void*)op);
+    }
+
+    op->pid = 0;
+    if(op->opaque->callback) {
+	/* Callback might call cancel which would result in the message being free'd
+	 * Do not access 'op' after this line
+	 */
+	op->opaque->callback(op);
+
+    } else if(op->opaque->repeat_timer == 0) {
+	free_operation(op);
+    }
+    
 #endif
 }
 
@@ -353,7 +442,7 @@ perform_action(rsc_op_t* op, gboolean synchronous)
 	    add_OCF_env_vars(op);
 	    
 	    /* execute the RA */
-	    execvp(op->exec, op->args);
+	    execvp(op->opaque->exec, op->opaque->args);
 
 	    switch (errno) { /* see execve(2) */
 		case ENOENT:  /* No such file or directory */
@@ -382,11 +471,11 @@ perform_action(rsc_op_t* op, gboolean synchronous)
      */
     /* Let the read operations be NONBLOCK */ 
 
-    op->stdout_fd = stdout_fd[0];
-    set_fd_opts(op->stdout_fd, O_NONBLOCK);
+    op->opaque->stdout_fd = stdout_fd[0];
+    set_fd_opts(op->opaque->stdout_fd, O_NONBLOCK);
 
-    op->stderr_fd = stderr_fd[0];
-    set_fd_opts(op->stderr_fd, O_NONBLOCK);
+    op->opaque->stderr_fd = stderr_fd[0];
+    set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
 
     if(synchronous) {
 	int status = 0;
@@ -419,17 +508,18 @@ perform_action(rsc_op_t* op, gboolean synchronous)
 	}
 #endif
 	
-	read_output(op->stdout_fd, op);
-	read_output(op->stderr_fd, op);
+	read_output(op->opaque->stdout_fd, op);
+	read_output(op->opaque->stderr_fd, op);
 	
     } else {
-	mainloop_add_child(-(op->pid), op->timeout, op->id, op, operation_finished);
+	mh_err("Async waiting for %d - %s", op->pid, op->opaque->exec);
+	mainloop_add_child(op->pid, op->timeout, op->id, op, operation_finished);
 
-	op->stdout_gsource = mainloop_add_fd(
-	    G_PRIORITY_LOW, op->stdout_fd, read_output, pipe_out_done, op);
+	op->opaque->stdout_gsource = mainloop_add_fd(
+	    G_PRIORITY_LOW, op->opaque->stdout_fd, read_output, pipe_out_done, op);
 
-	op->stderr_gsource = mainloop_add_fd(
-	    G_PRIORITY_LOW, op->stderr_fd, read_output, pipe_err_done, op);
+	op->opaque->stderr_gsource = mainloop_add_fd(
+	    G_PRIORITY_LOW, op->opaque->stderr_fd, read_output, pipe_err_done, op);
     }
     
 #endif
@@ -437,16 +527,29 @@ perform_action(rsc_op_t* op, gboolean synchronous)
 }
 
 gboolean
-perform_async_action(rsc_op_t* op)
+perform_async_action(rsc_op_t* op, void (*action_callback)(rsc_op_t*))
 {
+    if(action_callback) {
+	op->opaque->callback = action_callback;
+    }
+
+    if(recurring_actions == NULL) {
+	recurring_actions = g_hash_table_new_full(
+	    g_str_hash, g_str_equal, NULL, NULL);
+    }
+
+    if(op->interval > 0) {
+	g_hash_table_replace(recurring_actions, op->id, op);
+    }
+    
     return perform_action(op, FALSE);
 }
-    
+
 gboolean
 perform_sync_action(rsc_op_t* op)
 {
     gboolean rc = perform_action(op, TRUE);
-    mh_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->exec, op->rc);
+    mh_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if(op->stdout_data) {
 	mh_trace("   > stdout: %s", op->stdout_data);
     }
