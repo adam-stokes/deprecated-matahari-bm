@@ -49,7 +49,7 @@ extern gboolean mainloop_destroy_trigger(mainloop_trigger_t* source);
 
 typedef struct mainloop_fd_s 
 {
-	GSource *source;
+	GSource source;
 	GPollFD	gpoll;
 	guint id;
 	void *user_data;
@@ -79,7 +79,7 @@ struct mainloop_child_s {
 
 };
 
-extern void mainloop_track_children(int priority, unsigned long maxdisptime);
+extern void mainloop_track_children(int priority);
 
 /*
  * Create a new tracked process

@@ -407,6 +407,7 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
     p->timeout = FALSE;
     p->desc = strdup(desc);
     p->privatedata = privatedata;
+    p->callback = callback;
     
     if(timeout) {
 	p->timerid = g_timeout_add(
@@ -427,29 +428,32 @@ child_death_dispatch(int sig)
 	    int	signo = 0, exitcode = 0;
 
 	    mainloop_child_t *p = g_hash_table_lookup(mainloop_process_table, GINT_TO_POINTER(pid));
-	    if (p != NULL) {
+	    mh_trace("Managed process %d exited: %p", pid, p);
+	    if (p == NULL) {
 		continue;
 	    }
 
 	    if (WIFEXITED(status)) {
 		exitcode = WEXITSTATUS(status);
-		mh_trace("Managed %s process %d exited with rc=%d", p->desc, pid, exitcode);
+		mh_trace("Managed process %d (%s) exited with rc=%d", pid, p->desc, exitcode);
 
 	    } else if (WIFSIGNALED(status)) {
 		signo = WTERMSIG(status);
-		mh_trace("Managed %s process %d exited with signal=%d", p->desc, pid, signo);
+		mh_trace("Managed process %d (%s) exited with signal=%d", pid, p->desc, signo);
 	    }
 #ifdef WCOREDUMP
 	    if (WCOREDUMP(status)) {
-		mh_err("Managed %s process %d dumped core", p->desc, pid);
+		mh_err("Managed process %d (%s) dumped core", pid, p->desc);
 	    }
 #endif
 	    if (p->timerid != 0) {
+		mh_trace("Removing timer %d", p->timerid);
 		g_source_remove(p->timerid);
 		p->timerid = 0;
 	    }
 	    p->callback(p, status, signo, exitcode);
 	    g_hash_table_remove(mainloop_process_table, GINT_TO_POINTER(pid));
+	    mh_trace("Removed process entry for %d", pid);
 	    return;
 
 	} else {
@@ -463,7 +467,7 @@ child_death_dispatch(int sig)
 }
 
 void
-mainloop_track_children(int priority, unsigned long maxdisptime)
+mainloop_track_children(int priority)
 {
 #if __linux__
     mainloop_add_signal(SIGCHLD, child_death_dispatch);
