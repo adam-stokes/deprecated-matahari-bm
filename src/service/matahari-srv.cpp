@@ -61,14 +61,30 @@ extern "C" {
 #include <string.h>
 };
 
+static void mh_action_callback(rsc_op_t *op)
+{
+    static int count = 0;
+    mh_trace("here: %s[%d] = %d\n", op->id, count++, op->rc);
+
+    if(count >= 3) {
+	cancel_action(op->rsc, op->action, op->interval);
+    }
+
+    /* TODO: Raise an event */
+}
+
 int
 main(int argc, char **argv)
 {
     SrvAgent agent;
     int rc = agent.init(argc, argv);
-    while (rc == 0) {
-	qpid::sys::sleep(1);
+    GMainLoop *mainloop = g_main_new(FALSE);
+
+    if(rc >= 0) {
+	mainloop_track_children(G_PRIORITY_DEFAULT);
+	g_main_run(mainloop);
     }
+    
     return rc;
 }
 
@@ -129,8 +145,9 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Services::METHOD_START:
 	    {
 		_qmf::ArgsServicesStart& ioArgs = (_qmf::ArgsServicesStart&) arguments;
-		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
+		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
 		perform_sync_action(op);
+		ioArgs.o_rc = op->rc;
 		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
@@ -140,6 +157,7 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		_qmf::ArgsServicesStop& ioArgs = (_qmf::ArgsServicesStop&) arguments;
 		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "stop", 0, ioArgs.i_timeout);
 		perform_sync_action(op);
+		ioArgs.o_rc = op->rc;
 		free_operation(op);
 	    }
 	    return Manageable::STATUS_OK;
@@ -147,20 +165,29 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Services::METHOD_STATUS:
 	    {
 		_qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
-		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
-		perform_sync_action(op);
-		free_operation(op);
-	    }
+		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
+
+		if(ioArgs.io_interval) {
+		    perform_async_action(op, mh_action_callback);
+		    ioArgs.o_rc = OCF_PENDING;
+
+		} else {
+		    perform_sync_action(op);
+		    ioArgs.o_rc = op->rc;
+		    free_operation(op);
+		}
+	    }	    
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_CANCEL:
-	    /* We don't support recurring or asynchronous actions yet */
-	    return Manageable::STATUS_NOT_IMPLEMENTED;
+	    {
+		_qmf::ArgsServicesCancel& ioArgs = (_qmf::ArgsServicesCancel&) arguments;
+		cancel_action(ioArgs.i_name.c_str(), ioArgs.i_action.c_str(), ioArgs.i_interval);
+	    }
+	    
+	    return Manageable::STATUS_OK;
 
-	case _qmf::Services::METHOD_DESCRIBE:
-	    /* We don't support describe yet */
-	    return Manageable::STATUS_NOT_IMPLEMENTED;
-
+	// case _qmf::Services::METHOD_DESCRIBE:
 	}
     return Manageable::STATUS_NOT_IMPLEMENTED;
 }
