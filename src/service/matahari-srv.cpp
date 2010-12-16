@@ -26,8 +26,6 @@
 #include "matahari/mh_agent.h"
 
 #include "qmf/org/matahariproject/Services.h"
-#include "qmf/org/matahariproject/Resources.h"
-#include "qmf/org/matahariproject/ArgsResourcesList.h"
 #include "qmf/org/matahariproject/ArgsServicesList.h"
 #include "qmf/org/matahariproject/ArgsServicesDescribe.h"
 #include "qmf/org/matahariproject/ArgsServicesStop.h"
@@ -37,46 +35,86 @@
 #include "qmf/org/matahariproject/ArgsServicesDisable.h"
 #include "qmf/org/matahariproject/ArgsServicesCancel.h"
 #include "qmf/org/matahariproject/ArgsServicesFail.h"
+#include "qmf/org/matahariproject/EventService_op.h"
+
+#include "qmf/org/matahariproject/Resources.h"
+#include "qmf/org/matahariproject/ArgsResourcesList.h"
+#include "qmf/org/matahariproject/ArgsResourcesDescribe.h"
+#include "qmf/org/matahariproject/ArgsResourcesStop.h"
+#include "qmf/org/matahariproject/ArgsResourcesStart.h"
+#include "qmf/org/matahariproject/ArgsResourcesMonitor.h"
+#include "qmf/org/matahariproject/ArgsResourcesCancel.h"
+#include "qmf/org/matahariproject/ArgsResourcesFail.h"
+#include "qmf/org/matahariproject/EventResource_op.h"
 
 extern "C" { 
 #include "matahari/logging.h"
 #include "matahari/services.h"
 }
 
+class SrvManageable : public Manageable
+{
+    private:
+	_qmf::Services* _management_object;
+	
+    public:
+	SrvManageable(ManagementAgent* agent) {
+	    _management_object = new _qmf::Services(agent, this);
+	    _management_object->set_hostname(get_hostname());
+	    agent->addObject(this->_management_object);
+	};
+	ManagementObject* GetManagementObject() const { return _management_object; }
+	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
+};
+
+class RscManageable : public Manageable
+{
+    private:
+	_qmf::Resources* _management_object;
+	
+    public:
+	RscManageable(ManagementAgent* agent) { 
+	    _management_object = new _qmf::Resources(agent, this); 
+	    _management_object->set_hostname(get_hostname());
+	    agent->addObject(this->_management_object);
+	};
+	ManagementObject* GetManagementObject() const { return _management_object; }
+	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
+};
+
 class SrvAgent : public MatahariAgent
 {
     private:
 	ManagementAgent* _agent;
+
+	SrvManageable *services;
 	_qmf::Services* _srv_management_object;
+
+	RscManageable *resources;
 	_qmf::Resources* _rsc_management_object;
 	
     public:
+	void raiseEvent(rsc_op_t *op, int service);
 	int setup(ManagementAgent* agent);
 	ManagementObject* GetManagementObject() const { return _srv_management_object; }
-	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
 };
+
 
 extern "C" { 
 #include <stdlib.h>
 #include <string.h>
 };
 
-static void mh_action_callback(rsc_op_t *op)
+SrvAgent agent;
+static void mh_service_callback(rsc_op_t *op)
 {
-    static int count = 0;
-    mh_trace("here: %s[%d] = %d\n", op->id, count++, op->rc);
-
-    if(count >= 3) {
-	cancel_action(op->rsc, op->action, op->interval);
-    }
-
-    /* TODO: Raise an event */
+    mh_trace("Completed: %s = %d\n", op->id, op->rc);
+    agent.raiseEvent(op, 1);
 }
 
 int
 main(int argc, char **argv)
 {
-    SrvAgent agent;
     int rc = agent.init(argc, argv);
     GMainLoop *mainloop = g_main_new(FALSE);
 
@@ -88,26 +126,36 @@ main(int argc, char **argv)
     return rc;
 }
 
+void SrvAgent::raiseEvent(rsc_op_t *op, int service)
+{
+    uint64_t timestamp = 0L;
+
+#ifndef MSVC
+    timestamp = ::time(NULL);
+#endif
+
+    if(service) {
+	agent._agent->raiseEvent(_qmf::EventService_op(
+				     op->rsc, op->action, op->interval, op->rc, 0, timestamp));
+    } else {
+	agent._agent->raiseEvent(_qmf::EventResource_op(
+				     op->rsc, op->action, op->interval, op->rc, 0, timestamp, 
+				     op->agent, op->rclass, op->provider));
+    }
+}
+
 int
 SrvAgent::setup(ManagementAgent* agent)
 {
     this->_agent = agent;
-    this->_srv_management_object = new _qmf::Services(agent, this);
-    this->_srv_management_object->set_hostname(get_hostname());
+    this->services = new SrvManageable(agent);
+    this->resources = new RscManageable(agent);
 
-    agent->addObject(this->_srv_management_object);
-/*
-  Seems we can only manage one object/class per agent...
-    this->_rsc_management_object = new _qmf::Resources(agent, this);
-    this->_rsc_management_object->set_hostname(get_hostname());
-
-    agent->addObject(this->_rsc_management_object);
-*/
     return 0;
 }
 
 Manageable::status_t
-SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
+SrvManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 {
     int default_timeout_ms = 60000;
     switch(method)
@@ -168,7 +216,7 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
 
 		if(ioArgs.io_interval) {
-		    perform_async_action(op, mh_action_callback);
+		    perform_async_action(op, mh_service_callback);
 		    ioArgs.o_rc = OCF_PENDING;
 
 		} else {
@@ -188,6 +236,73 @@ SrvAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    return Manageable::STATUS_OK;
 
 	// case _qmf::Services::METHOD_DESCRIBE:
+	}
+    return Manageable::STATUS_NOT_IMPLEMENTED;
+}
+
+Manageable::status_t
+RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
+{
+    switch(method)
+	{
+	case _qmf::Resources::METHOD_LIST:
+	    {
+		GList *gIter = NULL;
+		GList *services = list_services();
+		_qmf::ArgsResourcesList& ioArgs = (_qmf::ArgsResourcesList&) arguments;
+		
+		for(gIter = services; gIter != NULL; gIter = gIter->next) {
+		    // ioArgs.o_resources.push_back(gIter->data);
+		}
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Resources::METHOD_START:
+	    {
+		_qmf::ArgsResourcesStart& ioArgs = (_qmf::ArgsResourcesStart&) arguments;
+		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
+		perform_sync_action(op);
+		ioArgs.o_rc = op->rc;
+		free_operation(op);
+	    }
+	    return Manageable::STATUS_OK;
+	    
+	case _qmf::Resources::METHOD_STOP:
+	    {
+		_qmf::ArgsResourcesStop& ioArgs = (_qmf::ArgsResourcesStop&) arguments;
+		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "stop", 0, ioArgs.i_timeout);
+		perform_sync_action(op);
+		ioArgs.o_rc = op->rc;
+		free_operation(op);
+	    }
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Resources::METHOD_MONITOR:
+	    {
+		_qmf::ArgsResourcesMonitor& ioArgs = (_qmf::ArgsResourcesMonitor&) arguments;
+		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "monitor", ioArgs.io_interval, ioArgs.i_timeout);
+
+		if(ioArgs.io_interval) {
+		    perform_async_action(op, mh_service_callback);
+		    ioArgs.o_rc = OCF_PENDING;
+
+		} else {
+		    perform_sync_action(op);
+		    ioArgs.o_rc = op->rc;
+		    free_operation(op);
+		}
+	    }	    
+	    return Manageable::STATUS_OK;
+
+	case _qmf::Resources::METHOD_CANCEL:
+	    {
+		_qmf::ArgsResourcesCancel& ioArgs = (_qmf::ArgsResourcesCancel&) arguments;
+		cancel_action(ioArgs.io_name.c_str(), ioArgs.io_action.c_str(), ioArgs.io_interval);
+	    }
+	    
+	    return Manageable::STATUS_OK;
+
+	// case _qmf::Resources::METHOD_DESCRIBE:
 	}
     return Manageable::STATUS_NOT_IMPLEMENTED;
 }
