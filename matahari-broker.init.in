@@ -50,7 +50,7 @@ RETVAL=0
 
 start() {
 	echo -n $"Starting Matahari broker daemon: "
-	daemon --pidfile $pidfile --check $prog --user qpidd /usr/sbin/$prog --daemon --pid-dir @localstatedir@/run/qpidd --data-dir @localstatedir@/lib/qpidd $QPIDD_OPTIONS
+	daemon --pidfile $pidfile --check $prog --user qpidd /usr/sbin/$prog --daemon --pid-dir @localstatedir@/run/matahari --data-dir @localstatedir@/lib/matahari $QPIDD_OPTIONS
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch $lockfile
