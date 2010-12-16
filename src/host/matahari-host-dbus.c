@@ -40,6 +40,86 @@
 /* Generated dbus stuff for host */
 #include "matahari-host-dbus-glue.h"
 
+/* Generated properties list */
+#include "matahari-host-properties.h"
+
+
+//TODO: Properties get/set
+static void
+fmci_set_property(GObject *object, guint property_id, const GValue *value,
+    GParamSpec *pspec)
+{
+  Fmci *self = FMCI(object);
+  switch (property_id)
+    {
+  case PROP_UUID:
+  case PROP_HOSTNAME:
+  case PROP_IS_VIRTUAL:
+  case PROP_OPERATING_SYSTEM:
+  case PROP_MEMORY:
+  case PROP_SWAP:
+  case PROP_ARCH:
+  case PROP_PLATFORM:
+  case PROP_PROCESSORS:
+  case PROP_CORES:
+  case PROP_MODEL:
+  case PROP_LAST_UPDATED_SEQ:
+  case PROP_LAST_UPDATED:
+  case PROP_LOAD_AVERAGE_1:
+  case PROP_LOAD_AVERAGE_5:
+  case PROP_LOAD_AVERAGE_15:
+  case PROP_MEM_FREE:
+  case PROP_SWAP_FREE:
+  case PROP_PROC_TOTAL:
+  case PROP_PROC_RUNNING:
+  default:
+    /* We don't have any other property... */
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+    }
+}
+
+static void
+fmci_get_property(GObject *object, guint property_id, GValue *value,
+    GParamSpec *pspec)
+{
+  Fmci *self = FMCI(object);
+  switch (property_id)
+    {
+  case PROP_UUID:
+    g_value_set_string (value, host_get_uuid());
+    break;
+  case PROP_HOSTNAME:
+    g_value_set_string (value, host_get_hostname());
+    break;
+  case PROP_IS_VIRTUAL:
+    //TODO
+    break;
+  case PROP_OPERATING_SYSTEM:
+    g_value_set_string (value, host_get_operating_system());
+    break;
+  case PROP_MEMORY:
+  case PROP_SWAP:
+  case PROP_ARCH:
+  case PROP_PLATFORM:
+  case PROP_PROCESSORS:
+  case PROP_CORES:
+  case PROP_MODEL:
+  case PROP_LAST_UPDATED_SEQ:
+  case PROP_LAST_UPDATED:
+  case PROP_LOAD_AVERAGE_1:
+  case PROP_LOAD_AVERAGE_5:
+  case PROP_LOAD_AVERAGE_15:
+  case PROP_MEM_FREE:
+  case PROP_SWAP_FREE:
+  case PROP_PROC_TOTAL:
+  case PROP_PROC_RUNNING:
+  default:
+    /* We don't have any other property... */
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+    }
+}
 
 /* Generate the GObject boilerplate */
 G_DEFINE_TYPE(Fmci, fmci, G_TYPE_OBJECT)
@@ -48,6 +128,67 @@ G_DEFINE_TYPE(Fmci, fmci, G_TYPE_OBJECT)
 static void
 fmci_class_init(FmciClass *fmci_class)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS(fmci_class);
+  GParamSpec *pspec;
+
+  gobject_class->set_property = fmci_set_property;
+  gobject_class->get_property = fmci_get_property;
+
+  //TODO: Proper properties initialization
+  int i;
+  for (i = 0; properties_Host[i].name != NULL; i++)
+  {
+    printf("Writing property: %s\n", properties_Host[i].name);
+    switch (properties_Host[i].type)
+    {
+        case 's':
+            pspec = g_param_spec_string(properties_Host[i].name,
+                                        properties_Host[i].nick,
+                                        properties_Host[i].desc,
+                                        NULL,
+                                        properties_Host[i].flags);
+            break;
+        case 'b':
+            pspec = g_param_spec_boolean(properties_Host[i].name,
+                                         properties_Host[i].nick,
+                                         properties_Host[i].desc,
+                                         FALSE,
+                                         properties_Host[i].flags);
+            break;
+        case 'n':
+        case 'i':
+        case 'x':
+            pspec = g_param_spec_int(properties_Host[i].name,
+                                      properties_Host[i].nick,
+                                      properties_Host[i].desc,
+                                      G_MININT, G_MAXINT, 0,
+                                      properties_Host[i].flags);
+            break;
+        case 'y':
+        case 'q':
+        case 'u':
+        case 't':
+            pspec = g_param_spec_uint(properties_Host[i].name,
+                                         properties_Host[i].nick,
+                                         properties_Host[i].desc,
+                                         0, G_MAXUINT, 0,
+                                         properties_Host[i].flags);
+            break;
+        case 'd':
+            pspec = g_param_spec_double(properties_Host[i].name,
+                                         properties_Host[i].nick,
+                                         properties_Host[i].desc,
+                                         -G_MAXDOUBLE, G_MAXDOUBLE, 0,
+                                         properties_Host[i].flags);
+            break;
+        default:
+            fprintf(stderr, "Unknown type: %c\n", properties_Host[i].type);
+            pspec = NULL;
+    }
+    if (pspec)
+        g_object_class_install_property(gobject_class, properties_Host[i].prop, pspec);
+  }
+
   dbus_g_object_type_install_info(FMCI_TYPE, &dbus_glib_fmci_object_info);
 }
 
