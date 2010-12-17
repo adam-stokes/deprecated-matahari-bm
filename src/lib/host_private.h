@@ -18,18 +18,16 @@
 					
 #include <glib.h>
 
-typedef struct cpuinfo_
+typedef struct cpuinfo_s
 {
-  int initialized;
   char *model;
   unsigned int cpus;
   unsigned int cores;
-  unsigned int wordsize;
 } cpuinfo_t;
 
 extern cpuinfo_t cpuinfo;
 
-typedef struct host_init_
+typedef struct host_init_s
 {
     sigar_t *sigar;
     gboolean sigar_init;

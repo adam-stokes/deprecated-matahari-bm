@@ -39,7 +39,7 @@
 #include <sigar_format.h>
 
 host_init_t host_init = { NULL, FALSE };
-cpuinfo_t cpuinfo = { 0, 0, 0, 0, 0 };
+cpuinfo_t cpuinfo = { NULL, 0, 0 };
 
 static void
 init(void)
@@ -130,25 +130,22 @@ host_get_cpu_wordsize(void)
 const char*
 host_get_cpu_model(void)
 {
-    init();
     host_get_cpu_details();
-  return cpuinfo.model;
+    return cpuinfo.model;
 }
 
 int
 host_get_cpu_count(void)
 {
-    init();
     host_get_cpu_details();
-  return cpuinfo.cpus;
+    return cpuinfo.cpus;
 }
 
 int
 host_get_cpu_number_of_cores(void)
 {
-    init();
     host_get_cpu_details();
-  return cpuinfo.cores;
+    return cpuinfo.cores;
 }
 
 void
@@ -216,19 +213,24 @@ host_get_swap_free(void)
 void
 host_get_cpu_details(void)
 {
+    int lpc = 0;
     sigar_cpu_info_list_t cpus;
-    sigar_cpu_info_t *cpu;
     
-    if(cpuinfo.initialized) return;
-    cpuinfo.initialized = 1;
+    if(cpuinfo.cpus) {
+	return;
+    }
 
+    init();
     sigar_cpu_info_list_get(host_init.sigar, &cpus);
-    cpu = (sigar_cpu_info_t *) cpus.data;
 
-    cpuinfo.model = g_strdup(cpu->model);
-    cpuinfo.cpus = cpu->total_cores;
-    cpuinfo.cores = cpu->cores_per_socket;
-
+    cpuinfo.cpus = cpus.number;
+    for(lpc = 0; lpc < cpus.number; lpc++) {
+	sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
+	if(cpuinfo.model == NULL) {
+	    cpuinfo.model = g_strdup(cpu->model);
+	}
+	cpuinfo.cores += cpu->total_cores;
+    }
+    
     sigar_cpu_info_list_destroy(host_init.sigar, &cpus);
-
 }
