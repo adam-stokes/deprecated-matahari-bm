@@ -37,8 +37,6 @@ extern uint64_t host_get_swap_free(void);
 
 extern int host_get_cpu_count(void);
 extern int host_get_cpu_number_of_cores(void);
-
-extern uint32_t host_get_platform(void);
 extern int host_get_cpu_wordsize(void);
 
 extern void host_identify(const unsigned int iterations);

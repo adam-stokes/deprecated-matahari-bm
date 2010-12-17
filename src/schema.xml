@@ -22,32 +22,41 @@
 <!-- Host API -->
  <class name="Host">
    <!-- properties -->
-   <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" index="y" />
-   <property name="hostname"         type="sstr"  access="RO" desc="Hostname" />
-   <property name="is_virtual"       type="bool"  access="RO" desc="Is this machine virtual?" />
-   <property name="operating_system" type="sstr"  access="RO" desc="The installed operating system." />
-   <property name="memory"           type="uint64" access="RO" desc="Amount of primary memory for host (kb)" unit="kb" />
-   <property name="swap"             type="uint64" access="RO" desc="Amount of swap for host (kb)" unit="kb" />
-   <property name="arch"             type="sstr"  access="RO" desc="Architecture of host" />
-   <property name="platform"         type="uint8" access="RO" desc="The wordsize for the host." unit="bit"/>
-   <property name="processors"       type="uint8" access="RO" desc="The number of physical CPUs." />
-   <property name="cores"            type="uint8" access="RO" desc="The total number of processor cores." />
-   <property name="model"            type="lstr"  access="RO" desc="The processor(s) model description." />
+   <property name="uuid"             type="sstr"   access="RO" desc="Host UUID" index="y" />
+   <property name="hostname"         type="sstr"   access="RO" desc="Hostname" />
+
+   <property name="os"               type="sstr"   access="RO" desc="The installed operating system." />
+   <property name="arch"             type="sstr"   access="RO" desc="The host's architecture" />
+   <property name="wordsize"         type="uint8"  access="RO" desc="The wordsize for the host" unit="bit"/>
+
+   <property name="memory"           type="uint64" access="RO" desc="Amount of primary memory for host" unit="kb" />
+   <property name="swap"             type="uint64" access="RO" desc="Amount of swap for host" unit="kb" />
+
+   <property name="cpu_count"        type="uint8"  access="RO" desc="The number of physical CPUs." />
+   <property name="cpu_cores"        type="uint8"  access="RO" desc="The total number of processor cores." />
+   <property name="cpu_model"        type="lstr"   access="RO" desc="The processor(s) model description." />
+   <property name="cpu_flags"        type="lstr"   access="RO" desc="The processor(s) CPU flags." />
+
+   <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
 
    <!-- statistics -->
-   <statistic name="last_updated_seq" type="uint32"  desc="The heartbeat sequence number." />
-   <statistic name="last_updated"     type="absTime" desc="The last time a heartbeat occurred." />
-   <statistic name="load_average_1"   type="double"  desc="The one minute load average." />
-   <statistic name="load_average_5"   type="double"  desc="The five minute load average." />
-   <statistic name="load_average_15"  type="double"  desc="The fiften minute load average" />
-   <statistic name="mem_free"          type="uint64"  desc="Amount of available memory for host (kb)" />
-   <statistic name="swap_free"         type="uint64"  desc="Amount of available swap for host (kb)" />
-   <statistic name="proc_total"        type="uint64"  desc="Total processes" />
-   <statistic name="proc_running"      type="uint64"  desc="Total running processes" />
-   <statistic name="proc_sleeping"     type="uint64"  desc="Total sleeping processes" />
-   <statistic name="proc_zombie"       type="uint64"  desc="Total zombie processes" />
-   <statistic name="proc_stopped"      type="uint64"  desc="Total stopped processes" />
-   <statistic name="proc_idle"         type="uint64"  desc="Total idle processes" />
+   <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
+   <statistic name="sequence"        type="uint32"  desc="The heartbeat sequence number." />
+
+   <statistic name="free_mem"        type="uint64"  desc="Amount of available memory for host" unit="kb" />
+   <statistic name="free_swap"       type="uint64"  desc="Amount of available swap for host" unit="kb" />
+
+   <statistic name="load_average_1"  type="double"  desc="The one minute load average." />
+   <statistic name="load_average_5"  type="double"  desc="The five minute load average." />
+   <statistic name="load_average_15" type="double"  desc="The fiften minute load average" />
+
+   <statistic name="proc_total"      type="uint64"  desc="Total processes" />
+   <statistic name="proc_running"    type="uint64"  desc="Total running processes" />
+   <statistic name="proc_sleeping"   type="uint64"  desc="Total sleeping processes" />
+   <statistic name="proc_zombie"     type="uint64"  desc="Total zombie processes" />
+   <statistic name="proc_stopped"    type="uint64"  desc="Total stopped processes" />
+   <statistic name="proc_idle"       type="uint64"  desc="Total idle processes" />
+
    <!-- APIs -->
    <method name="identify"                desc="Tells the host to beep its pc speaker." />
    <method name="shutdown"                desc="Shutdown node" />

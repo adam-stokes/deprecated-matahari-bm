@@ -83,14 +83,10 @@ host_get_operating_system(void)
     return operating_system;
 }
 
-uint32_t
-host_get_platform(void)
+int
+host_get_cpu_wordsize(void)
 {
-    uint32_t platform;
-
-    platform = CHAR_BIT * sizeof(size_t);
-
-    return platform;
+    return (int)(CHAR_BIT * sizeof(size_t));
 }
 
 const char *
@@ -118,14 +114,6 @@ host_shutdown(void)
 {
     host_os_shutdown();
 }
-
-/* TODO: Discuss removing wordsize
-int
-host_get_cpu_wordsize(void)
-{
-    return 0;
-}
-*/
 
 const char*
 host_get_cpu_model(void)

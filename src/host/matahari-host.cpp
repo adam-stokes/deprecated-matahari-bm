@@ -30,7 +30,6 @@
 extern "C" {
 #include "matahari/host.h"
 }
-uint32_t _heartbeat_sequence;
 
 class HostAgent : public MatahariAgent
 {
@@ -51,7 +50,7 @@ main(int argc, char **argv)
     HostAgent agent; 
     int rc = agent.init(argc, argv);
     while (rc == 0) {
-	qpid::sys::sleep(5);
+	/* Looks like a tight loop, but .heartbeat() contains a call to sleep() */
 	agent.heartbeat();
     }
     
@@ -66,15 +65,16 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object = new _qmf::Host(agent, this);
   agent->addObject(_management_object);
 
+  _management_object->set_update_interval(5);
   _management_object->set_uuid(host_get_uuid());
   _management_object->set_hostname(host_get_hostname());
-  _management_object->set_operating_system(host_get_operating_system());
-  _management_object->set_platform(host_get_platform());
+  _management_object->set_os(host_get_operating_system());
+  _management_object->set_wordsize(host_get_cpu_wordsize());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
-  _management_object->set_processors(host_get_cpu_count());
-  _management_object->set_cores(host_get_cpu_number_of_cores());
-  _management_object->set_model(host_get_cpu_model());
+  _management_object->set_cpu_count(host_get_cpu_count());
+  _management_object->set_cpu_cores(host_get_cpu_number_of_cores());
+  _management_object->set_cpu_model(host_get_cpu_model());
 
   return 1;
 }
@@ -101,17 +101,21 @@ HostAgent::heartbeat()
     uint64_t timestamp = 0L, now = 0L;
     sigar_loadavg_t avg;
     sigar_proc_stat_t procs;
+    static uint32_t _heartbeat_sequence = 1;
 
-    _heartbeat_sequence++;
+    if(_management_object->get_update_interval() == 0) {
+	/* Updates disabled, just sleep */
+	qpid::sys::sleep(60);
+    }
 
 #ifndef MSVC
     timestamp = ::time(NULL);
 #endif
 
     now = timestamp * 1000000000;
-    this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, _heartbeat_sequence));
+    this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, _heartbeat_sequence++));
     _management_object->set_last_updated(now);
-    _management_object->set_last_updated_seq(_heartbeat_sequence);
+    _management_object->set_sequence(_heartbeat_sequence);
 
     // update the load averages
     host_get_load_averages(&avg);
@@ -125,6 +129,8 @@ HostAgent::heartbeat()
     _management_object->set_proc_zombie(procs.zombie);
     _management_object->set_proc_stopped(procs.stopped);
     _management_object->set_proc_idle(procs.idle);
-    _management_object->set_swap_free(host_get_swap_free());
-    _management_object->set_mem_free(host_get_mem_free());
+    _management_object->set_free_swap(host_get_swap_free());
+    _management_object->set_free_mem(host_get_mem_free());
+
+    qpid::sys::sleep(_management_object->get_update_interval());
 }
