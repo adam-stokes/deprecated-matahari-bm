@@ -23,7 +23,7 @@
 #include "matahari/mainloop.h"
 
 /* TODO: Autodetect these two in CMakeList.txt */
-#define OCF_ROOT "/usr/lib/ocf"
+#define OCF_ROOT "/usr/lib/ocf/resource.d"
 #define LSB_ROOT "/etc/init.d"
 
 enum ocf_exitcode {
