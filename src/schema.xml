@@ -155,8 +155,7 @@
    <method name="list_ocf_providers"  desc="List known OCF providers (if supported)">
      <arg name="providers"      dir="O"  type="list" />
    </method>
-   <method name="list"          desc="List known resource types for a given class/provider combination">
-     <arg name="class"          dir="I"  type="sstr" />
+   <method name="list"          desc="List known resource types for a given provider">
      <arg name="provider"       dir="I"  type="sstr" />
      <arg name="types"          dir="O"  type="list" />
    </method>
