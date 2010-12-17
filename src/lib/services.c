@@ -121,7 +121,7 @@ rsc_op_t *create_ocf_op(
     op->agent = strdup(agent);
     op->provider = strdup(provider);
 
-    /* op->params = params;  / Will need to make a copy */
+    op->params = params;
 
     op->id = malloc(500);
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);

@@ -100,6 +100,7 @@ static inline GList *list_ocf_agents(const char *provider)
 extern rsc_op_t *create_service_op(
     const char *name, const char *action, int interval /* ms */, int timeout /* ms */);
 
+/* After the call, 'params' is owned, and later free'd by the rsc_op_t result */
 extern rsc_op_t *create_ocf_op(
     const char *name, const char *provider, const char *agent,
     const char *action, int interval /* ms */, int timeout /* ms */, GHashTable *params);
