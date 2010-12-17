@@ -93,7 +93,7 @@ class SrvAgent : public MatahariAgent
 	RscManageable *resources;
 	
     public:
-	void raiseEvent(rsc_op_t *op, int service);
+	void raiseEvent(svc_action_t *op, int service);
 	int setup(ManagementAgent* agent);
 	ManagementObject* GetManagementObject() const { return services->GetManagementObject(); }
 };
@@ -106,13 +106,13 @@ extern "C" {
 
 SrvAgent agent;
 
-static void mh_service_callback(rsc_op_t *op)
+static void mh_service_callback(svc_action_t *op)
 {
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
     agent.raiseEvent(op, 1);
 }
 
-static void mh_resource_callback(rsc_op_t *op)
+static void mh_resource_callback(svc_action_t *op)
 {
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
     agent.raiseEvent(op, 0);
@@ -147,7 +147,7 @@ main(int argc, char **argv)
     return rc;
 }
 
-void SrvAgent::raiseEvent(rsc_op_t *op, int service)
+void SrvAgent::raiseEvent(svc_action_t *op, int service)
 {
     uint64_t timestamp = 0L;
 
@@ -184,7 +184,7 @@ SrvManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Services::METHOD_LIST:
 	    {
 		GList *gIter = NULL;
-		GList *services = list_services();
+		GList *services = services_list();
 		_qmf::ArgsServicesList& ioArgs = (_qmf::ArgsServicesList&) arguments;
 		
 		for(gIter = services; gIter != NULL; gIter = gIter->next) {
@@ -196,54 +196,54 @@ SrvManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Services::METHOD_ENABLE:
 	    {
 		_qmf::ArgsServicesEnable& ioArgs = (_qmf::ArgsServicesEnable&) arguments;
-		rsc_op_t * op = create_service_op(ioArgs.i_name.c_str(), "enable", 0, default_timeout_ms);
-		perform_sync_action(op);
-		free_operation(op);
+		svc_action_t * op = services_action_create(ioArgs.i_name.c_str(), "enable", 0, default_timeout_ms);
+		services_action_sync(op);
+		services_action_free(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_DISABLE:
 	    {
 		_qmf::ArgsServicesDisable& ioArgs = (_qmf::ArgsServicesDisable&) arguments;
-		rsc_op_t * op = create_service_op(ioArgs.i_name.c_str(), "disable", 0, default_timeout_ms);
-		perform_sync_action(op);
-		free_operation(op);
+		svc_action_t * op = services_action_create(ioArgs.i_name.c_str(), "disable", 0, default_timeout_ms);
+		services_action_sync(op);
+		services_action_free(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_START:
 	    {
 		_qmf::ArgsServicesStart& ioArgs = (_qmf::ArgsServicesStart&) arguments;
-		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
-		perform_sync_action(op);
+		svc_action_t *op = services_action_create(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
+		services_action_sync(op);
 		ioArgs.o_rc = op->rc;
-		free_operation(op);
+		services_action_free(op);
 	    }
 	    return Manageable::STATUS_OK;
 	    
 	case _qmf::Services::METHOD_STOP:
 	    {
 		_qmf::ArgsServicesStop& ioArgs = (_qmf::ArgsServicesStop&) arguments;
-		rsc_op_t * op = create_service_op(ioArgs.io_name.c_str(), "stop", 0, ioArgs.i_timeout);
-		perform_sync_action(op);
+		svc_action_t * op = services_action_create(ioArgs.io_name.c_str(), "stop", 0, ioArgs.i_timeout);
+		services_action_sync(op);
 		ioArgs.o_rc = op->rc;
-		free_operation(op);
+		services_action_free(op);
 	    }
 	    return Manageable::STATUS_OK;
 
 	case _qmf::Services::METHOD_STATUS:
 	    {
 		_qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
-		rsc_op_t *op = create_service_op(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
+		svc_action_t *op = services_action_create(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
 
 		if(ioArgs.io_interval) {
-		    perform_async_action(op, mh_service_callback);
+		    services_action_async(op, mh_service_callback);
 		    ioArgs.o_rc = OCF_PENDING;
 
 		} else {
-		    perform_sync_action(op);
+		    services_action_sync(op);
 		    ioArgs.o_rc = op->rc;
-		    free_operation(op);
+		    services_action_free(op);
 		}
 	    }	    
 	    return Manageable::STATUS_OK;
@@ -251,7 +251,7 @@ SrvManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Services::METHOD_CANCEL:
 	    {
 		_qmf::ArgsServicesCancel& ioArgs = (_qmf::ArgsServicesCancel&) arguments;
-		cancel_action(ioArgs.i_name.c_str(), ioArgs.i_action.c_str(), ioArgs.i_interval);
+		services_action_cancel(ioArgs.i_name.c_str(), ioArgs.i_action.c_str(), ioArgs.i_interval);
 	    }
 	    
 	    return Manageable::STATUS_OK;
@@ -277,7 +277,7 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Resources::METHOD_LIST_OCF_PROVIDERS:
 	    {
 		GList *gIter = NULL;
-		GList *providers = list_ocf_providers();
+		GList *providers = resources_list_ocf_providers();
 		_qmf::ArgsResourcesList_ocf_providers& ioArgs = (_qmf::ArgsResourcesList_ocf_providers&) arguments;
 		
 		for(gIter = providers; gIter != NULL; gIter = gIter->next) {
@@ -290,7 +290,7 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		GList *gIter = NULL;
 		_qmf::ArgsResourcesList& ioArgs = (_qmf::ArgsResourcesList&) arguments;
-		GList *agents = list_ocf_agents(ioArgs.i_provider.c_str());
+		GList *agents = resources_list_ocf_agents(ioArgs.i_provider.c_str());
 		
 		for(gIter = agents; gIter != NULL; gIter = gIter->next) {
 		    ioArgs.o_types.push_back((const char *)gIter->data);
@@ -302,12 +302,12 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsResourcesStart& ioArgs = (_qmf::ArgsResourcesStart&) arguments;
 		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		rsc_op_t *op = create_ocf_op(
+		svc_action_t *op = resources_action_create(
 		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
 		    "start", 0, ioArgs.i_timeout, params);
-		perform_sync_action(op);
+		services_action_sync(op);
 		ioArgs.o_rc = op->rc;
-		free_operation(op);
+		services_action_free(op);
 	    }
 	    return Manageable::STATUS_OK;
 	    
@@ -315,12 +315,12 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsResourcesStop& ioArgs = (_qmf::ArgsResourcesStop&) arguments;
 		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		rsc_op_t *op = create_ocf_op(
+		svc_action_t *op = resources_action_create(
 		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
 		    "stop", 0, ioArgs.i_timeout, params);
-		perform_sync_action(op);
+		services_action_sync(op);
 		ioArgs.o_rc = op->rc;
-		free_operation(op);
+		services_action_free(op);
 	    }
 	    return Manageable::STATUS_OK;
 
@@ -328,18 +328,18 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsResourcesMonitor& ioArgs = (_qmf::ArgsResourcesMonitor&) arguments;
 		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		rsc_op_t *op = create_ocf_op(
+		svc_action_t *op = resources_action_create(
 		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
 		    "monitor", ioArgs.io_interval, ioArgs.i_timeout, params);
 
 		if(ioArgs.io_interval) {
-		    perform_async_action(op, mh_resource_callback);
+		    services_action_async(op, mh_resource_callback);
 		    ioArgs.o_rc = OCF_PENDING;
 
 		} else {
-		    perform_sync_action(op);
+		    services_action_sync(op);
 		    ioArgs.o_rc = op->rc;
-		    free_operation(op);
+		    services_action_free(op);
 		}
 	    }	    
 	    return Manageable::STATUS_OK;
@@ -348,18 +348,18 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	    {
 		_qmf::ArgsResourcesInvoke& ioArgs = (_qmf::ArgsResourcesInvoke&) arguments;
 		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		rsc_op_t *op = create_ocf_op(
+		svc_action_t *op = resources_action_create(
 		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
 		    ioArgs.io_action.c_str(), ioArgs.io_interval, ioArgs.i_timeout, params);
 
 		if(ioArgs.io_interval) {
-		    perform_async_action(op, mh_resource_callback);
+		    services_action_async(op, mh_resource_callback);
 		    ioArgs.o_rc = OCF_PENDING;
 
 		} else {
-		    perform_sync_action(op);
+		    services_action_sync(op);
 		    ioArgs.o_rc = op->rc;
-		    free_operation(op);
+		    services_action_free(op);
 		}
 	    }	    
 	    return Manageable::STATUS_OK;
@@ -367,7 +367,7 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 	case _qmf::Resources::METHOD_CANCEL:
 	    {
 		_qmf::ArgsResourcesCancel& ioArgs = (_qmf::ArgsResourcesCancel&) arguments;
-		cancel_action(ioArgs.io_name.c_str(), ioArgs.io_action.c_str(), ioArgs.io_interval);
+		services_action_cancel(ioArgs.io_name.c_str(), ioArgs.io_action.c_str(), ioArgs.io_interval);
 	    }
 	    
 	    return Manageable::STATUS_OK;

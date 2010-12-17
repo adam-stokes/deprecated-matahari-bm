@@ -31,14 +31,14 @@
 #include "matahari/mainloop.h"
 #include "matahari/services.h"
 
-struct rsc_op_private_s 
+struct svc_action_private_s 
 {
 	char *exec;
 	char *args[4];
 	gboolean cancel;
 	
 	guint repeat_timer;
-	void (*callback)(rsc_op_t *op);
+	void (*callback)(svc_action_t *op);
 	
 	int            stderr_fd;
 	mainloop_fd_t *stderr_gsource;
@@ -60,14 +60,14 @@ struct rsc_op_private_s
 
 GHashTable *recurring_actions = NULL;
 
-rsc_op_t *create_service_op(
+svc_action_t *services_action_create(
     const char *name, const char *action, int interval, int timeout)
 {
-    rsc_op_t *op = malloc(sizeof(rsc_op_t));
-    memset(op, 0, sizeof(rsc_op_t));
+    svc_action_t *op = malloc(sizeof(svc_action_t));
+    memset(op, 0, sizeof(svc_action_t));
 
-    op->opaque = malloc(sizeof(rsc_op_private_t));
-    memset(op->opaque, 0, sizeof(rsc_op_private_t));
+    op->opaque = malloc(sizeof(svc_action_private_t));
+    memset(op->opaque, 0, sizeof(svc_action_private_t));
     
     op->rsc = strdup(name);
     op->action = strdup(action);
@@ -105,12 +105,12 @@ rsc_op_t *create_service_op(
     return op;
 }
 
-rsc_op_t *create_ocf_op(
+svc_action_t *resources_action_create(
     const char *name, const char *provider, const char *agent,
     const char *action, int interval, int timeout, GHashTable *params)
 {
-    rsc_op_t *op = malloc(sizeof(rsc_op_t));
-    memset(op, 0, sizeof(rsc_op_t));
+    svc_action_t *op = malloc(sizeof(svc_action_t));
+    memset(op, 0, sizeof(svc_action_t));
 
     op->rsc = strdup(name);
     op->action = strdup(action);
@@ -132,7 +132,7 @@ rsc_op_t *create_ocf_op(
     return op;
 }
 
-void free_operation(rsc_op_t *op)
+void services_action_free(svc_action_t *op)
 {
     if(op == NULL) {
 	return;
@@ -170,7 +170,7 @@ read_output(int fd, gpointer user_data)
     char * data = NULL;
     int rc = 0, len = 0;
     gboolean is_err = FALSE;
-    rsc_op_t* op = (rsc_op_t *)user_data;
+    svc_action_t* op = (svc_action_t *)user_data;
 
     if(fd == op->opaque->stderr_fd) {
 	is_err = TRUE;
@@ -214,7 +214,7 @@ read_output(int fd, gpointer user_data)
 static void
 pipe_out_done(gpointer user_data)
 {
-    rsc_op_t* op = (rsc_op_t *)user_data;
+    svc_action_t* op = (svc_action_t *)user_data;
     op->opaque->stdout_gsource = NULL;
     if (op->opaque->stdout_fd > STDERR_FILENO) {
 	close(op->opaque->stdout_fd);
@@ -225,7 +225,7 @@ pipe_out_done(gpointer user_data)
 static void
 pipe_err_done(gpointer user_data)
 {
-    rsc_op_t* op = (rsc_op_t *)user_data;
+    svc_action_t* op = (svc_action_t *)user_data;
     op->opaque->stderr_gsource = NULL;
     if (op->opaque->stderr_fd > STDERR_FILENO) {
 	close(op->opaque->stderr_fd);
@@ -251,7 +251,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-add_OCF_env_vars(rsc_op_t *op)
+add_OCF_env_vars(svc_action_t *op)
 {
     if (strcmp("ocf", op->rclass) != 0) {
 	return;
@@ -279,22 +279,22 @@ add_OCF_env_vars(rsc_op_t *op)
     }
 }
 
-static gboolean recurring_op_timer(gpointer data)
+static gboolean recurring_action_timer(gpointer data)
 {
-    rsc_op_t *op = data;
+    svc_action_t *op = data;
     mh_debug("Scheduling another invokation of %s", op->id);
 
     /* Clean out the old result */
     free(op->stdout_data); op->stdout_data = NULL;
     free(op->stderr_data); op->stderr_data = NULL;
     
-    perform_async_action(op, NULL);
+    services_action_async(op, NULL);
     return FALSE;
 }
 
-gboolean cancel_action(const char *name, const char *action, int interval)
+gboolean services_action_cancel(const char *name, const char *action, int interval)
 {
-    rsc_op_t* op = NULL;
+    svc_action_t* op = NULL;
     gboolean found = FALSE;
     char *id = malloc(500);
 
@@ -309,7 +309,7 @@ gboolean cancel_action(const char *name, const char *action, int interval)
 	if(op->opaque->repeat_timer) {
 	    g_source_remove(op->opaque->repeat_timer);
 	}
-	free_operation(op);
+	services_action_free(op);
     }
     
     return found;
@@ -321,7 +321,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 #if __linux__
     char *next = NULL;
     char *offset = NULL;
-    rsc_op_t *op = p->privatedata;
+    svc_action_t *op = p->privatedata;
 
     p->privatedata = NULL;
     op->status = LRM_OP_DONE;
@@ -369,7 +369,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     }
     
     if(op->interval && op->opaque->cancel == FALSE) {
-	op->opaque->repeat_timer = g_timeout_add(op->interval, recurring_op_timer, (void*)op);
+	op->opaque->repeat_timer = g_timeout_add(op->interval, recurring_action_timer, (void*)op);
     }
 
     op->pid = 0;
@@ -380,14 +380,14 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
 	op->opaque->callback(op);
 
     } else if(op->opaque->repeat_timer == 0) {
-	free_operation(op);
+	services_action_free(op);
     }
     
 #endif
 }
 
 gboolean
-perform_action(rsc_op_t* op, gboolean synchronous)
+perform_action(svc_action_t* op, gboolean synchronous)
 {
 #if __linux__
     int rc, lpc;
@@ -527,7 +527,7 @@ perform_action(rsc_op_t* op, gboolean synchronous)
 }
 
 gboolean
-perform_async_action(rsc_op_t* op, void (*action_callback)(rsc_op_t*))
+services_action_async(svc_action_t* op, void (*action_callback)(svc_action_t*))
 {
     if(action_callback) {
 	op->opaque->callback = action_callback;
@@ -546,7 +546,7 @@ perform_async_action(rsc_op_t* op, void (*action_callback)(rsc_op_t*))
 }
 
 gboolean
-perform_sync_action(rsc_op_t* op)
+services_action_sync(svc_action_t* op)
 {
     gboolean rc = perform_action(op, TRUE);
     mh_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);

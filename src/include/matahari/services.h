@@ -49,8 +49,8 @@ enum op_status {
 	LRM_OP_ERROR
 };
 
-typedef struct rsc_op_private_s rsc_op_private_t;
-typedef struct rsc_op_s 
+typedef struct svc_action_private_s svc_action_private_t;
+typedef struct svc_action_s 
 {
 	char *id;
 	char *rsc;
@@ -71,23 +71,23 @@ typedef struct rsc_op_s
 	char          *stderr_data;
 	char          *stdout_data;
 
-	rsc_op_private_t *opaque;
+	svc_action_private_t *opaque;
 	
-} rsc_op_t;
+} svc_action_t;
 
 extern GList *get_directory_list(const char *root, gboolean files);
 
-static inline GList *list_services(void) 
+static inline GList *services_list(void) 
 {
     return get_directory_list(LSB_ROOT, TRUE);
 }
 
-static inline GList *list_ocf_providers(void) 
+static inline GList *resources_list_ocf_providers(void) 
 {
     return get_directory_list(OCF_ROOT, FALSE);
 }
 
-static inline GList *list_ocf_agents(const char *provider) 
+static inline GList *resources_list_ocf_agents(const char *provider) 
 {
     if(provider) {
 	char buffer[500];
@@ -97,22 +97,22 @@ static inline GList *list_ocf_agents(const char *provider)
     return NULL;
 }
 
-extern rsc_op_t *create_service_op(
+extern svc_action_t *services_action_create(
     const char *name, const char *action, int interval /* ms */, int timeout /* ms */);
 
-/* After the call, 'params' is owned, and later free'd by the rsc_op_t result */
-extern rsc_op_t *create_ocf_op(
+/* After the call, 'params' is owned, and later free'd by the svc_action_t result */
+extern svc_action_t *resources_action_create(
     const char *name, const char *provider, const char *agent,
     const char *action, int interval /* ms */, int timeout /* ms */, GHashTable *params);
 
-extern void free_operation(rsc_op_t *op);
+extern void services_action_free(svc_action_t *op);
 
-extern gboolean perform_sync_action(rsc_op_t* op);
-extern gboolean perform_async_action(rsc_op_t* op, void (*action_callback)(rsc_op_t*));
+extern gboolean services_action_sync(svc_action_t* op);
+extern gboolean services_action_async(svc_action_t* op, void (*action_callback)(svc_action_t*));
 
-extern gboolean cancel_action(const char *name, const char *action, int interval);
+extern gboolean services_action_cancel(const char *name, const char *action, int interval);
 
-static inline enum ocf_exitcode convert_lsb_exitcode(char *action, int lsb) 
+static inline enum ocf_exitcode resources_convert_lsb_exitcode(char *action, int lsb) 
 {
     if(lsb == OCF_NOT_INSTALLED) {
 	return OCF_NOT_INSTALLED;
