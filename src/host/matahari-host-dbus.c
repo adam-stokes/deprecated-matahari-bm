@@ -30,9 +30,6 @@
 /* GObject class definition */
 #include "fmci/fmci-class.h"
 
-/* DBus names */
-#include "fmci/fmci-host-dbus.h"
-
 /* Host methods */
 #include "matahari/host.h"
 #include "fmci/host.h"
@@ -42,6 +39,11 @@
 
 /* Generated properties list */
 #include "matahari-host-dbus-properties.h"
+
+/* DBus names */
+#define HOST_BUS_NAME "org.matahariproject.Host"
+#define HOST_OBJECT_PATH "/org/matahariproject/Host"
+#define HOST_INTERFACE_NAME "org.matahariproject.Host"
 
 
 //TODO: Properties get/set
@@ -221,12 +223,12 @@ main(int argc, char** argv)
     }
 
   obj = g_object_new(FMCI_TYPE, NULL);
-  dbus_g_connection_register_g_object(connection, FMCI_OBJECT_PATH, obj);
+  dbus_g_connection_register_g_object(connection, HOST_OBJECT_PATH, obj);
 
   driver_proxy = dbus_g_proxy_new_for_name(connection, DBUS_SERVICE_DBUS,
       DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
 
-  if (!org_freedesktop_DBus_request_name(driver_proxy, FMCI_BUS_NAME, 0,
+  if (!org_freedesktop_DBus_request_name(driver_proxy, HOST_BUS_NAME, 0,
       &request_name_ret, &error))
     {
       g_printerr(_("Failed to get name: %s"), error->message);
