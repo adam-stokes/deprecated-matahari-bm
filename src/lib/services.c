@@ -30,6 +30,7 @@
 #include "matahari/logging.h"
 #include "matahari/mainloop.h"
 #include "matahari/services.h"
+#include "sigar.h"
 
 struct svc_action_private_s 
 {
@@ -112,6 +113,9 @@ svc_action_t *resources_action_create(
     svc_action_t *op = malloc(sizeof(svc_action_t));
     memset(op, 0, sizeof(svc_action_t));
 
+    op->opaque = malloc(sizeof(svc_action_private_t));
+    memset(op->opaque, 0, sizeof(svc_action_private_t));    
+    
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
@@ -127,8 +131,12 @@ svc_action_t *resources_action_create(
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
 
     op->opaque->exec = malloc(500);
-    snprintf(op->id, 500, "%s/%s/%s", OCF_ROOT, name, provider);
+    snprintf(op->opaque->exec, 500, "%s/resource.d/%s/%s", OCF_ROOT, provider, agent);
 
+    op->opaque->args[0] = strdup(op->opaque->exec);
+    op->opaque->args[1] = strdup(action);
+    op->opaque->args[2] = NULL;
+    
     return op;
 }
 
@@ -247,7 +255,9 @@ static void
 set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     /* TODO: Add OCF_RESKEY_ prefix to 'key' */
-    set_ocf_env(key, value, user_data);
+    char buffer[500];
+    snprintf(buffer, 500, "OCF_RESKEY_%s", key);
+    set_ocf_env(buffer, value, user_data);
 }
 
 static void
@@ -456,20 +466,12 @@ perform_action(svc_action_t* op, gboolean synchronous)
 		    rc = OCF_UNKNOWN_ERROR;
 		    break;
 	    }
-	    exit(rc);
+	    _exit(rc);
     }
 
     /* Only the parent reaches here */
     close(stdout_fd[1]);
     close(stderr_fd[1]);
-
-    /*
-     * No any obviouse proof of lrmd hang in pipe read yet.
-     * Bug 475 may be a duplicate of bug 499.
-     * Anyway, via test, it's proved that NOBLOCK read will
-     * obviously reduce the RA execution time (bug 553).
-     */
-    /* Let the read operations be NONBLOCK */ 
 
     op->opaque->stdout_fd = stdout_fd[0];
     set_fd_opts(op->opaque->stdout_fd, O_NONBLOCK);
@@ -479,13 +481,25 @@ perform_action(svc_action_t* op, gboolean synchronous)
 
     if(synchronous) {
 	int status = 0;
-	mh_err("Waiting for %d", op->pid);
-	while(waitpid(op->pid, &status, WNOHANG) <= 0) {
+	int timeout = 1 + op->timeout / 1000;
+	mh_trace("Waiting for %d", op->pid);
+	while(timeout > 0 && waitpid(op->pid, &status, WNOHANG) <= 0) {
 	    sleep(1);
+	    timeout--;
 	}
 
-	mh_err("Child done: %d", op->pid);
-	if (WIFEXITED(status)) {
+	mh_trace("Child done: %d", op->pid);
+	if(timeout == 0) {
+	    int killrc = sigar_proc_kill(op->pid, 9 /*SIGKILL*/);
+
+	    op->status = LRM_OP_TIMEOUT;	    
+	    mh_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+
+	    if (killrc != SIGAR_OK && killrc != ESRCH) {
+		mh_err("kill(%d, KILL) failed: %d", op->pid, killrc);
+	    }
+
+	} else if (WIFEXITED(status)) {
 	    op->status = LRM_OP_DONE;
 	    op->rc = WEXITSTATUS(status);
 	    mh_err("Managed %s process %d exited with rc=%d", op->id, op->pid, op->rc);
@@ -493,13 +507,6 @@ perform_action(svc_action_t* op, gboolean synchronous)
 	} else if (WIFSIGNALED(status)) {
 	    int signo = WTERMSIG(status);
 	    op->status = LRM_OP_ERROR;
-#if 0
-	    /* How to do outside of mainloop? */
-	    if( p->timeout ) {
-		mh_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
-		op->status = LRM_OP_TIMEOUT;
-	    }
-#endif
 	    mh_err("Managed %s process %d exited with signal=%d", op->id, op->pid, signo);
 	}
 #ifdef WCOREDUMP
@@ -512,7 +519,7 @@ perform_action(svc_action_t* op, gboolean synchronous)
 	read_output(op->opaque->stderr_fd, op);
 	
     } else {
-	mh_err("Async waiting for %d - %s", op->pid, op->opaque->exec);
+	mh_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
 	mainloop_add_child(op->pid, op->timeout, op->id, op, operation_finished);
 
 	op->opaque->stdout_gsource = mainloop_add_fd(
@@ -551,10 +558,10 @@ services_action_sync(svc_action_t* op)
     gboolean rc = perform_action(op, TRUE);
     mh_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if(op->stdout_data) {
-	mh_trace("   > stdout: %s", op->stdout_data);
+	mh_trace(" >  stdout: %s", op->stdout_data);
     }
     if(op->stderr_data) {
-	mh_trace("   > stderr: %s", op->stderr_data);
+	mh_trace(" >  stderr: %s", op->stderr_data);
     }
     return rc;
 }

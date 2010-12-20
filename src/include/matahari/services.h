@@ -23,7 +23,7 @@
 #include "matahari/mainloop.h"
 
 /* TODO: Autodetect these two in CMakeList.txt */
-#define OCF_ROOT "/usr/lib/ocf/resource.d"
+#define OCF_ROOT "/usr/lib/ocf"
 #define LSB_ROOT "/etc/init.d"
 
 enum ocf_exitcode {
@@ -84,14 +84,14 @@ static inline GList *services_list(void)
 
 static inline GList *resources_list_ocf_providers(void) 
 {
-    return get_directory_list(OCF_ROOT, FALSE);
+    return get_directory_list(OCF_ROOT"/resource.d", FALSE);
 }
 
 static inline GList *resources_list_ocf_agents(const char *provider) 
 {
     if(provider) {
 	char buffer[500];
-	snprintf(buffer, 500, "%s/%s", OCF_ROOT, provider);
+	snprintf(buffer, 500, "%s//resource.d/%s", OCF_ROOT, provider);
 	return get_directory_list(buffer, TRUE);
     }
     return NULL;
