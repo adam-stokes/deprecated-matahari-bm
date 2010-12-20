@@ -28,43 +28,59 @@
 
 #include <config.h>
 
-#include <spawn.h>
+#include <glib.h>
 #include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windns.h>
-#include <iphlpapi.h>
-#include <process.h>
-
-#define GAA_FLAGS ( GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_ANYCAST )
-#define BUFSIZE 1024
 
 void
 network_os_stop(const char *iface)
 {
-    char *exe_path;
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
     char *p;
-    gint r;
+    char *exe_path;
 
     p = getenv("WINDIR");
-    exe_path = g_strdup_printf("%s\\system32\\netsh", p);
+    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface %s disabled", p, iface);
 
-    r = _spawnl(_P_WAIT, exe_path, exe_path, "interface",
-                "set", "interface", iface, "disabled", NULL);
+    gboolean ok = CreateProcess(NULL,
+                                exe_path,
+                                NULL,
+                                NULL,
+                                TRUE,
+                                0,
+                                NULL,
+                                NULL,
+                                &si,
+                                &pi);
+
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
     g_free(exe_path);
 }
 
 void
 network_os_start(const char *iface)
 {
-    char *exe_path;
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
     char *p;
-    gint r;
+    char *exe_path;
 
     p = getenv("WINDIR");
-    exe_path = g_strdup_printf("%s\\system32\\netsh", p);
+    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface %s enabled", p, iface);
 
-    r = _spawnl(_P_WAIT, exe_path, exe_path, "interface",
-                "set", "interface", iface, "enabled", NULL);
+    gboolean ok = CreateProcess(NULL,
+                                exe_path,
+                                NULL,
+                                NULL,
+                                TRUE,
+                                0,
+                                NULL,
+                                NULL,
+                                &si,
+                                &pi);
+
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
     g_free(exe_path);
 }
