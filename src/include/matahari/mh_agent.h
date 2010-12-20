@@ -25,6 +25,10 @@
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/management/Manageable.h>
 
+extern "C" {
+#include "matahari/mainloop.h"
+}
+
 using namespace qpid::management;
 using namespace std;
 
@@ -33,12 +37,16 @@ namespace _qmf = qmf::org::matahariproject;
 
 class MatahariAgent : public Manageable
 {
+    GMainLoop *mainloop;
+    mainloop_fd_t *qpid_source;
+    
   public:
     MatahariAgent() {};
     ~MatahariAgent() {};
     
     virtual int setup(ManagementAgent *agent) { return 0; };
     int init(int argc, char **argv);
+    void run();
 };
 
 #endif // __MATAHARI_DAEMON_H

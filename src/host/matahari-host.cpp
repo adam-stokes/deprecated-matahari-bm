@@ -38,20 +38,27 @@ class HostAgent : public MatahariAgent
 	_qmf::Host* _management_object;
 	
     public:
-	void heartbeat();
+	int heartbeat();
 	int setup(ManagementAgent* agent);
 	ManagementObject* GetManagementObject() const { return _management_object; }
 	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
 };
 
+static gboolean heartbeat_timer(gpointer data)
+{
+    HostAgent *agent = (HostAgent *)data;
+    g_timeout_add(agent->heartbeat(), heartbeat_timer, data);
+    return FALSE;
+}
+
 int
 main(int argc, char **argv)
 {
-    HostAgent agent; 
-    int rc = agent.init(argc, argv);
-    while (rc == 0) {
-	/* Looks like a tight loop, but .heartbeat() contains a call to sleep() */
-	agent.heartbeat();
+    HostAgent *agent = new HostAgent(); 
+    int rc = agent->init(argc, argv);
+    if (rc == 0) {
+	heartbeat_timer(agent);
+	agent->run();
     }
     
     return rc;
@@ -95,7 +102,7 @@ HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
   return Manageable::STATUS_NOT_IMPLEMENTED;
 }
 
-void
+int
 HostAgent::heartbeat()
 {
     uint64_t timestamp = 0L, now = 0L;
@@ -132,5 +139,5 @@ HostAgent::heartbeat()
     _management_object->set_free_swap(host_get_swap_free());
     _management_object->set_free_mem(host_get_mem_free());
 
-    qpid::sys::sleep(_management_object->get_update_interval());
+    return _management_object->get_update_interval() * 1000;
 }

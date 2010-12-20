@@ -75,6 +75,21 @@ print_usage()
 }
 #endif
 
+static gboolean 
+mh_qpid_callback(int fd, gpointer user_data)
+{
+    ManagementAgent *agent = (ManagementAgent *)user_data;
+    mh_trace("Qpid message recieved");
+    agent->pollCallbacks();
+    return TRUE;
+}
+
+static void
+mh_qpid_disconnect(gpointer user_data)
+{
+    mh_err("Qpid connection closed");
+}
+
 int
 MatahariAgent::init(int argc, char **argv)
 {
@@ -193,7 +208,7 @@ MatahariAgent::init(int argc, char **argv)
 	settings.mechanism = "GSSAPI";
     }
 
-    agent->init(settings, 5, false, ".magentdata");
+    agent->init(settings, 5, true, ".magentdata");
 
     /* Do any setup required by our agent */
     if(this->setup(agent) < 0) {
@@ -201,5 +216,16 @@ MatahariAgent::init(int argc, char **argv)
 	return -1;
     } 
     
+
+    this->mainloop = g_main_new(FALSE);
+    this->qpid_source = mainloop_add_fd(
+	G_PRIORITY_HIGH, agent->getSignalFd(), mh_qpid_callback, mh_qpid_disconnect, agent);
+
     return 0;
+}
+
+void
+MatahariAgent::run()
+{
+    g_main_run(this->mainloop);
 }

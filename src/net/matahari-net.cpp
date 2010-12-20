@@ -61,8 +61,8 @@ main(int argc, char **argv)
 {
     NetAgent agent;
     int rc = agent.init(argc, argv);
-    while (rc == 0) {
-	qpid::sys::sleep(1);
+    if (rc == 0) {
+	agent.run();
     }
     return rc;
 }

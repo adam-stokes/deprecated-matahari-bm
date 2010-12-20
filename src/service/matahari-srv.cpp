@@ -137,11 +137,10 @@ int
 main(int argc, char **argv)
 {
     int rc = agent.init(argc, argv);
-    GMainLoop *mainloop = g_main_new(FALSE);
 
     if(rc >= 0) {
 	mainloop_track_children(G_PRIORITY_DEFAULT);
-	g_main_run(mainloop);
+	agent.run();
     }
     
     return rc;
