@@ -20,6 +20,7 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,9 +33,6 @@
 
 /* Host methods */
 #include "matahari/host.h"
-
-/* Generated dbus stuff for host */
-#include "matahari-host-dbus-glue.h"
 
 /* Generated properties list */
 #include "matahari-host-dbus-properties.h"
@@ -66,6 +64,12 @@ Host_reboot(Fmci* fmci, GError** error)
   host_reboot();
   return TRUE;
 }
+
+/* Generated dbus stuff for host
+ * MUST be after declaration of user defined functions.
+ */
+#include "matahari-host-dbus-glue.h"
+
 
 //TODO: Properties get/set
 static void

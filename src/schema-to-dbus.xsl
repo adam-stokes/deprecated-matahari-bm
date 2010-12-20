@@ -12,7 +12,7 @@
         <xsl:value-of select="schema/@package" />
     </xsl:variable>
     <xsl:for-each select="schema/class">
-        <xsl:variable name="filename" select="concat('matahari-', translate(@name, $uppercase, $smallcase),'-dbus.xml')" />
+        <xsl:variable name="filename" select="concat('org.matahariproject.', translate(@name, $uppercase, $smallcase),'.xml')" />
         <exsl:document method="xml" indent="yes" version="1.0" encoding="utf-8" href="{$filename}">
             <node>
                 <interface>
