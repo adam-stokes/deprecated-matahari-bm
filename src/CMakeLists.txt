@@ -2,6 +2,7 @@
 
 if(WIN32)
    set(VARIANT "windows")
+   set(SUPPORT_TRACING 0)
 else(WIN32)
    set(VARIANT "linux")
 endif(WIN32)
@@ -137,9 +138,9 @@ find_package(QPID REQUIRED)
 ## sigar
 find_library(SIGAR sigar)
 if(NOT_SIGAR)
-   message("SIGAR library not found.")
-   set(SIGAR "")
+   message(FATAL_ERROR "SIGAR library not found.")
 endif(NOT_SIGAR)
+target_link_libraries(mcommon ${SIGAR})
 
 string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 
@@ -172,7 +173,7 @@ endif (regen_schema)
 
 # Add QF libraries
 foreach(daemon ${DAEMONS}) 
-    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY} ${SIGAR})
+    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY})
     IF(QPIDTYPES_FOUND)
         target_link_libraries(${daemon} ${QPIDTYPES_LIBRARY})
     ENDIF(QPIDTYPES_FOUND)

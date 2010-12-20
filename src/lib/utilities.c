@@ -17,7 +17,6 @@
  */
 
 #define _GNU_SOURCE
-#include <link.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -33,6 +32,7 @@ int mh_log_level = LOG_INFO;
 gboolean mh_stderr_enabled = FALSE;
 
 #if __linux__
+#  include <link.h>
 #  include <unistd.h>
 #  include <sys/wait.h>
 #  include <sys/utsname.h>
