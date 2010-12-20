@@ -46,16 +46,8 @@
    <statistic name="free_mem"        type="uint64"  desc="Amount of available memory for host" unit="kb" />
    <statistic name="free_swap"       type="uint64"  desc="Amount of available swap for host" unit="kb" />
 
-   <statistic name="load_average_1"  type="double"  desc="The one minute load average." />
-   <statistic name="load_average_5"  type="double"  desc="The five minute load average." />
-   <statistic name="load_average_15" type="double"  desc="The fiften minute load average" />
-
-   <statistic name="proc_total"      type="uint64"  desc="Total processes" />
-   <statistic name="proc_running"    type="uint64"  desc="Total running processes" />
-   <statistic name="proc_sleeping"   type="uint64"  desc="Total sleeping processes" />
-   <statistic name="proc_zombie"     type="uint64"  desc="Total zombie processes" />
-   <statistic name="proc_stopped"    type="uint64"  desc="Total stopped processes" />
-   <statistic name="proc_idle"       type="uint64"  desc="Total idle processes" />
+   <statistic name="load"	        type="map"  desc="The one/five/fifteen minute load average" />
+   <statistic name="process_statistics" type="map"  desc="Number of processes in each possible state" />
 
    <!-- APIs -->
    <method name="identify"                desc="Tells the host to beep its pc speaker." />

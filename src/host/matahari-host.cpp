@@ -121,23 +121,29 @@ HostAgent::heartbeat()
 
     now = timestamp * 1000000000;
     this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, _heartbeat_sequence++));
+
     _management_object->set_last_updated(now);
     _management_object->set_sequence(_heartbeat_sequence);
 
-    // update the load averages
-    host_get_load_averages(&avg);
-    host_get_processes(&procs);
-    _management_object->set_load_average_1(avg.loadavg[0]);
-    _management_object->set_load_average_5(avg.loadavg[1]);
-    _management_object->set_load_average_15(avg.loadavg[2]);
-    _management_object->set_proc_total(procs.total);
-    _management_object->set_proc_sleeping(procs.sleeping);
-    _management_object->set_proc_running(procs.running);
-    _management_object->set_proc_zombie(procs.zombie);
-    _management_object->set_proc_stopped(procs.stopped);
-    _management_object->set_proc_idle(procs.idle);
     _management_object->set_free_swap(host_get_swap_free());
     _management_object->set_free_mem(host_get_mem_free());
+
+    ::qpid::types::Variant::Map load;
+    host_get_load_averages(&avg);
+    load["1"]  = ::qpid::types::Variant((double)avg.loadavg[0]);
+    load["5"]  = ::qpid::types::Variant((double)avg.loadavg[1]);
+    load["15"] = ::qpid::types::Variant((double)avg.loadavg[2]);
+    _management_object->set_load(load);
+
+    ::qpid::types::Variant::Map proc;
+    host_get_processes(&procs);
+    proc["total"]    = ::qpid::types::Variant((int)procs.total);
+    proc["idle"]     = ::qpid::types::Variant((int)procs.idle);
+    proc["zombie"]   = ::qpid::types::Variant((int)procs.zombie);
+    proc["running"]  = ::qpid::types::Variant((int)procs.running);
+    proc["stopped"]  = ::qpid::types::Variant((int)procs.stopped);
+    proc["sleeping"] = ::qpid::types::Variant((int)procs.sleeping);
+    _management_object->set_process_statistics(proc);
 
     return _management_object->get_update_interval() * 1000;
 }
