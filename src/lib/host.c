@@ -38,6 +38,8 @@
 #include <sigar_private.h>
 #include <sigar_format.h>
 
+MH_TRACE_INIT_DATA(mh_host);
+
 host_init_t host_init = { NULL, FALSE };
 cpuinfo_t cpuinfo = { NULL, 0, 0 };
 

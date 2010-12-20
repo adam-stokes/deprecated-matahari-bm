@@ -96,7 +96,6 @@ MatahariAgent::init(int argc, char **argv)
 #ifdef __linux__
     int arg;
     int idx = 0;
-    bool verbose = false;
     bool daemonize = false;
 #endif
     bool gssapi = false;
@@ -119,10 +118,11 @@ MatahariAgent::init(int argc, char **argv)
 	{"port", required_argument, NULL, 'p'},
 	{0, 0, 0, 0}
     };
-    mh_log_init(basename(argv[0]), LOG_DEBUG);
+
+    mh_log_init(basename(argv[0]), LOG_INFO, FALSE);
 
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:v", opt, &idx)) != -1) {
 	switch (arg) {
 	    case 'h':
 	    case '?':
@@ -133,7 +133,8 @@ MatahariAgent::init(int argc, char **argv)
 		daemonize = true;
 		break;
 	    case 'v':
-		verbose = true;
+		mh_log_level++;
+		mh_enable_stderr(1);
 		break;
 	    case 's':
 		if (optarg) {

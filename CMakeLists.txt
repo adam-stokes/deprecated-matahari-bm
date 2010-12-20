@@ -19,6 +19,7 @@ ENDMACRO (inherit_value)
 # Various defines 
 inherit_value(MATAHARI_PORT "49000")
 inherit_value(MATAHARI_BROKER "127.0.0.1")
+inherit_value(SUPPORT_TRACING 0)
 
 # Build Paths
 inherit_value(MINGW_ROOT "/usr/i686-pc-mingw32/sys-root/mingw")

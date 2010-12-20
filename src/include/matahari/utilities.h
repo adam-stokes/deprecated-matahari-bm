@@ -34,14 +34,14 @@ extern void mh_abort(const char *file, const char *function, int line,
 #define __unlikely(expr) __builtin_expect(expr, 0)
 
 #define MH_ASSERT(expr) do {						\
-	if(__unlikely((expr) == FALSE)) {				\
-	    mh_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+	if(__unlikely((expr) == 0)) {					\
+	    mh_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, 1, 0); \
 	}								\
     } while(0)
 
 #define MH_LOG_ASSERT(expr) do {					\
 	if(__unlikely((expr) == FALSE)) {				\
-	    mh_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
+	    mh_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, 0, 1); \
 	}								\
     } while(0)
 

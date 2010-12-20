@@ -32,6 +32,8 @@
 #include "matahari/services.h"
 #include "sigar.h"
 
+MH_TRACE_INIT_DATA(mh_services);
+
 struct svc_action_private_s 
 {
 	char *exec;
@@ -256,7 +258,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     /* TODO: Add OCF_RESKEY_ prefix to 'key' */
     char buffer[500];
-    snprintf(buffer, 500, "OCF_RESKEY_%s", key);
+    snprintf(buffer, 500, "OCF_RESKEY_%s", (char*)key);
     set_ocf_env(buffer, value, user_data);
 }
 

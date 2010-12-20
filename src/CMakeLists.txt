@@ -30,6 +30,7 @@ set(DAEMONS ${M_HOST} ${M_NET} ${M_SRV})
 file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 
 # Defines
+add_definitions(-DSUPPORT_TRACING=${SUPPORT_TRACING})
 add_definitions(-DMATAHARI_PORT=${MATAHARI_PORT})
 add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 
@@ -138,7 +139,7 @@ find_library(SIGAR sigar)
 if(NOT_SIGAR)
    message("SIGAR library not found.")
    set(SIGAR "")
-endif(NOT SIGAR)
+endif(NOT_SIGAR)
 
 string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 

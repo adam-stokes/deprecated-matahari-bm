@@ -21,30 +21,33 @@
 #define __MH_LOGGING__
 
 #ifdef __linux__
-#include <syslog.h>
-#define mh_log_fn syslog
-#else
- /* Broken but will compile
-  * TODO - Use sigar logging wrappers
-  */
-#define mh_log_fn fprintf
-#define LOG_CRIT stderr
-#define LOG_ERR stderr
-#define LOG_WARNING stderr
-#define LOG_NOTICE stderr
-#define LOG_INFO stderr
-#define LOG_DEBUG stderr
+#  include <syslog.h>
+#else 
+#  define	LOG_EMERG	0	/* system is unusable */
+#  define	LOG_ALERT	1	/* action must be taken immediately */
+#  define	LOG_CRIT	2	/* critical conditions */
+#  define	LOG_ERR		3	/* error conditions */
+#  define	LOG_WARNING	4	/* warning conditions */
+#  define	LOG_NOTICE	5	/* normal but significant condition */
+#  define	LOG_INFO	6	/* informational */
+#  define	LOG_DEBUG	7	/* debug-level messages */
 #endif
 
 #include <stdio.h>
+#include <glib.h>
 #include "matahari/utilities.h"
 
-#define LOG_TRACE    12
+#define LOG_TRACE    8
 
 extern int mh_log_level;
-extern void mh_log_init(const char *ident, int level);
+extern void mh_log_fn(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
+extern void mh_log_init(const char *ident, int level, gboolean to_stderr);
+extern void mh_enable_stderr(gboolean to_stderr);
 
 #if SUPPORT_TRACING
+
+/* Linux with trace logging */
+
 struct _mh_ddebug_query {
 	const char *files;
 	const char *formats;
@@ -84,14 +87,14 @@ extern struct _mh_ddebug __stop___verbose[];
     void name(void) { MH_ASSERT(__start___verbose != __stop___verbose); } \
     void __attribute__ ((constructor)) name(void);
 
-#define MH_CHECK(expr, failure_action) do {				\
+#  define MH_CHECK(expr, failure_action) do {				\
 	static struct _mh_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
 									\
-	if(__unlikely((expr) == FALSE)) {				\
+	if(__unlikely((expr) == 0)) {					\
 	    mh_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
-		     descriptor.bump != LOG_TRACE, TRUE);		\
+		     descriptor.bump != LOG_TRACE, 1);			\
 	    failure_action;						\
 	}								\
     } while(0)
@@ -139,9 +142,9 @@ extern struct _mh_ddebug __stop___verbose[];
 
 #  define MH_TRACE_INIT_DATA(name)
 
-#define MH_CHECK(expr, failure_action) do {				\
-	if(__unlikely((expr) == FALSE)) {				\
-	    mh_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+#  define MH_CHECK(expr, failure_action) do {				\
+	if(__unlikely((expr) == 0)) {					\
+	    mh_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, 0, 1); \
 	    failure_action;						\
 	}								\
     } while(0)
@@ -165,7 +168,7 @@ extern struct _mh_ddebug __stop___verbose[];
 #endif
 
 #define mh_log_always(level, fmt, args...) mh_log_fn(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
-#define mh_crit(fmt, args...)    mh_log_always(LOG_CRIT,    fmt , ##args)
+#define mh_crit(fmt, args...)    mh_log(LOG_CRIT,    fmt , ##args)
 #define mh_err(fmt, args...)     mh_log(LOG_ERR,     fmt , ##args)
 #define mh_warn(fmt, args...)    mh_log(LOG_WARNING, fmt , ##args)
 #define mh_notice(fmt, args...)  mh_log(LOG_NOTICE,  fmt , ##args)

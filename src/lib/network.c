@@ -26,6 +26,8 @@
 #include <sigar.h>
 #include <stdint.h>
 
+MH_TRACE_INIT_DATA(mh_network);
+
 static GList *
 query_interface_table(void)
 {
@@ -39,7 +41,7 @@ query_interface_table(void)
     sigar_open(&sigar);
     status = sigar_net_interface_list_get(sigar, &iflist);
     if(status == SIGAR_OK) {
-	for(lpc; lpc < iflist.number; lpc++) {
+	for(lpc = 0; lpc < iflist.number; lpc++) {
             ifconfig = g_new0(sigar_net_interface_config_t, 1);
 	    status = sigar_net_interface_config_get(sigar, iflist.data[lpc],
 						    ifconfig);
