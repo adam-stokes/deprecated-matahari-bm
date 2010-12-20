@@ -32,7 +32,6 @@
 
 /* Host methods */
 #include "matahari/host.h"
-#include "fmci/host.h"
 
 /* Generated dbus stuff for host */
 #include "matahari-host-dbus-glue.h"
@@ -45,6 +44,28 @@
 #define HOST_OBJECT_PATH "/org/matahariproject/Host"
 #define HOST_INTERFACE_NAME "org.matahariproject.Host"
 
+/* Dbus methods */
+gboolean
+Host_identify(Fmci* fmci, GError** error)
+{
+//  host_identify(5);
+//  fprintf(stderr, "host_identify() is missing\n");
+  return TRUE;
+}
+
+gboolean
+Host_shutdown(Fmci* fmci, GError** error)
+{
+  host_shutdown();
+  return TRUE;
+}
+
+gboolean
+Host_reboot(Fmci* fmci, GError** error)
+{
+  host_reboot();
+  return TRUE;
+}
 
 //TODO: Properties get/set
 static void
