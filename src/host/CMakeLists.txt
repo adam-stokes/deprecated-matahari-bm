@@ -254,4 +254,6 @@ install(TARGETS ${M_HOST_DBUS} DESTINATION sbin)
 #install(FILES ${SCHEMAS} DESTINATION share/matahari)
 #install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.h DESTINATION include)
 
+# TODO: fix install paths
 install(FILES ${DBUS_INTROSPECT} DESTINATION share/dbus-1/interfaces)
+install(FILES org.matahariproject.Host.conf /etc/dbus-1/system.d)
