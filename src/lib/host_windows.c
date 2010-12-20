@@ -36,6 +36,12 @@ host_os_get_uuid(void)
     return host_get_hostname();
 }
 
+const char *
+host_os_get_cpu_flags(void)
+{
+    return "unknown";
+}
+
 static void
 get_token_priv(HANDLE token, TOKEN_PRIVILEGES tkp)
 {

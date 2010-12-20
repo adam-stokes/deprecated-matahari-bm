@@ -36,7 +36,7 @@
 #include "host_private.h"
 
 const char *
-host_os_get_uuid()
+host_os_get_uuid(void)
 {
     static char * uuid = NULL;
 
@@ -68,6 +68,86 @@ host_os_get_uuid()
     }
     
     return uuid;
+}
+
+const char *
+host_os_get_cpu_flags(void)
+{
+    static char *flags = NULL;
+    
+    size_t chunk = 512;
+    size_t read_chars = 0;
+    size_t data_length = 0;
+    
+    char *buffer = NULL;
+    FILE *input = NULL;
+
+    if(flags) {
+	return flags;
+    }
+    
+    input = fopen("/proc/cpuinfo", "r");
+
+    do {
+	buffer = realloc(buffer, chunk + data_length + 1);
+	read_chars = fread(buffer + data_length, 1, chunk, input);
+	data_length += read_chars;
+    } while (read_chars > 0);
+
+    if(data_length == 0) {
+	mh_warn("Could not read from /proc/cpuinfo");
+
+    } else {
+	const char *regexstr = "(.*\\S)\\s*:\\s*(\\S.*)";
+	int expected = 3;
+	int found[9];
+	const char* pcre_error;
+	int pcre_error_offset;
+	pcre* regex;
+	int offset = 0, lpc = 0, match = 0;
+       
+	buffer[data_length] = '\0';
+	regex = pcre_compile(regexstr, 0, &pcre_error, &pcre_error_offset, NULL);
+	if(!regex) {
+	    mh_err("Unable to compile regular expression '%s' at offset %d: %s",
+		   regexstr, pcre_error_offset, pcre_error);
+	    goto done;
+	}
+
+	for(lpc = 0; lpc < data_length; lpc++) {
+           
+	    switch(buffer[lpc]) {
+		case '\n':
+		case '\0':
+		    match = pcre_exec(regex, NULL, buffer+offset, lpc-offset,
+				      0, PCRE_NOTEMPTY, found, 9);
+                   
+		    if(match == expected) {
+			char *name = malloc(2 + found[3] - found[2]);
+			snprintf(name, 1 + found[3] - found[2], "%s", buffer + offset + found[2]);
+                       
+			if (strcmp(name, "flags") == 0) {
+			    flags = malloc(2 + found[5] - found[4]);
+			    snprintf(flags, 1 + found[5] - found[4], "%s", buffer + offset + found[4]);
+			    free(name);
+			    goto done;
+			}
+			free(name);
+		    }
+		    offset = lpc+1;
+	    }
+	}
+    }
+    
+  done:
+    fclose(input);
+    free(buffer);
+
+    if(flags == NULL) {
+	flags = strdup("unknown");
+    }
+    
+    return flags;
 }
 
 void

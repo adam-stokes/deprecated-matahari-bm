@@ -83,6 +83,7 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_cpu_count(host_get_cpu_count());
   _management_object->set_cpu_cores(host_get_cpu_number_of_cores());
   _management_object->set_cpu_model(host_get_cpu_model());
+  _management_object->set_cpu_flags(host_get_cpu_flags());
 
   return 1;
 }

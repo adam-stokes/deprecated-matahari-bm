@@ -39,6 +39,7 @@ extern const char *host_os_get_uuid(void);
 extern const char *host_os_get_hostname(void);
 extern const char *host_os_get_operating_system(void);
 extern const char *host_os_get_architecture(void);
+extern const char *host_os_get_cpu_flags(void);
 
 extern unsigned int host_os_get_memory(void);
 extern unsigned int host_os_get_platform(void);

@@ -32,6 +32,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include "matahari/host.h"
+#include "matahari/logging.h"
 #include "host_private.h"
 
 #include <sigar.h>
@@ -122,6 +123,12 @@ host_get_cpu_model(void)
 {
     host_get_cpu_details();
     return cpuinfo.model;
+}
+
+const char *
+host_get_cpu_flags(void)
+{
+    return host_os_get_cpu_flags();
 }
 
 int

@@ -29,6 +29,7 @@ extern const char *host_get_operating_system(void);
 
 extern const char *host_get_architecture(void);
 extern const char *host_get_cpu_model(void);
+extern const char *host_get_cpu_flags(void);
 
 extern uint64_t host_get_memory(void);
 extern uint64_t host_get_mem_free(void);
