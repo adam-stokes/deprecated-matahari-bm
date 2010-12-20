@@ -22,6 +22,9 @@ set(MHOST_VERSION 0.0.1)
 set(MSRV_VERSION 0.0.1)
 set(MNET_VERSION 0.0.1)
 
+option(WITH-QMF "Build the QMF daemon" ON)
+option(WITH-DBUS "Build the DBus daemon" ON)
+
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
@@ -107,6 +110,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURREN
 ## Modules
 pkg_check_modules(glib REQUIRED glib-2.0)
 pkg_check_modules(pcre REQUIRED libpcre)
+pkg_check_modules(dbus-glib REQUIRED dbus-glib-1)
 
 if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
@@ -140,6 +144,35 @@ if(glib_FOUND)
 else(glib_FOUND)
    message(FATAL_ERROR "Glib2 header/library not found.")
 endif(glib_FOUND)
+
+## dbus
+
+include(DBusMacros)
+set(apis host net srv)
+generate_dbus_interfaces(${CMAKE_CURRENT_SOURCE_DIR}/schema.xml ${apis})
+
+set(HOST_DBUS_SOURCE
+    host/matahari-host-dbus.c
+    ${CMAKE_CURRENT_BINARY_DIR}/host/matahari-host-dbus-glue.h
+    ${CMAKE_CURRENT_BINARY_DIR}/host/matahari-host-dbus-properties.h)
+
+# Daemon
+set(M_HOST_DBUS "matahari-host-dbusd")
+add_executable(${M_HOST_DBUS} ${HOST_DBUS_SOURCE})
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/host)
+add_dependencies(${M_HOST_DBUS}
+    ${CMAKE_CURRENT_BINARY_DIR}/host/matahari-host-dbus-glue.h
+    ${CMAKE_CURRENT_BINARY_DIR}/host/matahari-host-dbus-properties.h)
+    
+target_link_libraries(${M_HOST_DBUS} mhost )
+
+if(dbus-glib_FOUND)
+   include_directories(${dbus-glib_INCLUDE_DIRS})
+   target_link_libraries(${M_HOST_DBUS} ${dbus-glib_LIBRARIES})
+else(dbus-glib_FOUND)
+   message(FATAL_ERROR "dbus-glib headers/libraries not found.")
+endif(dbus-glib_FOUND)
+
 
 ## qpid
 
@@ -205,6 +238,3 @@ endif(WIN32)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
-
-
-add_subdirectory(host)

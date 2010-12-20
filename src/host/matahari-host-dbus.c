@@ -41,7 +41,7 @@
 #include "matahari-host-dbus-glue.h"
 
 /* Generated properties list */
-#include "matahari-host-properties.h"
+#include "matahari-host-dbus-properties.h"
 
 
 //TODO: Properties get/set
