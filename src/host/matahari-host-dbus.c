@@ -73,6 +73,9 @@ fmci_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)
 {
   Fmci *self = FMCI(object);
+  sigar_loadavg_t load;
+  sigar_proc_stat_t procs;
+
   switch (property_id)
     {
   case PROP_UUID:
@@ -122,21 +125,72 @@ fmci_get_property(GObject *object, guint property_id, GValue *value,
     g_value_set_string (value, host_get_operating_system());
     break;
   case PROP_MEMORY:
+    g_value_set_uint64 (value, host_get_memory());
+    break;
   case PROP_SWAP:
+    g_value_set_uint64 (value, host_get_swap());
+    break;
   case PROP_ARCH:
+    g_value_set_string (value, host_get_architecture());
+    break;
   case PROP_PLATFORM:
+    g_value_set_uint (value, host_get_platform());
+    break;
   case PROP_PROCESSORS:
+    g_value_set_uint (value, host_get_cpu_count());
+    break;
   case PROP_CORES:
+    g_value_set_uint (value, host_get_cpu_number_of_cores());
+    break;
   case PROP_MODEL:
+    g_value_set_string (value, host_get_cpu_model());
+    break;
   case PROP_LAST_UPDATED_SEQ:
+    //TODO
+    break;
   case PROP_LAST_UPDATED:
+    //TODO
+    break;
   case PROP_LOAD_AVERAGE_1:
+    host_get_load_averages(&load);
+    g_value_set_double (value, load.loadavg[0]);
+    break;
   case PROP_LOAD_AVERAGE_5:
+    host_get_load_averages(&load);
+    g_value_set_double (value, load.loadavg[1]);
+    break;
   case PROP_LOAD_AVERAGE_15:
+    host_get_load_averages(&load);
+    g_value_set_double (value, load.loadavg[2]);
+    break;
   case PROP_MEM_FREE:
+    g_value_set_uint64 (value, host_get_mem_free());
+    break;
   case PROP_SWAP_FREE:
+    g_value_set_uint64 (value, host_get_swap_free());
+    break;
   case PROP_PROC_TOTAL:
+    host_get_processes(&procs);
+    g_value_set_uint64 (value, procs.total);
+    break;
   case PROP_PROC_RUNNING:
+    host_get_processes(&procs);
+    g_value_set_uint64 (value, procs.running);
+    break;
+  case PROP_PROC_SLEEPING:
+    host_get_processes(&procs);
+    g_value_set_uint64 (value, procs.sleeping);
+    break;
+  case PROP_PROC_ZOMBIE:
+    host_get_processes(&procs);
+    g_value_set_uint64 (value, procs.zombie);
+    break;
+  case PROP_PROC_STOPPED:
+    host_get_processes(&procs);
+    g_value_set_uint64 (value, procs.stopped);
+    break;
+  case PROP_PROC_IDLE:
+
   default:
     /* We don't have any other property... */
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
