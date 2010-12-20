@@ -79,6 +79,7 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_wordsize(host_get_cpu_wordsize());
   _management_object->set_arch(host_get_architecture());
   _management_object->set_memory(host_get_memory());
+  _management_object->set_swap(host_get_swap());
   _management_object->set_cpu_count(host_get_cpu_count());
   _management_object->set_cpu_cores(host_get_cpu_number_of_cores());
   _management_object->set_cpu_model(host_get_cpu_model());
