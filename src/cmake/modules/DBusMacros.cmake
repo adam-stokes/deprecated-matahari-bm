@@ -29,7 +29,7 @@ macro(generate_dbus_interfaces SCHEMA APIS)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${API}/matahari-${API}-dbus-glue.h
             COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/${API}/
-            COMMAND ${BIND_TOOL} --prefix=fmci --mode=glib-server
+            COMMAND ${BIND_TOOL} --prefix=matahari --mode=glib-server
                 --output=${CMAKE_CURRENT_BINARY_DIR}/${API}/matahari-${API}-dbus-glue.h
                 ${CMAKE_CURRENT_BINARY_DIR}/dbus/org.matahariproject.${API}.xml
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/dbus/org.matahariproject.${API}.xml

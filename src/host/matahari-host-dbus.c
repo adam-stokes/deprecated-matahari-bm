@@ -29,7 +29,7 @@
 #include <dbus/dbus-glib-bindings.h>
 
 /* GObject class definition */
-#include "fmci/fmci-class.h"
+#include "mh_gobject_class.h"
 
 /* Host methods */
 #include "matahari/host.h"
@@ -44,7 +44,7 @@
 
 /* Dbus methods */
 gboolean
-Host_identify(Fmci* fmci, GError** error)
+Host_identify(Matahari* matahari, GError** error)
 {
 //  host_identify(5);
 //  fprintf(stderr, "host_identify() is missing\n");
@@ -52,14 +52,14 @@ Host_identify(Fmci* fmci, GError** error)
 }
 
 gboolean
-Host_shutdown(Fmci* fmci, GError** error)
+Host_shutdown(Matahari* matahari, GError** error)
 {
   host_shutdown();
   return TRUE;
 }
 
 gboolean
-Host_reboot(Fmci* fmci, GError** error)
+Host_reboot(Matahari* matahari, GError** error)
 {
   host_reboot();
   return TRUE;
@@ -73,13 +73,10 @@ Host_reboot(Fmci* fmci, GError** error)
 
 //TODO: Properties get/set
 static void
-fmci_set_property(GObject *object, guint property_id, const GValue *value,
+matahari_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)
 {
-  Fmci *self = FMCI(object);
-  sigar_loadavg_t load;
-  sigar_proc_stat_t procs;
-
+  Matahari *self = MATAHARI(object);
   switch (property_id)
     {
   case PROP_UUID:
@@ -110,10 +107,13 @@ fmci_set_property(GObject *object, guint property_id, const GValue *value,
 }
 
 static void
-fmci_get_property(GObject *object, guint property_id, GValue *value,
+matahari_get_property(GObject *object, guint property_id, GValue *value,
     GParamSpec *pspec)
 {
-  Fmci *self = FMCI(object);
+  Matahari *self = MATAHARI(object);
+  sigar_loadavg_t load;
+  sigar_proc_stat_t procs;
+
   switch (property_id)
     {
   case PROP_UUID:
@@ -203,23 +203,23 @@ fmci_get_property(GObject *object, guint property_id, GValue *value,
 }
 
 /* Generate the GObject boilerplate */
-G_DEFINE_TYPE(Fmci, fmci, G_TYPE_OBJECT)
+G_DEFINE_TYPE(Matahari, matahari, G_TYPE_OBJECT)
 
 /* Class init */
 static void
-fmci_class_init(FmciClass *fmci_class)
+matahari_class_init(MatahariClass *matahari_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS(fmci_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
   GParamSpec *pspec;
 
-  gobject_class->set_property = fmci_set_property;
-  gobject_class->get_property = fmci_get_property;
+  gobject_class->set_property = matahari_set_property;
+  gobject_class->get_property = matahari_get_property;
 
   //TODO: Proper properties initialization
   int i;
   for (i = 0; properties_Host[i].name != NULL; i++)
   {
-    printf("Writing property: %s\n", properties_Host[i].name);
+    g_print("Writing property: %s\n", properties_Host[i].name);
     switch (properties_Host[i].type)
     {
         case 's':
@@ -263,19 +263,19 @@ fmci_class_init(FmciClass *fmci_class)
                                          properties_Host[i].flags);
             break;
         default:
-            fprintf(stderr, "Unknown type: %c\n", properties_Host[i].type);
+            g_printerr("Unknown type: %c\n", properties_Host[i].type);
             pspec = NULL;
     }
     if (pspec)
         g_object_class_install_property(gobject_class, properties_Host[i].prop, pspec);
   }
 
-  dbus_g_object_type_install_info(FMCI_TYPE, &dbus_glib_fmci_object_info);
+  dbus_g_object_type_install_info(MATAHARI_TYPE, &dbus_glib_matahari_object_info);
 }
 
 /* Instance init */
 static void
-fmci_init(Fmci *fmci)
+matahari_init(Matahari *matahari)
 {
 }
 
@@ -301,7 +301,7 @@ main(int argc, char** argv)
       exit(1);
     }
 
-  obj = g_object_new(FMCI_TYPE, NULL);
+  obj = g_object_new(MATAHARI_TYPE, NULL);
   dbus_g_connection_register_g_object(connection, HOST_OBJECT_PATH, obj);
 
   driver_proxy = dbus_g_proxy_new_for_name(connection, DBUS_SERVICE_DBUS,
