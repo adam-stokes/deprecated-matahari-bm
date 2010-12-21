@@ -55,7 +55,7 @@ int
 main(int argc, char **argv)
 {
     HostAgent *agent = new HostAgent(); 
-    int rc = agent->init(argc, argv);
+    int rc = agent->init(argc, argv, "host");
     if (rc == 0) {
 	heartbeat_timer(agent);
 	agent->run();

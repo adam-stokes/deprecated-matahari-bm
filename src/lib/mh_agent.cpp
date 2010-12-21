@@ -91,7 +91,7 @@ mh_qpid_disconnect(gpointer user_data)
 }
 
 int
-MatahariAgent::init(int argc, char **argv)
+MatahariAgent::init(int argc, char **argv, char* proc_name)
 {
 #ifdef __linux__
     int arg;
@@ -209,7 +209,9 @@ MatahariAgent::init(int argc, char **argv)
 	settings.mechanism = "GSSAPI";
     }
 
-    agent->init(settings, 5, true, ".magentdata");
+    agent->setName("matahariproject.org", proc_name);
+    std::string dataFile(".matahari-data-");
+    agent->init(settings, 5, true, dataFile + proc_name);
 
     /* Do any setup required by our agent */
     if(this->setup(agent) < 0) {

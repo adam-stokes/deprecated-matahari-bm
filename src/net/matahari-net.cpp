@@ -60,7 +60,7 @@ int
 main(int argc, char **argv)
 {
     NetAgent agent;
-    int rc = agent.init(argc, argv);
+    int rc = agent.init(argc, argv, "net");
     if (rc == 0) {
 	agent.run();
     }

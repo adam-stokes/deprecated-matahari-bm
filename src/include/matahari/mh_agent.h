@@ -45,7 +45,7 @@ class MatahariAgent : public Manageable
     ~MatahariAgent() {};
     
     virtual int setup(ManagementAgent *agent) { return 0; };
-    int init(int argc, char **argv);
+    int init(int argc, char **argv, char* proc_name);
     void run();
 };
 

@@ -136,7 +136,7 @@ static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
 int
 main(int argc, char **argv)
 {
-    int rc = agent.init(argc, argv);
+    int rc = agent.init(argc, argv, "service");
 
     if(rc >= 0) {
 	mainloop_track_children(G_PRIORITY_DEFAULT);
