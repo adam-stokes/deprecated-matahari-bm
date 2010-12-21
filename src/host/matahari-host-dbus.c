@@ -123,10 +123,10 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     g_value_set_uint (value, host_get_cpu_wordsize());
     break;
   case PROP_MEMORY:
-    g_value_set_uint (value, host_get_memory());
+    g_value_set_uint64 (value, host_get_memory());
     break;
   case PROP_SWAP:
-    g_value_set_uint (value, host_get_swap());
+    g_value_set_uint64 (value, host_get_swap());
     break;
   case PROP_CPU_COUNT:
     g_value_set_uint (value, host_get_cpu_count());
@@ -150,10 +150,10 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     //TODO Logic here
     break;
   case PROP_FREE_MEM:
-    g_value_set_uint (value, host_get_mem_free());
+    g_value_set_uint64 (value, host_get_mem_free());
     break;
   case PROP_FREE_SWAP:
-    g_value_set_uint (value, host_get_swap_free());
+    g_value_set_uint64 (value, host_get_swap_free());
     break;
   case PROP_LOAD:
     //TODO 1/5/15 minute load average - map
@@ -206,22 +206,36 @@ matahari_class_init(MatahariClass *matahari_class)
             break;
         case 'n':
         case 'i':
-        case 'x':
             pspec = g_param_spec_int(properties_Host[i].name,
                                       properties_Host[i].nick,
                                       properties_Host[i].desc,
                                       G_MININT, G_MAXINT, 0,
                                       properties_Host[i].flags);
             break;
+        case 'x':
+            pspec = g_param_spec_int64(properties_Host[i].name,
+                                       properties_Host[i].nick,
+                                       properties_Host[i].desc,
+                                       G_MININT64, G_MAXINT64, 0,
+                                       properties_Host[i].flags);
+ 
+            break;
         case 'y':
         case 'q':
         case 'u':
-        case 't':
             pspec = g_param_spec_uint(properties_Host[i].name,
                                          properties_Host[i].nick,
                                          properties_Host[i].desc,
                                          0, G_MAXUINT, 0,
                                          properties_Host[i].flags);
+            break;
+        case 't':
+            pspec = g_param_spec_uint64(properties_Host[i].name,
+                                         properties_Host[i].nick,
+                                         properties_Host[i].desc,
+                                         0, G_MAXUINT64, 0,
+                                         properties_Host[i].flags);
+ 
             break;
         case 'd':
             pspec = g_param_spec_double(properties_Host[i].name,
