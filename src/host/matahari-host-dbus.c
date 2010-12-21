@@ -282,7 +282,7 @@ main(int argc, char** argv)
   connection = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
   if (!connection)
     {
-      g_printerr(_("Failed to open connection to bus: %s"), error->message);
+      g_printerr(_("Failed to open connection to bus: %s\n"), error->message);
       g_error_free(error);
       exit(1);
     }
@@ -296,7 +296,7 @@ main(int argc, char** argv)
   if (!org_freedesktop_DBus_request_name(driver_proxy, HOST_BUS_NAME, 0,
       &request_name_ret, &error))
     {
-      g_printerr(_("Failed to get name: %s"), error->message);
+      g_printerr(_("Failed to get name: %s\n"), error->message);
       g_error_free(error);
       exit(1);
     }
