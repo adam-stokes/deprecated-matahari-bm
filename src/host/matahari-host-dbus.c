@@ -87,6 +87,9 @@ matahari_set_property(GObject *object, guint property_id, const GValue *value,
   Matahari *self = MATAHARI(object);
   switch (property_id)
     {
+  case PROP_UPDATE_INTERVAL:
+    self->priv->update_interval = g_value_get_uint (value);
+    break;
   default:
     /* We don't have any other property... */
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -138,7 +141,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     g_value_set_string (value, host_get_cpu_flags());
     break;
   case PROP_UPDATE_INTERVAL:
-    //TODO XXX Hardcoded number
+    g_value_set_uint (value, self->priv->update_interval);
     break;
   case PROP_LAST_UPDATED:
     //TODO Logic here
@@ -242,6 +245,10 @@ matahari_class_init(MatahariClass *matahari_class)
 static void
 matahari_init(Matahari *matahari)
 {
+  MatahariPrivate *priv;
+  matahari->priv = priv = MATAHARI_GET_PRIVATE(matahari);
+  //XXX hardcoded number
+  priv->update_interval = 5;
 }
 
 int
