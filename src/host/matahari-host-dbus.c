@@ -102,79 +102,54 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
   case PROP_HOSTNAME:
     g_value_set_string (value, host_get_hostname());
     break;
-  case PROP_IS_VIRTUAL:
-    //TODO
-    break;
-  case PROP_OPERATING_SYSTEM:
+  case PROP_OS:
     g_value_set_string (value, host_get_operating_system());
-    break;
-  case PROP_MEMORY:
-    g_value_set_uint64 (value, host_get_memory());
-    break;
-  case PROP_SWAP:
-    g_value_set_uint64 (value, host_get_swap());
     break;
   case PROP_ARCH:
     g_value_set_string (value, host_get_architecture());
     break;
-  case PROP_PLATFORM:
-    g_value_set_uint (value, host_get_platform());
+  case PROP_WORDSIZE:
+    g_value_set_uint (value, host_get_cpu_wordsize());
     break;
-  case PROP_PROCESSORS:
+  case PROP_MEMORY:
+    g_value_set_uint (value, host_get_memory());
+    break;
+  case PROP_SWAP:
+    g_value_set_uint (value, host_get_swap());
+    break;
+  case PROP_CPU_COUNT:
     g_value_set_uint (value, host_get_cpu_count());
     break;
-  case PROP_CORES:
+  case PROP_CPU_CORES:
     g_value_set_uint (value, host_get_cpu_number_of_cores());
     break;
-  case PROP_MODEL:
+  case PROP_CPU_MODEL:
     g_value_set_string (value, host_get_cpu_model());
     break;
-  case PROP_LAST_UPDATED_SEQ:
-    //TODO
+  case PROP_CPU_FLAGS:
+    g_value_set_string (value, host_get_cpu_flags());
+    break;
+  case PROP_UPDATE_INTERVAL:
+    //TODO XXX Hardcoded number
     break;
   case PROP_LAST_UPDATED:
-    //TODO
+    //TODO Logic here
     break;
-  case PROP_LOAD_AVERAGE_1:
-    host_get_load_averages(&load);
-    g_value_set_double (value, load.loadavg[0]);
+  case PROP_SEQUENCE:
+    //TODO Logic here
     break;
-  case PROP_LOAD_AVERAGE_5:
-    host_get_load_averages(&load);
-    g_value_set_double (value, load.loadavg[1]);
+  case PROP_FREE_MEM:
+    g_value_set_uint (value, host_get_mem_free());
     break;
-  case PROP_LOAD_AVERAGE_15:
-    host_get_load_averages(&load);
-    g_value_set_double (value, load.loadavg[2]);
+  case PROP_FREE_SWAP:
+    g_value_set_uint (value, host_get_swap_free());
     break;
-  case PROP_MEM_FREE:
-    g_value_set_uint64 (value, host_get_mem_free());
+  case PROP_LOAD:
+    //TODO 1/5/15 minute load average - map
     break;
-  case PROP_SWAP_FREE:
-    g_value_set_uint64 (value, host_get_swap_free());
+  case PROP_PROCESS_STATISTICS:
+    //TODO proc stats - map
     break;
-  case PROP_PROC_TOTAL:
-    host_get_processes(&procs);
-    g_value_set_uint64 (value, procs.total);
-    break;
-  case PROP_PROC_RUNNING:
-    host_get_processes(&procs);
-    g_value_set_uint64 (value, procs.running);
-    break;
-  case PROP_PROC_SLEEPING:
-    host_get_processes(&procs);
-    g_value_set_uint64 (value, procs.sleeping);
-    break;
-  case PROP_PROC_ZOMBIE:
-    host_get_processes(&procs);
-    g_value_set_uint64 (value, procs.zombie);
-    break;
-  case PROP_PROC_STOPPED:
-    host_get_processes(&procs);
-    g_value_set_uint64 (value, procs.stopped);
-    break;
-  case PROP_PROC_IDLE:
-
   default:
     /* We don't have any other property... */
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
