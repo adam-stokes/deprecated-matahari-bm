@@ -32,6 +32,7 @@
 
 typedef struct _Matahari Matahari;
 typedef struct _MatahariClass MatahariClass;
+typedef struct _MatahariPrivate MatahariPrivate;
 
 GType
 matahari_get_type(void);
@@ -39,6 +40,7 @@ matahari_get_type(void);
 struct _Matahari
 {
   GObject parent;
+  MatahariPrivate *priv;
 };
 
 struct _MatahariClass

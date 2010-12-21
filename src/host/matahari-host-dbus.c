@@ -42,6 +42,14 @@
 #define HOST_OBJECT_PATH "/org/matahariproject/Host"
 #define HOST_INTERFACE_NAME "org.matahariproject.Host"
 
+/* Private struct in Matahari class */
+#define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), MATAHARI_TYPE, MatahariPrivate))
+
+struct _MatahariPrivate
+{
+  guint update_interval;
+};
+
 /* Dbus methods */
 gboolean
 Host_identify(Matahari* matahari, GError** error)
@@ -166,6 +174,8 @@ matahari_class_init(MatahariClass *matahari_class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
   GParamSpec *pspec;
+
+  g_type_class_add_private(matahari_class, sizeof (MatahariPrivate));
 
   gobject_class->set_property = matahari_set_property;
   gobject_class->get_property = matahari_get_property;
