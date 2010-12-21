@@ -79,26 +79,6 @@ matahari_set_property(GObject *object, guint property_id, const GValue *value,
   Matahari *self = MATAHARI(object);
   switch (property_id)
     {
-  case PROP_UUID:
-  case PROP_HOSTNAME:
-  case PROP_IS_VIRTUAL:
-  case PROP_OPERATING_SYSTEM:
-  case PROP_MEMORY:
-  case PROP_SWAP:
-  case PROP_ARCH:
-  case PROP_PLATFORM:
-  case PROP_PROCESSORS:
-  case PROP_CORES:
-  case PROP_MODEL:
-  case PROP_LAST_UPDATED_SEQ:
-  case PROP_LAST_UPDATED:
-  case PROP_LOAD_AVERAGE_1:
-  case PROP_LOAD_AVERAGE_5:
-  case PROP_LOAD_AVERAGE_15:
-  case PROP_MEM_FREE:
-  case PROP_SWAP_FREE:
-  case PROP_PROC_TOTAL:
-  case PROP_PROC_RUNNING:
   default:
     /* We don't have any other property... */
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
