@@ -36,8 +36,8 @@
         <xsl:value-of select="preceding::comment()[1]" />
         <xsl:text>", </xsl:text>
         <xsl:choose>
-            <xsl:when test="@access='RW'">
-                <xsl:text>G_PARAM_WRITABLE</xsl:text>
+            <xsl:when test="@access='readwrite'">
+                <xsl:text>G_PARAM_READWRITE</xsl:text>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:text>G_PARAM_READABLE</xsl:text>
