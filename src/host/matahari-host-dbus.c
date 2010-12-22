@@ -54,8 +54,7 @@ struct _MatahariPrivate
 gboolean
 Host_identify(Matahari* matahari, GError** error)
 {
-//  host_identify(5);
-//  fprintf(stderr, "host_identify() is missing\n");
+//  host_identify(5); XXX, not implemented
   return TRUE;
 }
 
@@ -187,7 +186,6 @@ matahari_class_init(MatahariClass *matahari_class)
   int i;
   for (i = 0; properties_Host[i].name != NULL; i++)
   {
-    g_print("Writing property: %s\n", properties_Host[i].name);
     switch (properties_Host[i].type)
     {
         case 's':
@@ -304,7 +302,6 @@ main(int argc, char** argv)
   switch (request_name_ret)
     {
   case DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER:
-    //g_print("OK, we are primary owner\n");
     break;
   case DBUS_REQUEST_NAME_REPLY_IN_QUEUE:
     g_printerr(
