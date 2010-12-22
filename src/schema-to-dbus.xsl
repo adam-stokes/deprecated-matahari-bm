@@ -7,6 +7,14 @@
 <xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
 <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
 
+<!-- This xsl transformation takes schema.xml and converts it to multiple
+     DBus interfaces, one per each class.
+
+     The DBus files will be name org.matahariproject.class_name.xml and will
+     be created in current directory. Description of the properties/methods
+     will be added as a comment for future processing.
+-->
+
 <xsl:template match="/">
     <xsl:variable name="package">
         <xsl:value-of select="schema/@package" />
