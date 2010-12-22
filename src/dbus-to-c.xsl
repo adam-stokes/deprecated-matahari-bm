@@ -5,21 +5,52 @@
 <xsl:output method="text" indent="no" />
 <xsl:strip-space elements="*" />
 
+<!-- This xsl file is for tranforming dbus interface file to
+     C code that can be used by glib-dbus for automated generating
+     of dbus properties.
+
+     It create enum named Prop with list of properties for internal
+     identification.
+
+     Then it create struct Property which contains enum of property, its name,
+     nick, description, flags (readable, readwrite) and type. Type is then
+     used to automaticly create the property from dbus.
+
+     Last step is to create array of Property structs with info about all
+     properties.
+-->
+
 <xsl:template match="/">
     <xsl:for-each select="node/interface">
+        <!-- Create enum of the properties -->
         <xsl:call-template name="enum" />
-        <xsl:text>
-
-</xsl:text>
+        <!-- Define Property struct and create array of it with properties
+        info -->
         <xsl:call-template name="struct" />
     </xsl:for-each>
 </xsl:template>
 
+<!-- This is needed for converting properties names to uppercase -->
 <xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
 <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
 
+<xsl:template name="enum">
+    <!-- Create enum of the properties and first property with id 0 -->
+    <xsl:text>enum Prop {
+    PROP_0,
+    </xsl:text>
+    <!-- Iterate through all properties -->
+    <xsl:for-each select="property">
+        <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />,
+    </xsl:for-each>
+    <xsl:text>};</xsl:text>
+</xsl:template>
+
 <xsl:template name="struct">
-    <xsl:text>typedef struct {
+    <!-- Define Property struct -->
+    <xsl:text>
+
+typedef struct {
     enum Prop prop;
     gchar *name, *nick, *desc;
     GParamFlags flags;
@@ -27,14 +58,29 @@
 } Property;
 
 </xsl:text>
+    <!-- Create the array of Property structs -->
     <xsl:value-of select="concat('Property properties_', substring-after(substring-after(@name, '.'), '.'))" />
     <xsl:text>[] = {&#10;</xsl:text>
+    <!-- Iterate through all properties -->
     <xsl:for-each select="property">
         <xsl:text>    { </xsl:text>
-        <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />, "<xsl:value-of select="@name" />", "<xsl:value-of select="@name" />
+        <!-- Enum of the item -->
+        <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />
+        <xsl:text>, "</xsl:text>
+
+        <!-- Name of the item -->
+        <xsl:value-of select="@name" />
         <xsl:text>", "</xsl:text>
+
+        <!-- Nickname - same as the name -->
+        <xsl:value-of select="@name" />
+        <xsl:text>", "</xsl:text>
+
+        <!-- Description is taken from the comment that is preceding the item -->
         <xsl:value-of select="preceding::comment()[1]" />
         <xsl:text>", </xsl:text>
+
+        <!-- Flags - readable or readwrite -->
         <xsl:choose>
             <xsl:when test="@access='readwrite'">
                 <xsl:text>G_PARAM_READWRITE</xsl:text>
@@ -43,20 +89,24 @@
                 <xsl:text>G_PARAM_READABLE</xsl:text>
             </xsl:otherwise>
         </xsl:choose>
-        <xsl:text>, '</xsl:text><xsl:value-of select="@type" /><xsl:text>'</xsl:text>
+        <xsl:text>, '</xsl:text>
+
+        <!-- Type of the property - some must be converted -->
+        <xsl:choose>
+            <!-- Convert dict to type 'e' -->
+            <xsl:when test="@type='a{sv}'">
+                <xsl:text>e</xsl:text>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="@type" />
+            </xsl:otherwise>
+            </xsl:choose>
+        <xsl:text>'</xsl:text>
         <xsl:text> },&#10;</xsl:text>
     </xsl:for-each>
+    <!-- This item is used as sentinel node -->
     <xsl:text>    { PROP_0, NULL, NULL, NULL, 0, '\0' },&#10;</xsl:text>
     <xsl:text>};</xsl:text>
-    <xsl:apply-templates />
 </xsl:template>
 
-<xsl:template name="enum">
-    <xsl:text>enum Prop {
-    PROP_0,
-    </xsl:text>
-    <xsl:for-each select="property">
-        <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />,
-    </xsl:for-each>};
-</xsl:template>
 </xsl:stylesheet>
