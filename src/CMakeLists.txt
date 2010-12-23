@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "-Wall")
 set(MCOMMON_VERSION 0.0.1)
 set(MHOST_VERSION 0.0.1)
 set(MSRV_VERSION 0.0.1)
+set(MNET_VERSION 0.0.1)
 
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
@@ -61,7 +62,8 @@ add_library (msrv SHARED lib/services.c lib/services_${VARIANT}.c)
 set_target_properties(msrv PROPERTIES SOVERSION ${MSRV_VERSION})
 target_link_libraries(msrv mcommon)
 
-add_library (mnet lib/network.c lib/network_${VARIANT}.c)
+add_library (mnet SHARED lib/network.c lib/network_${VARIANT}.c)
+set_target_properties(mnet PROPERTIES SOVERSION ${MNET_VERSION})
 target_link_libraries(mnet mcommon)
 
 if(WIN32)
@@ -183,7 +185,7 @@ endforeach(daemon ${DAEMONS})
 install(TARGETS ${M_HOST}  DESTINATION sbin)
 install(TARGETS ${M_NET}   DESTINATION sbin)
 
-install(TARGETS mcommon mhost msrv DESTINATION lib${LIB_SUFFIX})
+install(TARGETS mcommon mhost msrv mnet DESTINATION lib${LIB_SUFFIX})
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
