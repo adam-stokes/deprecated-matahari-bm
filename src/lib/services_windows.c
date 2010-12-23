@@ -18,3 +18,16 @@
 #include "matahari/logging.h"
 #include "matahari/mainloop.h"
 #include "matahari/services.h"
+#include "services_private.h"
+
+gboolean
+services_os_action_execute(svc_action_t* op, gboolean synchronous)
+{
+    return TRUE;
+}
+
+GList *
+services_os_get_directory_list(const char *root, gboolean files)
+{
+    return NULL;
+}
