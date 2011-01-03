@@ -1,1 +1,13 @@
-QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf"
+# Try to use the centrally defined port (also used by the agents)
+# Otherwise, use the default port specified at build-time
+
+if [ -f @sysconfdir@/sysconfig/matahari ] ; then
+   . @sysconfdir@/sysconfig/matahari
+fi
+
+if [ -z $MATAHARI_PORT ]; then
+   MATAHARI_PORT=@MATAHARI_PORT@
+fi
+
+QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf --port $MATAHARI_PORT"
+
