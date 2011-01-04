@@ -35,10 +35,12 @@ function linux_build() {
     mkdir build
     cd build
 
+    DESTDIR=$AUTOBUILD_INSTALL_ROOT/linux; export DESTDIR
+    mkdir -p $DESTDIR
+
     CFLAGS="${CFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export CFLAGS ; 
     CXXFLAGS="${CXXFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export CXXFLAGS ; 
     FFLAGS="${FFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export FFLAGS ; 
-    DESTDIR=$AUTOBUILD_INSTALL_ROOT; export DESTDIR
 
     /usr/bin/cmake \
         -DCMAKE_VERBOSE_MAKEFILE=ON \
@@ -50,8 +52,9 @@ function linux_build() {
         -DSHARE_INSTALL_PREFIX:PATH=/usr/share \
         -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 
-    #eval "`rpm --eval "%{cmake}"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$AUTOBUILD_INSTALL_ROOT ..
+    #eval "`rpm --eval "%{cmake}"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
     make all install
+
     cd ..
 }
 
@@ -64,7 +67,10 @@ function windows_build() {
     mkdir build-win
     cd build-win
 
-    eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$AUTOBUILD_INSTALL_ROOT ..
+    DESTDIR=$AUTOBUILD_INSTALL_ROOT/win; export DESTDIR
+    mkdir -p $DESTDIR
+
+    eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release ..
     make all install
     cd ..
 }
@@ -98,7 +104,7 @@ if [ $rc != 0 ]; then
     exit_rc=$rc
 fi
 
-#windows_build
+windows_build
 rc=$?
 
 if [ $rc != 0 ]; then
