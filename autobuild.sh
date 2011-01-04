@@ -38,6 +38,8 @@ function linux_build() {
     CFLAGS="${CFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export CFLAGS ; 
     CXXFLAGS="${CXXFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export CXXFLAGS ; 
     FFLAGS="${FFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export FFLAGS ; 
+    DESTDIR=$AUTOBUILD_INSTALL_ROOT; export DESTDIR
+
     /usr/bin/cmake \
         -DCMAKE_VERBOSE_MAKEFILE=ON \
         -DCMAKE_INSTALL_PREFIX:PATH=/usr \
@@ -46,7 +48,7 @@ function linux_build() {
         -DLIB_INSTALL_DIR:PATH=/usr/lib64 \
         -DSYSCONF_INSTALL_DIR:PATH=/etc \
         -DSHARE_INSTALL_PREFIX:PATH=/usr/share \
-        -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/var/lib/builder/matahari/install-root ..
+        -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 
     #eval "`rpm --eval "%{cmake}"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$AUTOBUILD_INSTALL_ROOT ..
     make all install
@@ -96,7 +98,7 @@ if [ $rc != 0 ]; then
     exit_rc=$rc
 fi
 
-windows_build
+#windows_build
 rc=$?
 
 if [ $rc != 0 ]; then
