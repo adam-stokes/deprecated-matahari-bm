@@ -1,5 +1,5 @@
-%global specversion 17
-%global upstream_version bc6056d
+%global specversion 21
+%global upstream_version b6f91b3
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -31,6 +31,7 @@ BuildRequires:	qpid-cpp-server-devel > 0.7
 BuildRequires:	qmf-devel > 0.7
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
+BuildRequires:	sigar-devel
 
 %description
 
@@ -43,6 +44,17 @@ layer protocol providing reliable transport of messages.
 QMF provides a modeling framework layer on top of qpid (which implements
 AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
+
+%package broker
+License:	GPLv2+
+Summary:	Optional AMQP Broker for Matahari
+Group:		Applications/System
+Requires:	%{name} = %{version}-%{release}
+Requires:	qpid-cpp-server > 0.7
+Requires:	qmf > 0.7
+
+%description broker
+Optional AMQP Broker for Matahari
 
 %package devel 
 License:	GPLv2+
@@ -116,14 +128,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-hostd
 
+%doc AUTHORS COPYING
+
+%files broker
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 
 %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
 %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
-
-%doc AUTHORS COPYING
 
 %files devel
 %defattr(644, root, root, 755)
