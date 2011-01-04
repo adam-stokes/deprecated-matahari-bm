@@ -142,7 +142,10 @@ find_library(SIGAR sigar)
 if(NOT_SIGAR)
    message(FATAL_ERROR "SIGAR library not found.")
 endif(NOT_SIGAR)
+
 target_link_libraries(mcommon ${SIGAR})
+target_link_libraries(mhost   ${SIGAR})
+target_link_libraries(mnet    ${SIGAR})
 
 string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 
