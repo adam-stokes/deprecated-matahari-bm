@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 5
-%global upstream_version e1d0d9a
+%global specversion 9
+%global upstream_version 5995a16
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -26,7 +26,8 @@ BuildArch:      noarch
 BuildRequires:  redhat-rpm-config cmake make qmf-devel
 BuildRequires:  mingw32-filesystem >= 57
 BuildRequires:  mingw32-gcc-c++ mingw32-nsis genisoimage
-BuildRequires:  mingw32-pcre mingw32-qpid-cpp mingw32-libvirt mingw32-srvany mingw32-netcf
+BuildRequires:  mingw32-pcre mingw32-qpid-cpp 
+BuildRequires:	mingw32-glib2 mingw32-sigar mingw32-srvany
 
 %description
 
