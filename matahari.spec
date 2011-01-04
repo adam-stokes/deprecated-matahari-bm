@@ -76,6 +76,9 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 
+%{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
+%{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
+
 %post
 for svc in net host broker; do
     /sbin/chkconfig --level 2345 matahari-$svc on
@@ -116,6 +119,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
+
+%attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
+%attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 
 %doc AUTHORS COPYING
 
