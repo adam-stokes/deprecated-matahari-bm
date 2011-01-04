@@ -25,7 +25,7 @@ TARFILE		= $(PACKAGE)-$(VERSION).tbz2
 RPM_ROOT	= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
-		  --define "_srcrpmdir $(RPM_ROOT)" 	\
+		  --define "_srcrpmdir $(RPM_ROOT)"
 
 TAG    ?= $(shell git show --pretty="format:%h" --abbrev-commit | head -n 1)
 WITH   ?= 
@@ -35,13 +35,13 @@ PROFILE ?= fedora-13-x86_64
 setup:
 	@echo "Setting up for Linux..."
 	-test ! -d build && mkdir build
-	-test ! -e build/CMakeFiles && cd build && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+	-test ! -e build/CMakeFiles && cd build && eval "`rpm --eval "%{cmake}"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 	@echo "Now enter the build/ directory and run 'make' as usual"
 
 setup-win:
 	@echo "Setting up for Windows..."
 	-test ! -d build-win && mkdir build-win
-	-test ! -e build-win/CMakeFiles && cd build-win && mingw32-cmake ..
+	-test ! -e build-win/CMakeFiles && cd build-win && eval "`rpm --eval "%{_mingw32_cmake}"`" ..
 	@echo "Now enter the build-win/ directory and run 'make' as usual"
 
 export:
