@@ -86,7 +86,7 @@ if(WIN32)
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES src/windows/install.bat DESTINATION sbin)
-  install(FILES matahari-broker.conf DESTINATION sbin)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION sbin)
 
 else(WIN32)
 
@@ -101,7 +101,7 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.sysconf.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
 
-  install(FILES matahari-broker.conf DESTINATION ${sysconfdir})
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION ${sysconfdir})
 
 endif(WIN32)
 
