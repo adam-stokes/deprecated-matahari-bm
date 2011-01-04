@@ -27,7 +27,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
 		  --define "_srcrpmdir $(RPM_ROOT)" 	\
 
-TAG    ?= master
+TAG    ?= $(shell git show --pretty="format:%h" --abbrev-commit | head -n 1)
 WITH   ?= 
 VARIANT ?=
 PROFILE ?= fedora-13-x86_64
@@ -47,7 +47,7 @@ setup-win:
 export:
 	rm -f $(TARFILE)
 	git archive --prefix=$(PACKAGE)-$(VERSION)/ $(TAG) | bzip2 > $(TARFILE)
-	echo `date`: Rebuilt $(TARFILE)
+	echo `date`: Rebuilt $(TARFILE) from $(TAG)
 
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
