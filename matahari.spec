@@ -23,7 +23,7 @@ Requires:	qmf > 0.7
 Requires:	pcre
 
 BuildRequires:	cmake
-BuildRequires:	libudev-devel netcf-devel
+BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
 BuildRequires:	dbus-devel
 BuildRequires:	hal-devel
