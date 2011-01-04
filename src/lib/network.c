@@ -24,6 +24,7 @@
 #include "network_private.h"
 #include "matahari/logging.h"
 #include <sigar.h>
+#include <sigar_format.h>
 #include <stdint.h>
 
 MH_TRACE_INIT_DATA(mh_network);
