@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright (C) 2008 Andrew Beekhof
 #
@@ -15,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-
+set -x
 PACKAGE=matahari
 VERSION=0.4.0
 TARFILE=${PACKAGE}-${VERSION}.tbz2
@@ -68,6 +69,10 @@ function mock_build() {
 #	make PROFILE=matahari VARIANT=mingw32- srpm mock-nodeps
 
 exit_rc=0
+
+env
+ls -alR
+ls -alR $AUTOBUILD_INSTALL_ROOT
 
 linux_build
 rc=$?
