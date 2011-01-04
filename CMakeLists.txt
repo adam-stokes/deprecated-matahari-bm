@@ -67,15 +67,11 @@ if(WIN32)
   
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "")
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_host\\\"' ")
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_broker\\\"' ")
+  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_net\\\"' ")
   
   #WriteRegStr HKCU \\\"Environment\\\" \\\"OGITOR_HOME\\\" $INSTDIR
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/windows/autorun.inf.in 
                  ${CMAKE_CURRENT_BINARY_DIR}/src/windows/autorun.inf)
-  
-  # Find qpid files needed by matahari
-  file(GLOB_RECURSE QPID_EXE  ${MINGW_ROOT}/*/qpidd.exe)
-  install(FILES ${QPID_EXE} DESTINATION sbin)
   
   # Assume all installed DLLs are needed by matahari/qpid
   # Finding the minimal list is excruciatingly painful and unreliable
@@ -86,7 +82,6 @@ if(WIN32)
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES src/windows/install.bat DESTINATION sbin)
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION sbin)
 
 else(WIN32)
 

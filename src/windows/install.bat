@@ -10,16 +10,11 @@ set target=%target:"=%
 
 cd "%target%"
 
-rem Now install the agents and broker as services and start them
+rem Now install the agents as services and start them
 
-copy rhsrvany.exe mh_broker.exe
-mh_broker.exe install "%target%\qpidd.exe --config matahari-broker.conf" "%target%"
-sc start mh_broker
-
-copy rhsrvany.exe mh_host.exe
-mh_host.exe install "%target%\matahari-hostd.exe" "%target%"
-sc start mh_host
-
-copy rhsrvany.exe mh_net.exe
-mh_net.exe install "%target%\matahari-netd.exe" "%target%"
-sc start mh_net
+set agents=hostd netd
+for %%A in (%agents%) do sc delete mh_%%A
+for %%A in (%agents%) do del mh_%%A.exe
+for %%A in (%agents%) do copy srvany.exe mh_%%A.exe
+for %%A in (%agents%) do mh_%%A.exe install "%target%\matahari-%%A.exe" "%target%"
+for %%A in (%agents%) do sc start mh_%%A

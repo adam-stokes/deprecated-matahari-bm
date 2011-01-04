@@ -182,10 +182,8 @@ foreach(daemon ${DAEMONS})
 endforeach(daemon ${DAEMONS}) 
 
 # Install targets
-install(TARGETS ${M_HOST}  DESTINATION sbin)
-install(TARGETS ${M_NET}   DESTINATION sbin)
-
-install(TARGETS mcommon mhost msrv mnet DESTINATION lib${LIB_SUFFIX})
+install(TARGETS ${DAEMONS}  DESTINATION sbin)
+install(TARGETS mcommon mhost mnet msrv DESTINATION lib${LIB_SUFFIX})
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
