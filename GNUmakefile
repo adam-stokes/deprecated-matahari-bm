@@ -22,7 +22,7 @@ PACKAGE		?= matahari
 VERSION		?= 0.4.0
 TARFILE		= $(PACKAGE)-$(VERSION).tbz2
 
-RPM_ROOT	= $(shell pwd)
+RPM_ROOT	?= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
 		  --define "_srcrpmdir $(RPM_ROOT)"
@@ -32,17 +32,28 @@ WITH   ?=
 VARIANT ?=
 PROFILE ?= fedora-13-x86_64
 
-setup:
-	@echo "Setting up for Linux..."
-	-test ! -d build && mkdir build
-	-test ! -e build/CMakeFiles && cd build && eval "`rpm --eval "%{cmake}"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-	@echo "Now enter the build/ directory and run 'make' as usual"
+linux.build:
+	@echo "=::=::=::= Setting up for Linux =::=::=::= "
+	mkdir $@
+	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+	@echo "Now enter the $@ directory and run 'make' as usual"
 
-setup-win:
-	@echo "Setting up for Windows..."
-	-test ! -d build-win && mkdir build-win
-	-test ! -e build-win/CMakeFiles && cd build-win && eval "`rpm --eval "%{_mingw32_cmake}"`" ..
-	@echo "Now enter the build-win/ directory and run 'make' as usual"
+windows.build:
+	@echo "=::=::=::= Setting up for Windows =::=::=::= "
+	mkdir $@
+	cd $@ && eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release ..
+	@echo "Now enter the $@ directory and run 'make' as usual"
+
+%.check: %.build
+	DESTDIR=`pwd`/$@ make -C $^ all install
+	@echo "=::=::=::= Done =::=::=::= "
+	@echo 
+	@echo 
+	@echo 
+
+check:	
+	rm -rf *.build *.check
+	make linux.check windows.check
 
 export:
 	rm -f $(TARFILE)
@@ -77,4 +88,5 @@ mock:   srpm mock-nodeps
 mock-win:   
 	make PROFILE=matahari VARIANT=mingw32- srpm mock-nodeps
 
-.PHONY: build build-win
+
+.PHONY: check

@@ -19,97 +19,57 @@
 set -x
 PACKAGE=matahari
 VERSION=0.4.0
-TARFILE=${PACKAGE}-${VERSION}.tbz2
 
 RPM_OPTS='--define "_sourcedir $(AUTOBUILD_SOURCE_ROOT)" 	\
 	  --define "_specdir   $(AUTOBUILD_SOURCE_ROOT)" 	\
 	  --define "_srcrpmdir $(AUTOBUILD_SOURCE_ROOT)"	\
 '
 
-function linux_build() {
-    echo "Installing dependancies..."
-    sudo yum install -y "cmake make libudev-devel gcc-c++ dbus-devel hal-devel qpid-cpp-server-devel qmf-devel pcre-devel glib2-devel sigar-devel"
+function make_srpm() {
+    VARIANT=$1
+    TARFILE=matahari-${VERSION}.tbz2
+    TAG=`git show --pretty="format:%h" --abbrev-commit | head -n 1`
 
-    echo "Building for Linux..."
-    rm -rf build
-    mkdir build
-    cd build
-
-    DESTDIR=$AUTOBUILD_INSTALL_ROOT/linux; export DESTDIR
-    mkdir -p $DESTDIR
-
-    CFLAGS="${CFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export CFLAGS ; 
-    CXXFLAGS="${CXXFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export CXXFLAGS ; 
-    FFLAGS="${FFLAGS:--O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic}" ; export FFLAGS ; 
-
-    /usr/bin/cmake \
-        -DCMAKE_VERBOSE_MAKEFILE=ON \
-        -DCMAKE_INSTALL_PREFIX:PATH=/usr \
-        -DCMAKE_INSTALL_LIBDIR:PATH=/usr/lib64 \
-        -DINCLUDE_INSTALL_DIR:PATH=/usr/include \
-        -DLIB_INSTALL_DIR:PATH=/usr/lib64 \
-        -DSYSCONF_INSTALL_DIR:PATH=/etc \
-        -DSHARE_INSTALL_PREFIX:PATH=/usr/share \
-        -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-
-    #eval "`rpm --eval "%{cmake}"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-    make all install
-
-    cd ..
+    sed -i.sed 's/global\ specversion.*/global\ specversion\ ${AUTO_BUILD_COUNTER}/' ${VARIANT}matahari.spec
+    sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ ${shell git show --pretty="format:%h" | head -n 1}/' ${VARIANT}matahari.spec
+    
+    rm -f ${TARFILE}
+    git archive --prefix=matahari-${VERSION}/ ${TAG} | bzip2 > ${TARFILE}
+    echo `date`: Rebuilt ${TARFILE} from ${TAG}
+    
+    rm -f *.src.rpm
+    rpmbuild -bs ${RPM_OPTS} ${VARIANT}matahari.spec
 }
-
-function windows_build() {
-    echo "Installing dependancies..."
-    sudo yum install -y "redhat-rpm-config cmake make qmf-devel mingw32-filesystem mingw32-gcc-c++ mingw32-nsis genisoimage mingw32-pcre mingw32-qpid-cpp mingw32-glib2 mingw32-sigar mingw32-srvany"
-
-    echo "Building for Windows..."
-    rm -rf build-win
-    mkdir build-win
-    cd build-win
-
-    DESTDIR=$AUTOBUILD_INSTALL_ROOT/win; export DESTDIR
-    mkdir -p $DESTDIR
-
-    eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release ..
-    make all install
-    cd ..
-}
-
-function mock_build() {
-	sed -i.sed 's/global\ specversion.*/global\ specversion\ ${shell expr 1 + ${lastword ${shell grep "global specversion" ${VARIANT}${PACKAGE}.spec}}}/' ${VARIANT}${PACKAGE}.spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ ${firstword ${shell git show --pretty="format: %h"}}/' ${VARIANT}${PACKAGE}.spec
-
-	rm -f ${TARFILE}
-	git archive --prefix=${PACKAGE}-${VERSION}/ ${TAG} | bzip2 > ${TARFILE}
-	echo `date`: Rebuilt ${TARFILE}
-
-	rm -f *.src.rpm
-	rm -rf ${AUTOBUILD_SOURCE_ROOT}/mock
-	rpmbuild -bs ${RPM_OPTS} ${VARIANT}${PACKAGE}.spec
-
-	mock --root=${PROFILE} --resultdir=${AUTOBUILD_SOURCE_ROOT}/mock --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
-}
-
-#	make PROFILE=matahari VARIANT=mingw32- srpm mock-nodeps
-
-exit_rc=0
 
 env
 
-linux_build
+# Local builds
+echo "Installing Linux dependancies..."
+sudo yum install -y cmake make libudev-devel gcc-c++ dbus-devel hal-devel qpid-cpp-server-devel qmf-devel pcre-devel glib2-devel sigar-devel
+
+echo "Installing Windows dependancies..."
+sudo yum install -y redhat-rpm-config cmake make qmf-devel mingw32-filesystem mingw32-gcc-c++ mingw32-nsis genisoimage mingw32-pcre mingw32-qpid-cpp mingw32-glib2 mingw32-sigar mingw32-srvany
+
+#DESTDIR=$AUTOBUILD_INSTALL_ROOT/linux; export DESTDIR
+#mkdir -p $DESTDIR
+
+make check
 rc=$?
 
 if [ $rc != 0 ]; then
-    echo "Linux build failed: $rc"
-    exit_rc=$rc
+    exit $rc
 fi
 
-windows_build
+make_srpm 
+mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
+
 rc=$?
 
 if [ $rc != 0 ]; then
-    echo "Windows build failed: $rc"
-    exit_rc=$rc
+    exit $rc
 fi
 
-exit $exit_rc
+
+# Need to wait until mingw32-qpid-cpp is in F-14 updates
+#make_srpm mingw32-
+#mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
