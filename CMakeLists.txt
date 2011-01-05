@@ -79,7 +79,7 @@ if(WIN32)
   install(FILES ${DLL_LIST} DESTINATION sbin)
 
   # Util for creating services
-  file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/rhsrvany.exe)
+  file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/srvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES src/windows/install.bat DESTINATION sbin)
 
