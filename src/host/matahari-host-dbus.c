@@ -101,8 +101,13 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     GParamSpec *pspec)
 {
   Matahari *self = MATAHARI(object);
-  sigar_loadavg_t load;
   sigar_proc_stat_t procs;
+  sigar_loadavg_t avg;
+  DBusGTypeSpecializedAppendContext appendctx;
+  gpointer ret;
+  GType gtype;
+  GValue key_value = {0,};
+  GValue value_value = {0,};
 
   switch (property_id)
     {
@@ -155,10 +160,68 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     g_value_set_uint64 (value, host_get_swap_free());
     break;
   case PROP_LOAD:
-    //TODO 1/5/15 minute load average - map
+    // 1/5/15 minute load average - map
+    host_get_load_averages(&avg);
+
+    gtype = G_VALUE_TYPE (value);
+    ret = dbus_g_type_specialized_construct (gtype);
+    g_value_set_boxed_take_ownership (value, ret);
+
+    dbus_g_type_specialized_init_append (value, &appendctx);
+
+    g_value_init (&key_value, G_TYPE_STRING);
+    g_value_init (&value_value, G_TYPE_DOUBLE);
+
+    g_value_set_static_string(&key_value, "1");
+    g_value_set_double(&value_value, avg.loadavg[0]);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "5");
+    g_value_set_double(&value_value, avg.loadavg[1]);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "15");
+    g_value_set_double(&value_value, avg.loadavg[2]);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
     break;
   case PROP_PROCESS_STATISTICS:
     //TODO proc stats - map
+    /*
+    host_get_processes(&procs);
+
+    gtype = G_VALUE_TYPE (value);
+    ret = dbus_g_type_specialized_construct (gtype);
+    g_value_set_boxed_take_ownership (value, ret);
+
+    dbus_g_type_specialized_init_append (value, &appendctx);
+
+    g_value_init (&key_value, G_TYPE_STRING);
+    g_value_init (&value_value, G_TYPE_INT);
+
+    g_value_set_static_string(&key_value, "total");
+    g_value_set_double(&value_value, procs.total);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "idle");
+    g_value_set_double(&value_value, procs.idle);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "zombie");
+    g_value_set_double(&value_value, procs.zombie);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "running");
+    g_value_set_double(&value_value, procs.running);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "stopped");
+    g_value_set_double(&value_value, procs.stopped);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+
+    g_value_set_static_string(&key_value, "sleeping");
+    g_value_set_double(&value_value, procs.sleeping);
+    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    */
     break;
   default:
     /* We don't have any other property... */
@@ -175,7 +238,7 @@ static void
 matahari_class_init(MatahariClass *matahari_class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
-  GParamSpec *pspec;
+  GParamSpec *pspec = NULL;
 
   g_type_class_add_private(matahari_class, sizeof (MatahariPrivate));
 
@@ -241,6 +304,14 @@ matahari_class_init(MatahariClass *matahari_class)
                                          properties_Host[i].desc,
                                          -G_MAXDOUBLE, G_MAXDOUBLE, 0,
                                          properties_Host[i].flags);
+            break;
+        case 'e':
+            // Type is map (a{sv} according to dbus)
+            pspec = g_param_spec_boxed(properties_Host[i].name,
+                                       properties_Host[i].nick,
+                                       properties_Host[i].desc,
+                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, G_TYPE_DOUBLE),
+                                       properties_Host[i].flags);
             break;
         default:
             g_printerr("Unknown type: %c\n", properties_Host[i].type);

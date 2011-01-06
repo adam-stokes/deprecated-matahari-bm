@@ -154,7 +154,7 @@
             <xsl:attribute name="type">x</xsl:attribute>
         </xsl:when>
         <xsl:when test="@type='map'">
-            <xsl:attribute name="type">x</xsl:attribute>
+            <xsl:attribute name="type">a{sv}</xsl:attribute>
         </xsl:when>
 
         <!-- TODO: check if compatible -->
