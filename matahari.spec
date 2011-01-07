@@ -35,8 +35,8 @@ BuildRequires:	sigar-devel
 
 %description
 
-matahari provides a QMF Agent that can be used to control and manage
-various pieces of functionality for an ovirt node, using the AMQP protocol.
+Matahari provides QMF Agents that can be used to control and manage
+various pieces of functionality, using the AMQP protocol.
 
 The Advanced Message Queuing Protocol (AMQP) is an open standard application
 layer protocol providing reliable transport of messages.
@@ -56,7 +56,7 @@ Requires:	qmf > 0.7
 %description broker
 Optional AMQP Broker for Matahari
 
-%package devel 
+%package devel
 License:	GPLv2+
 Summary:	Matahari development package
 Group:		Development/Libraries
