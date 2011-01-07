@@ -82,6 +82,7 @@ make DESTDIR=%{buildroot} install
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-net
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
@@ -92,24 +93,39 @@ make DESTDIR=%{buildroot} install
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
 
 %post
-for svc in net host broker; do
+for svc in net host service ; do
     /sbin/chkconfig --level 2345 matahari-$svc on
     /sbin/service matahari-$svc condrestart
 done
 
+%post broker
+/sbin/chkconfig --level 2345 matahari-broker on
+/sbin/service matahari-broker condrestart
+
 %preun
 if [ $1 = 0 ]; then
-    for svc in net host broker; do
+    for svc in net host service ; do
        /sbin/service matahari-$svc stop >/dev/null 2>&1 || :
        chkconfig --del matahari-$svc
     done
 fi
 
+%preun broker
+if [ $1 = 0 ]; then
+    /sbin/service matahari-broker stop >/dev/null 2>&1 || :
+    chkconfig --del matahari-broker
+fi
+
 %postun
 if [ "$1" -ge "1" ]; then
-    for svc in net host broker; do
+    for svc in net host service ; do
         /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
     done
+fi
+
+%postun broker
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
 %clean
@@ -127,6 +143,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-hostd
+
+%attr(755, root, root) %{_initddir}/matahari-service
+%attr(755, root, root) %{_sbindir}/matahari-serviced
 
 %doc AUTHORS COPYING
 
