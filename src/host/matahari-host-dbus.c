@@ -185,8 +185,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
     break;
   case PROP_PROCESS_STATISTICS:
-    //TODO proc stats - map
-    /*
+    // Process statistics is type map string -> int
     host_get_processes(&procs);
 
     gtype = G_VALUE_TYPE (value);
@@ -199,29 +198,28 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     g_value_init (&value_value, G_TYPE_INT);
 
     g_value_set_static_string(&key_value, "total");
-    g_value_set_double(&value_value, procs.total);
+    g_value_set_int(&value_value, procs.total);
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
 
     g_value_set_static_string(&key_value, "idle");
-    g_value_set_double(&value_value, procs.idle);
+    g_value_set_int(&value_value, procs.idle);
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
 
     g_value_set_static_string(&key_value, "zombie");
-    g_value_set_double(&value_value, procs.zombie);
+    g_value_set_int(&value_value, procs.zombie);
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
 
     g_value_set_static_string(&key_value, "running");
-    g_value_set_double(&value_value, procs.running);
+    g_value_set_int(&value_value, procs.running);
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
 
     g_value_set_static_string(&key_value, "stopped");
-    g_value_set_double(&value_value, procs.stopped);
+    g_value_set_int(&value_value, procs.stopped);
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
 
     g_value_set_static_string(&key_value, "sleeping");
-    g_value_set_double(&value_value, procs.sleeping);
+    g_value_set_int(&value_value, procs.sleeping);
     dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
-    */
     break;
   default:
     /* We don't have any other property... */
@@ -239,6 +237,7 @@ matahari_class_init(MatahariClass *matahari_class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
   GParamSpec *pspec = NULL;
+  GType value_type;
 
   g_type_class_add_private(matahari_class, sizeof (MatahariPrivate));
 
@@ -306,11 +305,24 @@ matahari_class_init(MatahariClass *matahari_class)
                                          properties_Host[i].flags);
             break;
         case 'e':
-            // Type is map (a{sv} according to dbus)
+            // Type is map - type of parameters must be added manually!
+            switch (properties_Host[i].prop)
+            {
+                case PROP_LOAD:
+                    value_type = G_TYPE_DOUBLE;
+                    break;
+                case PROP_PROCESS_STATISTICS:
+                    value_type = G_TYPE_INT;
+                    break;
+                default:
+                    g_printerr("Type of property %s is map of unknown types\n", properties_Host[i].name);
+                    value_type = G_TYPE_VALUE;
+            }
+
             pspec = g_param_spec_boxed(properties_Host[i].name,
                                        properties_Host[i].nick,
                                        properties_Host[i].desc,
-                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, G_TYPE_DOUBLE),
+                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, value_type),
                                        properties_Host[i].flags);
             break;
         default:
