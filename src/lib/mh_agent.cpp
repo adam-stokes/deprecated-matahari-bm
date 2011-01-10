@@ -16,13 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef WIN32
-#include <config.h>
-#include <getopt.h>
-#endif
-
 #ifdef WIN32
 #include <windows.h>
+int use_stderr = 1;
+#else
+#include <getopt.h>
+int use_stderr = 0;
 #endif
 
 #include <iostream>
@@ -90,18 +89,10 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
-#ifdef __linux__
 static void
 read_broker(char **servername) 
 {
-    /* No-op */
-}
-
-#else
-
-static void
-read_broker(char **servername) 
-{
+#ifndef __linux__
     int BUFFER_SIZE = 512;
     size_t   converted;
     DWORD    nSize;
@@ -122,9 +113,11 @@ read_broker(char **servername)
     }
     
     RegCloseKey(key_service);
+#else
+    mh_info("Nothing to do for linux");
+#endif
 }
 
-#endif
 
 int
 MatahariAgent::init(int argc, char **argv, char* proc_name)
@@ -143,7 +136,7 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
     qpid::management::ConnectionSettings settings;
     ManagementAgent *agent;
 
-    mh_log_init(proc_name, LOG_INFO, FALSE);
+    mh_log_init(proc_name, LOG_INFO, use_stderr);
     read_broker(&servername);
 
 #ifdef __linux__
