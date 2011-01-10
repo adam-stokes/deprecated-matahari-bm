@@ -35,7 +35,7 @@
 # description: Matahari Broker is an AMQP broker. It receives, stores, routes and forwards messages using the AMQP protcol.
 # processname: qpidd
 
-prog=qpidd
+prog=matahari-brokerd
 lockfile=@localstatedir@/lock/subsys/matahari-broker
 pidfile=@localstatedir@/run/matahari-broker.pid
 

@@ -88,6 +88,7 @@ make DESTDIR=%{buildroot} install
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
+%{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
@@ -150,9 +151,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %files broker
+%defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
+%{_sbindir}/matahari-brokerd
 
 %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
 %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
