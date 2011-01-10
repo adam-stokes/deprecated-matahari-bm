@@ -90,6 +90,42 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
+#ifdef __linux__
+static void
+read_broker(char **servername) 
+{
+    /* No-op */
+}
+
+#else
+
+static void
+read_broker(char **servername) 
+{
+    int BUFFER_SIZE = 512;
+    size_t   converted;
+    DWORD    nSize;
+    HKEY     key_service;
+    wchar_t  szData[1024];
+
+    if(ERROR_SUCCESS != RegOpenKey (
+	   HKEY_LOCAL_MACHINE, "SOFTWARE\\matahari", &key_service)) {
+	mh_info("Could not read broker key\n\r");
+	return;
+    }
+    
+    if(ERROR_SUCCESS != RegQueryValueEx (
+	   key_service, "broker", NULL, NULL, (LPBYTE) szData, &nSize)) {
+	mh_info("Obtained broker '%ls' from the registry\n\r", szData);
+	*servername = (char *)malloc( BUFFER_SIZE );
+	wcstombs(*servername, szData, (size_t)BUFFER_SIZE);
+    }
+    
+    RegCloseKey(key_service);
+}
+
+#endif
+
 int
 MatahariAgent::init(int argc, char **argv, char* proc_name)
 {
@@ -107,6 +143,9 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
     qpid::management::ConnectionSettings settings;
     ManagementAgent *agent;
 
+    mh_log_init(proc_name, LOG_INFO, FALSE);
+    read_broker(&servername);
+
 #ifdef __linux__
     struct option opt[] = {
 	{"help", no_argument, NULL, 'h'},
@@ -118,8 +157,6 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
 	{"port", required_argument, NULL, 'p'},
 	{0, 0, 0, 0}
     };
-
-    mh_log_init(basename(argv[0]), LOG_INFO, FALSE);
 
     // Get args
     while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:v", opt, &idx)) != -1) {
