@@ -77,25 +77,9 @@ typedef struct svc_action_s
 
 extern GList *get_directory_list(const char *root, gboolean files);
 
-static inline GList *services_list(void) 
-{
-    return get_directory_list(LSB_ROOT, TRUE);
-}
-
-static inline GList *resources_list_ocf_providers(void) 
-{
-    return get_directory_list(OCF_ROOT"/resource.d", FALSE);
-}
-
-static inline GList *resources_list_ocf_agents(const char *provider) 
-{
-    if(provider) {
-	char buffer[500];
-	snprintf(buffer, 500, "%s//resource.d/%s", OCF_ROOT, provider);
-	return get_directory_list(buffer, TRUE);
-    }
-    return NULL;
-}
+extern GList *services_list(void);
+extern GList *resources_list_ocf_providers(void);
+extern GList *resources_list_ocf_agents(const char *provider);
 
 extern svc_action_t *services_action_create(
     const char *name, const char *action, int interval /* ms */, int timeout /* ms */);

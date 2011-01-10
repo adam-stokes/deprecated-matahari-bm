@@ -54,27 +54,7 @@ svc_action_t *services_action_create(
     op->id = malloc(500);
     snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
 
-    if(strcmp("enable", action) == 0) {
-	op->opaque->exec = strdup("/sbin/chkconfig");
-	op->opaque->args[0] = strdup(op->opaque->exec);
-	op->opaque->args[1] = strdup(name);
-	op->opaque->args[2] = strdup("on");
-	op->opaque->args[3] = NULL;
-	
-    } else if(strcmp("disable", action) == 0) {
-	op->opaque->exec = strdup("/sbin/chkconfig");
-	op->opaque->args[0] = strdup(op->opaque->exec);
-	op->opaque->args[1] = strdup(name);
-	op->opaque->args[2] = strdup("off");
-	op->opaque->args[3] = NULL;
-
-    } else {
-	op->opaque->exec = malloc(500);
-	snprintf(op->opaque->exec, 500, "%s/%s", LSB_ROOT, name);
-	op->opaque->args[0] = strdup(op->opaque->exec);
-	op->opaque->args[1] = strdup(action);
-	op->opaque->args[2] = NULL;
-    }
+    services_os_set_exec(op);
     
     return op;
 }
@@ -206,3 +186,19 @@ get_directory_list(const char *root, gboolean files)
 {
     return services_os_get_directory_list(root, files);
 }
+
+GList *services_list(void) 
+{
+    return services_os_list();
+}
+
+GList *resources_list_ocf_providers(void) 
+{
+    return resources_os_list_ocf_providers();
+}
+
+GList *resources_list_ocf_agents(const char *provider) 
+{
+    return resources_os_list_ocf_agents(provider);
+}
+
