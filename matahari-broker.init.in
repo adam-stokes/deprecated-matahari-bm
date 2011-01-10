@@ -87,7 +87,7 @@ case "$1" in
 	$1
 	;;
   status)
-	status $prog
+	status -p $pidfile -l $lockfile $prog
 	RETVAL=$?
 	;;
   force-reload)
