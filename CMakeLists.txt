@@ -60,25 +60,32 @@ if(WIN32)
   set (CPACK_PACKAGE_EXECUTABLES "")
   
   # Cant supply arguments within quotes, use batch files to support --port etc
-  set (CPACK_NSIS_MENU_LINKS "")
-  
-  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS "")
-  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS ${CPACK_NSIS_EXTRA_INSTALL_COMMANDS} "ReadRegStr $1 HKLM SOFTWARE\\\\matahari broker ")
-  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS ${CPACK_NSIS_EXTRA_INSTALL_COMMANDS} "StrCmp $1 \\\"\\\" 0 1 ")
-  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS ${CPACK_NSIS_EXTRA_INSTALL_COMMANDS} "WriteRegStr HKLM SOFTWARE\\\\matahari broker 127.0.0.1 ")
-  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS ${CPACK_NSIS_EXTRA_INSTALL_COMMANDS} "ExecWait \\\"$INSTDIR\\\\sbin\\\\install.bat\\\" ")
-  
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "")
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc stop mh_hostd\\\"' ")
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_hostd\\\"' ")
+  set (CPACK_NSIS_MENU_LINKS "")  
 
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc stop mh_netd\\\"' ")
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_netd\\\"' ")
+  # The comments and spacing are apparnetly critical to all this working, don't ask me why
+  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS "\\n")
+  set( CPACK_NSIS_EXTRA_INSTALL_COMMANDS ${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
+					 " Some comment\\n  ReadRegStr $1 HKLM SYSTEM\\\\CurrentControlSet\\\\services\\\\Matahari Broker\\n"
+					 " Some comment\\n  DetailPrint \\\"Current broker is: $1\\\"\\n"
+					 " Some comment\\n  StrCmp $1 \\\"\\\" 0 +2\\n"
+					 " Some comment\\n  WriteRegStr HKLM SYSTEM\\\\CurrentControlSet\\\\services\\\\Matahari Broker 127.0.0.1\\n"
+					 " Some comment\\n  ExecWait \\\"$INSTDIR\\\\sbin\\\\install.bat\\\"\\n"
+					 " Some comment\\n  Sleep 100\\n"
+					 )
   
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc stop mh_serviced\\\"' ")
-  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} "ExecWait '\\\"sc delete mh_serviced\\\"' ")
+  # The comments and spacing are apparnetly critical to all this working, don't ask me why
+  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "\\n")
+  set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} 
+					   " Some comment\\n  ExecWait '\\\"sc stop mh_hostd\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"sc delete mh_hostd\\\"'\\n"
 
-  #WriteRegStr HKCU \\\"Environment\\\" \\\"OGITOR_HOME\\\" $INSTDIR
+					   " Some comment\\n  ExecWait '\\\"sc stop mh_netd\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"sc delete mh_netd\\\"'\\n"
+
+					   " Some comment\\n  ExecWait '\\\"sc stop mh_serviced\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"sc delete mh_serviced\\\"'\\n"
+					   )
+
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/windows/autorun.inf.in 
                  ${CMAKE_CURRENT_BINARY_DIR}/src/windows/autorun.inf)
   

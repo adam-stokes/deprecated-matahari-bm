@@ -72,6 +72,32 @@ print_usage()
     printf("\t-s | --service    service name to use for authentication purproses.\n");
     printf("\t-p | --port       specify broker port.\n");
 }
+#else
+#define BUFFER_SIZE 1024
+static void
+RegistryRead (HKEY hHive, wchar_t *szKeyPath, wchar_t *szValue, char **out)
+{
+    HKEY hKey;
+    DWORD nSize = BUFFER_SIZE;
+    wchar_t szData[BUFFER_SIZE];
+    long lSuccess = RegOpenKey (hHive, szKeyPath, &hKey);
+    
+    if (lSuccess != ERROR_SUCCESS) {
+	mh_debug("Could not open %ls key from the registry: %ld\n\r", szKeyPath, lSuccess);
+	return;
+    }
+    
+    lSuccess = RegQueryValueEx (hKey, szValue, NULL, NULL, (LPBYTE) szData, &nSize);
+    if (lSuccess != ERROR_SUCCESS) {
+	mh_debug("Could not read '%ls[%ls]' from the registry: %ld\n\r", szKeyPath, szValue, lSuccess);
+	return;
+    }
+    mh_info("Obtained '%ls[%ls]' = '%ls' from the registry\n\r", szKeyPath, szValue, szData);
+    if(out) {
+	*out = (char *)malloc( BUFFER_SIZE );
+	wcstombs(*out, szData, (size_t)BUFFER_SIZE);
+    }
+}
 #endif
 
 static gboolean 
@@ -89,34 +115,6 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
-static void
-read_broker(char **servername) 
-{
-#ifndef __linux__
-    int BUFFER_SIZE = 512;
-    size_t   converted;
-    DWORD    nSize;
-    HKEY     key_service;
-    wchar_t  szData[1024];
-
-    if(ERROR_SUCCESS != RegOpenKey (
-	   HKEY_LOCAL_MACHINE, L"SYSTEM\\matahari", &key_service)) {
-	mh_info("Could not read broker key\n\r");
-	return;
-    }
-    
-    if(ERROR_SUCCESS != RegQueryValueEx (
-	   key_service, L"broker", NULL, NULL, (LPBYTE) szData, &nSize)) {
-	mh_info("Obtained broker '%ls' from the registry\n\r", szData);
-	*servername = (char *)malloc( BUFFER_SIZE );
-	wcstombs(*servername, szData, (size_t)BUFFER_SIZE);
-    }
-    
-    RegCloseKey(key_service);
-#endif
-}
-
-
 int
 MatahariAgent::init(int argc, char **argv, char* proc_name)
 {
@@ -129,15 +127,44 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
     char *servername = strdup(MATAHARI_BROKER);
     char *username = NULL;
     char *service = NULL;
+    char *port = NULL;
     int serverport = MATAHARI_PORT;
 
     qpid::management::ConnectionSettings settings;
     ManagementAgent *agent;
 
     mh_log_init(proc_name, LOG_INFO, use_stderr);
-    read_broker(&servername);
+    
+#ifndef __linux__
+    RegistryRead (
+	HKEY_LOCAL_MACHINE,
+	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+	L"Broker",
+	&servername);
 
-#ifdef __linux__
+    RegistryRead (
+	HKEY_LOCAL_MACHINE,
+	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+	L"Port",
+	&port);
+
+    if(port) {
+	serverport = atoi(port);
+    }
+
+    RegistryRead (
+	HKEY_LOCAL_MACHINE,
+	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+	L"Service",
+	&service);
+
+    RegistryRead (
+	HKEY_LOCAL_MACHINE,
+	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+	L"User",
+	&username);
+    
+#else
     struct option opt[] = {
 	{"help", no_argument, NULL, 'h'},
 	{"daemon", no_argument, NULL, 'd'},
