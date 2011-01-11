@@ -3,6 +3,11 @@
 if(WIN32)
    set(VARIANT "windows")
    set(SUPPORT_TRACING 0)
+
+   add_definitions(-DUNICODE)
+   add_definitions(-D_UNICODE)
+   add_definitions(-D_WIN32_WINNT=0x0501)
+
 else(WIN32)
    set(VARIANT "linux")
 endif(WIN32)
@@ -186,7 +191,12 @@ endforeach(daemon ${DAEMONS})
 
 # Install targets
 install(TARGETS ${DAEMONS}  DESTINATION sbin)
+
+if(WIN32)
+install(TARGETS mcommon mhost mnet msrv DESTINATION sbin)
+else(WIN32)
 install(TARGETS mcommon mhost mnet msrv DESTINATION lib${LIB_SUFFIX})
+endif(WIN32)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)

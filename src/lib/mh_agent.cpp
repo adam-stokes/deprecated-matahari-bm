@@ -100,21 +100,19 @@ read_broker(char **servername)
     wchar_t  szData[1024];
 
     if(ERROR_SUCCESS != RegOpenKey (
-	   HKEY_LOCAL_MACHINE, "SOFTWARE\\matahari", &key_service)) {
+	   HKEY_LOCAL_MACHINE, L"SYSTEM\\matahari", &key_service)) {
 	mh_info("Could not read broker key\n\r");
 	return;
     }
     
     if(ERROR_SUCCESS != RegQueryValueEx (
-	   key_service, "broker", NULL, NULL, (LPBYTE) szData, &nSize)) {
+	   key_service, L"broker", NULL, NULL, (LPBYTE) szData, &nSize)) {
 	mh_info("Obtained broker '%ls' from the registry\n\r", szData);
 	*servername = (char *)malloc( BUFFER_SIZE );
 	wcstombs(*servername, szData, (size_t)BUFFER_SIZE);
     }
     
     RegCloseKey(key_service);
-#else
-    mh_info("Nothing to do for linux");
 #endif
 }
 
