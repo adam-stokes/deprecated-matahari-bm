@@ -311,7 +311,11 @@ mh_log_fn(int priority, const char * fmt, ...)
     if (mh_stderr_enabled) {
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
+#ifdef __linux__
 	fprintf(stderr, "\n");
+#else
+	fprintf(stderr, "\n\r");
+#endif	
 	va_end(ap);
 
 #ifdef __linux__

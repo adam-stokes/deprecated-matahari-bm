@@ -83,16 +83,16 @@ RegistryRead (HKEY hHive, wchar_t *szKeyPath, wchar_t *szValue, char **out)
     long lSuccess = RegOpenKey (hHive, szKeyPath, &hKey);
     
     if (lSuccess != ERROR_SUCCESS) {
-	mh_debug("Could not open %ls key from the registry: %ld\n\r", szKeyPath, lSuccess);
+	mh_debug("Could not open %ls key from the registry: %ld", szKeyPath, lSuccess);
 	return;
     }
     
     lSuccess = RegQueryValueEx (hKey, szValue, NULL, NULL, (LPBYTE) szData, &nSize);
     if (lSuccess != ERROR_SUCCESS) {
-	mh_debug("Could not read '%ls[%ls]' from the registry: %ld\n\r", szKeyPath, szValue, lSuccess);
+	mh_debug("Could not read '%ls[%ls]' from the registry: %ld", szKeyPath, szValue, lSuccess);
 	return;
     }
-    mh_info("Obtained '%ls[%ls]' = '%ls' from the registry\n\r", szKeyPath, szValue, szData);
+    mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue, szData);
     if(out) {
 	*out = (char *)malloc( BUFFER_SIZE );
 	wcstombs(*out, szData, (size_t)BUFFER_SIZE);
