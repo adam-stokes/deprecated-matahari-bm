@@ -110,6 +110,7 @@ static char *read_output(HANDLE h)
 gboolean
 services_os_action_execute(svc_action_t* op, gboolean synchronous)
 {
+    wchar_t *exec_w = NULL;
     STARTUPINFO siStartInfo;
     SECURITY_ATTRIBUTES saAttr; 
     PROCESS_INFORMATION piProcInfo; 
@@ -155,9 +156,10 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
     siStartInfo.hStdOutput = child_pipe_wr;
 /*   siStartInfo.hStdInput = g_hChildStd_IN_Rd; */
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
- 
+
+    exec_w = char2wide(op->opaque->exec);
     if( !CreateProcess(NULL, 
-		       op->opaque->exec,     // command line 
+		       exec_w,        // command line 
 		       NULL,          // process security attributes 
 		       NULL,          // primary thread security attributes 
 		       TRUE,          // handles are inherited 
@@ -168,6 +170,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 		       &piProcInfo)  // receives PROCESS_INFORMATION 
 	) {
 	mh_err("Could not create child process");
+	op->rc = OCF_UNKNOWN_ERROR;
 	return FALSE;
       
     } else if(synchronous) {
@@ -184,6 +187,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 	    mh_err("Operation for %s timeout out after %dms", op->id, op->timeout);
 	}
        
+	mh_info("Result of '%ls' was %d", exec_w, status);
 	op->rc = status;
        
         /* Close the write end of the pipe before reading from the 
@@ -196,6 +200,11 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 	}
        
 	op->stdout_data = read_output( child_pipe_rd);
+	mh_info("Output: %s", op->stdout_data);
+	
+	if (!CloseHandle(child_pipe_rd)) {
+	    mh_err("Couldn't close read end of child pipe");
+	}
        
 	CloseHandle(piProcInfo.hProcess);
 	CloseHandle(piProcInfo.hThread);
@@ -207,13 +216,14 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 void
 services_os_set_exec(svc_action_t* op)
 {
-    /* char *p = getenv("WINDIR"); */
+    char *p = getenv("WINDIR");
     if(strcmp("status", op->action) == 0) {
-	op->opaque->exec = g_strdup_printf("sc query %s", op->rsc);
+	op->opaque->exec = g_strdup_printf("%s\\system32\\sc.exe query %s", p, op->rsc);
+	/* op->opaque->exec = g_strdup_printf("sc query %s", op->rsc); */
 
     } else {
-	/* op->opaque->exec = g_strdup_printf("%s\\system32\\sc %s %s", p, op->rsc, op->action); */
-	op->opaque->exec = g_strdup_printf("sc %s %s", op->action, op->rsc);
+	op->opaque->exec = g_strdup_printf("%s\\system32\\sc.exe %s %s", p, op->action, op->rsc);
+	/* op->opaque->exec = g_strdup_printf("sc %s %s", op->action, op->rsc); */
     }
 }
 
