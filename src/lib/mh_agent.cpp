@@ -59,20 +59,7 @@ shutdown(int /*signal*/)
   exit(0);
 }
 
-#ifdef __linux__
-static void
-print_usage()
-{
-    printf("Usage:\tmatahari-netd <options>\n");
-    printf("\t-d | --daemon     run as a daemon.\n");
-    printf("\t-h | --help       print this help message.\n");
-    printf("\t-b | --broker     specify broker host name..\n");
-    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
-    printf("\t-u | --username   username to use for authentication purproses.\n");
-    printf("\t-s | --service    service name to use for authentication purproses.\n");
-    printf("\t-p | --port       specify broker port.\n");
-}
-#else
+#ifdef WIN32
 #define BUFFER_SIZE 1024
 static void
 RegistryRead (HKEY hHive, wchar_t *szKeyPath, wchar_t *szValue, char **out)
@@ -98,6 +85,30 @@ RegistryRead (HKEY hHive, wchar_t *szKeyPath, wchar_t *szValue, char **out)
 	wcstombs(*out, szData, (size_t)BUFFER_SIZE);
     }
 }
+#else
+struct option opt[] = {
+    {"help", no_argument, NULL, 'h'},
+    {"daemon", no_argument, NULL, 'd'},
+    {"broker", required_argument, NULL, 'b'},
+    {"gssapi", no_argument, NULL, 'g'},
+    {"username", required_argument, NULL, 'u'},
+    {"service", required_argument, NULL, 's'},
+    {"port", required_argument, NULL, 'p'},
+    {0, 0, 0, 0}
+};
+
+static void
+print_usage()
+{
+    printf("Usage:\tmatahari-netd <options>\n");
+    printf("\t-d | --daemon     run as a daemon.\n");
+    printf("\t-h | --help       print this help message.\n");
+    printf("\t-b | --broker     specify broker host name..\n");
+    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
+    printf("\t-u | --username   username to use for authentication purproses.\n");
+    printf("\t-s | --service    service name to use for authentication purproses.\n");
+    printf("\t-p | --port       specify broker port.\n");
+}
 #endif
 
 static gboolean 
@@ -118,24 +129,40 @@ mh_qpid_disconnect(gpointer user_data)
 int
 MatahariAgent::init(int argc, char **argv, char* proc_name)
 {
-#ifdef __linux__
+#ifdef WIN32
+    char *value = NULL;
+#else
     int arg;
     int idx = 0;
     bool daemonize = false;
 #endif
+
     bool gssapi = false;
     char *servername = strdup(MATAHARI_BROKER);
     char *username = NULL;
     char *service = NULL;
-    char *port = NULL;
     int serverport = MATAHARI_PORT;
+    int debuglevel = 0;
 
     qpid::management::ConnectionSettings settings;
     ManagementAgent *agent;
 
-    mh_log_init(proc_name, LOG_INFO, use_stderr);
+    /* Set up basic logging */
+    mh_log_init(proc_name, LOG_INFO, FALSE);    
+
+#ifdef WIN32
+    RegistryRead (
+	HKEY_LOCAL_MACHINE,
+	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+	L"DebugLevel",
+	&value);
+
+    if(value) {
+	debuglevel = atoi(value);
+	free(value);
+	value = NULL;
+    }
     
-#ifndef __linux__
     RegistryRead (
 	HKEY_LOCAL_MACHINE,
 	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
@@ -146,10 +173,12 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
 	HKEY_LOCAL_MACHINE,
 	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
 	L"Port",
-	&port);
+	&value);
 
-    if(port) {
-	serverport = atoi(port);
+    if(value) {
+	serverport = atoi(value);
+	free(value);
+	value = NULL;
     }
 
     RegistryRead (
@@ -165,17 +194,7 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
 	&username);
     
 #else
-    struct option opt[] = {
-	{"help", no_argument, NULL, 'h'},
-	{"daemon", no_argument, NULL, 'd'},
-	{"broker", required_argument, NULL, 'b'},
-	{"gssapi", no_argument, NULL, 'g'},
-	{"username", required_argument, NULL, 'u'},
-	{"service", required_argument, NULL, 's'},
-	{"port", required_argument, NULL, 'p'},
-	{0, 0, 0, 0}
-    };
-
+    
     // Get args
     while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:v", opt, &idx)) != -1) {
 	switch (arg) {
@@ -241,6 +260,9 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
 	}
     }
 #endif
+
+    /* Re-initialize logging now that we've completed option processing */
+    mh_log_init(proc_name, LOG_INFO+debuglevel, debuglevel > 0);
 
     // Get our management agent
     singleton = new ManagementAgent::Singleton();
