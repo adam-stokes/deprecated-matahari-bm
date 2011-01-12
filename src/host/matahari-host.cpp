@@ -108,7 +108,7 @@ int
 HostAgent::heartbeat()
 {
     uint64_t timestamp = 0L, now = 0L;
-    sigar_loadavg_t avg;
+    sigar_loadavg_t avg = { 0, 0, 0 };
     sigar_proc_stat_t procs;
     static uint32_t _heartbeat_sequence = 1;
 
