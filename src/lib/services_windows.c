@@ -82,14 +82,14 @@ windows_service_control(char *name, int command)
 }
 
 #define BUFSIZE 4096
-static char *read_output(HANDLE h) 
+static void read_output(HANDLE h, char **output, int *length) 
 {
     /* Read output from the child process's pipe for STDOUT
      * Stop when there is no more data.
      */
-    DWORD len = 0;
+    int len = 0;
     DWORD bytes = 0; 
-    char buf[BUFSIZE]; 
+    char buf[BUFSIZE];
     char *data = NULL;
     
     while(1) { 
@@ -99,17 +99,80 @@ static char *read_output(HANDLE h)
 	    break;
 	}
 	
-	data = realloc(data, len + bytes + 1);
+	data = realloc(data, len + (int)bytes + 1);
+	mh_info("Read %d: %.*s", len, (int)bytes, buf);
 	sprintf(data+len, "%s", buf);
-	len += bytes;	
+	data[len+bytes] = 0;
+	len += (int)bytes;
     }
 
-    return data;
+    *length = len;
+    *output = data;
+    mh_info("Read %d bytes", len);
 } 
+
+static int
+extract_service_status(const char *unmutable, int max)
+{
+    int lpc = 0, last = 0;
+    int rc = LSB_STATUS_UNKNOWN_ERROR;
+
+    if(unmutable == NULL || max < 10) {
+	return rc;
+    }
+    
+    for(; lpc < max; lpc++) {
+	switch(unmutable[lpc]) {
+	    case '\n':
+	    case '\r':
+	    case 0:
+		if(lpc - last > 1) {
+		    char name[512];
+		    char value[512];
+		    char next[2048];
+		    /* char *next = malloc(1+lpc-last); */
+		    int rc = 0, number = 0;
+
+		    strncpy(next, unmutable+last, lpc-last);
+		    next[lpc-last] = 0;
+				
+		    rc = sscanf(next, "        %[^:]: %d %[^:]", name, &number, value);
+		    if(rc == 3) {
+			mh_info("  '%s' = '%s' %d", name, value, number);
+			if(strncmp("STATE", name, 5) == 0) {
+			    switch(number) {
+				case 1: 
+				    rc = LSB_STATUS_NOT_RUNNING;
+				    break;
+				case 3: 
+				    /* Stopping but not stopped - treat as active */
+				    rc = LSB_STATUS_OK;
+				    break;
+				case 4: 
+				    rc = LSB_STATUS_OK;
+				    break;
+				default:
+				    mh_info("Unknown status: %s", next);
+			    }
+			    /* free(next); */
+			    return rc;
+			}
+		    }
+		    free(next);
+		}
+		last = lpc+1;
+		break;
+	}
+    }	
+    mh_info("Couldn't parse service status");
+    return rc;
+}
 
 gboolean
 services_os_action_execute(svc_action_t* op, gboolean synchronous)
 {
+    int max = 0;
+    DWORD status = 0;
     wchar_t *exec_w = NULL;
     STARTUPINFO siStartInfo;
     SECURITY_ATTRIBUTES saAttr; 
@@ -118,17 +181,18 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
     HANDLE child_pipe_rd = NULL;
     HANDLE child_pipe_wr = NULL;
 
+    gboolean is_status_op = FALSE;
 
-    if(strcmp("disable", op->action) == 0) {
+    if(strcmp("status", op->action) == 0) {
+	is_status_op = TRUE;
+	
+    } else if(strcmp("disable", op->action) == 0) {
 	return windows_service_control(op->rsc, SERVICE_DISABLED);
 
     } else if(strcmp("enable", op->action) == 0) {
 	return windows_service_control(op->rsc, SERVICE_AUTO_START);
     }
     
-    /* For now, everything is synchronous */
-    synchronous = TRUE;
-
     /* Initialize all structures */
     ZeroMemory( &siStartInfo, sizeof(STARTUPINFO) );
     ZeroMemory( &saAttr, sizeof(SECURITY_ATTRIBUTES) );
@@ -142,13 +206,13 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
     /* Create a pipe for the child process's stdout  */
     if ( ! CreatePipe(&child_pipe_rd, &child_pipe_wr, &saAttr, 0) ) {
 	mh_err("Couldn't create child pipe");
-	return FALSE;
+	goto fail;
     }
 
     /* Ensure the read handle to the pipe for STDOUT is not inherited. */
     if ( ! SetHandleInformation(child_pipe_rd, HANDLE_FLAG_INHERIT, 0) ) {
 	mh_err("Couldn't set pipe handle information"); 
-	return FALSE;
+	goto fail;
     }
     
     siStartInfo.cb = sizeof(STARTUPINFO); 
@@ -170,47 +234,86 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 		       &piProcInfo)  // receives PROCESS_INFORMATION 
 	) {
 	mh_err("Could not create child process");
-	op->rc = OCF_UNKNOWN_ERROR;
-	return FALSE;
-      
-    } else if(synchronous) {
-	DWORD status = 0;
-	WaitForSingleObject(piProcInfo.hProcess, op->timeout /* Or INFINITE */);
-
-	if(GetExitCodeProcess(piProcInfo.hProcess, &status) == 0) {
-	    mh_err("Could not get exit code: %lu", GetLastError());
-	    status = STILL_ACTIVE;
-	}
-       
-	if(status == STILL_ACTIVE) {
-	    TerminateProcess(piProcInfo.hProcess, 1);
-	    mh_err("Operation for %s timeout out after %dms", op->id, op->timeout);
-	}
-       
-	mh_info("Result of '%ls' was %d", exec_w, status);
-	op->rc = status;
-       
-        /* Close the write end of the pipe before reading from the 
-	 * read end of the pipe, to control child process execution.
-	 * The pipe is assumed to have enough buffer space to hold the
-	 * data the child process has already written to it.
-	 */
-	if (!CloseHandle(child_pipe_wr)) {
-	    mh_err("Couldn't close write end of child pipe");
-	}
-       
-	op->stdout_data = read_output( child_pipe_rd);
-	mh_info("Output: %s", op->stdout_data);
+	goto fail;
 	
-	if (!CloseHandle(child_pipe_rd)) {
-	    mh_err("Couldn't close read end of child pipe");
-	}
+    /* For now, run all commands synchronously */
+    /* } else if(synchronous == FALSE) { */
+    /* 	return TRUE; */
+    }
+    
+    WaitForSingleObject(piProcInfo.hProcess, op->timeout /* Or INFINITE */);
+
+    if(GetExitCodeProcess(piProcInfo.hProcess, &status) == 0) {
+	mh_err("Could not get exit code: %lu", GetLastError());
+	status = STILL_ACTIVE;
+    }
        
-	CloseHandle(piProcInfo.hProcess);
-	CloseHandle(piProcInfo.hThread);
+    if(status == STILL_ACTIVE) {
+	op->rc = LSB_UNKNOWN_ERROR;
+	op->status = LRM_OP_TIMEOUT;
+	TerminateProcess(piProcInfo.hProcess, 1);
+	mh_err("Operation for %s timeout out after %dms", op->id, op->timeout);
+
+    } else if(status == 1062 && strcmp("stop", op->action) == 0) {
+	/* Stopping something thats stopped is a success */ 
+	op->status = LRM_OP_DONE;
+	op->rc = LSB_OK;
+
+    } else if(status == 1056 && strcmp("start", op->action) == 0) {
+	/* Starting something thats started is a success */ 
+	op->status = LRM_OP_DONE;
+	op->rc = LSB_OK;
+
+    } else if(status == 0) {
+	op->status = LRM_OP_DONE;
+	op->rc = LSB_OK;
+
+    } else {
+	op->status = LRM_OP_ERROR;
+	op->rc = LSB_UNKNOWN_ERROR;
+	mh_info("Result of '%ls' for '%s' was %d", exec_w, op->id, (int)status);
     }
 
-    return 0;
+    /* Nice to log it somewhere */
+    if(op->rc == LSB_OK) {
+	mh_debug("Result of '%ls' for '%s' was %d", exec_w, op->id, (int)status);
+    }
+	
+    /* Close the write end of the pipe before reading from the 
+     * read end of the pipe, to control child process execution.
+     * The pipe is assumed to have enough buffer space to hold the
+     * data the child process has already written to it.
+     */
+    if (!CloseHandle(child_pipe_wr)) {
+	mh_err("Couldn't close write end of child pipe");
+    }
+       
+    read_output(child_pipe_rd, &op->stdout_data, &max);
+    if(op->stdout_data) {
+	mh_debug("RAW: %s", op->stdout_data);
+    }
+
+    if(is_status_op && op->status == LRM_OP_DONE) {
+	op->rc = extract_service_status(op->stdout_data, max);
+    }
+	
+    CloseHandle(piProcInfo.hProcess);
+    CloseHandle(piProcInfo.hThread);
+    CloseHandle(child_pipe_rd);
+
+    if(is_status_op && op->rc == LSB_UNKNOWN_ERROR) {
+	op->rc = LSB_STATUS_UNKNOWN_ERROR;
+    }
+    
+    return TRUE;
+
+  fail:
+    op->status = LRM_OP_ERROR;
+    op->rc = LSB_UNKNOWN_ERROR;
+    if(is_status_op && op->rc == LSB_UNKNOWN_ERROR) {
+	op->rc = LSB_STATUS_UNKNOWN_ERROR;
+    }
+    return FALSE;
 }
 
 void
@@ -230,6 +333,7 @@ services_os_set_exec(svc_action_t* op)
 GList *
 services_os_get_directory_list(const char *root, gboolean files)
 {
+    /* For now, this is unsupported/unnecessary on Windows, return an empty list */
     return NULL;
 }
 
@@ -243,10 +347,12 @@ GList *services_os_list(void)
 
 GList *resources_os_list_ocf_providers(void) 
 {
+    /* Unsupported on Windows, return an empty list */
     return NULL;
 }
 
 GList *resources_os_list_ocf_agents(const char *provider) 
 {
+    /* Unsupported on Windows, return an empty list */
     return NULL;
 }
