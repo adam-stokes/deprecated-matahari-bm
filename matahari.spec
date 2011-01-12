@@ -35,8 +35,8 @@ BuildRequires:	sigar-devel
 
 %description
 
-matahari provides a QMF Agent that can be used to control and manage
-various pieces of functionality for an ovirt node, using the AMQP protocol.
+Matahari provides QMF Agents that can be used to control and manage
+various pieces of functionality, using the AMQP protocol.
 
 The Advanced Message Queuing Protocol (AMQP) is an open standard application
 layer protocol providing reliable transport of messages.
@@ -56,7 +56,7 @@ Requires:	qmf > 0.7
 %description broker
 Optional AMQP Broker for Matahari
 
-%package devel 
+%package devel
 License:	GPLv2+
 Summary:	Matahari development package
 Group:		Development/Libraries
@@ -82,34 +82,51 @@ make DESTDIR=%{buildroot} install
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-net
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
+%{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
 
 %post
-for svc in net host broker; do
+for svc in net host service ; do
     /sbin/chkconfig --level 2345 matahari-$svc on
     /sbin/service matahari-$svc condrestart
 done
 
+%post broker
+/sbin/chkconfig --level 2345 matahari-broker on
+/sbin/service matahari-broker condrestart
+
 %preun
 if [ $1 = 0 ]; then
-    for svc in net host broker; do
+    for svc in net host service ; do
        /sbin/service matahari-$svc stop >/dev/null 2>&1 || :
        chkconfig --del matahari-$svc
     done
 fi
 
+%preun broker
+if [ $1 = 0 ]; then
+    /sbin/service matahari-broker stop >/dev/null 2>&1 || :
+    chkconfig --del matahari-broker
+fi
+
 %postun
 if [ "$1" -ge "1" ]; then
-    for svc in net host broker; do
+    for svc in net host service ; do
         /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
     done
+fi
+
+%postun broker
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
 %clean
@@ -128,12 +145,17 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-hostd
 
+%attr(755, root, root) %{_initddir}/matahari-service
+%attr(755, root, root) %{_sbindir}/matahari-serviced
+
 %doc AUTHORS COPYING
 
 %files broker
+%defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
+%{_sbindir}/matahari-brokerd
 
 %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
 %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
