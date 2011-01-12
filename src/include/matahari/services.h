@@ -26,6 +26,32 @@
 #define OCF_ROOT "/usr/lib/ocf"
 #define LSB_ROOT "/etc/init.d"
 
+enum lsb_exitcode {
+    LSB_PENDING = -1,
+    LSB_OK = 0,
+    LSB_UNKNOWN_ERROR = 1,
+    LSB_INVALID_PARAM = 2,
+    LSB_UNIMPLEMENT_FEATURE = 3,
+    LSB_INSUFFICIENT_PRIV = 4,
+    LSB_NOT_INSTALLED = 5,
+    LSB_NOT_CONFIGURED = 6,
+    LSB_NOT_RUNNING = 7,
+    
+    /* 150-199	reserved for application use */
+};
+
+/* The return codes for the status operation are not the same for other operatios - go figure */
+enum lsb_status_exitcode {
+    LSB_STATUS_OK = 0,
+    LSB_STATUS_VAR_PID = 1,
+    LSB_STATUS_VAR_LOCK = 2,
+    LSB_STATUS_NOT_RUNNING = 3,
+    LSB_STATUS_NOT_INSTALLED = 4,
+
+    /* 150-199	reserved for application use */
+    LSB_STATUS_UNKNOWN_ERROR = 199,
+};
+
 enum ocf_exitcode {
 	OCF_PENDING = -1,
 	OCF_OK = 0,
@@ -98,19 +124,22 @@ extern gboolean services_action_cancel(const char *name, const char *action, int
 
 static inline enum ocf_exitcode resources_convert_lsb_exitcode(char *action, int lsb) 
 {
-    if(lsb == OCF_NOT_INSTALLED) {
-	return OCF_NOT_INSTALLED;
-
-    } else if(action != NULL && strcmp("status", action) == 0) {
+    if(action != NULL && strcmp("status", action) == 0) {
 	switch(lsb) {
-	    case 0: return OCF_OK;            /* LSB_STATUS_OK */
-	    case 1: return OCF_NOT_RUNNING;   /* LSB_STATUS_VAR_PID */
-	    case 2: return OCF_NOT_RUNNING;   /* LSB_STATUS_VAR_LOCK */
-	    case 3: return OCF_NOT_RUNNING;   /* LSB_STATUS_STOPPED */
-	    case 4: return OCF_UNKNOWN_ERROR; /* LSB_STATUS_UNKNOWN */
+	    case LSB_STATUS_OK:			return OCF_OK;
+	    case LSB_STATUS_VAR_PID:		return OCF_NOT_RUNNING;
+	    case LSB_STATUS_VAR_LOCK:		return OCF_NOT_RUNNING;
+	    case LSB_STATUS_NOT_RUNNING:	return OCF_NOT_RUNNING;
+	    case LSB_STATUS_NOT_INSTALLED:	return OCF_UNKNOWN_ERROR;
+	    default:
+		return OCF_UNKNOWN_ERROR;
 	}
+	
+    } else if(lsb > LSB_NOT_RUNNING) {
+	return OCF_UNKNOWN_ERROR;	
     }
-    
-    return OCF_UNKNOWN_ERROR;
+
+    /* For non-status operations, the LSB and OCF share error code meaning for rc <= 7 */ 
+    return (enum ocf_exitcode)lsb;
 }
 #endif
