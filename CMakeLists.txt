@@ -76,14 +76,19 @@ if(WIN32)
   # The comments and spacing are apparnetly critical to all this working, don't ask me why
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "\\n")
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} 
-					   " Some comment\\n  ExecWait '\\\"sc stop mh_hostd\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"sc delete mh_hostd\\\"'\\n"
-
-					   " Some comment\\n  ExecWait '\\\"sc stop mh_netd\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"sc delete mh_netd\\\"'\\n"
-
-					   " Some comment\\n  ExecWait '\\\"sc stop mh_serviced\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"sc delete mh_serviced\\\"'\\n"
+  					   " Some comment\\n  DetailPrint \\\"Stopping Matahari services\\\"\\n"
+					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe stop mh_hostd\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe stop mh_netd\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe stop mh_serviced\\\"'\\n"
+					   " Give them time to stop\\n  Sleep 10000\\n"
+  					   " Some comment\\n  DetailPrint \\\"Removing Matahari services\\\"\\n"
+					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe delete mh_hostd\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe delete mh_netd\\\"'\\n"
+					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe delete mh_serviced\\\"'\\n"
+  					   " Some comment\\n  DetailPrint \\\"Removing Matahari service binaries\\\"\\n"
+					   " Some comment\\n  ExecWait 'del \\\"$INSTDIR\\\\mh_hostd.exe\\\"'\\n"
+					   " Some comment\\n  ExecWait 'del \\\"$INSTDIR\\\\mh_netd.exe\\\"'\\n"
+					   " Some comment\\n  ExecWait 'del \\\"$INSTDIR\\\\mh_serviced.exe\\\"'\\n"
 					   )
 
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/windows/autorun.inf.in 
