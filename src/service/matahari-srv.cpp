@@ -236,6 +236,8 @@ SrvManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		svc_action_t *op = services_action_create(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
 
 		if(ioArgs.io_interval) {
+		    return Manageable::STATUS_NOT_IMPLEMENTED;
+
 		    services_action_async(op, mh_service_callback);
 		    ioArgs.o_rc = OCF_PENDING;
 
@@ -332,9 +334,10 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 		    "monitor", ioArgs.io_interval, ioArgs.i_timeout, params);
 
 		if(op->interval) {
-		    // services_action_async(op, mh_resource_callback);
-		    // ioArgs.o_rc = OCF_PENDING;
 		    return Manageable::STATUS_NOT_IMPLEMENTED;
+
+		    services_action_async(op, mh_resource_callback);
+		    ioArgs.o_rc = OCF_PENDING;
 
 		} else {
 		    services_action_sync(op);
@@ -354,9 +357,10 @@ RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
 
 		
 		if(op->interval) {
-		    // services_action_async(op, mh_resource_callback);
-		    // ioArgs.o_rc = OCF_PENDING;
 		    return Manageable::STATUS_NOT_IMPLEMENTED;
+
+		    services_action_async(op, mh_resource_callback);
+		    ioArgs.o_rc = OCF_PENDING;
 
 		} else {
 		    services_action_sync(op);

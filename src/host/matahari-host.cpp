@@ -28,6 +28,7 @@
 #include <sigar.h>
 
 extern "C" {
+#include <string.h>
 #include "matahari/host.h"
 }
 
@@ -108,7 +109,7 @@ int
 HostAgent::heartbeat()
 {
     uint64_t timestamp = 0L, now = 0L;
-    sigar_loadavg_t avg = { 0, 0, 0 };
+    sigar_loadavg_t avg;
     sigar_proc_stat_t procs;
     static uint32_t _heartbeat_sequence = 1;
 
@@ -131,6 +132,7 @@ HostAgent::heartbeat()
     _management_object->set_free_mem(host_get_mem_free());
 
     ::qpid::types::Variant::Map load;
+    memset(&avg, 0, sizeof(sigar_loadavg_t));
     host_get_load_averages(&avg);
     load["1"]  = ::qpid::types::Variant((double)avg.loadavg[0]);
     load["5"]  = ::qpid::types::Variant((double)avg.loadavg[1]);

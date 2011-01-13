@@ -62,7 +62,7 @@ shutdown(int /*signal*/)
 #ifdef WIN32
 #define BUFFER_SIZE 1024
 static void
-RegistryRead (HKEY hHive, wchar_t *szKeyPath, wchar_t *szValue, char **out)
+RegistryRead (HKEY hHive, const wchar_t *szKeyPath, const wchar_t *szValue, char **out)
 {
     HKEY hKey;
     DWORD nSize = BUFFER_SIZE;
@@ -127,7 +127,7 @@ mh_qpid_disconnect(gpointer user_data)
 }
 
 int
-MatahariAgent::init(int argc, char **argv, char* proc_name)
+MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {
 #ifdef WIN32
     char *value = NULL;

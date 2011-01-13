@@ -359,7 +359,7 @@ mainloop_destroy_fd(mainloop_fd_t* source)
 
 static gboolean child_timeout_callback(gpointer p)
 {
-    pid_t pid = (pid_t)p;
+    pid_t pid = (pid_t)GPOINTER_TO_INT(p);
     mainloop_child_t *pinfo = (mainloop_child_t *)g_hash_table_lookup(mainloop_process_table, p);
 
     if (pinfo == NULL) {
@@ -417,10 +417,10 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
     g_hash_table_insert(mainloop_process_table, GINT_TO_POINTER(abs(pid)), p);
 }
 
+#if __linux__
 static void
 child_death_dispatch(int sig)
 {
-#if __linux__
     int status = 0;
     while(TRUE) {
 	pid_t pid = wait3(&status, WNOHANG, NULL);
@@ -463,8 +463,8 @@ child_death_dispatch(int sig)
 	    break;
 	}
     }
-#endif
 }
+#endif
 
 void
 mainloop_track_children(int priority)

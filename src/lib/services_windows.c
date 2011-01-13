@@ -158,7 +158,7 @@ extract_service_status(const char *unmutable, int max)
 			    return rc;
 			}
 		    }
-		    free(next);
+		    /* free(next); */
 		}
 		last = lpc+1;
 		break;
