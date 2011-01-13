@@ -20,56 +20,46 @@ set -x
 PACKAGE=matahari
 VERSION=0.4.0
 
-RPM_OPTS='--define "_sourcedir $(AUTOBUILD_SOURCE_ROOT)" 	\
-	  --define "_specdir   $(AUTOBUILD_SOURCE_ROOT)" 	\
-	  --define "_srcrpmdir $(AUTOBUILD_SOURCE_ROOT)"	\
-'
+: ${AUTO_BUILD_COUNTER:="custom"}
+: ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
+: ${AUTOBUILD_INSTALL_ROOT:=`pwd`}
 
 function make_srpm() {
     VARIANT=$1
     TARFILE=matahari-${VERSION}.tbz2
     TAG=`git show --pretty="format:%h" --abbrev-commit | head -n 1`
 
-    sed -i.sed 's/global\ specversion.*/global\ specversion\ ${AUTO_BUILD_COUNTER}/' ${VARIANT}matahari.spec
-    sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ ${shell git show --pretty="format:%h" | head -n 1}/' ${VARIANT}matahari.spec
+    sed -i.sed s/global\ specversion.*/global\ specversion\ ${AUTO_BUILD_COUNTER}/ ${VARIANT}matahari.spec
+    sed -i.sed s/global\ upstream_version.*/global\ upstream_version\ ${TAG}/ ${VARIANT}matahari.spec
     
     rm -f ${TARFILE}
     git archive --prefix=matahari-${VERSION}/ ${TAG} | bzip2 > ${TARFILE}
     echo `date`: Rebuilt ${TARFILE} from ${TAG}
     
     rm -f *.src.rpm
-    rpmbuild -bs ${RPM_OPTS} ${VARIANT}matahari.spec
+    rpmbuild -bs --define "_sourcedir ${AUTOBUILD_SOURCE_ROOT}" \
+		 --define "_specdir  ${AUTOBUILD_SOURCE_ROOT}"  \
+		 --define "_srcrpmdir ${AUTOBUILD_SOURCE_ROOT}" ${VARIANT}matahari.spec
 }
 
 env
-
-# Local builds
-echo "Installing Linux dependancies..."
-sudo yum install -y cmake make libudev-devel gcc-c++ dbus-devel hal-devel qpid-cpp-server-devel qmf-devel pcre-devel glib2-devel sigar-devel
-
-echo "Installing Windows dependancies..."
-sudo yum install -y redhat-rpm-config cmake make qmf-devel mingw32-filesystem mingw32-gcc-c++ mingw32-nsis genisoimage mingw32-pcre mingw32-qpid-cpp mingw32-glib2 mingw32-sigar mingw32-srvany
-
-#DESTDIR=$AUTOBUILD_INSTALL_ROOT/linux; export DESTDIR
-#mkdir -p $DESTDIR
-
-make check
-rc=$?
-
-if [ $rc != 0 ]; then
-    exit $rc
-fi
 
 make_srpm 
 mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
 
 rc=$?
+cat $AUTOBUILD_INSTALL_ROOT/build.log
 
 if [ $rc != 0 ]; then
     exit $rc
 fi
 
+make_srpm mingw32-
+mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
 
-# Need to wait until mingw32-qpid-cpp is in F-14 updates
-#make_srpm mingw32-
-#mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
+rc=$?
+cat $AUTOBUILD_INSTALL_ROOT/build.log
+
+if [ $rc != 0 ]; then
+    exit $rc
+fi
