@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 6
-%global upstream_version 8487293
+%global specversion 10
+%global upstream_version 66098f9
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -19,14 +19,14 @@ Group:		Applications/System
 License:	GPLv2
 URL:		http://fedorahosted.org/matahari
 Source0:	matahari-%{version}.tbz2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildArch:      noarch
+BuildArch:	noarch
 
-BuildRequires:  redhat-rpm-config cmake make qmf-devel
-BuildRequires:  mingw32-filesystem >= 57
-BuildRequires:  mingw32-gcc-c++ mingw32-nsis genisoimage
-BuildRequires:  mingw32-pcre mingw32-qpid-cpp mingw32-srvany mingw32-glib2 mingw32-sigar
+BuildRequires:	redhat-rpm-config cmake make qmf-devel
+BuildRequires:	mingw32-filesystem >= 57
+BuildRequires:	mingw32-gcc-c++ mingw32-nsis genisoimage
+BuildRequires:	mingw32-pcre mingw32-qpid-cpp mingw32-srvany mingw32-glib2 mingw32-sigar
 
 %description
 
@@ -51,10 +51,8 @@ MinGW cross-compiled Windows application.
 PATH=%{_mingw32_bindir}:$PATH
 
 ls -al /usr/i686-pc-mingw32/sys-root/mingw/lib/pkgconfig
-#%{_mingw32_cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo
 %{_mingw32_cmake} --debug-output -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=on
 make VERBOSE=1 %{?_smp_mflags}
-
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -64,6 +62,9 @@ genisoimage -o matahari-%{version}-win32.iso matahari-%{version}-win32.exe src/w
 
 %{__install} -d $RPM_BUILD_ROOT/%{_mingw32_datadir}/matahari
 %{__install} matahari-%{version}-win32.iso $RPM_BUILD_ROOT/%{_mingw32_datadir}/matahari
+
+%clean
+test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)

@@ -15,7 +15,7 @@ Group:		Applications/System
 License:	GPLv2
 URL:		http://fedorahosted.org/matahari
 Source0:	matahari-%{version}.tbz2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:	dbus
 Requires:	hal
@@ -120,7 +120,7 @@ fi
 %postun
 if [ "$1" -ge "1" ]; then
     for svc in net host service ; do
-        /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
+       /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
     done
 fi
 
