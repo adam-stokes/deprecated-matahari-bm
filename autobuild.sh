@@ -23,6 +23,7 @@ VERSION=0.4.0
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
 : ${AUTOBUILD_INSTALL_ROOT:=`pwd`}
+: ${AUTOBUILD_PACKAGE_ROOT:=`pwd`}
 
 function make_srpm() {
     VARIANT=$1
@@ -38,27 +39,27 @@ function make_srpm() {
     
     rm -f *.src.rpm
     rpmbuild -bs --define "_sourcedir ${PWD}" \
-		 --define "_specdir  ${PWD}"  \
+		 --define "_specdir   ${PWD}" \
 		 --define "_srcrpmdir ${PWD}" ${VARIANT}matahari.spec
 }
 
 env
 
 make_srpm 
-mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
+mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
 
 rc=$?
-cat $AUTOBUILD_INSTALL_ROOT/build.log
+cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/x86_64/build.log
 
 if [ $rc != 0 ]; then
     exit $rc
 fi
 
 make_srpm mingw32-
-mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_INSTALL_ROOT --rebuild ${AUTOBUILD_SOURCE_ROOT}/*.src.rpm
+mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
 
 rc=$?
-cat $AUTOBUILD_INSTALL_ROOT/build.log
+cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch/build.log
 
 if [ $rc != 0 ]; then
     exit $rc
