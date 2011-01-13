@@ -286,13 +286,15 @@ MatahariAgent::init(int argc, char **argv, char* proc_name)
 	settings.mechanism = "GSSAPI";
     }
 
+    mh_info("Connecting to Qpid broker at %s on port %d", servername, serverport);
     agent->setName("matahariproject.org", proc_name);
     std::string dataFile(".matahari-data-");
     agent->init(settings, 5, true, dataFile + proc_name);
 
     /* Do any setup required by our agent */
     if(this->setup(agent) < 0) {
-	fprintf(stderr, "Failed to set up agent\n");
+	fprintf(stderr, "Failed to set up broker connection to %s on %d for %s\n", 
+		servername, serverport, proc_name);
 	return -1;
     } 
     
