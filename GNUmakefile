@@ -30,7 +30,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 TAG    ?= $(shell git show --pretty="format:%h" --abbrev-commit | head -n 1)
 WITH   ?= 
 VARIANT ?=
-PROFILE ?= fedora-13-x86_64
+PROFILE ?= fedora-14-x86_64
 
 linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
@@ -54,6 +54,12 @@ windows.build:
 check:	
 	rm -rf *.build *.check
 	make linux.check windows.check
+
+check-quick:   
+	make linux.check windows.check
+
+check-mock:   
+	make mock mock-win
 
 export:
 	rm -f $(TARFILE)
@@ -86,7 +92,7 @@ mock-nodeps:
 mock:   srpm mock-nodeps
 
 mock-win:   
-	make PROFILE=matahari VARIANT=mingw32- srpm mock-nodeps
+	make PROFILE=$(PROFILE) VARIANT=mingw32- srpm mock-nodeps
 
 
 .PHONY: check
