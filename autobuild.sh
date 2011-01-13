@@ -37,9 +37,9 @@ function make_srpm() {
     echo `date`: Rebuilt ${TARFILE} from ${TAG}
     
     rm -f *.src.rpm
-    rpmbuild -bs --define "_sourcedir ${AUTOBUILD_SOURCE_ROOT}" \
-		 --define "_specdir  ${AUTOBUILD_SOURCE_ROOT}"  \
-		 --define "_srcrpmdir ${AUTOBUILD_SOURCE_ROOT}" ${VARIANT}matahari.spec
+    rpmbuild -bs --define "_sourcedir ${PWD}" \
+		 --define "_specdir  ${PWD}"  \
+		 --define "_srcrpmdir ${PWD}" ${VARIANT}matahari.spec
 }
 
 env
