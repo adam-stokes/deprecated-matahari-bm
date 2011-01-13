@@ -122,10 +122,10 @@ extern gboolean services_action_async(svc_action_t* op, void (*action_callback)(
 
 extern gboolean services_action_cancel(const char *name, const char *action, int interval);
 
-static inline enum ocf_exitcode resources_convert_lsb_exitcode(char *action, int lsb) 
+static inline enum ocf_exitcode services_get_ocf_exitcode(char *action, int lsb_exitcode) 
 {
     if(action != NULL && strcmp("status", action) == 0) {
-	switch(lsb) {
+	switch(lsb_exitcode) {
 	    case LSB_STATUS_OK:			return OCF_OK;
 	    case LSB_STATUS_VAR_PID:		return OCF_NOT_RUNNING;
 	    case LSB_STATUS_VAR_LOCK:		return OCF_NOT_RUNNING;
@@ -135,11 +135,11 @@ static inline enum ocf_exitcode resources_convert_lsb_exitcode(char *action, int
 		return OCF_UNKNOWN_ERROR;
 	}
 	
-    } else if(lsb > LSB_NOT_RUNNING) {
+    } else if(lsb_exitcode > LSB_NOT_RUNNING) {
 	return OCF_UNKNOWN_ERROR;	
     }
 
     /* For non-status operations, the LSB and OCF share error code meaning for rc <= 7 */ 
-    return (enum ocf_exitcode)lsb;
+    return (enum ocf_exitcode)lsb_exitcode;
 }
 #endif
