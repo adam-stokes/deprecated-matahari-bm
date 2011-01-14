@@ -27,6 +27,9 @@
 #include <glib-object.h>
 #include <glib/gi18n.h>
 #include <dbus/dbus-glib-bindings.h>
+#include <dbus/dbus-glib-lowlevel.h>
+
+#include "mh_dbus_common.h"
 
 /* GObject class definition */
 #include "mh_gobject_class.h"
@@ -50,25 +53,48 @@ struct _MatahariPrivate
   guint update_interval;
 };
 
+
 /* Dbus methods */
 gboolean
-Host_identify(Matahari* matahari, GError** error)
+Host_identify(Matahari* matahari, DBusGMethodInvocation *context)
 {
+  GError* error = NULL;
+  if (!check_authorization(HOST_BUS_NAME ".identify", &error, context))
+  {
+    dbus_g_method_return_error(context, error);
+    return FALSE;
+  }
 //  host_identify(5); XXX, not implemented
+  printf("Host_identify\n");
+  dbus_g_method_return(context, TRUE);
   return TRUE;
 }
 
 gboolean
-Host_shutdown(Matahari* matahari, GError** error)
+Host_shutdown(Matahari* matahari, DBusGMethodInvocation *context)
 {
+  GError* error = NULL;
+  if (!check_authorization(HOST_BUS_NAME ".shutdown", &error, context))
+  {
+    dbus_g_method_return_error(context, error);
+    return FALSE;
+  }
   host_shutdown();
+  dbus_g_method_return(context, TRUE);
   return TRUE;
 }
 
 gboolean
-Host_reboot(Matahari* matahari, GError** error)
+Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
 {
+  GError* error = NULL;
+  if (!check_authorization(HOST_BUS_NAME ".reboot", &error, context))
+  {
+    dbus_g_method_return_error(context, error);
+    return FALSE;
+  }
   host_reboot();
+  dbus_g_method_return(context, TRUE);
   return TRUE;
 }
 
@@ -76,7 +102,6 @@ Host_reboot(Matahari* matahari, GError** error)
  * MUST be after declaration of user defined functions.
  */
 #include "matahari-host-dbus-glue.h"
-
 
 //TODO: Properties get/set
 static void
@@ -108,6 +133,25 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
   GType gtype;
   GValue key_value = {0,};
   GValue value_value = {0,};
+
+  int i;
+  char *action_id = NULL;
+  for (i = 0; properties_Host[i].name != NULL; i++)
+  {
+    if (properties_Host[i].prop == property_id)
+    {
+      action_id = strdup(HOST_BUS_NAME ".");
+      action_id = realloc(action_id, (strlen(HOST_BUS_NAME) + strlen(properties_Host[i].name) + 2) * sizeof(char));
+      strcat(action_id, properties_Host[i].name);
+    }
+  }
+  if (action_id == NULL)
+    //TODO: handle error
+    return;
+  if (!check_authorization(action_id, NULL, NULL))
+    // TODO: handle authorization error
+    return;
+  fprintf(stderr, "Authorized\n");
 
   switch (property_id)
     {

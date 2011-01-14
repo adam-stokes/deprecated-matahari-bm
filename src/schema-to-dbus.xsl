@@ -67,6 +67,7 @@
                             <xsl:if test="not(arg[@dir='O'])">
                                 <annotation name="org.freedesktop.DBus.GLib.NoReply" value="yes" />
                             </xsl:if>
+                            <annotation name="org.freedesktop.DBus.GLib.Async" value="" />
                             <xsl:for-each select="arg">
                                 <arg>
                                 <xsl:attribute name="name">

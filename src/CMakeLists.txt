@@ -112,6 +112,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURREN
 pkg_check_modules(glib REQUIRED glib-2.0)
 pkg_check_modules(pcre REQUIRED libpcre)
 pkg_check_modules(dbus-glib REQUIRED dbus-glib-1)
+pkg_check_modules(polkit REQUIRED polkit-gobject-1)
 
 if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
@@ -154,6 +155,7 @@ generate_dbus_interfaces(${CMAKE_CURRENT_SOURCE_DIR}/schema.xml ${apis})
 
 set(HOST_DBUS_SOURCE
     host/matahari-host-dbus.c
+    common/mh_dbus_common.c
     ${CMAKE_CURRENT_BINARY_DIR}/host/matahari-host-dbus-glue.h
     ${CMAKE_CURRENT_BINARY_DIR}/host/matahari-host-dbus-properties.h)
 
@@ -173,6 +175,13 @@ if(dbus-glib_FOUND)
 else(dbus-glib_FOUND)
    message(FATAL_ERROR "dbus-glib headers/libraries not found.")
 endif(dbus-glib_FOUND)
+
+if(polkit_FOUND)
+   include_directories(${polkit_INCLUDE_DIRS})
+   target_link_libraries(${M_HOST_DBUS} ${polkit_LIBRARIES})
+else(polkit_FOUND)
+   message(FATAL_ERROR "polkit headers/libraries not found.")
+endif(polkit_FOUND)
 
 
 ## qpid
