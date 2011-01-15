@@ -19,7 +19,8 @@
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-SERVICE=`basename "$0"`
+SERVICE=`readlink -f "$0"`
+SERVICE=`basename "$SERVICE"`
 PROCESS=`echo "$SERVICE"d`
 
 RETVAL=0
