@@ -20,14 +20,15 @@
      properties.
 -->
 
-<xsl:template match="/">
-    <xsl:for-each select="node/interface">
+<xsl:template match="/node/interface">
+    <!-- Do not generate anything for interface Properies -->
+    <xsl:if test="@name!='org.freedesktop.DBus.Properties'">
         <!-- Create enum of the properties -->
         <xsl:call-template name="enum" />
         <!-- Define Property struct and create array of it with properties
         info -->
         <xsl:call-template name="struct" />
-    </xsl:for-each>
+    </xsl:if>
 </xsl:template>
 
 <!-- This is needed for converting properties names to uppercase -->

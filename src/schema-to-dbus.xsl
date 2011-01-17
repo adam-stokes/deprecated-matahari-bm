@@ -85,6 +85,22 @@
                         </method>
                     </xsl:for-each>
                 </interface>
+                <!-- Get and set function will be used for accessing parameters.
+                     It enables to obtain authorization via Polkit -->
+                <interface name="org.freedesktop.DBus.Properties">
+                    <method name="Get">
+                        <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+                        <arg name="interface" direction="in" type="s"/>
+                        <arg name="property" direction="in" type="s"/>
+                        <arg name="value" direction="out" type="v"/>
+                    </method>
+                    <method name="Set">
+                        <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+                        <arg name="interface" direction="in" type="s"/>
+                        <arg name="property" direction="in" type="s"/>
+                        <arg name="value" direction="in" type="v"/>
+                    </method>
+                </interface>
             </node>
         </exsl:document>
     </xsl:for-each>

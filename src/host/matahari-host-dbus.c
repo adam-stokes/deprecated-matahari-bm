@@ -44,6 +44,7 @@
 #define HOST_BUS_NAME "org.matahariproject.Host"
 #define HOST_OBJECT_PATH "/org/matahariproject/Host"
 #define HOST_INTERFACE_NAME "org.matahariproject.Host"
+#define DBUS_PROPERTY_INTERAFACE_NAME "org.freedesktop.DBus.Properties"
 
 /* Private struct in Matahari class */
 #define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), MATAHARI_TYPE, MatahariPrivate))
@@ -98,6 +99,46 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
   return TRUE;
 }
 
+gboolean
+matahari_get(Matahari* matahari, const char *interface, const char *name, DBusGMethodInvocation *context)
+{
+  GError* error = NULL;
+  char *action = malloc((strlen(interface) + strlen(name) + 2) * sizeof(char));
+  sprintf(action, "%s.%s", interface, name);
+  if (!check_authorization(action, &error, context))
+  {
+    dbus_g_method_return_error(context, error);
+    free(action);
+    return FALSE;
+  }
+  free(action);
+
+  GParamSpec *spec = g_object_class_find_property(G_OBJECT_GET_CLASS(matahari), name);
+  GValue value = {0, };
+  g_value_init(&value, spec->value_type);
+  g_object_get_property(G_OBJECT(matahari), name, &value);
+  dbus_g_method_return(context, &value);
+  return TRUE;
+}
+
+gboolean
+matahari_set(Matahari *matahari, const char *interface, const char *name, GValue *value, DBusGMethodInvocation *context)
+{
+  GError* error = NULL;
+  char *action = malloc((strlen(interface) + strlen(name) + 2) * sizeof(char));
+  sprintf(action, "%s.%s", interface, name);
+  if (!check_authorization(action, &error, context))
+  {
+    dbus_g_method_return_error(context, error);
+    free(action);
+    return FALSE;
+  }
+  free(action);
+
+  g_object_set_property(G_OBJECT(matahari), name, value);
+  return TRUE;
+}
+
 /* Generated dbus stuff for host
  * MUST be after declaration of user defined functions.
  */
@@ -133,25 +174,6 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
   GType gtype;
   GValue key_value = {0,};
   GValue value_value = {0,};
-
-  int i;
-  char *action_id = NULL;
-  for (i = 0; properties_Host[i].name != NULL; i++)
-  {
-    if (properties_Host[i].prop == property_id)
-    {
-      action_id = strdup(HOST_BUS_NAME ".");
-      action_id = realloc(action_id, (strlen(HOST_BUS_NAME) + strlen(properties_Host[i].name) + 2) * sizeof(char));
-      strcat(action_id, properties_Host[i].name);
-    }
-  }
-  if (action_id == NULL)
-    //TODO: handle error
-    return;
-  if (!check_authorization(action_id, NULL, NULL))
-    // TODO: handle authorization error
-    return;
-  fprintf(stderr, "Authorized\n");
 
   switch (property_id)
     {

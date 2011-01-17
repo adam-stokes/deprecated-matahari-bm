@@ -2,6 +2,7 @@
 #include "mh_dbus_common.h"
 
 #include <polkit/polkit.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
 GQuark
 matahari_error_quark (void)
