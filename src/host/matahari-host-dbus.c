@@ -25,9 +25,7 @@
 #include <string.h>
 
 #include <glib-object.h>
-#include <glib/gi18n.h>
 #include <dbus/dbus-glib-bindings.h>
-#include <dbus/dbus-glib-lowlevel.h>
 
 #include "mh_dbus_common.h"
 
@@ -310,68 +308,14 @@ matahari_class_init(MatahariClass *matahari_class)
   gobject_class->set_property = matahari_set_property;
   gobject_class->get_property = matahari_get_property;
 
-  //TODO: Proper properties initialization
   int i;
   for (i = 0; properties_Host[i].name != NULL; i++)
   {
-    switch (properties_Host[i].type)
+    if (!get_paramspec_from_property(properties_Host[i], &pspec))
     {
-        case 's':
-            pspec = g_param_spec_string(properties_Host[i].name,
-                                        properties_Host[i].nick,
-                                        properties_Host[i].desc,
-                                        NULL,
-                                        properties_Host[i].flags);
-            break;
-        case 'b':
-            pspec = g_param_spec_boolean(properties_Host[i].name,
-                                         properties_Host[i].nick,
-                                         properties_Host[i].desc,
-                                         FALSE,
-                                         properties_Host[i].flags);
-            break;
-        case 'n':
-        case 'i':
-            pspec = g_param_spec_int(properties_Host[i].name,
-                                      properties_Host[i].nick,
-                                      properties_Host[i].desc,
-                                      G_MININT, G_MAXINT, 0,
-                                      properties_Host[i].flags);
-            break;
-        case 'x':
-            pspec = g_param_spec_int64(properties_Host[i].name,
-                                       properties_Host[i].nick,
-                                       properties_Host[i].desc,
-                                       G_MININT64, G_MAXINT64, 0,
-                                       properties_Host[i].flags);
- 
-            break;
-        case 'y':
-        case 'q':
-        case 'u':
-            pspec = g_param_spec_uint(properties_Host[i].name,
-                                         properties_Host[i].nick,
-                                         properties_Host[i].desc,
-                                         0, G_MAXUINT, 0,
-                                         properties_Host[i].flags);
-            break;
-        case 't':
-            pspec = g_param_spec_uint64(properties_Host[i].name,
-                                         properties_Host[i].nick,
-                                         properties_Host[i].desc,
-                                         0, G_MAXUINT64, 0,
-                                         properties_Host[i].flags);
- 
-            break;
-        case 'd':
-            pspec = g_param_spec_double(properties_Host[i].name,
-                                         properties_Host[i].nick,
-                                         properties_Host[i].desc,
-                                         -G_MAXDOUBLE, G_MAXDOUBLE, 0,
-                                         properties_Host[i].flags);
-            break;
-        case 'e':
-            // Type is map - type of parameters must be added manually!
+        // Type is map - type of parameters must be added manually!
+        if (properties_Host[i].type == 'e')
+        {
             switch (properties_Host[i].prop)
             {
                 case PROP_LOAD:
@@ -390,10 +334,12 @@ matahari_class_init(MatahariClass *matahari_class)
                                        properties_Host[i].desc,
                                        dbus_g_type_get_map("GHashTable", G_TYPE_STRING, value_type),
                                        properties_Host[i].flags);
-            break;
-        default:
+        }
+        else
+        {
             g_printerr("Unknown type: %c\n", properties_Host[i].type);
             pspec = NULL;
+        }
     }
     if (pspec)
         g_object_class_install_property(gobject_class, properties_Host[i].prop, pspec);
@@ -415,59 +361,6 @@ matahari_init(Matahari *matahari)
 int
 main(int argc, char** argv)
 {
-  GMainLoop* loop = NULL;
-  DBusGConnection *connection = NULL;
-  GError *error = NULL;
-  GObject *obj = NULL;
-  DBusGProxy *driver_proxy = NULL;
-  guint32 request_name_ret;
-
   g_type_init();
-  loop = g_main_loop_new(NULL, FALSE);
-
-  /* Obtain a connection to the system bus */
-  connection = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-  if (!connection)
-    {
-      g_printerr(_("Failed to open connection to bus: %s\n"), error->message);
-      g_error_free(error);
-      exit(1);
-    }
-
-  obj = g_object_new(MATAHARI_TYPE, NULL);
-  dbus_g_connection_register_g_object(connection, HOST_OBJECT_PATH, obj);
-
-  driver_proxy = dbus_g_proxy_new_for_name(connection, DBUS_SERVICE_DBUS,
-      DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
-
-  if (!org_freedesktop_DBus_request_name(driver_proxy, HOST_BUS_NAME, 0,
-      &request_name_ret, &error))
-    {
-      g_printerr(_("Failed to get name: %s\n"), error->message);
-      g_error_free(error);
-      exit(1);
-    }
-
-  switch (request_name_ret)
-    {
-  case DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER:
-    break;
-  case DBUS_REQUEST_NAME_REPLY_IN_QUEUE:
-    g_printerr(
-        _("Looks like another server of this type is already running: Reply in queue\n"));
-    exit(1);
-  case DBUS_REQUEST_NAME_REPLY_EXISTS:
-    g_printerr(
-        _("Looks like another server of this type is already running: Reply exists\n"));
-    exit(1);
-  case DBUS_REQUEST_NAME_REPLY_ALREADY_OWNER:
-    g_printerr(_("We are already running\n"));
-    exit(1);
-  default:
-    g_printerr(_("Unspecified error\n"));
-    exit(1);
-    }
-
-  g_main_loop_run(loop);
-  return 0;
+  return run_dbus_server(MATAHARI_TYPE, HOST_BUS_NAME, HOST_OBJECT_PATH);
 }

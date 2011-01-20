@@ -44,21 +44,10 @@
     <xsl:for-each select="property">
         <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />,
     </xsl:for-each>
-    <xsl:text>};</xsl:text>
+    <xsl:text>};&#10;</xsl:text>
 </xsl:template>
 
 <xsl:template name="struct">
-    <!-- Define Property struct -->
-    <xsl:text>
-
-typedef struct {
-    enum Prop prop;
-    gchar *name, *nick, *desc;
-    GParamFlags flags;
-    char type;
-} Property;
-
-</xsl:text>
     <!-- Create the array of Property structs -->
     <xsl:value-of select="concat('Property properties_', substring-after(substring-after(@name, '.'), '.'))" />
     <xsl:text>[] = {&#10;</xsl:text>
