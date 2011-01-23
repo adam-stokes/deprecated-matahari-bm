@@ -92,6 +92,7 @@ struct option opt[] = {
     {"broker", required_argument, NULL, 'b'},
     {"gssapi", no_argument, NULL, 'g'},
     {"username", required_argument, NULL, 'u'},
+    {"password", required_argument, NULL, 'P'},
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
     {0, 0, 0, 0}
@@ -100,12 +101,13 @@ struct option opt[] = {
 static void
 print_usage()
 {
-    printf("Usage:\tmatahari-netd <options>\n");
+    printf("Usage:\tmatahari-DAEMONd <options>\n");
     printf("\t-d | --daemon     run as a daemon.\n");
     printf("\t-h | --help       print this help message.\n");
     printf("\t-b | --broker     specify broker host name..\n");
     printf("\t-g | --gssapi     force GSSAPI authentication.\n");
     printf("\t-u | --username   username to use for authentication purproses.\n");
+    printf("\t-P | --password   password to use for authentication purproses.\n");
     printf("\t-s | --service    service name to use for authentication purproses.\n");
     printf("\t-p | --port       specify broker port.\n");
 }
@@ -140,6 +142,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     bool gssapi = false;
     char *servername = strdup(MATAHARI_BROKER);
     char *username = NULL;
+    char *password = NULL;
     char *service = NULL;
     int serverport = MATAHARI_PORT;
     int debuglevel = 0;
@@ -192,11 +195,16 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
 	L"User",
 	&username);
+    RegistryRead (
+	HKEY_LOCAL_MACHINE,
+	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+	L"Password",
+	&password);
     
 #else
     
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gu:s:p:v", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:v", opt, &idx)) != -1) {
 	switch (arg) {
 	    case 'h':
 	    case '?':
@@ -226,6 +234,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 		    exit(1);
 		}
 		break;
+            case 'P':
+                if (optarg) {
+                    password = strdup(optarg);
+                } else {
+                    print_usage();
+                    exit(1);
+                }
+                break;
 	    case 'g':
 		gssapi = true;
 		break;
@@ -278,6 +294,9 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     if (username != NULL) {
 	settings.username = username;
+    }
+    if (password != NULL) {
+        settings.password = password;
     }
     if (service != NULL) {
 	settings.service = service;
