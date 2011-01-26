@@ -20,12 +20,7 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
-#include <glib-object.h>
-#include <dbus/dbus-glib-bindings.h>
 
 #include "mh_dbus_common.h"
 
