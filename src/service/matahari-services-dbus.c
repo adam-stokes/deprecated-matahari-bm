@@ -187,13 +187,14 @@ gboolean
 Services_fail(Matahari *matahari, const char *name, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
-  if (!check_authorization(SERVICES_BUS_NAME ".", &error, context))
+  if (!check_authorization(SERVICES_BUS_NAME ".fail", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-
-  dbus_g_method_return(context);
+  // TODO: Implement when implemented in backend
+  error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED, "Action fail is not implemented yet!");
+  dbus_g_method_return_error(context, error);
   return TRUE;
 }
 
@@ -201,13 +202,14 @@ gboolean
 Services_describe(Matahari *matahari, const char *name, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
-  if (!check_authorization(SERVICES_BUS_NAME ".", &error, context))
+  if (!check_authorization(SERVICES_BUS_NAME ".describe", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-
-  dbus_g_method_return(context);
+  // TODO: Implement when implemented in backend
+  error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED, "Action describe is not implemented yet!");
+  dbus_g_method_return_error(context, error);
   return TRUE;
 }
 
