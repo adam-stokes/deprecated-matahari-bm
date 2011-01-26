@@ -161,6 +161,7 @@ execute_process(
 ### DBus
 
 add_subdirectory(host)
+add_subdirectory(service)
 
 ## qpid
 
