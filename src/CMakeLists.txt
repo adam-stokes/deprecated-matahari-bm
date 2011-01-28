@@ -162,6 +162,7 @@ execute_process(
 
 add_subdirectory(host)
 add_subdirectory(service)
+add_subdirectory(net)
 
 ## qpid
 

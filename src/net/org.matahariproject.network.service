@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.matahariproject.Network
+Exec=/usr/sbin/matahari-network-dbusd
