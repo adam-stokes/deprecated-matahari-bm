@@ -138,7 +138,7 @@ Services_stop(Matahari *matahari, const char *name, unsigned int timeout, DBusGM
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  svc_action_t *op = services_action_create(name, "start", 0, timeout);
+  svc_action_t *op = services_action_create(name, "stop", 0, timeout);
   services_action_sync(op);
   int rc = op->rc;
   services_action_free(op);
@@ -253,7 +253,6 @@ matahari_set(Matahari *matahari, const char *interface, const char *name, GValue
  */
 #include "matahari-services-dbus-glue.h"
 
-//TODO: Properties get/set
 static void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)
