@@ -51,12 +51,14 @@ struct _MatahariPrivate
   int x;
 };
 
+
+/* Get status of the interface
+ * 0 - running
+ * 1 - inactive
+ */
 static int interface_status(const char *iface)
 {
   uint64_t flags = 0;
-  if(iface == NULL)
-    return 3;
-  
   network_status(iface, &flags);
 
   if(flags & SIGAR_IFF_UP)
