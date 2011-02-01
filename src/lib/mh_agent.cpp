@@ -99,9 +99,9 @@ struct option opt[] = {
 };
 
 static void
-print_usage()
+print_usage(const char *proc_name)
 {
-    printf("Usage:\tmatahari-DAEMONd <options>\n");
+    printf("Usage:\tmatahari-%sd <options>\n", proc_name);
     printf("\t-d | --daemon     run as a daemon.\n");
     printf("\t-h | --help       print this help message.\n");
     printf("\t-b | --broker     specify broker host name..\n");
@@ -208,7 +208,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 	switch (arg) {
 	    case 'h':
 	    case '?':
-		print_usage();
+		print_usage(proc_name);
 		exit(0);
 		break;
 	    case 'd':
@@ -222,7 +222,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 		if (optarg) {
 		    service = strdup(optarg);
 		} else {
-		    print_usage();
+		    print_usage(proc_name);
 		    exit(1);
 		}
 		break;
@@ -230,7 +230,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 		if (optarg) {
 		    username = strdup(optarg);
 		} else {
-		    print_usage();
+		    print_usage(proc_name);
 		    exit(1);
 		}
 		break;
@@ -238,7 +238,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 if (optarg) {
                     password = strdup(optarg);
                 } else {
-                    print_usage();
+                    print_usage(proc_name);
                     exit(1);
                 }
                 break;
@@ -249,7 +249,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 		if (optarg) {
 		    serverport = atoi(optarg);
 		} else {
-		    print_usage();
+		    print_usage(proc_name);
 		    exit(1);
 		}
 		break;
@@ -257,13 +257,13 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 		if (optarg) {
 		    servername = strdup(optarg);
 		} else {
-		    print_usage();
+		    print_usage(proc_name);
 		    exit(1);
 		}
 		break;
 	    default:
 		fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
-		print_usage();
+		print_usage(proc_name);
 		exit(0);
 	    break;
 	}
