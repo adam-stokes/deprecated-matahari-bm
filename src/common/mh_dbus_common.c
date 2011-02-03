@@ -176,5 +176,8 @@ run_dbus_server(GType matahari_type, char *bus_name, char *object_path)
     }
 
   g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+  g_object_unref(obj);
+  g_object_unref(driver_proxy);
   return 0;
 }
