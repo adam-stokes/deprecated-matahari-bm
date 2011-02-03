@@ -8,21 +8,24 @@
 macro(generate_dbus_headers API)
     find_file(XSLTPROC xsltproc)
     find_file(BIND_TOOL dbus-binding-tool)
+    
+    # Lowercase
+    string(TOLOWER ${API} lAPI)
 
     # Convert dbus interface to glue and properties files
     add_custom_command(
-        OUTPUT matahari-${API}-dbus-glue.h
+        OUTPUT matahari-${lAPI}-dbus-glue.h
         COMMAND ${BIND_TOOL} --prefix=matahari --mode=glib-server
-            --output=matahari-${API}-dbus-glue.h
+            --output=matahari-${lAPI}-dbus-glue.h
             ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.${API}.xml
-        COMMENT "Generating matahari-${API}-dbus-glue.h"
+        COMMENT "Generating matahari-${lAPI}-dbus-glue.h"
     )
 
     add_custom_command(
-        OUTPUT matahari-${API}-dbus-properties.h
-        COMMAND ${XSLTPROC} --output matahari-${API}-dbus-properties.h
+        OUTPUT matahari-${lAPI}-dbus-properties.h
+        COMMAND ${XSLTPROC} --output matahari-${lAPI}-dbus-properties.h
             ${CMAKE_CURRENT_SOURCE_DIR}/../dbus-to-c.xsl
             ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.${API}.xml
-        COMMENT "Generating matahari-${API}-dbus-properties.h"
+        COMMENT "Generating matahari-${lAPI}-dbus-properties.h"
     )
 endmacro(generate_dbus_headers)

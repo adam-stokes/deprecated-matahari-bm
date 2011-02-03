@@ -1,7 +1,7 @@
 set(MHOST_VERSION 0.0.1)
 
 include(DBusMacros)
-generate_dbus_headers(host)
+generate_dbus_headers(Host)
 
 set(HOST_DBUS_SOURCE
     matahari-host-dbus.c
@@ -34,7 +34,7 @@ endif(dbus-glib_FOUND)
 # Install targets
 # TODO: fix hardcoded paths, should go to libexec
 install(TARGETS ${M_HOST_DBUS} DESTINATION sbin)
-install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.host.xml DESTINATION share/dbus-1/interfaces)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.host.service DESTINATION share/dbus-1/system-services)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.host.conf DESTINATION /etc/dbus-1/system.d)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.host.policy DESTINATION share/polkit-1/actions)
+install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Host.xml DESTINATION share/dbus-1/interfaces)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Host.service DESTINATION share/dbus-1/system-services)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Host.conf DESTINATION /etc/dbus-1/system.d)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Host.policy DESTINATION share/polkit-1/actions)

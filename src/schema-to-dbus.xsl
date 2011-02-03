@@ -4,9 +4,6 @@
                 xmlns:exsl="http://exslt.org/common"
                 extension-element-prefixes="exsl">
 
-<xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
-<xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
-
 <!-- This xsl transformation takes schema.xml and converts it to multiple
      DBus interfaces, one per each class.
 
@@ -20,7 +17,7 @@
         <xsl:value-of select="schema/@package" />
     </xsl:variable>
     <xsl:for-each select="schema/class">
-        <xsl:variable name="filename" select="concat('org.matahariproject.', translate(@name, $uppercase, $smallcase),'.xml')" />
+        <xsl:variable name="filename" select="concat('org.matahariproject.', @name,'.xml')" />
         <exsl:document method="xml" indent="yes" version="1.0" encoding="utf-8" href="{$filename}">
             <node>
                 <interface>

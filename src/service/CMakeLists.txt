@@ -1,7 +1,7 @@
 set(MHOST_VERSION 0.0.1)
 
 include(DBusMacros)
-generate_dbus_headers(services)
+generate_dbus_headers(Services)
 
 set(SRV_DBUS_SOURCE
     matahari-services-dbus.c
@@ -34,7 +34,7 @@ endif(dbus-glib_FOUND)
 # Install targets
 # TODO: fix hardcoded paths, should go to libexec
 install(TARGETS ${M_SRV_DBUS} DESTINATION sbin)
-install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.services.xml DESTINATION share/dbus-1/interfaces)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.services.service DESTINATION share/dbus-1/system-services)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.services.conf DESTINATION /etc/dbus-1/system.d)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.services.policy DESTINATION share/polkit-1/actions)
+install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Services.xml DESTINATION share/dbus-1/interfaces)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.service DESTINATION share/dbus-1/system-services)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.conf DESTINATION /etc/dbus-1/system.d)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.policy DESTINATION share/polkit-1/actions)

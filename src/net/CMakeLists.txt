@@ -1,7 +1,7 @@
 set(MHOST_VERSION 0.0.1)
 
 include(DBusMacros)
-generate_dbus_headers(network)
+generate_dbus_headers(Network)
 
 set(NET_DBUS_SOURCE
     matahari-network-dbus.c
@@ -34,7 +34,7 @@ endif(dbus-glib_FOUND)
 # Install targets
 # TODO: fix hardcoded paths, should go to libexec
 install(TARGETS ${M_NET_DBUS} DESTINATION sbin)
-install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.network.xml DESTINATION share/dbus-1/interfaces)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.network.service DESTINATION share/dbus-1/system-services)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.network.conf DESTINATION /etc/dbus-1/system.d)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.network.policy DESTINATION share/polkit-1/actions)
+install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Network.xml DESTINATION share/dbus-1/interfaces)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.service DESTINATION share/dbus-1/system-services)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.conf DESTINATION /etc/dbus-1/system.d)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.policy DESTINATION share/polkit-1/actions)
