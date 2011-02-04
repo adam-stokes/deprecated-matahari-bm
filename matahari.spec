@@ -1,5 +1,5 @@
-%global specversion 21
-%global upstream_version b6f91b3
+%global specversion 24
+%global upstream_version 8003b6c
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -14,7 +14,9 @@ Summary:	Matahari QMF Agents for Linux guests
 Group:		Applications/System
 License:	GPLv2
 URL:		http://fedorahosted.org/matahari
-Source0:	matahari-%{version}.tbz2
+
+# wget --no-check-certificate -O matahari-matahari-{upstream_version}.tgz https://github.com/matahari/matahari/tarball/{upstream_version}
+Source0:	matahari-matahari-%{upstream_version}.tgz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:	dbus
@@ -69,7 +71,7 @@ Requires:	glib2-devel
 Headers and shared libraries for developing Matahari agents.
 
 %prep
-%setup -q
+%setup -q -n matahari-matahari-%{upstream_version}
 
 %build
 %{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo .

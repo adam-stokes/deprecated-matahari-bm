@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 10
-%global upstream_version 66098f9
+%global specversion 11
+%global upstream_version 8003b6c
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -18,9 +18,11 @@ Summary:	Matahari QMF Agents for Windows guests
 Group:		Applications/System
 License:	GPLv2
 URL:		http://fedorahosted.org/matahari
-Source0:	matahari-%{version}.tbz2
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+# wget --no-check-certificate -O matahari-matahari-{upstream_version}.tgz https://github.com/matahari/matahari/tarball/{upstream_version}
+Source0:	matahari-matahari-%{upstream_version}.tgz
+
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:	noarch
 
 BuildRequires:	redhat-rpm-config cmake make qmf-devel
@@ -45,7 +47,7 @@ MinGW cross-compiled Windows application.
 %{_mingw32_debug_package}
 
 %prep
-%setup -q -n matahari-%{version}
+%setup -q -n matahari-matahari-%{upstream_version}
 
 %build
 PATH=%{_mingw32_bindir}:$PATH

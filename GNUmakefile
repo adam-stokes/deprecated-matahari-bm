@@ -20,7 +20,8 @@
 
 PACKAGE		?= matahari
 VERSION		?= 0.4.0
-TARFILE		= $(PACKAGE)-$(VERSION).tbz2
+TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
+TARFILE		= $(TARPREFIX).tgz
 
 RPM_ROOT	?= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
@@ -62,8 +63,8 @@ check-mock:
 	make mock mock-win
 
 export:
-	rm -f $(TARFILE)
-	git archive --prefix=$(PACKAGE)-$(VERSION)/ $(TAG) | bzip2 > $(TARFILE)
+	rm -f $(TARFILE).tgz
+	git archive --prefix=$(TARPREFIX)/ $(TAG) | gzip > $(TARFILE)
 	echo `date`: Rebuilt $(TARFILE) from $(TAG)
 
 srpm:	export $(VARIANT)$(PACKAGE).spec
