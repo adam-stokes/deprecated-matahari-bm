@@ -59,8 +59,8 @@ Host_identify(Matahari* matahari, DBusGMethodInvocation *context)
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-//  host_identify(5); XXX, not implemented
-  printf("Host_identify\n");
+  // TODO: Implement when implemented in backend
+  error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED, "Action fail is not implemented yet!");
   dbus_g_method_return(context, TRUE);
   return TRUE;
 }
