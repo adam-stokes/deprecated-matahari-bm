@@ -212,5 +212,5 @@ int
 main(int argc, char** argv)
 {
   g_type_init();
-  return run_dbus_server(MATAHARI_TYPE, NETWORK_BUS_NAME, NETWORK_OBJECT_PATH);
+  return run_dbus_server(NETWORK_BUS_NAME, NETWORK_OBJECT_PATH);
 }

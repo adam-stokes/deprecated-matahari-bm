@@ -147,7 +147,7 @@ get_paramspec_from_property(Property prop, GParamSpec** pspec)
 }
 
 int
-run_dbus_server(GType matahari_type, char *bus_name, char *object_path)
+run_dbus_server(char *bus_name, char *object_path)
 {
   GMainLoop* loop = NULL;
   DBusGConnection *connection = NULL;
@@ -169,7 +169,7 @@ run_dbus_server(GType matahari_type, char *bus_name, char *object_path)
       return 1;
     }
 
-  obj = g_object_new(matahari_type, NULL);
+  obj = g_object_new(MATAHARI_TYPE, NULL);
   dbus_g_connection_register_g_object(connection, object_path, obj);
 
   driver_proxy = dbus_g_proxy_new_for_name(connection, DBUS_SERVICE_DBUS,

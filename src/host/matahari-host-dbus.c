@@ -262,5 +262,5 @@ int
 main(int argc, char** argv)
 {
   g_type_init();
-  return run_dbus_server(MATAHARI_TYPE, HOST_BUS_NAME, HOST_OBJECT_PATH);
+  return run_dbus_server(HOST_BUS_NAME, HOST_OBJECT_PATH);
 }

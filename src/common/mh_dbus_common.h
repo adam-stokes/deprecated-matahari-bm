@@ -60,7 +60,7 @@ extern Property properties[];
  * Start DBus server with name 'bus_name' and object path 'object_path'
  */
 int
-run_dbus_server();
+run_dbus_server(char *bus_name, char *object_path);
 
 /**
  * Check the authorization for getting the parameter 'name' using PolicyKit
