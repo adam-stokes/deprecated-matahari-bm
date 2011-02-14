@@ -49,8 +49,7 @@
 
 <xsl:template name="struct">
     <!-- Create the array of Property structs -->
-    <xsl:value-of select="concat('Property properties_', substring-after(substring-after(@name, '.'), '.'))" />
-    <xsl:text>[] = {&#10;</xsl:text>
+    <xsl:text>Property properties[] = {&#10;</xsl:text>
     <!-- Iterate through all properties -->
     <xsl:for-each select="property">
         <xsl:text>    { </xsl:text>

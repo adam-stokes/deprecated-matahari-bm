@@ -7,6 +7,11 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <dbus/dbus-glib-bindings.h>
 
+/* Generate the GObject boilerplate */
+G_DEFINE_TYPE(Matahari, matahari, G_TYPE_OBJECT)
+
+const DBusGObjectInfo dbus_glib_matahari_object_info;
+
 GQuark
 matahari_error_quark (void)
 {
@@ -222,4 +227,53 @@ matahari_set(Matahari *matahari, const char *interface, const char *name, GValue
 
   g_object_set_property(G_OBJECT(matahari), name, value);
   return TRUE;
+}
+
+/* Class init */
+static void
+matahari_class_init(MatahariClass *matahari_class)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
+  GParamSpec *pspec = NULL;
+  GType value_type;
+
+  //g_type_class_add_private(matahari_class, sizeof (MatahariPrivate));
+
+  gobject_class->set_property = matahari_set_property;
+  gobject_class->get_property = matahari_get_property;
+
+  int i;
+  for (i = 0; properties[i].name != NULL; i++)
+  {
+    if (!get_paramspec_from_property(properties[i], &pspec))
+    {
+        // Type is map - type of parameters must be added manually!
+        if (properties[i].type == 'e')
+        {
+            value_type = matahari_dict_type(properties[i].prop);
+            pspec = g_param_spec_boxed(properties[i].name,
+                                       properties[i].nick,
+                                       properties[i].desc,
+                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, value_type),
+                                       properties[i].flags);
+        }
+        else
+        {
+            g_printerr("Unknown type: %c\n", properties[i].type);
+            pspec = NULL;
+        }
+    }
+    if (pspec)
+        g_object_class_install_property(gobject_class, properties[i].prop, pspec);
+  }
+
+  dbus_g_object_type_install_info(MATAHARI_TYPE, &dbus_glib_matahari_object_info);
+}
+
+/* Instance init */
+static void
+matahari_init(Matahari *matahari)
+{
+  MatahariPrivate *priv;
+  matahari->priv = priv = MATAHARI_GET_PRIVATE(matahari);
 }

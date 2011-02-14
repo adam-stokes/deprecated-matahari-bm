@@ -37,9 +37,6 @@
 #define HOST_INTERFACE_NAME "org.matahariproject.Host"
 #define DBUS_PROPERTY_INTERAFACE_NAME "org.freedesktop.DBus.Properties"
 
-/* Private struct in Matahari class */
-#define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), MATAHARI_TYPE, MatahariPrivate))
-
 struct _MatahariPrivate
 {
   guint update_interval;
@@ -96,7 +93,7 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
 #include "matahari-host-dbus-glue.h"
 
 //TODO: Properties get/set
-static void
+void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)
 {
@@ -113,7 +110,7 @@ matahari_set_property(GObject *object, guint property_id, const GValue *value,
     }
 }
 
-static void
+void
 matahari_get_property(GObject *object, guint property_id, GValue *value,
     GParamSpec *pspec)
 {
@@ -245,70 +242,20 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     }
 }
 
-/* Generate the GObject boilerplate */
-G_DEFINE_TYPE(Matahari, matahari, G_TYPE_OBJECT)
-
-/* Class init */
-static void
-matahari_class_init(MatahariClass *matahari_class)
+GType matahari_dict_type(int prop)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
-  GParamSpec *pspec = NULL;
-  GType value_type;
-
-  g_type_class_add_private(matahari_class, sizeof (MatahariPrivate));
-
-  gobject_class->set_property = matahari_set_property;
-  gobject_class->get_property = matahari_get_property;
-
-  int i;
-  for (i = 0; properties_Host[i].name != NULL; i++)
+  switch (prop)
   {
-    if (!get_paramspec_from_property(properties_Host[i], &pspec))
-    {
-        // Type is map - type of parameters must be added manually!
-        if (properties_Host[i].type == 'e')
-        {
-            switch (properties_Host[i].prop)
-            {
-                case PROP_LOAD:
-                    value_type = G_TYPE_DOUBLE;
-                    break;
-                case PROP_PROCESS_STATISTICS:
-                    value_type = G_TYPE_INT;
-                    break;
-                default:
-                    g_printerr("Type of property %s is map of unknown types\n", properties_Host[i].name);
-                    value_type = G_TYPE_VALUE;
-            }
-
-            pspec = g_param_spec_boxed(properties_Host[i].name,
-                                       properties_Host[i].nick,
-                                       properties_Host[i].desc,
-                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, value_type),
-                                       properties_Host[i].flags);
-        }
-        else
-        {
-            g_printerr("Unknown type: %c\n", properties_Host[i].type);
-            pspec = NULL;
-        }
-    }
-    if (pspec)
-        g_object_class_install_property(gobject_class, properties_Host[i].prop, pspec);
+    case PROP_LOAD:
+      return G_TYPE_DOUBLE;
+      break;
+    case PROP_PROCESS_STATISTICS:
+      return G_TYPE_INT;
+      break;
+    default:
+      g_printerr("Type of property %s is map of unknown types\n", properties[prop].name);
+      return G_TYPE_VALUE;
   }
-
-  dbus_g_object_type_install_info(MATAHARI_TYPE, &dbus_glib_matahari_object_info);
-}
-
-/* Instance init */
-static void
-matahari_init(Matahari *matahari)
-{
-  MatahariPrivate *priv;
-  matahari->priv = priv = MATAHARI_GET_PRIVATE(matahari);
-  //XXX hardcoded number
-  priv->update_interval = 5;
 }
 
 int
