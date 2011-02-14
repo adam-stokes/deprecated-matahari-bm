@@ -24,9 +24,6 @@
 
 #include "mh_dbus_common.h"
 
-/* GObject class definition */
-#include "mh_gobject_class.h"
-
 /* Services methods */
 #include "matahari/services.h"
 #include "matahari/utilities.h"
@@ -205,46 +202,6 @@ Services_describe(Matahari *matahari, const char *name, DBusGMethodInvocation *c
   // TODO: Implement when implemented in backend
   error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED, "Action describe is not implemented yet!");
   dbus_g_method_return_error(context, error);
-  return TRUE;
-}
-
-gboolean
-matahari_get(Matahari* matahari, const char *interface, const char *name, DBusGMethodInvocation *context)
-{
-  GError* error = NULL;
-  char *action = malloc((strlen(interface) + strlen(name) + 2) * sizeof(char));
-  sprintf(action, "%s.%s", interface, name);
-  if (!check_authorization(action, &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    free(action);
-    return FALSE;
-  }
-  free(action);
-
-  GParamSpec *spec = g_object_class_find_property(G_OBJECT_GET_CLASS(matahari), name);
-  GValue value = {0, };
-  g_value_init(&value, spec->value_type);
-  g_object_get_property(G_OBJECT(matahari), name, &value);
-  dbus_g_method_return(context, &value);
-  return TRUE;
-}
-
-gboolean
-matahari_set(Matahari *matahari, const char *interface, const char *name, GValue *value, DBusGMethodInvocation *context)
-{
-  GError* error = NULL;
-  char *action = malloc((strlen(interface) + strlen(name) + 2) * sizeof(char));
-  sprintf(action, "%s.%s", interface, name);
-  if (!check_authorization(action, &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    free(action);
-    return FALSE;
-  }
-  free(action);
-
-  g_object_set_property(G_OBJECT(matahari), name, value);
   return TRUE;
 }
 
