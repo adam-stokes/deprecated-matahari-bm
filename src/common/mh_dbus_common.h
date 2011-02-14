@@ -32,16 +32,19 @@
 /* Private struct in Matahari class */
 #define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), MATAHARI_TYPE, MatahariPrivate))
 
+// Matahari error codes
 #define MATAHARI_ERROR matahari_error_quark ()
 enum { MATAHARI_AUTHENTICATION_ERROR, MATAHARI_NOT_IMPLEMENTED };
 
 GQuark
 matahari_error_quark (void);
 
+/**
+ * Check the authorization for given 'action' using PolicyKit. Returns TRUE if
+ * user is authorized, otherwise return FALSE and 'error' is set.
+ */
 gboolean
 check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *context);
-
-enum Prop;
 
 typedef struct {
     int prop;
@@ -50,26 +53,49 @@ typedef struct {
     char type;
 } Property;
 
+// This array is defined in auto-generated matahari-module-properties.h
 extern Property properties[];
 
-gboolean
-get_paramspec_from_property(Property prop, GParamSpec** spec);
-
+/**
+ * Start DBus server with name 'bus_name' and object path 'object_path'
+ */
 int
 run_dbus_server();
 
+/**
+ * Check the authorization for getting the parameter 'name' using PolicyKit
+ * action interface.name
+ */
 gboolean
 matahari_get(Matahari* matahari, const char *interface, const char *name, DBusGMethodInvocation *context);
 
+/**
+ * Check the authorization for setting the parameter 'name' using PolicyKit
+ * action interface.name
+ */
 gboolean
 matahari_set(Matahari *matahari, const char *interface, const char *name, GValue *value, DBusGMethodInvocation *context);
 
+/**
+ * This method is used for getting value of DBus property.
+ * It must be implemented in each module.
+ * Set the value of property_id parameter to parameter value.
+ */
 void
 matahari_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 
+/**
+ * This method is used for setting value of DBus property.
+ * It must be implemented in each module.
+ * New value of property_id is in parameter value.
+ */
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 
+/**
+ * This method is used to determine type of value in all dictionary parameters.
+ * It must be implemented in each module.
+ */
 GType
 matahari_dict_type(int prop);
 
