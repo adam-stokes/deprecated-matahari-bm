@@ -83,6 +83,7 @@ check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *
 gboolean
 get_paramspec_from_property(Property prop, GParamSpec** pspec)
 {
+    GType value_type;
     switch (prop.type)
     {
         case 's':
@@ -138,6 +139,15 @@ get_paramspec_from_property(Property prop, GParamSpec** pspec)
                                         prop.desc,
                                         -G_MAXDOUBLE, G_MAXDOUBLE, 0,
                                         prop.flags);
+            break;
+        case 'e':
+            // Type is map - key is string, type of value must be added manually!
+            value_type = matahari_dict_type(prop.prop);
+            *pspec = g_param_spec_boxed(prop.name,
+                                       prop.nick,
+                                       prop.desc,
+                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, value_type),
+                                       prop.flags);
             break;
         default:
             return FALSE;
@@ -256,7 +266,6 @@ matahari_class_init(MatahariClass *matahari_class)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS(matahari_class);
   GParamSpec *pspec = NULL;
-  GType value_type;
 
   //g_type_class_add_private(matahari_class, sizeof (MatahariPrivate));
 
@@ -268,21 +277,8 @@ matahari_class_init(MatahariClass *matahari_class)
   {
     if (!get_paramspec_from_property(properties[i], &pspec))
     {
-        // Type is map - type of parameters must be added manually!
-        if (properties[i].type == 'e')
-        {
-            value_type = matahari_dict_type(properties[i].prop);
-            pspec = g_param_spec_boxed(properties[i].name,
-                                       properties[i].nick,
-                                       properties[i].desc,
-                                       dbus_g_type_get_map("GHashTable", G_TYPE_STRING, value_type),
-                                       properties[i].flags);
-        }
-        else
-        {
-            g_printerr("Unknown type: %c\n", properties[i].type);
-            pspec = NULL;
-        }
+        g_printerr("Unknown type: %c\n", properties[i].type);
+        pspec = NULL;
     }
     if (pspec)
         g_object_class_install_property(gobject_class, properties[i].prop, pspec);
