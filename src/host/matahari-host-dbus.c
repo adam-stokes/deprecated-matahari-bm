@@ -117,11 +117,8 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
   Matahari *self = MATAHARI(object);
   sigar_proc_stat_t procs;
   sigar_loadavg_t avg;
-  DBusGTypeSpecializedAppendContext appendctx;
-  gpointer ret;
-  GType gtype;
-  GValue key_value = {0,};
-  GValue value_value = {0,};
+  Dict *dict;
+  GValue value_value = {0, };
 
   switch (property_id)
     {
@@ -177,63 +174,44 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     // 1/5/15 minute load average - map
     host_get_load_averages(&avg);
 
-    gtype = G_VALUE_TYPE (value);
-    ret = dbus_g_type_specialized_construct (gtype);
-    g_value_set_boxed_take_ownership (value, ret);
-
-    dbus_g_type_specialized_init_append (value, &appendctx);
-
-    g_value_init (&key_value, G_TYPE_STRING);
+    dict = dict_new(value);
     g_value_init (&value_value, G_TYPE_DOUBLE);
 
-    g_value_set_static_string(&key_value, "1");
     g_value_set_double(&value_value, avg.loadavg[0]);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "1", &value_value);
 
-    g_value_set_static_string(&key_value, "5");
     g_value_set_double(&value_value, avg.loadavg[1]);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "5", &value_value);
 
-    g_value_set_static_string(&key_value, "15");
     g_value_set_double(&value_value, avg.loadavg[2]);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "15", &value_value);
+    dict_free(dict);
     break;
   case PROP_PROCESS_STATISTICS:
     // Process statistics is type map string -> int
     host_get_processes(&procs);
 
-    gtype = G_VALUE_TYPE (value);
-    ret = dbus_g_type_specialized_construct (gtype);
-    g_value_set_boxed_take_ownership (value, ret);
-
-    dbus_g_type_specialized_init_append (value, &appendctx);
-
-    g_value_init (&key_value, G_TYPE_STRING);
+    dict = dict_new(value);
     g_value_init (&value_value, G_TYPE_INT);
 
-    g_value_set_static_string(&key_value, "total");
     g_value_set_int(&value_value, procs.total);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "total", &value_value);
 
-    g_value_set_static_string(&key_value, "idle");
     g_value_set_int(&value_value, procs.idle);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "idle", &value_value);
 
-    g_value_set_static_string(&key_value, "zombie");
     g_value_set_int(&value_value, procs.zombie);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "zombie", &value_value);
 
-    g_value_set_static_string(&key_value, "running");
     g_value_set_int(&value_value, procs.running);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "running", &value_value);
 
-    g_value_set_static_string(&key_value, "stopped");
     g_value_set_int(&value_value, procs.stopped);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "stopped", &value_value);
 
-    g_value_set_static_string(&key_value, "sleeping");
     g_value_set_int(&value_value, procs.sleeping);
-    dbus_g_type_specialized_map_append (&appendctx, &key_value, &value_value);
+    dict_add(dict, "sleeping", &value_value);
+    dict_free(dict);
     break;
   default:
     /* We don't have any other property... */

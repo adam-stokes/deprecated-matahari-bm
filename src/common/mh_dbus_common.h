@@ -99,4 +99,30 @@ matahari_set_property(GObject *object, guint property_id, const GValue *value, G
 GType
 matahari_dict_type(int prop);
 
+/**
+ * Dictionary type. Key is always string, value is set in constructor dict_new.
+ */
+typedef struct
+{
+    GValue *value;
+    GValue *key;
+    DBusGTypeSpecializedAppendContext appendctx;
+} Dict;
+
+/**
+ * Constructor of dictionary type. Key is string, type of value is defined by type of 'value'.
+ * New value will be stored in 'value'. Use dict_free after setting all values.
+ */
+Dict *dict_new(GValue *value);
+
+/**
+ * Add 'value' to the dictionary 'dict'.
+ */
+void dict_add(Dict *dict, const gchar *key, GValue *value);
+
+/**
+ * Frees memory allocated by dict_new.
+ */
+void dict_free(Dict *dict);
+
 #endif

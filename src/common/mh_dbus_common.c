@@ -298,3 +298,29 @@ matahari_init(Matahari *matahari)
   MatahariPrivate *priv;
   matahari->priv = priv = MATAHARI_GET_PRIVATE(matahari);
 }
+
+Dict *dict_new(GValue *value)
+{
+    Dict *dict = malloc(sizeof(Dict));
+    dict->key = calloc(sizeof(GValue), 1);
+    dict->value = value;
+    g_value_init(dict->key, G_TYPE_STRING);
+    gpointer ret = dbus_g_type_specialized_construct (G_VALUE_TYPE (value));
+    g_value_set_boxed_take_ownership (value, ret);
+
+    dbus_g_type_specialized_init_append (value, &(dict->appendctx));
+
+    return dict;
+}
+
+void dict_add(Dict *dict, const gchar *key, GValue *value)
+{
+    g_value_set_static_string(dict->key, key);
+    dbus_g_type_specialized_map_append (&(dict->appendctx), dict->key, value);
+}
+
+void dict_free(Dict *dict)
+{
+    free(dict->key);
+    free(dict);
+}
