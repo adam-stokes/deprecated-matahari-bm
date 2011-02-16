@@ -16,7 +16,7 @@ Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Windows guests
 
 Group:		Applications/System
-License:	GPLv2
+License:	GPLv2+
 URL:		http://fedorahosted.org/matahari
 
 # wget --no-check-certificate -O matahari-matahari-{upstream_version}.tgz https://github.com/matahari/matahari/tarball/{upstream_version}
