@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 11
-%global upstream_version 8003b6c
+%global specversion 12
+%global upstream_version 060266b
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -44,7 +44,7 @@ as a set of objects with properties and methods.
 
 MinGW cross-compiled Windows application.
 
-%{_mingw32_debug_package}
+#{_mingw32_debug_package}
 
 %prep
 %setup -q -n matahari-matahari-%{upstream_version}
@@ -53,7 +53,7 @@ MinGW cross-compiled Windows application.
 PATH=%{_mingw32_bindir}:$PATH
 
 ls -al /usr/i686-pc-mingw32/sys-root/mingw/lib/pkgconfig
-%{_mingw32_cmake} --debug-output -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=on
+%{_mingw32_cmake} --debug-output -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=on
 make VERBOSE=1 %{?_smp_mflags}
 
 %install
@@ -75,9 +75,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %changelog
-* Tue Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - matahari-0.4.0-0.3.e1d0d9a.git
+* Tue Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.12.060266b.git
 - Initial build.
 
-* Fri Sep 10 2010 Andrew Beekhof <andrew@beekhof.net> - matahari-0.4.0-0.1
+* Fri Sep 10 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.1
 - Initial build.
 
