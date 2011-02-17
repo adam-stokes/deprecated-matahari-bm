@@ -238,5 +238,6 @@ int
 main(int argc, char** argv)
 {
   g_type_init();
+  priv.update_interval = 5;
   return run_dbus_server(HOST_BUS_NAME, HOST_OBJECT_PATH);
 }
