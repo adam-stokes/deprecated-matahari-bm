@@ -37,11 +37,12 @@
 #define HOST_INTERFACE_NAME "org.matahariproject.Host"
 #define DBUS_PROPERTY_INTERAFACE_NAME "org.freedesktop.DBus.Properties"
 
-struct _MatahariPrivate
+struct Private
 {
   guint update_interval;
 };
 
+struct Private priv;
 
 /* Dbus methods */
 gboolean
@@ -96,11 +97,10 @@ void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)
 {
-  Matahari *self = MATAHARI(object);
   switch (property_id)
     {
   case PROP_UPDATE_INTERVAL:
-    self->priv->update_interval = g_value_get_uint (value);
+    priv.update_interval = g_value_get_uint (value);
     break;
   default:
     /* We don't have any other property... */
@@ -113,7 +113,6 @@ void
 matahari_get_property(GObject *object, guint property_id, GValue *value,
     GParamSpec *pspec)
 {
-  Matahari *self = MATAHARI(object);
   sigar_proc_stat_t procs;
   sigar_loadavg_t avg;
   Dict *dict;
@@ -155,7 +154,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     g_value_set_string (value, host_get_cpu_flags());
     break;
   case PROP_UPDATE_INTERVAL:
-    g_value_set_uint (value, self->priv->update_interval);
+    g_value_set_uint (value, priv.update_interval);
     break;
   case PROP_LAST_UPDATED:
     // Not used in DBus module
