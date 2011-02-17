@@ -177,7 +177,6 @@ Network_get_mac_address(Matahari *matahari, const char *iface, DBusGMethodInvoca
  */
 #include "matahari-network-dbus-glue.h"
 
-//TODO: Properties get/set
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)

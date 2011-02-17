@@ -92,7 +92,6 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
  */
 #include "matahari-host-dbus-glue.h"
 
-//TODO: Properties get/set
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,
     GParamSpec *pspec)
@@ -159,10 +158,10 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     g_value_set_uint (value, self->priv->update_interval);
     break;
   case PROP_LAST_UPDATED:
-    //TODO Logic here
+    // Not used in DBus module
     break;
   case PROP_SEQUENCE:
-    //TODO Logic here
+    // Not used in DBus module
     break;
   case PROP_FREE_MEM:
     g_value_set_uint64 (value, host_get_mem_free());

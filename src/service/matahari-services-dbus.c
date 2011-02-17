@@ -142,7 +142,6 @@ Services_status(Matahari *matahari, const char *name, unsigned int interval, uns
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  // TODO: interval parameter
   svc_action_t *op = services_action_create(name, "status", interval, timeout);
   services_action_sync(op);
   int rc = op->rc;
