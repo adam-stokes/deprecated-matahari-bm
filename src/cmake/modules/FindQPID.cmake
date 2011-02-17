@@ -81,6 +81,7 @@ else(MSVC)
    # Figure out the qpid version
    if(WIN32)
       find_file(QPIDD qpidd.exe)
+      find_file(QMFGEN qmf-gen PATHS "/usr/i686-pc-mingw32/sys-root/mingw/managementgen")
       if(QPIDD)
           execute_process(COMMAND strings ${QPIDD} OUTPUT_VARIABLE QPID_VERSION_LONG)
           string(REGEX REPLACE ".*BUILD/qpid" " qpid" QPID_VERSION_LONG ${QPID_VERSION_LONG})
@@ -97,6 +98,7 @@ else(MSVC)
 
    else(WIN32)
       find_file(QPIDD qpidd)
+      find_program(QMFGEN qmf-gen)
       if(QPIDD)
           execute_process(COMMAND ${QPIDD} --version  OUTPUT_VARIABLE QPID_VERSION_LONG)
           string(STRIP QPID_VERSION_LONG ${QPID_VERSION_LONG})
@@ -110,7 +112,6 @@ else(MSVC)
    endif(WIN32)
 
    # Look for schema processor
-   find_program(QMFGEN qmf-gen)
    if(QMFGEN)
        set(QMFGEN_FOUND true)
 
