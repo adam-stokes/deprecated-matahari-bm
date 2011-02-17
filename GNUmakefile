@@ -92,8 +92,10 @@ mock-nodeps:
 
 mock:   srpm mock-nodeps
 
+rpm-win:   
+	make PROFILE=$(PROFILE) VARIANT=mingw32- rpm
+
 mock-win:   
 	make PROFILE=$(PROFILE) VARIANT=mingw32- srpm mock-nodeps
-
 
 .PHONY: check
