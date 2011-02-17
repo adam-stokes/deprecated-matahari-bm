@@ -257,6 +257,7 @@ matahari_set(Matahari *matahari, const char *interface, const char *name, GValue
   free(action);
 
   g_object_set_property(G_OBJECT(matahari), name, value);
+  dbus_g_method_return(context);
   return TRUE;
 }
 
