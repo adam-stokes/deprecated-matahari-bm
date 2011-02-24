@@ -27,14 +27,17 @@ VERSION=0.4.0
 
 function make_srpm() {
     VARIANT=$1
-    TARFILE=matahari-${VERSION}.tbz2
+
+    PACKAGE=matahari
     TAG=`git show --pretty="format:%h" --abbrev-commit | head -n 1`
+    TARPREFIX=${PACKAGE}-${PACKAGE}-${TAG}
+    TARFILE=${TARPREFIX}.tgz
 
     sed -i.sed s/global\ specversion.*/global\ specversion\ ${AUTO_BUILD_COUNTER}/ ${VARIANT}matahari.spec
     sed -i.sed s/global\ upstream_version.*/global\ upstream_version\ ${TAG}/ ${VARIANT}matahari.spec
     
     rm -f ${TARFILE}
-    git archive --prefix=matahari-${VERSION}/ ${TAG} | bzip2 > ${TARFILE}
+    git archive --prefix=${TARPREFIX}/ ${TAG} | gzip > ${TARFILE}
     echo `date`: Rebuilt ${TARFILE} from ${TAG}
     
     rm -f *.src.rpm
@@ -46,7 +49,7 @@ function make_srpm() {
 env
 
 make_srpm 
-mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
+/usr/bin/mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
 
 rc=$?
 cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/x86_64/build.log
@@ -56,7 +59,7 @@ if [ $rc != 0 ]; then
 fi
 
 make_srpm mingw32-
-mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
+/usr/bin/mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
 
 rc=$?
 cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch/build.log
