@@ -62,6 +62,8 @@ Network_list(Matahari *matahari, DBusGMethodInvocation *context)
   GList *interface_list;
   GList *plist;
   sigar_net_interface_config_t *ifconfig;
+  char **list;
+  int i = 0;
   
   if (!check_authorization(NETWORK_BUS_NAME ".list", &error, context))
   {
@@ -73,10 +75,9 @@ Network_list(Matahari *matahari, DBusGMethodInvocation *context)
   interface_list = network_get_interfaces();
   
   // Alloc array for list of interface names
-  char **list = g_new(char *, g_list_length(interface_list) + 1);  
+  list = g_new(char *, g_list_length(interface_list) + 1);  
 
   // Convert list of interfaces to the array of names
-  int i = 0;
   for(plist = g_list_first(interface_list); plist; plist = g_list_next(plist))
   {
     ifconfig = (sigar_net_interface_config_t *)plist->data;
@@ -94,13 +95,15 @@ gboolean
 Network_start(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  int status;
+
   if (!check_authorization(NETWORK_BUS_NAME ".start", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
   
-  int status = interface_status(iface);
+  status = interface_status(iface);
   if (status != 1)
   {
     network_start(iface);
@@ -114,13 +117,15 @@ gboolean
 Network_stop(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  int status;
+
   if (!check_authorization(NETWORK_BUS_NAME ".stop", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
   
-  int status = interface_status(iface);
+  status = interface_status(iface);
   if (status == 0)
   {
     network_stop(iface);

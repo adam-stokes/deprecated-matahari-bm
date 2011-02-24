@@ -45,6 +45,8 @@ Services_list(Matahari *matahari, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
   int i = 0;
+  GList *services;
+  char **list;
 
   if (!check_authorization(SERVICES_BUS_NAME ".list", &error, context))
   {
@@ -53,10 +55,10 @@ Services_list(Matahari *matahari, DBusGMethodInvocation *context)
   }
 
   // Get list of services
-  GList *services = services_list();
+  services = services_list();
 
   // Convert GList to (char **)
-  char **list = g_new(char *, g_list_length(services) + 1);
+  list = g_new(char *, g_list_length(services) + 1);
   for (; services != NULL; services = services->next)
     list[i++] = strdup(services->data);
   list[i] = NULL; // Sentinel
@@ -71,13 +73,16 @@ gboolean
 Services_enable(Matahari *matahari, const char *name, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  svc_action_t *op;
+  gboolean res;
+
   if (!check_authorization(SERVICES_BUS_NAME ".enable", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  svc_action_t *op = services_action_create(name, "enable", 0, TIMEOUT_MS);
-  gboolean res = services_action_sync(op);
+  op = services_action_create(name, "enable", 0, TIMEOUT_MS);
+  res = services_action_sync(op);
   services_action_free(op);
   dbus_g_method_return(context, res);
   return res;
@@ -87,13 +92,16 @@ gboolean
 Services_disable(Matahari *matahari, const char *name, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  svc_action_t *op;
+  gboolean res;
+
   if (!check_authorization(SERVICES_BUS_NAME ".disable", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  svc_action_t *op = services_action_create(name, "disable", 0, TIMEOUT_MS);
-  gboolean res = services_action_sync(op);
+  op = services_action_create(name, "disable", 0, TIMEOUT_MS);
+  res = services_action_sync(op);
   services_action_free(op);
   dbus_g_method_return(context, res);
   return res;
@@ -103,14 +111,17 @@ gboolean
 Services_start(Matahari *matahari, const char *name, unsigned int timeout, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  svc_action_t *op;
+  int rc;
+
   if (!check_authorization(SERVICES_BUS_NAME ".start", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  svc_action_t *op = services_action_create(name, "start", 0, timeout);
+  op = services_action_create(name, "start", 0, timeout);
   services_action_sync(op);
-  int rc = op->rc;
+  rc = op->rc;
   services_action_free(op);
   dbus_g_method_return(context, rc);
   return TRUE;
@@ -120,14 +131,17 @@ gboolean
 Services_stop(Matahari *matahari, const char *name, unsigned int timeout, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  svc_action_t *op;
+  int rc;
+
   if (!check_authorization(SERVICES_BUS_NAME ".stop", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  svc_action_t *op = services_action_create(name, "stop", 0, timeout);
+  op = services_action_create(name, "stop", 0, timeout);
   services_action_sync(op);
-  int rc = op->rc;
+  rc = op->rc;
   services_action_free(op);
   dbus_g_method_return(context, rc);
   return TRUE;
@@ -137,14 +151,17 @@ gboolean
 Services_status(Matahari *matahari, const char *name, unsigned int interval, unsigned int timeout, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  svc_action_t *op;
+  int rc;
+
   if (!check_authorization(SERVICES_BUS_NAME ".status", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  svc_action_t *op = services_action_create(name, "status", interval, timeout);
+  op = services_action_create(name, "status", interval, timeout);
   services_action_sync(op);
-  int rc = op->rc;
+  rc = op->rc;
   services_action_free(op);
   dbus_g_method_return(context, rc);
   return TRUE;
@@ -154,12 +171,14 @@ gboolean
 Services_cancel(Matahari *matahari, const char *name, const char *action, unsigned int interval, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  int res;
+
   if (!check_authorization(SERVICES_BUS_NAME ".cancel", &error, context))
   {
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  int res = services_action_cancel(name, action, interval);
+  res = services_action_cancel(name, action, interval);
   dbus_g_method_return(context);
   return res;
 }

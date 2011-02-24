@@ -43,15 +43,20 @@ matahari_error_quark (void)
 gboolean
 check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *context)
 {
+  GError *err;
+  PolkitAuthorizationResult *result;
+  PolkitSubject *subject;
+  PolkitAuthority *authority;
+  gboolean res;
+
   if (context == NULL)
   {
     g_printerr("Context is not set!\n");
     return FALSE;
   }
-  GError *err = NULL;
-  PolkitAuthorizationResult *result;
-  PolkitSubject *subject = polkit_system_bus_name_new(dbus_g_method_get_sender(context));
-  PolkitAuthority *authority = polkit_authority_get_sync(NULL, &err);
+  err = NULL;
+  subject = polkit_system_bus_name_new(dbus_g_method_get_sender(context));
+  authority = polkit_authority_get_sync(NULL, &err);
   if (err != NULL)
   {
     g_printerr("Error in obtaining authority: %s", err->message);
@@ -68,7 +73,7 @@ check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *
     g_error_free(err);
     return FALSE;
   }
-  gboolean res = polkit_authorization_result_get_is_authorized(result);
+  res = polkit_authorization_result_get_is_authorized(result);
   g_object_unref(subject);
   g_object_unref(result);
   g_object_unref(authority);
@@ -224,6 +229,9 @@ gboolean
 matahari_get(Matahari* matahari, const char *interface, const char *name, DBusGMethodInvocation *context)
 {
   GError* error = NULL;
+  GParamSpec *spec;
+  GValue value = {0, };
+
   char *action = malloc((strlen(interface) + strlen(name) + 2) * sizeof(char));
   sprintf(action, "%s.%s", interface, name);
   if (!check_authorization(action, &error, context))
@@ -234,8 +242,7 @@ matahari_get(Matahari* matahari, const char *interface, const char *name, DBusGM
   }
   free(action);
 
-  GParamSpec *spec = g_object_class_find_property(G_OBJECT_GET_CLASS(matahari), name);
-  GValue value = {0, };
+  spec = g_object_class_find_property(G_OBJECT_GET_CLASS(matahari), name);
   g_value_init(&value, spec->value_type);
   g_object_get_property(G_OBJECT(matahari), name, &value);
   dbus_g_method_return(context, &value);
@@ -298,11 +305,12 @@ matahari_init(Matahari *matahari)
 
 Dict *dict_new(GValue *value)
 {
+    gpointer ret;
     Dict *dict = malloc(sizeof(Dict));
     dict->key = calloc(sizeof(GValue), 1);
     dict->value = value;
     g_value_init(dict->key, G_TYPE_STRING);
-    gpointer ret = dbus_g_type_specialized_construct (G_VALUE_TYPE (value));
+    ret = dbus_g_type_specialized_construct (G_VALUE_TYPE (value));
     g_value_set_boxed_take_ownership (value, ret);
 
     dbus_g_type_specialized_init_append (value, &(dict->appendctx));
