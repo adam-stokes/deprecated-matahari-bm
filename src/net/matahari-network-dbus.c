@@ -39,18 +39,18 @@
 #define NETWORK_OBJECT_PATH "/org/matahariproject/Network"
 #define NETWORK_INTERFACE_NAME "org.matahariproject.Network"
 
-/* Get status of the interface
- * 0 - running
- * 1 - inactive
- */
-static int interface_status(const char *iface)
+
+enum status { INACTIVE = 0, RUNNING };
+
+/* Get status of the interface */
+static enum status interface_status(const char *iface)
 {
   uint64_t flags = 0;
   network_status(iface, &flags);
 
   if(flags & SIGAR_IFF_UP)
-    return 0;
-  return 1; /* Inactive */
+    return RUNNING;
+  return INACTIVE; /* Inactive */
 }
 
 /* Dbus methods */
@@ -104,7 +104,7 @@ Network_start(Matahari *matahari, const char *iface, DBusGMethodInvocation *cont
   }
   
   status = interface_status(iface);
-  if (status != 1)
+  if (status != RUNNING)
   {
     network_start(iface);
     status = interface_status(iface);
@@ -126,7 +126,7 @@ Network_stop(Matahari *matahari, const char *iface, DBusGMethodInvocation *conte
   }
   
   status = interface_status(iface);
-  if (status == 0)
+  if (status != INACTIVE)
   {
     network_stop(iface);
     status = interface_status(iface);
