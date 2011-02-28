@@ -161,7 +161,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 	&value);
 
     if(value) {
-	debuglevel = atoi(value);
+	mh_log_level = LOG_INFO+atoi(value);
 	free(value);
 	value = NULL;
     }
@@ -278,7 +278,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #endif
 
     /* Re-initialize logging now that we've completed option processing */
-    mh_log_init(proc_name, LOG_INFO+debuglevel, debuglevel > 0);
+    mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);
 
     // Get our management agent
     singleton = new ManagementAgent::Singleton();
@@ -312,8 +312,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     /* Do any setup required by our agent */
     if(this->setup(agent) < 0) {
-	fprintf(stderr, "Failed to set up broker connection to %s on %d for %s\n", 
-		servername, serverport, proc_name);
+	mh_err("Failed to set up broker connection to %s on %d for %s\n", 
+	       servername, serverport, proc_name);
 	return -1;
     } 
     
@@ -328,5 +328,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 void
 MatahariAgent::run()
 {
+    mh_trace("Starting agent mainloop");
     g_main_run(this->mainloop);
 }
