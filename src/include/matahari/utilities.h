@@ -21,7 +21,8 @@
 #include <sys/types.h>
 #include <string.h>
 
-extern char *get_hostname(void);
+extern const char *matahari_uuid(void);
+extern const char *matahari_hostname(void);
 extern void mh_abort(const char *file, const char *function, int line,
 		     const char *assert_condition, int do_core, int do_fork);
 

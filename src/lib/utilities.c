@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <glib.h>
+#include <sigar.h>
 
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
@@ -329,34 +330,68 @@ mh_log_fn(int priority, const char * fmt, ...)
     return;
 }
 
-char *get_hostname(void)
+const char *matahari_hostname(void)
 {
   static char *hostname = NULL;
 
   if(hostname == NULL) {
-#ifdef __linux__
-
-      struct utsname details;
-
-      if(!uname(&details)) {
-	  hostname = strdup(details.nodename);
-      }
-
-#elif defined WIN32
-      WORD verreq;
-      WSADATA wsadata;
-      
-      hostname = malloc(500);
-      verreq = MAKEWORD(2, 2);
-      if(!WSAStartup(verreq, &wsadata)) {
-	  if(gethostname(hostname, 500) != 0) {
-	      free(hostname);
-	      hostname = strdup("unknown");
-	  }
-	  WSACleanup();
-      }
- #endif
+      sigar_t *sigar;
+      sigar_net_info_t netinfo;
+      sigar_open(&sigar);
+      sigar_net_info_get(sigar, &netinfo);
+      hostname = strdup(netinfo.host_name);
   }
 
+  if(hostname != NULL && strcmp(hostname, "localhost") == 0) {
+      free(hostname);
+      hostname = matahari_uuid();
+  }
+
+  mh_trace("Got hostname: %s", hostname);
   return hostname;
+}
+
+const char *matahari_uuid(void)
+{
+  static char *uuid = NULL;
+
+  if(uuid == NULL) {
+#ifdef __linux__
+      char *buffer = NULL;
+      int chunk = 512, data_length = 0, read_chars = 0;
+      const char *uuid_file = "/var/lib/dbus/machine-id";
+      FILE *input = fopen(uuid_file, "r");
+      if(input) {
+        do {
+	  buffer = realloc(buffer, chunk + data_length + 1);
+	  read_chars = fread(buffer + data_length, 1, chunk, input);
+	  data_length += read_chars;
+        } while (read_chars > 0);
+      }
+      if(data_length == 0) {
+	  mh_warn("Could not read from %s", uuid_file);
+	  uuid = strdup("unknown");
+	  
+      } else {
+	  int lpc = 0;
+	  for (; lpc < data_length; lpc++) {
+	      switch(buffer[lpc]) {
+		  case '\0':
+		  case '\n':
+		      uuid = malloc(lpc);
+		      snprintf(uuid, lpc-1, "%s", buffer);
+	      }
+	  }
+      }
+      if(input) {
+          fclose(input);
+      }
+      free(buffer);
+#else
+      uuid = strdup("unknown");
+#endif
+  }
+
+  mh_trace("Got uuid: %s", uuid);
+  return uuid;
 }

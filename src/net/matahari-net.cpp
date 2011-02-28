@@ -86,7 +86,8 @@ NetAgent::setup(ManagementAgent* agent)
 {
     this->_agent = agent;
     this->_management_object = new _qmf::Network(agent, this);
-    this->_management_object->set_hostname(get_hostname());
+    this->_management_object->set_hostname(matahari_hostname());
+    this->_management_object->set_uuid(matahari_uuid());
 
     agent->addObject(this->_management_object);
     return 0;

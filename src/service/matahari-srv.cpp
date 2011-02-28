@@ -63,7 +63,7 @@ class SrvManageable : public Manageable
     public:
 	SrvManageable(ManagementAgent* agent) {
 	    _management_object = new _qmf::Services(agent, this);
-	    _management_object->set_hostname(get_hostname());
+	    _management_object->set_hostname(matahari_hostname());
 	    agent->addObject(this->_management_object);
 	};
 	ManagementObject* GetManagementObject() const { return _management_object; }
@@ -78,7 +78,8 @@ class RscManageable : public Manageable
     public:
 	RscManageable(ManagementAgent* agent) { 
 	    _management_object = new _qmf::Resources(agent, this); 
-	    _management_object->set_hostname(get_hostname());
+	    _management_object->set_hostname(matahari_hostname());
+	    _management_object->set_uuid(matahari_uuid());
 	    agent->addObject(this->_management_object);
 	};
 	ManagementObject* GetManagementObject() const { return _management_object; }

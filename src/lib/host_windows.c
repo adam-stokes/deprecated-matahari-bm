@@ -32,12 +32,6 @@
 #include "host_private.h"
 
 const char *
-host_os_get_uuid(void)
-{
-    return host_get_hostname();
-}
-
-const char *
 host_os_get_cpu_flags(void)
 {
     return strdup("unknown");

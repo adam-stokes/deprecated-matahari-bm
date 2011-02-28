@@ -55,21 +55,13 @@ init(void)
 const char *
 host_get_uuid(void)
 {
-    return host_os_get_uuid();
+    return matahari_uuid();
 }
 
 const char *
 host_get_hostname(void)
 {
-    init();
-    sigar_net_info_t netinfo;
-    char *host_name = NULL;
-
-    if(host_name == NULL) {
-        sigar_net_info_get(host_init.sigar, &netinfo);
-        host_name = g_strdup(netinfo.host_name);
-    }
-    return host_name;
+    return matahari_hostname();
 }
 
 const char *

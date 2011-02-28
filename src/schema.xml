@@ -23,7 +23,8 @@
  <class name="Host">
    <!-- properties -->
    <property name="uuid"             type="sstr"   access="RO" desc="Host UUID" index="y" />
-   <property name="hostname"         type="sstr"   access="RO" desc="Hostname" />
+   <property name="hostname"         type="sstr"   access="RO" desc="Hostname" index="y" />
+   <property name="hardware_uuid"    type="sstr"   access="RO" desc="Host Hardware UUID"  />
 
    <property name="os"               type="sstr"   access="RO" desc="The installed operating system." />
    <property name="arch"             type="sstr"   access="RO" desc="The host's architecture" />
@@ -59,7 +60,8 @@
 
  <!-- Network API -->
   <class name="Network">
-   <property name="hostname"   type="sstr"  access="RO" desc="Hostname" index="y"/>
+   <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" />
+   <property name="hostname"         type="sstr"  access="RO" desc="Hostname" index="y" />
 
    <!-- APIs -
    <method name="identify"                desc="Tell network device to blink light"/>
@@ -106,7 +108,8 @@
  <event name="resource_op"	args="name,action,interval,rc,sequence,timestamp,rsc_type,rsc_class,rsc_provider" />
 
  <class name="Services">
-   <property name="hostname"    type="sstr"  access="RO" desc="Hostname" index="y"/>
+   <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
+   <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
 
    <method name="list"          desc="List known system services">
      <arg name="services"       dir="O"  type="list" />
@@ -148,6 +151,7 @@
  </class>
 
  <class name="Resources">
+   <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
    <property name="hostname"    type="sstr"  access="RO" desc="Hostname" index="y"/>
 
    <method name="list_classes"  desc="List known resource classes (OCF, LSB, Upstart, etc)">

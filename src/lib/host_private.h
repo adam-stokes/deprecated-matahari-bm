@@ -35,8 +35,6 @@ typedef struct host_init_s
 
 extern host_init_t host_init;
 
-extern const char *host_os_get_uuid(void);
-extern const char *host_os_get_hostname(void);
 extern const char *host_os_get_operating_system(void);
 extern const char *host_os_get_architecture(void);
 extern const char *host_os_get_cpu_flags(void);

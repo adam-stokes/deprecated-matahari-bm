@@ -36,41 +36,6 @@
 #include "host_private.h"
 
 const char *
-host_os_get_uuid(void)
-{
-    static char * uuid = NULL;
-
-    if(uuid == NULL) {
-	FILE *input = fopen("/var/lib/dbus/machine-id", "r");
-	char *buffer = NULL;
-	int chunk = 512, data_length = 0, read_chars = 0;
-	do {
-	    buffer = realloc(buffer, chunk + data_length + 1);
-	    read_chars = fread(buffer + data_length, 1, chunk, input);
-	    data_length += read_chars;
-	} while (read_chars > 0);
-
-	if(data_length == 0) {
-	    mh_warn("Could not read from /var/lib/dbus/machine-id");
-	} else {
-	    int lpc = 0;
-	    for (; lpc < data_length; lpc++) {
-		switch(buffer[lpc]) {
-		    case '\0':
-		    case '\n':
-			uuid = malloc(lpc);
-			snprintf(uuid, lpc-1, "%s", buffer);
-		}
-	    }
-	}
-	fclose(input);
-	free(buffer);
-    }
-    
-    return uuid;
-}
-
-const char *
 host_os_get_cpu_flags(void)
 {
     static char *flags = NULL;

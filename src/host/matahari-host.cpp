@@ -71,7 +71,6 @@ HostAgent::setup(ManagementAgent* agent)
   this->_agent = agent;
 
   _management_object = new _qmf::Host(agent, this);
-  agent->addObject(_management_object);
 
   _management_object->set_update_interval(5);
   _management_object->set_uuid(host_get_uuid());
@@ -86,6 +85,7 @@ HostAgent::setup(ManagementAgent* agent)
   _management_object->set_cpu_model(host_get_cpu_model());
   _management_object->set_cpu_flags(host_get_cpu_flags());
 
+  agent->addObject(_management_object);
   return 1;
 }
 
