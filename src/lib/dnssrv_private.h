@@ -16,13 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DNSSRV_H
-#define __DNSSRV_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define MAX_NAME_LEN 1024
 
 struct srv_reply
@@ -38,12 +31,6 @@ struct srv_reply **srv_lookup(char *service,
                               char *domain);
 
 void srv_free(struct srv_reply **srv);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __DNSSRV_H */
 
 /*
  * Local Variables:

@@ -21,7 +21,7 @@
 #include <resolv.h>
 #include <glib.h>
 
-#include "dnssrv.h"
+#include "dnssrv_private.h"
 
 struct srv_reply **srv_lookup(char *service,
 			      char *protocol,

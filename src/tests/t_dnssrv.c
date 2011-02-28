@@ -17,7 +17,7 @@
  */
 
 #include <glib.h>
-#include "dnssrv.h"
+#include "dnssrv_private.h"
 
 int main(int argc, char **argv)
 {
