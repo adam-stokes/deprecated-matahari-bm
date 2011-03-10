@@ -27,6 +27,7 @@ int use_stderr = 0;
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <sstream>
 #include <errno.h>
 #include <vector>
 #include <exception>
@@ -37,8 +38,6 @@ int use_stderr = 0;
 #include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
-
-#include "qmf/org/matahariproject/Package.h"
 #include "matahari/mh_agent.h"
 
 extern "C" {
@@ -49,9 +48,6 @@ using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
 namespace _qmf = qmf::org::matahariproject;
-
-// Global Variables
-ManagementAgent::Singleton* singleton;
 
 void
 shutdown(int /*signal*/)
@@ -114,12 +110,16 @@ print_usage(const char *proc_name)
 #endif
 
 static gboolean 
-mh_qpid_callback(int fd, gpointer user_data)
+mh_qpid_callback(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    ManagementAgent *agent = (ManagementAgent *)user_data;
+    MatahariAgent *agent = (MatahariAgent*) user_data;
     mh_trace("Qpid message recieved");
-    agent->pollCallbacks();
-    return TRUE;
+    if(event.hasDataAddr()) {
+	mh_trace("Message is for %s (type: %s)", 
+		 event.getDataAddr().getName().c_str(), 
+		 event.getDataAddr().getAgentName().c_str());
+    }
+    return agent->invoke(session, event, user_data);
 }
 
 static void
@@ -141,14 +141,12 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     bool gssapi = false;
     char *servername = strdup(MATAHARI_BROKER);
-    char *username = NULL;
-    char *password = NULL;
-    char *service = NULL;
-    int serverport = MATAHARI_PORT;
-    int debuglevel = 0;
+    char *username  = NULL;
+    char *password  = NULL;
+    char *service   = NULL;
+    int serverport  = MATAHARI_PORT;
 
     qpid::management::ConnectionSettings settings;
-    ManagementAgent *agent;
 
     /* Set up basic logging */
     mh_log_init(proc_name, LOG_INFO, FALSE);    
@@ -280,11 +278,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);
 
-    // Get our management agent
-    singleton = new ManagementAgent::Singleton();
-    agent = singleton->getInstance();
-    _qmf::Package packageInit(agent);
-
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
@@ -292,35 +285,47 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     settings.host = servername;
     settings.port = serverport;
 
-    if (username != NULL) {
-	settings.username = username;
+    mh_info("Connecting to Qpid broker at %s on port %d", servername, serverport);
+
+    // Create a v2 API options map.
+    qpid::types::Variant::Map options;
+    options["reconnect"] = bool(true);
+    if (username) {
+	options["username"] = username;
     }
-    if (password != NULL) {
-        settings.password = password;
+    if (password) {
+	options["password"] = password;
     }
-    if (service != NULL) {
-	settings.service = service;
+    if (service) {
+	options["sasl-service"] = service;
     }
-    if (gssapi == true) {
-	settings.mechanism = "GSSAPI";
+    if (gssapi) {
+	options["sasl-mechanism"] = "GSSAPI";
     }
 
-    mh_info("Connecting to Qpid broker at %s on port %d", servername, serverport);
-    agent->setName("matahariproject.org", proc_name);
-    std::string dataFile(".matahari-data-");
-    agent->init(settings, 5, true, dataFile + proc_name);
+    std::stringstream url;
+    url << servername << ":" << serverport ;
+
+    _amqp_connection = qpid::messaging::Connection(url.str(), options);
+    _amqp_connection.open();
+
+    _agent_session = qmf::AgentSession(_amqp_connection);
+    _agent_session.setVendor("matahariproject.org");
+    _agent_session.setProduct(proc_name);
+
+    _package.configure(_agent_session);
+    _agent_session.open();
 
     /* Do any setup required by our agent */
-    if(this->setup(agent) < 0) {
+    if(this->setup(_agent_session) < 0) {
 	mh_err("Failed to set up broker connection to %s on %d for %s\n", 
 	       servername, serverport, proc_name);
 	return -1;
-    } 
-    
+    }
 
     this->mainloop = g_main_new(FALSE);
-    this->qpid_source = mainloop_add_fd(
-	G_PRIORITY_HIGH, agent->getSignalFd(), mh_qpid_callback, mh_qpid_disconnect, agent);
+    this->qpid_source = mainloop_add_qmf(
+	G_PRIORITY_HIGH, _agent_session, mh_qpid_callback, mh_qpid_disconnect, this);
 
     return 0;
 }
@@ -330,4 +335,107 @@ MatahariAgent::run()
 {
     mh_trace("Starting agent mainloop");
     g_main_run(this->mainloop);
+}
+
+static gboolean
+mainloop_qmf_prepare(GSource* source, gint *timeout)
+{
+    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    if (qmf->event) {
+	return TRUE;
+    }
+    
+    *timeout = 1;
+    return FALSE;
+}
+
+static gboolean
+mainloop_qmf_check(GSource* source)
+{
+    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    if (qmf->event) {
+	return TRUE;
+
+    } else if(qmf->session.nextEvent(qmf->event, qpid::messaging::Duration::IMMEDIATE)) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static gboolean
+mainloop_qmf_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
+{
+    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    mh_trace("%p", source);
+    if (qmf->dispatch != NULL) {
+	qmf::AgentEvent event = qmf->event;
+	qmf->event = NULL;
+	
+	if(qmf->dispatch(qmf->session, event, qmf->user_data) == FALSE) {
+	    g_source_unref(source); /* Really? */
+	    return FALSE;
+	}
+    }
+    
+    return TRUE;
+}
+
+static void
+mainloop_qmf_destroy(GSource* source)
+{
+    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    mh_trace("%p", source);
+
+    if (qmf->dnotify) {
+	qmf->dnotify(qmf->user_data);
+    }
+}
+
+static GSourceFuncs mainloop_qmf_funcs = {
+    mainloop_qmf_prepare,
+    mainloop_qmf_check,
+    mainloop_qmf_dispatch,
+    mainloop_qmf_destroy,
+};
+
+mainloop_qmf_t*
+mainloop_add_qmf(int priority, qmf::AgentSession session,
+		gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer userdata),
+		GDestroyNotify notify, gpointer userdata)
+{
+    GSource *source = NULL;
+    mainloop_qmf_t *qmf_source = NULL;
+    MH_ASSERT(sizeof(mainloop_qmf_t) > sizeof(GSource));
+    source = g_source_new(&mainloop_qmf_funcs, sizeof(mainloop_qmf_t));
+    MH_ASSERT(source != NULL);
+
+    qmf_source = (mainloop_qmf_t*)source;
+    qmf_source->id = 0;
+    qmf_source->event = NULL;
+    qmf_source->session = session;
+
+    /*
+     * Normally we'd use g_source_set_callback() to specify the dispatch function,
+     * But we want to supply the qmf session too, so we store it in qmf_source->dispatch instead
+     */
+    qmf_source->dnotify = notify;
+    qmf_source->dispatch = dispatch;
+    qmf_source->user_data = userdata;
+
+    g_source_set_priority(source, priority);
+    g_source_set_can_recurse(source, FALSE);
+    
+    qmf_source->id = g_source_attach(source, NULL);
+    mh_info("Added source: %d", qmf_source->id);
+    return qmf_source;
+}
+
+gboolean
+mainloop_destroy_qmf(mainloop_qmf_t* source)
+{
+    g_source_remove(source->id);
+    source->id = 0;
+    g_source_unref((GSource*)source);
+    
+    return TRUE;
 }

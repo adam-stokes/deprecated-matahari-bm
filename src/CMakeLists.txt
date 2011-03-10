@@ -51,6 +51,7 @@ set(SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventHeartbeat.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventService_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventResource_op.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/QmfPackage.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Package.cpp)
 
 ## Libraries and Common code
@@ -177,13 +178,15 @@ if (regen_schema)
     execute_process(COMMAND rm -f ${SCHEMA_SOURCES})
     execute_process(COMMAND ${QMFGEN} -o ./qmf ${SCHEMAS}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    execute_process(COMMAND ${QMFGEN} -2 -o ./qmf ${SCHEMAS}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else (regen_schema)
     message(STATUS "No need to generate QMF schema")
 endif (regen_schema)
 
 # Add QF libraries
 foreach(daemon ${DAEMONS}) 
-    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY})
+    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
     IF(QPIDTYPES_FOUND)
         target_link_libraries(${daemon} ${QPIDTYPES_LIBRARY})
     ENDIF(QPIDTYPES_FOUND)
