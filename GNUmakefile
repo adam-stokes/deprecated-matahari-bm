@@ -35,13 +35,13 @@ PROFILE ?= fedora-14-x86_64
 
 linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
-	mkdir $@
+	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 	@echo "Now enter the $@ directory and run 'make' as usual"
 
 windows.build:
 	@echo "=::=::=::= Setting up for Windows =::=::=::= "
-	mkdir $@
+	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release ..
 	@echo "Now enter the $@ directory and run 'make' as usual"
 
@@ -98,4 +98,4 @@ rpm-win:
 mock-win:   
 	make PROFILE=$(PROFILE) VARIANT=mingw32- srpm mock-nodeps
 
-.PHONY: check
+.PHONY: check linux.build windows.build
