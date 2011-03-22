@@ -46,14 +46,9 @@ extern "C" {
 
 class NetAgent : public MatahariAgent
 {
-    private:
-	ManagementAgent* _agent;
-	_qmf::Network* _management_object;
-	
     public:
-	int setup(ManagementAgent* agent);
-	ManagementObject* GetManagementObject() const { return _management_object; }
-	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
+	int setup(qmf::AgentSession session);
+	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 };
 
 int
@@ -71,95 +66,80 @@ static int interface_status(const char *iface)
 {
     uint64_t flags = 0;
     if(iface == NULL)
-	return 3;
-	
+       return 3;
+       
     network_status(iface, &flags);
 
     if(flags & SIGAR_IFF_UP) {
-	return 0;
+       return 0;
     }
     return 1; /* Inactive */
 }
 
 int
-NetAgent::setup(ManagementAgent* agent)
+NetAgent::setup(qmf::AgentSession session)
 {
-    this->_agent = agent;
-    this->_management_object = new _qmf::Network(agent, this);
-    this->_management_object->set_hostname(matahari_hostname());
-    this->_management_object->set_uuid(matahari_uuid());
+    _instance = qmf::Data(_package.data_Network);
+    
+    _instance.setProperty("hostname", matahari_hostname());
+    _instance.setProperty("uuid", matahari_uuid());
 
-    agent->addObject(this->_management_object);
+    _agent_session.addData(_instance);    
     return 0;
 }
 
-Manageable::status_t
-NetAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
+gboolean
+NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    switch(method)
-	{
-	case _qmf::Network::METHOD_LIST:
-	    {
-                GList *interface_list = NULL;
-                GList *plist = NULL;
-                sigar_net_interface_config_t *ifconfig = NULL;
-		
-		_qmf::ArgsNetworkList& ioArgs = (_qmf::ArgsNetworkList&) arguments;
-                interface_list = network_get_interfaces();
-                for(plist = g_list_first(interface_list); plist; plist = g_list_next(plist)) {
-                    ifconfig = (sigar_net_interface_config_t *)plist->data;
-                    ioArgs.o_iface_map.push_back(ifconfig->name);
-		}
-	    }
-	    return Manageable::STATUS_OK;
+    if(event.getType() == qmf::AGENT_METHOD) {
+	const std::string& methodName(event.getMethodName());
+	if (methodName == "list") {
+	    GList *plist = NULL;
+	    GList *interface_list = NULL;
 
-	case _qmf::Network::METHOD_START:
-	    {
-		_qmf::ArgsNetworkStart& ioArgs = (_qmf::ArgsNetworkStart&) arguments;
-                ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
-		if((ioArgs.o_status) == 1) {
-		    network_start(ioArgs.i_iface.c_str());
-		    ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
-		}
-	    }
-	    return Manageable::STATUS_OK;
+	    _qtype::Variant::List s_list;
+	    sigar_net_interface_config_t *ifconfig = NULL;
 	    
-	case _qmf::Network::METHOD_STOP:
-	    {
-		_qmf::ArgsNetworkStop& ioArgs = (_qmf::ArgsNetworkStop&) arguments;
-                ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
-		if(ioArgs.o_status == 0) {
-		    network_stop(ioArgs.i_iface.c_str());
-		    ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
-		}
+	    interface_list = network_get_interfaces();
+	    for(plist = g_list_first(interface_list); plist; plist = g_list_next(plist)) {
+		ifconfig = (sigar_net_interface_config_t *)plist->data;
+		s_list.push_back(ifconfig->name);
 	    }
-	    return Manageable::STATUS_OK;
+	    event.addReturnArgument("iface_map", s_list);
 
-	case _qmf::Network::METHOD_STATUS:
-	    {
-		_qmf::ArgsNetworkStatus& ioArgs = (_qmf::ArgsNetworkStatus&) arguments;
-		ioArgs.o_status = interface_status(ioArgs.i_iface.c_str());
+	} else if (methodName == "start") {
+	    int rc = interface_status(event.getArguments()["iface"].asString().c_str());
 
+	    if(rc == 1) {
+		network_start(event.getArguments()["iface"].asString().c_str());
+		rc = interface_status(event.getArguments()["iface"].asString().c_str());
 	    }
-	    return Manageable::STATUS_OK;
+	    event.addReturnArgument("status", rc);
 
-	case _qmf::Network::METHOD_GET_IP_ADDRESS:
-	    {
-		_qmf::ArgsNetworkGet_ip_address& ioArgs = (_qmf::ArgsNetworkGet_ip_address&) arguments;
-
-                ioArgs.o_ip = g_strdup((network_get_ip_address(ioArgs.i_iface.c_str())));
+	} else if (methodName == "stop") {
+	    int rc = interface_status(event.getArguments()["iface"].asString().c_str());
+	    if(rc == 0) {
+		network_stop(event.getArguments()["iface"].asString().c_str());
+		rc = interface_status(event.getArguments()["iface"].asString().c_str());
 	    }
-	    return Manageable::STATUS_OK;
+	    event.addReturnArgument("status", rc);
 
-	case _qmf::Network::METHOD_GET_MAC_ADDRESS:
-	    {
-                const char *mac_str;
-		_qmf::ArgsNetworkGet_mac_address& ioArgs = (_qmf::ArgsNetworkGet_mac_address&) arguments;
+	} else if (methodName == "status") {
+	    event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
+	    
+	} else if (methodName == "get_ip_address") {
+	    event.addReturnArgument("ip", network_get_ip_address(event.getArguments()["iface"].asString().c_str()));
 
-                mac_str = network_get_mac_address(ioArgs.i_iface.c_str());
-                ioArgs.o_mac = g_strdup(mac_str);
-	    }
-	    return Manageable::STATUS_OK;
+	} else if (methodName == "get_mac_address") {
+	    event.addReturnArgument("mac", network_get_mac_address(event.getArguments()["iface"].asString().c_str()));
+
+	} else {
+	    session.raiseException(event, MH_NOT_IMPLEMENTED);
+	    goto bail;
 	}
-    return Manageable::STATUS_NOT_IMPLEMENTED;
+    }
+
+    session.methodSuccess(event);
+  bail:
+    return TRUE;
 }

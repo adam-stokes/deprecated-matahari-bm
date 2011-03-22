@@ -1,5 +1,7 @@
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+
+
 if(WIN32)
    set(VARIANT "windows")
    set(SUPPORT_TRACING 0)
@@ -20,10 +22,14 @@ set(MHOST_VERSION 0.0.1)
 set(MSRV_VERSION 0.0.1)
 set(MNET_VERSION 0.0.1)
 
+option(WITH-QMF "Build the QMF daemon" ON)
+option(WITH-DBUS "Build the DBus daemon" ON)
+
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH} )
 
@@ -51,6 +57,7 @@ set(SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventHeartbeat.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventService_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventResource_op.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/QmfPackage.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Package.cpp)
 
 ## Libraries and Common code
@@ -104,6 +111,8 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURREN
 ## Modules
 pkg_check_modules(glib REQUIRED glib-2.0)
 pkg_check_modules(pcre REQUIRED libpcre)
+pkg_check_modules(dbus-glib REQUIRED dbus-glib-1)
+pkg_check_modules(polkit REQUIRED polkit-gobject-1)
 
 if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
@@ -137,6 +146,23 @@ if(glib_FOUND)
 else(glib_FOUND)
    message(FATAL_ERROR "Glib2 header/library not found.")
 endif(glib_FOUND)
+
+## dbus
+
+# Create src/dbus directory and generate DBus XML definition files into it
+execute_process(COMMAND mkdir -p src/dbus)
+find_file(XSLTPROC xsltproc)
+execute_process(
+    COMMAND ${XSLTPROC} ${CMAKE_CURRENT_SOURCE_DIR}/schema-to-dbus.xsl ${CMAKE_CURRENT_SOURCE_DIR}/schema.xml
+    WORKING_DIRECTORY src/dbus
+)
+
+
+### DBus
+
+add_subdirectory(host)
+add_subdirectory(service)
+add_subdirectory(net)
 
 ## qpid
 
@@ -177,13 +203,15 @@ if (regen_schema)
     execute_process(COMMAND rm -f ${SCHEMA_SOURCES})
     execute_process(COMMAND ${QMFGEN} -o ./qmf ${SCHEMAS}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    execute_process(COMMAND ${QMFGEN} -2 -o ./qmf ${SCHEMAS}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 else (regen_schema)
     message(STATUS "No need to generate QMF schema")
 endif (regen_schema)
 
 # Add QF libraries
 foreach(daemon ${DAEMONS}) 
-    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QMF_LIBRARY})
+    target_link_libraries(${daemon} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
     IF(QPIDTYPES_FOUND)
         target_link_libraries(${daemon} ${QPIDTYPES_LIBRARY})
     ENDIF(QPIDTYPES_FOUND)
@@ -200,5 +228,3 @@ endif(WIN32)
 
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
-
-

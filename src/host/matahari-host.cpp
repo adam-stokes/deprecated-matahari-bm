@@ -23,26 +23,23 @@
 
 #include <set>
 #include "matahari/mh_agent.h"
+#include <qmf/Data.h>
 #include "qmf/org/matahariproject/Host.h"
 #include "qmf/org/matahariproject/EventHeartbeat.h"
-#include <sigar.h>
 
 extern "C" {
 #include <string.h>
+#include <sigar.h>
 #include "matahari/host.h"
+#include "matahari/logging.h"
 }
 
 class HostAgent : public MatahariAgent
 {
-    private:
-	ManagementAgent* _agent;
-	_qmf::Host* _management_object;
-	
     public:
 	int heartbeat();
-	int setup(ManagementAgent* agent);
-	ManagementObject* GetManagementObject() const { return _management_object; }
-	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
+	int setup(qmf::AgentSession session);
+	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 };
 
 static gboolean heartbeat_timer(gpointer data)
@@ -65,44 +62,46 @@ main(int argc, char **argv)
     return rc;
 }
 
-int
-HostAgent::setup(ManagementAgent* agent)
+gboolean 
+HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-  this->_agent = agent;
-
-  _management_object = new _qmf::Host(agent, this);
-
-  _management_object->set_update_interval(5);
-  _management_object->set_uuid(host_get_uuid());
-  _management_object->set_hostname(host_get_hostname());
-  _management_object->set_os(host_get_operating_system());
-  _management_object->set_wordsize(host_get_cpu_wordsize());
-  _management_object->set_arch(host_get_architecture());
-  _management_object->set_memory(host_get_memory());
-  _management_object->set_swap(host_get_swap());
-  _management_object->set_cpu_count(host_get_cpu_count());
-  _management_object->set_cpu_cores(host_get_cpu_number_of_cores());
-  _management_object->set_cpu_model(host_get_cpu_model());
-  _management_object->set_cpu_flags(host_get_cpu_flags());
-
-  agent->addObject(_management_object);
-  return 1;
+    if(event.getType() == qmf::AGENT_METHOD) {
+	const std::string& methodName(event.getMethodName());
+	if (methodName == "shutdown") {
+	    host_shutdown();
+	} else if (methodName == "reboot") {
+	    host_reboot();
+	} else {
+	    session.raiseException(event, MH_NOT_IMPLEMENTED);
+	    goto bail;
+	}
+    }
+    
+    session.methodSuccess(event);
+  bail:
+    return TRUE;
 }
 
-Manageable::status_t
-HostAgent::ManagementMethod(uint32_t method, Args& arguments, string& text)
+int
+HostAgent::setup(qmf::AgentSession session)
 {
-  switch(method)
-    {
-    case _qmf::Host::METHOD_SHUTDOWN:
-      host_shutdown();
-      return Manageable::STATUS_OK;
-    case _qmf::Host::METHOD_REBOOT:
-      host_reboot();
-      return Manageable::STATUS_OK;
-    }
+    _instance = qmf::Data(_package.data_Host);
+    
+    _instance.setProperty("update_interval", 5);
+    _instance.setProperty("uuid", host_get_uuid());
+    _instance.setProperty("hostname", host_get_hostname());
+    _instance.setProperty("os", host_get_operating_system());
+    _instance.setProperty("wordsize", host_get_cpu_wordsize());
+    _instance.setProperty("arch", host_get_architecture());
+    _instance.setProperty("memory", host_get_memory());
+    _instance.setProperty("swap", host_get_swap());
+    _instance.setProperty("cpu_count", host_get_cpu_count());
+    _instance.setProperty("cpu_cores", host_get_cpu_number_of_cores());
+    _instance.setProperty("cpu_model", host_get_cpu_model());
+    _instance.setProperty("cpu_flags", host_get_cpu_flags());
 
-  return Manageable::STATUS_NOT_IMPLEMENTED;
+    session.addData(_instance);
+    return 0;
 }
 
 int
@@ -111,11 +110,15 @@ HostAgent::heartbeat()
     uint64_t timestamp = 0L, now = 0L;
     sigar_loadavg_t avg;
     sigar_proc_stat_t procs;
-    static uint32_t _heartbeat_sequence = 1;
+    static uint32_t _heartbeat_sequence = 0;
+    uint32_t interval = _instance.getProperty("update_interval").asInt32();
 
-    if(_management_object->get_update_interval() == 0) {
-	/* Updates disabled, just sleep */
-	qpid::sys::sleep(60);
+    _heartbeat_sequence++;
+    mh_trace("Updating stats: %d %d", _heartbeat_sequence, interval);
+
+    if(interval == 0) {
+	/* Updates disabled, check again in 5min */
+	return 5*60*1000;
     }
 
 #ifndef MSVC
@@ -123,13 +126,12 @@ HostAgent::heartbeat()
 #endif
 
     now = timestamp * 1000000000;
-    this->_agent->raiseEvent(_qmf::EventHeartbeat(timestamp, _heartbeat_sequence++));
 
-    _management_object->set_last_updated(now);
-    _management_object->set_sequence(_heartbeat_sequence);
+    _instance.setProperty("last_updated", now);
+    _instance.setProperty("sequence", _heartbeat_sequence);
 
-    _management_object->set_free_swap(host_get_swap_free());
-    _management_object->set_free_mem(host_get_mem_free());
+    _instance.setProperty("free_swap", host_get_swap_free());
+    _instance.setProperty("free_mem", host_get_mem_free());
 
     ::qpid::types::Variant::Map load;
     memset(&avg, 0, sizeof(sigar_loadavg_t));
@@ -137,7 +139,7 @@ HostAgent::heartbeat()
     load["1"]  = ::qpid::types::Variant((double)avg.loadavg[0]);
     load["5"]  = ::qpid::types::Variant((double)avg.loadavg[1]);
     load["15"] = ::qpid::types::Variant((double)avg.loadavg[2]);
-    _management_object->set_load(load);
+    _instance.setProperty("load", load);
 
     ::qpid::types::Variant::Map proc;
     host_get_processes(&procs);
@@ -147,7 +149,12 @@ HostAgent::heartbeat()
     proc["running"]  = ::qpid::types::Variant((int)procs.running);
     proc["stopped"]  = ::qpid::types::Variant((int)procs.stopped);
     proc["sleeping"] = ::qpid::types::Variant((int)procs.sleeping);
-    _management_object->set_process_statistics(proc);
+    _instance.setProperty("process_statistics", proc);
 
-    return _management_object->get_update_interval() * 1000;
+    qmf::Data event = qmf::Data(_package.event_heartbeat);
+    event.setProperty("timestamp", timestamp);
+    event.setProperty("sequence", _heartbeat_sequence);
+    _agent_session.raiseEvent(event);
+
+    return interval * 1000;
 }

@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.matahariproject.Services
+Exec=/usr/sbin/matahari-services-dbusd
+User=root

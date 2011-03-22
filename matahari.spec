@@ -29,7 +29,7 @@ BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
 BuildRequires:	dbus-devel
 BuildRequires:	hal-devel
-BuildRequires:	qpid-cpp-server-devel > 0.7
+BuildRequires:	qpid-cpp-client-devel > 0.7
 BuildRequires:	qmf-devel > 0.7
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
@@ -63,7 +63,7 @@ License:	GPLv2+
 Summary:	Matahari development package
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	qpid-cpp-server-devel > 0.7
+Requires:	qpid-cpp-client-devel > 0.7
 Requires:	qmf-devel > 0.7
 Requires:	glib2-devel
 

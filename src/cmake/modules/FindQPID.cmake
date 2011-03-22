@@ -14,14 +14,20 @@ if(MSVC)
 
 else(MSVC)
    find_library(QMF_LIBRARY qmf)
+   find_library(QMF2_LIBRARY qmf2)
    find_library(QPIDCLIENT_LIBRARY qpidclient)
-   find_library(QPIDCOMMON_LIBRARY qpidcommon)	
-   find_library(QPIDTYPES_LIBRARY qpidtypes)	
+   find_library(QPIDCOMMON_LIBRARY qpidcommon)
+   find_library(QPIDTYPES_LIBRARY qpidtypes)
+   find_library(QPIDMESSAGING_LIBRARY qpidmessaging)
 
    # Check if we found all libraries
    if(QMF_LIBRARY)
        set(QMF_FOUND true)
    endif(QMF_LIBRARY)
+
+   if(QMF2_LIBRARY)
+       set(QMF2_FOUND true)
+   endif(QMF2_LIBRARY)
 
    if(QPIDCLIENT_LIBRARY)
        set(QPIDCLIENT_FOUND true)
@@ -35,6 +41,10 @@ else(MSVC)
        set(QPIDTYPES_FOUND true)
    endif(QPIDTYPES_LIBRARY)
 
+   if(QPIDMESSAGING_LIBRARY)
+       set(QPIDMESSAGING_FOUND true)
+   endif(QPIDMESSAGING_LIBRARY)
+
    # Handle found/not found libraries
    if(QMF_FOUND)
        if(NOT QPID_FIND_QUIETLY)
@@ -45,6 +55,16 @@ else(MSVC)
            message(FATAL_ERROR "Could not find QMF")
        endif(QPID_FIND_REQUIRED)
    endif(QMF_FOUND)
+
+   if(QMF2_FOUND)
+       if(NOT QPID_FIND_QUIETLY)
+           message(STATUS "Found QMF2: ${QMF2_LIBRARY}")
+       endif(NOT QPID_FIND_QUIETLY)
+   else(QMF2_FOUND)
+       if(QPID_FIND_REQUIRED)
+           message(FATAL_ERROR "Could not find QMF2")
+       endif(QPID_FIND_REQUIRED)
+   endif(QMF2_FOUND)
 
    if(QPIDCLIENT_FOUND)
        if(NOT QPID_FIND_QUIETLY)
@@ -77,6 +97,18 @@ else(MSVC)
            message(STATUS "Could not find QPIDTYPES")
        endif(QPID_FIND_REQUIRED)
    endif(QPIDTYPES_FOUND)
+
+   if(QPIDMESSAGING_FOUND)
+       if(NOT QPID_FIND_QUIETLY)
+           message(STATUS "Found QPIDMESSAGING: ${QPIDMESSAGING_LIBRARY}")
+       endif(NOT QPID_FIND_QUIETLY)
+   else(QPIDMESSAGING_FOUND)
+       if(QPID_FIND_REQUIRED)
+           # we don't want to fail now even we don't have QPIDMESSAGING!
+           # TODO: fix once QPIDMESSAGING available
+           message(STATUS "Could not find QPIDMESSAGING")
+       endif(QPID_FIND_REQUIRED)
+   endif(QPIDMESSAGING_FOUND)
 
    # Figure out the qpid version
    if(WIN32)

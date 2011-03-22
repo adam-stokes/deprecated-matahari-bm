@@ -26,28 +26,9 @@
 #include "matahari/mh_agent.h"
 
 #include "qmf/org/matahariproject/Services.h"
-#include "qmf/org/matahariproject/ArgsServicesList.h"
-#include "qmf/org/matahariproject/ArgsServicesDescribe.h"
-#include "qmf/org/matahariproject/ArgsServicesStop.h"
-#include "qmf/org/matahariproject/ArgsServicesStart.h"
-#include "qmf/org/matahariproject/ArgsServicesStatus.h"
-#include "qmf/org/matahariproject/ArgsServicesEnable.h"
-#include "qmf/org/matahariproject/ArgsServicesDisable.h"
-#include "qmf/org/matahariproject/ArgsServicesCancel.h"
-#include "qmf/org/matahariproject/ArgsServicesFail.h"
 #include "qmf/org/matahariproject/EventService_op.h"
 
 #include "qmf/org/matahariproject/Resources.h"
-#include "qmf/org/matahariproject/ArgsResourcesList.h"
-#include "qmf/org/matahariproject/ArgsResourcesList_classes.h"
-#include "qmf/org/matahariproject/ArgsResourcesList_ocf_providers.h"
-#include "qmf/org/matahariproject/ArgsResourcesDescribe.h"
-#include "qmf/org/matahariproject/ArgsResourcesStop.h"
-#include "qmf/org/matahariproject/ArgsResourcesStart.h"
-#include "qmf/org/matahariproject/ArgsResourcesMonitor.h"
-#include "qmf/org/matahariproject/ArgsResourcesInvoke.h"
-#include "qmf/org/matahariproject/ArgsResourcesCancel.h"
-#include "qmf/org/matahariproject/ArgsResourcesFail.h"
 #include "qmf/org/matahariproject/EventResource_op.h"
 
 extern "C" { 
@@ -55,48 +36,22 @@ extern "C" {
 #include "matahari/services.h"
 }
 
-class SrvManageable : public Manageable
-{
-    private:
-	_qmf::Services* _management_object;
-	
-    public:
-	SrvManageable(ManagementAgent* agent) {
-	    _management_object = new _qmf::Services(agent, this);
-	    _management_object->set_hostname(matahari_hostname());
-	    agent->addObject(this->_management_object);
-	};
-	ManagementObject* GetManagementObject() const { return _management_object; }
-	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
-};
-
-class RscManageable : public Manageable
-{
-    private:
-	_qmf::Resources* _management_object;
-	
-    public:
-	RscManageable(ManagementAgent* agent) { 
-	    _management_object = new _qmf::Resources(agent, this); 
-	    _management_object->set_hostname(matahari_hostname());
-	    _management_object->set_uuid(matahari_uuid());
-	    agent->addObject(this->_management_object);
-	};
-	ManagementObject* GetManagementObject() const { return _management_object; }
-	status_t ManagementMethod(uint32_t method, Args& arguments, string& text);
-};
-
 class SrvAgent : public MatahariAgent
 {
     private:
-	ManagementAgent* _agent;
-	SrvManageable *services;
-	RscManageable *resources;
+	qmf::Data _services;
+	qmf::DataAddr _services_addr;
+
+	qmf::Data _resources;
+	qmf::DataAddr _resources_addr;
+
+	gboolean invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+	gboolean invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 	
     public:
 	void raiseEvent(svc_action_t *op, int service);
-	int setup(ManagementAgent* agent);
-	ManagementObject* GetManagementObject() const { return services->GetManagementObject(); }
+	int setup(qmf::AgentSession session);
+	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 };
 
 
@@ -150,236 +105,251 @@ main(int argc, char **argv)
 void SrvAgent::raiseEvent(svc_action_t *op, int service)
 {
     uint64_t timestamp = 0L;
-
+    qmf::Data event;
+    
 #ifndef MSVC
     timestamp = ::time(NULL);
 #endif
 
     if(service) {
-	this->_agent->raiseEvent(_qmf::EventService_op(
-				     op->rsc, op->action, op->interval, op->rc, 0, timestamp));
+	event = qmf::Data(_package.event_service_op);
     } else {
-	this->_agent->raiseEvent(_qmf::EventResource_op(
-				     op->rsc, op->action, op->interval, op->rc, 0, timestamp, 
-				     op->agent, op->rclass, op->provider));
+	event = qmf::Data(_package.event_resource_op);
     }
+    
+    event.setProperty("name", op->rsc);
+    event.setProperty("action", op->action);
+    event.setProperty("interval", op->interval);
+    event.setProperty("rc", op->rc);
+    event.setProperty("timestamp", timestamp);
+    event.setProperty("sequence", 0);
+    
+
+    if(service == 0) {
+	event.setProperty("rsc_type", op->agent);
+	event.setProperty("rsc_class", op->rclass);
+	event.setProperty("rsc_provider", op->provider);
+    }
+
+    _agent_session.raiseEvent(event);
 }
 
 int
-SrvAgent::setup(ManagementAgent* agent)
+SrvAgent::setup(qmf::AgentSession session)
 {
-    this->_agent = agent;
-    this->services = new SrvManageable(agent);
-    this->resources = new RscManageable(agent);
+    _services = qmf::Data(_package.data_Services);
+	    
+    _services.setProperty("uuid", matahari_uuid());
+    _services.setProperty("hostname", matahari_hostname());
+	    
+    _services_addr = session.addData(_services);
+
+    _resources = qmf::Data(_package.data_Resources);
+	    
+    _resources.setProperty("uuid", matahari_uuid());
+    _resources.setProperty("hostname", matahari_hostname());
+	    
+    _resources_addr = session.addData(_resources);
 
     return 0;
 }
 
-Manageable::status_t
-SrvManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
+gboolean 
+SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    int default_timeout_ms = 60000;
-    switch(method)
-	{
-	case _qmf::Services::METHOD_LIST:
-	    {
-		GList *gIter = NULL;
-		GList *services = services_list();
-		_qmf::ArgsServicesList& ioArgs = (_qmf::ArgsServicesList&) arguments;
-		
-		for(gIter = services; gIter != NULL; gIter = gIter->next) {
-		    ioArgs.o_services.push_back((const char *)gIter->data);
-		}
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Services::METHOD_ENABLE:
-	    {
-		_qmf::ArgsServicesEnable& ioArgs = (_qmf::ArgsServicesEnable&) arguments;
-		svc_action_t * op = services_action_create(ioArgs.i_name.c_str(), "enable", 0, default_timeout_ms);
-		services_action_sync(op);
-		services_action_free(op);
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Services::METHOD_DISABLE:
-	    {
-		_qmf::ArgsServicesDisable& ioArgs = (_qmf::ArgsServicesDisable&) arguments;
-		svc_action_t * op = services_action_create(ioArgs.i_name.c_str(), "disable", 0, default_timeout_ms);
-		services_action_sync(op);
-		services_action_free(op);
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Services::METHOD_START:
-	    {
-		_qmf::ArgsServicesStart& ioArgs = (_qmf::ArgsServicesStart&) arguments;
-		svc_action_t *op = services_action_create(ioArgs.io_name.c_str(), "start", 0, ioArgs.i_timeout);
-		services_action_sync(op);
-		ioArgs.o_rc = op->rc;
-		services_action_free(op);
-	    }
-	    return Manageable::STATUS_OK;
-	    
-	case _qmf::Services::METHOD_STOP:
-	    {
-		_qmf::ArgsServicesStop& ioArgs = (_qmf::ArgsServicesStop&) arguments;
-		svc_action_t * op = services_action_create(ioArgs.io_name.c_str(), "stop", 0, ioArgs.i_timeout);
-		services_action_sync(op);
-		ioArgs.o_rc = op->rc;
-		services_action_free(op);
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Services::METHOD_STATUS:
-	    {
-		_qmf::ArgsServicesStatus& ioArgs = (_qmf::ArgsServicesStatus&) arguments;
-		svc_action_t *op = services_action_create(ioArgs.io_name.c_str(), "status", ioArgs.io_interval, ioArgs.i_timeout);
-
-		if(ioArgs.io_interval) {
-		    return Manageable::STATUS_NOT_IMPLEMENTED;
-
-		    services_action_async(op, mh_service_callback);
-		    ioArgs.o_rc = OCF_PENDING;
-
-		} else {
-		    services_action_sync(op);
-		    ioArgs.o_rc = op->rc;
-		    services_action_free(op);
-		}
-	    }	    
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Services::METHOD_CANCEL:
-	    {
-		_qmf::ArgsServicesCancel& ioArgs = (_qmf::ArgsServicesCancel&) arguments;
-		services_action_cancel(ioArgs.i_name.c_str(), ioArgs.i_action.c_str(), ioArgs.i_interval);
-	    }
-	    
-	    return Manageable::STATUS_OK;
-
-	// case _qmf::Services::METHOD_DESCRIBE:
+    if(event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
+	if(_services_addr == event.getDataAddr()) {
+	    mh_info("Calling services API");
+	    return invoke_services(session, event, user_data);
 	}
-    return Manageable::STATUS_NOT_IMPLEMENTED;
+
+	mh_info("Calling resources API");
+	return invoke_resources(session, event, user_data);
+    }
+
+    mh_err("Unhandled message");
+    return TRUE;
 }
 
-Manageable::status_t
-RscManageable::ManagementMethod(uint32_t method, Args& arguments, string& text)
+
+gboolean 
+SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    switch(method)
-	{
-	case _qmf::Resources::METHOD_LIST_CLASSES:
-	    {
-		_qmf::ArgsResourcesList_classes& ioArgs = (_qmf::ArgsResourcesList_classes&) arguments;
-		ioArgs.o_classes.push_back("ocf");
-		ioArgs.o_classes.push_back("lsb");
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Resources::METHOD_LIST_OCF_PROVIDERS:
-	    {
-		GList *gIter = NULL;
-		GList *providers = resources_list_ocf_providers();
-		_qmf::ArgsResourcesList_ocf_providers& ioArgs = (_qmf::ArgsResourcesList_ocf_providers&) arguments;
+    int default_timeout_ms = 60000;
+    const std::string& methodName(event.getMethodName());
+    if(event.getType() != qmf::AGENT_METHOD) {
+	return TRUE;
+    }
+    
+    if (methodName == "list") {
+	_qtype::Variant::List s_list;
+	GList *gIter = NULL;
+	GList *services = services_list();
 		
-		for(gIter = providers; gIter != NULL; gIter = gIter->next) {
-		    ioArgs.o_providers.push_back((const char *)gIter->data);
-		}
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Resources::METHOD_LIST:
-	    {
-		GList *gIter = NULL;
-		_qmf::ArgsResourcesList& ioArgs = (_qmf::ArgsResourcesList&) arguments;
-		GList *agents = resources_list_ocf_agents(ioArgs.i_provider.c_str());
-		
-		for(gIter = agents; gIter != NULL; gIter = gIter->next) {
-		    ioArgs.o_types.push_back((const char *)gIter->data);
-		}
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Resources::METHOD_START:
-	    {
-		_qmf::ArgsResourcesStart& ioArgs = (_qmf::ArgsResourcesStart&) arguments;
-		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		svc_action_t *op = resources_action_create(
-		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
-		    "start", 0, ioArgs.i_timeout, params);
-		services_action_sync(op);
-		ioArgs.o_rc = op->rc;
-		services_action_free(op);
-	    }
-	    return Manageable::STATUS_OK;
-	    
-	case _qmf::Resources::METHOD_STOP:
-	    {
-		_qmf::ArgsResourcesStop& ioArgs = (_qmf::ArgsResourcesStop&) arguments;
-		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		svc_action_t *op = resources_action_create(
-		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
-		    "stop", 0, ioArgs.i_timeout, params);
-		services_action_sync(op);
-		ioArgs.o_rc = op->rc;
-		services_action_free(op);
-	    }
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Resources::METHOD_MONITOR:
-	    {
-		_qmf::ArgsResourcesMonitor& ioArgs = (_qmf::ArgsResourcesMonitor&) arguments;
-		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		svc_action_t *op = resources_action_create(
-		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
-		    "monitor", ioArgs.io_interval, ioArgs.i_timeout, params);
-
-		if(op->interval) {
-		    return Manageable::STATUS_NOT_IMPLEMENTED;
-
-		    services_action_async(op, mh_resource_callback);
-		    ioArgs.o_rc = OCF_PENDING;
-
-		} else {
-		    services_action_sync(op);
-		    ioArgs.o_rc = op->rc;
-		    services_action_free(op);
-		}
-	    }	    
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Resources::METHOD_INVOKE:
-	    {
-		_qmf::ArgsResourcesInvoke& ioArgs = (_qmf::ArgsResourcesInvoke&) arguments;
-		GHashTable *params = qmf_map_to_hash(ioArgs.i_parameters);
-		svc_action_t *op = resources_action_create(
-		    ioArgs.io_name.c_str(), ioArgs.io_provider.c_str(), ioArgs.io_type.c_str(),
-		    ioArgs.io_action.c_str(), ioArgs.io_interval, ioArgs.i_timeout, params);
-
-		
-		if(op->interval) {
-		    return Manageable::STATUS_NOT_IMPLEMENTED;
-
-		    services_action_async(op, mh_resource_callback);
-		    ioArgs.o_rc = OCF_PENDING;
-
-		} else {
-		    services_action_sync(op);
-		    ioArgs.o_rc = op->rc;
-		    services_action_free(op);
-		}
-	    }	    
-	    return Manageable::STATUS_OK;
-
-	case _qmf::Resources::METHOD_CANCEL:
-	    {
-		_qmf::ArgsResourcesCancel& ioArgs = (_qmf::ArgsResourcesCancel&) arguments;
-		services_action_cancel(ioArgs.io_name.c_str(), ioArgs.io_action.c_str(), ioArgs.io_interval);
-	    }
-	    
-	    return Manageable::STATUS_OK;
-
-	// case _qmf::Resources::METHOD_DESCRIBE:
+	for(gIter = services; gIter != NULL; gIter = gIter->next) {
+	    s_list.push_back((const char *)gIter->data);
 	}
-    return Manageable::STATUS_NOT_IMPLEMENTED;
+
+	event.addReturnArgument("services", s_list);
+
+    } else if (methodName == "enable") {
+	svc_action_t * op = services_action_create(
+	    event.getArguments()["name"].asString().c_str(), "enable", 0, default_timeout_ms);
+	services_action_sync(op);
+	services_action_free(op);
+
+    } else if (methodName == "disable") {
+	svc_action_t * op = services_action_create(
+	    event.getArguments()["name"].asString().c_str(), "disable", 0, default_timeout_ms);
+	services_action_sync(op);
+	services_action_free(op);
+
+    } else if (methodName == "start") {
+	svc_action_t *op = services_action_create(
+	    event.getArguments()["name"].asString().c_str(), "start", 0, event.getArguments()["timeout"]);
+	services_action_sync(op);
+	event.addReturnArgument("rc", op->rc);
+	services_action_free(op);
+	    
+    } else if (methodName == "stop") {
+	svc_action_t * op = services_action_create(
+	    event.getArguments()["name"].asString().c_str(), "stop", 0, event.getArguments()["timeout"]);
+	services_action_sync(op);
+	event.addReturnArgument("rc", op->rc);
+	services_action_free(op);
+
+    } else if (methodName == "status") {
+	svc_action_t *op = services_action_create(
+	    event.getArguments()["name"].asString().c_str(), "status", 
+	    event.getArguments()["interval"], event.getArguments()["timeout"]);
+	    
+	if(event.getArguments()["interval"]) {
+	    session.raiseException(event, MH_NOT_IMPLEMENTED);
+	    return TRUE;
+		
+	    services_action_async(op, mh_service_callback);
+	    event.addReturnArgument("rc", OCF_PENDING);
+		
+	} else {
+	    services_action_sync(op);
+	    event.addReturnArgument("rc", op->rc);
+	    services_action_free(op);
+	}
+
+    } else if (methodName == "cancel") {
+	services_action_cancel(
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(), 
+	    event.getArguments()["interval"]);
+
+    } else {
+	session.raiseException(event, MH_NOT_IMPLEMENTED);
+	return TRUE;
+    }
+    
+    session.methodSuccess(event);
+    return TRUE;
+}
+
+gboolean
+SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
+{
+    const std::string& methodName(event.getMethodName());
+    if(event.getType() != qmf::AGENT_METHOD) {
+	return TRUE;
+    }
+    
+    if (methodName == "list_classes") {
+	_qtype::Variant::List c_list;
+	c_list.push_back("ocf");
+	c_list.push_back("lsb");
+	event.addReturnArgument("classes", c_list);
+
+    } else if (methodName == "list_ocf_providers") {
+	GList *gIter = NULL;
+	GList *providers = resources_list_ocf_providers();
+	_qtype::Variant::List p_list;
+		
+	for(gIter = providers; gIter != NULL; gIter = gIter->next) {
+	    p_list.push_back((const char *)gIter->data);
+	}
+	event.addReturnArgument("providers", p_list);
+
+    } else if (methodName == "list") {
+	GList *gIter = NULL;
+	GList *agents = resources_list_ocf_agents(event.getArguments()["provider"].asString().c_str());
+	_qtype::Variant::List t_list;
+		
+	for(gIter = agents; gIter != NULL; gIter = gIter->next) {
+	    t_list.push_back((const char *)gIter->data);
+	}
+	event.addReturnArgument("types", t_list);
+
+    } else if (methodName == "start") {
+	GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+	svc_action_t *op = resources_action_create(
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
+	    event.getArguments()["type"].asString().c_str(), "start", 0, event.getArguments()["timeout"], params);
+	services_action_sync(op);
+	event.addReturnArgument("rc", op->rc);
+	services_action_free(op);
+
+    } else if (methodName == "stop") {
+	GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+	svc_action_t *op = resources_action_create(
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
+	    event.getArguments()["type"].asString().c_str(), "stop", 0, event.getArguments()["timeout"], params);
+	services_action_sync(op);
+	event.addReturnArgument("rc", op->rc);
+	services_action_free(op);
+
+    } else if (methodName == "monitor") {
+	GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+	svc_action_t *op = resources_action_create(
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
+	    event.getArguments()["type"].asString().c_str(), "monitor", event.getArguments()["interval"], 
+	    event.getArguments()["timeout"], params);
+
+	if(op->interval) {
+	    session.raiseException(event, MH_NOT_IMPLEMENTED);
+	    return TRUE;
+
+	    services_action_async(op, mh_resource_callback);
+	    event.addReturnArgument("rc", OCF_PENDING);
+
+	} else {
+	    services_action_sync(op);
+	    event.addReturnArgument("rc", op->rc);
+	    services_action_free(op);
+	}
+    } else if (methodName == "invoke") {
+	GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+	svc_action_t *op = resources_action_create(
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(), 
+	    event.getArguments()["type"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
+	    event.getArguments()["interval"], event.getArguments()["timeout"], params);
+		
+	if(op->interval) {
+	    session.raiseException(event, MH_NOT_IMPLEMENTED);
+	    return TRUE;
+
+	    services_action_async(op, mh_resource_callback);
+	    event.addReturnArgument("rc", OCF_PENDING);
+
+	} else {
+	    services_action_sync(op);
+	    event.addReturnArgument("rc", op->rc);
+	    services_action_free(op);
+	}
+    } else if (methodName == "cancel") {
+	services_action_cancel(
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
+	    event.getArguments()["interval"]);
+
+    } else {
+	session.raiseException(event, MH_NOT_IMPLEMENTED);
+	return TRUE;
+    }
+	    
+    session.methodSuccess(event);
+    return TRUE;
 }
