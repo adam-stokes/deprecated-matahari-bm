@@ -178,10 +178,10 @@ target_link_libraries(mcommon ${SIGAR})
 target_link_libraries(mhost   ${SIGAR})
 target_link_libraries(mnet    ${SIGAR})
 
-string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
+# string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
 
-message("Building against: ${QPID_VERSION_LONG} (${QPID_VERSION} )")
-add_definitions(-DQPID_VERSION=${QPID_VERSION})
+# message("Building against: ${QPID_VERSION_LONG} (${QPID_VERSION} )")
+# add_definitions(-DQPID_VERSION=${QPID_VERSION})
 
 set(regen_schema OFF)
 message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
