@@ -1,40 +1,54 @@
-set(MHOST_VERSION 0.0.1)
+set(SRV_LIB "msrv")
+set(SRV_QMF "matahari-qmf-serviced")
+set(SRV_DBUS "matahari-dbus-serviced")
 
-include(DBusMacros)
-generate_dbus_headers(Services)
+# QMF daemon
+if(WITH-QMF)
+    add_executable(${SRV_QMF} matahari-srv.cpp ${SCHEMA_SOURCES} ../lib/mh_agent.cpp)
+    target_link_libraries(${SRV_QMF} ${SRV_LIB} mcommon)
 
-set(SRV_DBUS_SOURCE
-    matahari-services-dbus.c
-    ../common/mh_dbus_common.c
-    ${CMAKE_CURRENT_BINARY_DIR}/matahari-services-dbus-glue.h
-    ${CMAKE_CURRENT_BINARY_DIR}/matahari-services-dbus-properties.h
-)
+    target_link_libraries(${SRV_QMF} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
+    IF(QPIDTYPES_LIBRARY)
+        target_link_libraries(${SRV_QMF} ${QPIDTYPES_LIBRARY})
+    ENDIF(QPIDTYPES_LIBRARY)
 
-# Daemon
-set(M_SRV_DBUS "matahari-services-dbusd")
-add_executable(${M_SRV_DBUS} ${SRV_DBUS_SOURCE})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    if(WIN32)
+        target_link_libraries(${daemon} wsock32)
+    endif(WIN32)
 
-target_link_libraries(${M_SRV_DBUS} msrv)
+    install(TARGETS ${SRV_QMF} DESTINATION sbin)
+endif(WITH-QMF)
 
-if(polkit_FOUND)
-   include_directories(${polkit_INCLUDE_DIRS})
-   target_link_libraries(${M_SRV_DBUS} ${polkit_LIBRARIES})
-else(polkit_FOUND)
-   message(FATAL_ERROR "polkit headers/libraries not found.")
-endif(polkit_FOUND)
 
-if(dbus-glib_FOUND)
-   include_directories(${dbus-glib_INCLUDE_DIRS})
-   target_link_libraries(${M_SRV_DBUS} ${dbus-glib_LIBRARIES})
-else(dbus-glib_FOUND)
-   message(FATAL_ERROR "dbus-glib headers/libraries not found.")
-endif(dbus-glib_FOUND)
+# DBus daemon
+if(WITH-DBUS)
+    # Auto-generated stuff
+    include(MatahariDBusMacros)
+    generate_dbus_headers(services ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Services.xml)
+    # Must be included to find matahari-API-dbus-properties.h
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# Install targets
-# TODO: fix hardcoded paths, should go to libexec
-install(TARGETS ${M_SRV_DBUS} DESTINATION sbin)
-install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Services.xml DESTINATION share/dbus-1/interfaces)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.service DESTINATION share/dbus-1/system-services)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.conf DESTINATION /etc/dbus-1/system.d)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.policy DESTINATION share/polkit-1/actions)
+    set(SRV_DBUS_SOURCE
+        matahari-services-dbus.c
+        matahari-services-dbus-glue.h
+        matahari-services-dbus-properties.h
+    )
+
+    add_executable(${SRV_DBUS} ${SRV_DBUS_SOURCE})
+
+    target_link_libraries(${SRV_DBUS} ${SRV_LIB} mcommon_dbus)
+
+    include_directories(${polkit_INCLUDE_DIRS})
+    target_link_libraries(${SRV_DBUS} ${polkit_LIBRARIES})
+
+    include_directories(${dbus-glib_INCLUDE_DIRS})
+    target_link_libraries(${SRV_DBUS} ${dbus-glib_LIBRARIES})
+
+    # Install targets
+    # TODO: fix hardcoded paths, should go to libexec
+    install(TARGETS ${SRV_DBUS} DESTINATION sbin)
+    install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Services.xml DESTINATION share/dbus-1/interfaces)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.service DESTINATION share/dbus-1/system-services)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.conf DESTINATION /etc/dbus-1/system.d)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Services.policy DESTINATION share/polkit-1/actions)
+endif(WITH-DBUS)
