@@ -22,7 +22,7 @@
 
 #include <string.h>
 
-#include "mh_dbus_common.h"
+#include "matahari/mh_dbus_common.h"
 
 /* Services methods */
 #include "matahari/services.h"

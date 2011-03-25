@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "mh_dbus_common.h"
+#include "matahari/mh_dbus_common.h"
 
 /* Host methods */
 #include "matahari/host.h"
