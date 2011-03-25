@@ -163,6 +163,7 @@ add_subdirectory(net)
 ### Installation
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
+install(FILES cmake/modules/FindMatahari.cmake DESTINATION share/cmake/Modules)
 
 if(WITH-QMF)
     install(FILES cmake/modules/FindQPID.cmake DESTINATION share/cmake/Modules)
