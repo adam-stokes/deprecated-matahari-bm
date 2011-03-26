@@ -37,13 +37,13 @@ linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
 	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-	@echo "Now enter the $@ directory and run 'make' as usual"
+	@$(MAKE) -C $@
 
 windows.build:
 	@echo "=::=::=::= Setting up for Windows =::=::=::= "
 	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release ..
-	@echo "Now enter the $@ directory and run 'make' as usual"
+	@$(MAKE) -C $@
 
 %.check: %.build
 	DESTDIR=`pwd`/$@ make -C $^ all install
