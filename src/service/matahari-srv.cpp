@@ -175,7 +175,7 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
 gboolean
 SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    int default_timeout_ms = 60000;
+    static const int default_timeout_ms = 60000;
     const std::string& methodName(event.getMethodName());
     if(event.getType() != qmf::AGENT_METHOD) {
 	return TRUE;
