@@ -29,7 +29,7 @@ network_os_start(const char *iface)
     gboolean ret;
     GError *error = NULL;
     gchar *argv[] = {
-        "/sbin/ifup", iface, NULL
+        "/sbin/ifup", (gchar *) iface, NULL
     };
 
     ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
@@ -44,7 +44,7 @@ network_os_stop(const char *iface)
     gboolean ret;
     GError *error = NULL;
     gchar *argv[] = {
-        "/sbin/ifdown", iface, NULL
+        "/sbin/ifdown", (gchar *) iface, NULL
     };
 
     ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
