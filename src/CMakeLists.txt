@@ -44,6 +44,7 @@ endif(NOT PKG_CONFIG_FOUND)
 
 ## Modules
 # pcre
+pkg_check_modules(pcre REQUIRED libpcre)
 if(NOT pcre_FOUND)
    if(MSVC)
         find_path(pcre_FOUND pcre.h "${PCRE_PATH}")
