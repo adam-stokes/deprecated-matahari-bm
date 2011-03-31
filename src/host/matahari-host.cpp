@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,10 +36,10 @@ extern "C" {
 
 class HostAgent : public MatahariAgent
 {
-    public:
-	int heartbeat();
-	int setup(qmf::AgentSession session);
-	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+public:
+    int heartbeat();
+    int setup(qmf::AgentSession session);
+    gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 };
 
 static gboolean heartbeat_timer(gpointer data)
@@ -52,33 +52,38 @@ static gboolean heartbeat_timer(gpointer data)
 int
 main(int argc, char **argv)
 {
-    HostAgent *agent = new HostAgent(); 
+    HostAgent *agent = new HostAgent();
     int rc = agent->init(argc, argv, "host");
     if (rc == 0) {
-	heartbeat_timer(agent);
-	agent->run();
+        heartbeat_timer(agent);
+        agent->run();
     }
-    
+
     return rc;
 }
 
-gboolean 
+gboolean
 HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    if(event.getType() == qmf::AGENT_METHOD) {
-	const std::string& methodName(event.getMethodName());
-	if (methodName == "shutdown") {
-	    host_shutdown();
-	} else if (methodName == "reboot") {
-	    host_reboot();
-	} else {
-	    session.raiseException(event, MH_NOT_IMPLEMENTED);
-	    goto bail;
-	}
+    if (event.getType() != qmf::AGENT_METHOD) {
+        session.methodSuccess(event);
+        return TRUE;
     }
-    
+
+    const std::string& methodName(event.getMethodName());
+
+    if (methodName == "shutdown") {
+        host_shutdown();
+    } else if (methodName == "reboot") {
+        host_reboot();
+    } else {
+        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        goto bail;
+    }
+
     session.methodSuccess(event);
-  bail:
+
+bail:
     return TRUE;
 }
 
@@ -86,7 +91,7 @@ int
 HostAgent::setup(qmf::AgentSession session)
 {
     _instance = qmf::Data(_package.data_Host);
-    
+
     _instance.setProperty("update_interval", 5);
     _instance.setProperty("uuid", host_get_uuid());
     _instance.setProperty("hostname", host_get_hostname());
@@ -117,8 +122,8 @@ HostAgent::heartbeat()
     mh_trace("Updating stats: %d %d", _heartbeat_sequence, interval);
 
     if(interval == 0) {
-	/* Updates disabled, check again in 5min */
-	return 5*60*1000;
+        /* Updates disabled, check again in 5min */
+        return 5*60*1000;
     }
 
 #ifndef MSVC
