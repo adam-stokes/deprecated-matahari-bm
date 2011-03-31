@@ -41,8 +41,27 @@
 
 MH_TRACE_INIT_DATA(mh_host);
 
-host_init_t host_init = { NULL, FALSE };
-cpuinfo_t cpuinfo = { NULL, 0, 0 };
+typedef struct host_init_s {
+    sigar_t *sigar;
+    gboolean sigar_init;
+} host_init_t;
+
+static host_init_t host_init = {
+    .sigar      = NULL,
+    .sigar_init = FALSE,
+};
+
+typedef struct cpuinfo_s {
+    char *model;
+    unsigned int cpus;
+    unsigned int cores;
+} cpuinfo_t;
+
+static cpuinfo_t cpuinfo = {
+    .model = NULL,
+    .cpus  = 0,
+    .cores = 0,
+};
 
 static void
 init(void)

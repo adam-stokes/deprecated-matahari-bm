@@ -15,34 +15,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-					
+
+/**
+ * \file
+ * \brief Platform specific function prototypes.
+ *
+ * The functions in this header must be implemented by the platform
+ * specific host data code.
+ *  - host_linux.c
+ *  - host_windows.c
+ */
+
+#ifndef __MH_HOST_PRIVATE_H__
+#define __MH_HOST_PRIVATE_H__
+
 #include <glib.h>
 
-typedef struct cpuinfo_s
-{
-  char *model;
-  unsigned int cpus;
-  unsigned int cores;
-} cpuinfo_t;
-
-extern cpuinfo_t cpuinfo;
-
-typedef struct host_init_s
-{
-    sigar_t *sigar;
-    gboolean sigar_init;
-} host_init_t;
-
-extern host_init_t host_init;
-
-extern const char *host_os_get_operating_system(void);
-extern const char *host_os_get_architecture(void);
 extern const char *host_os_get_cpu_flags(void);
 
-extern unsigned int host_os_get_memory(void);
-extern unsigned int host_os_get_platform(void);
-
 extern void host_os_reboot(void);
+
 extern void host_os_shutdown(void);
 
-extern void host_os_get_cpu_details(void);
+#endif /* __MH_HOST_PRIVATE_H__ */
