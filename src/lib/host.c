@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -160,7 +160,7 @@ host_get_processes(sigar_proc_stat_t *procs)
 }
 
 uint64_t
-host_get_memory(void) 
+host_get_memory(void)
 {
     sigar_mem_t mem;
     uint64_t total;
@@ -212,9 +212,9 @@ host_get_cpu_details(void)
 {
     int lpc = 0;
     sigar_cpu_info_list_t cpus;
-    
+
     if(cpuinfo.cpus) {
-	return;
+        return;
     }
 
     init();
@@ -222,12 +222,12 @@ host_get_cpu_details(void)
 
     cpuinfo.cpus = cpus.number;
     for(lpc = 0; lpc < cpus.number; lpc++) {
-	sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
-	if(cpuinfo.model == NULL) {
-	    cpuinfo.model = g_strdup(cpu->model);
-	}
-	cpuinfo.cores += cpu->total_cores;
+        sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
+        if(cpuinfo.model == NULL) {
+            cpuinfo.model = g_strdup(cpu->model);
+        }
+        cpuinfo.cores += cpu->total_cores;
     }
-    
+
     sigar_cpu_info_list_destroy(host_init.sigar, &cpus);
 }
