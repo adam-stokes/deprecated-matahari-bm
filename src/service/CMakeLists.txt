@@ -4,8 +4,8 @@ set(SRV_DBUS "matahari-dbus-serviced")
 
 # QMF daemon
 if(WITH-QMF)
-    add_executable(${SRV_QMF} matahari-srv.cpp ${SCHEMA_SOURCES} ../lib/mh_agent.cpp)
-    target_link_libraries(${SRV_QMF} ${SRV_LIB} mcommon)
+    add_executable(${SRV_QMF} matahari-srv.cpp ${SCHEMA_SOURCES})
+    target_link_libraries(${SRV_QMF} ${SRV_LIB} mcommon mcommon_qmf)
 
     target_link_libraries(${SRV_QMF} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
     IF(QPIDTYPES_LIBRARY)

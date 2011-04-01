@@ -4,8 +4,8 @@ set(NET_DBUS "matahari-dbus-netd")
 
 # QMF daemon
 if(WITH-QMF)
-    add_executable(${NET_QMF} matahari-net.cpp ${SCHEMA_SOURCES} ../lib/mh_agent.cpp)
-    target_link_libraries(${NET_QMF} ${NET_LIB} mcommon)
+    add_executable(${NET_QMF} matahari-net.cpp ${SCHEMA_SOURCES})
+    target_link_libraries(${NET_QMF} ${NET_LIB} mcommon mcommon_qmf)
 
     target_link_libraries(${NET_QMF} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
     if(QPIDTYPES_LIBRARY)

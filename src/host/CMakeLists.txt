@@ -4,8 +4,8 @@ set(HOST_DBUS "matahari-dbus-hostd")
 
 # QMF daemon
 if(WITH-QMF)
-    add_executable(${HOST_QMF} matahari-host.cpp ${SCHEMA_SOURCES} ../lib/mh_agent.cpp)
-    target_link_libraries(${HOST_QMF} ${HOST_LIB} mcommon)
+    add_executable(${HOST_QMF} matahari-host.cpp ${SCHEMA_SOURCES})
+    target_link_libraries(${HOST_QMF} ${HOST_LIB} mcommon mcommon_qmf)
 
     target_link_libraries(${HOST_QMF} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
     if(QPIDTYPES_LIBRARY)
@@ -36,13 +36,8 @@ if(WITH-DBUS)
 
     add_executable(${HOST_DBUS} ${HOST_DBUS_SOURCE})
 
-    target_link_libraries(${HOST_DBUS} ${HOST_LIB} mcommon_dbus)
-
-    include_directories(${polkit_INCLUDE_DIRS})
-    target_link_libraries(${HOST_DBUS} ${polkit_LIBRARIES})
-
+    target_link_libraries(${HOST_DBUS} ${HOST_LIB} mcommon_dbus ${dbus-glib_LIBRARIES})
     include_directories(${dbus-glib_INCLUDE_DIRS})
-    target_link_libraries(${HOST_DBUS} ${dbus-glib_LIBRARIES})
 
     # Install targets
     # TODO: fix hardcoded paths, should go to libexec
