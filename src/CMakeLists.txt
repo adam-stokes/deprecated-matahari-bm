@@ -155,7 +155,6 @@ endif(WITH-QMF)
 
 ### Subdirectories
 add_subdirectory(lib)
-add_subdirectory(common)
 add_subdirectory(host)
 add_subdirectory(service)
 add_subdirectory(net)
