@@ -167,6 +167,7 @@ install(FILES cmake/modules/FindMatahari.cmake DESTINATION share/cmake/Modules)
 
 if(WITH-QMF)
     install(FILES cmake/modules/FindQPID.cmake DESTINATION share/cmake/Modules)
+    install(FILES include/matahari/mh_agent.h DESTINATION include/matahari)
 endif(WITH-QMF)
 
 if(WITH-DBUS)
