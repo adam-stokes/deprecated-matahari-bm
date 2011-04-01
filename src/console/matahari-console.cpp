@@ -16,13 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef WIN32
-# include "config.h"
-#endif
-
-#include <qpid/console/ConsoleListener.h>
-#include <qpid/console/SessionManager.h>
-#include <qpid/sys/Time.h>
+#include "qpid/console/ConsoleListener.h"
+#include "qpid/console/SessionManager.h"
+#include "qpid/sys/Time.h"
+#include <signal.h>
 
 using namespace std;
 using namespace qpid::console;
@@ -32,7 +29,7 @@ using namespace qpid::console;
  * matahari agents
  */
 
-class Listener : public ConsoleListner {
+class Listener : public ConsoleListener {
 public:
   ~Listener() {}
   void brokerConnected(const Broker& broker) {
@@ -47,82 +44,22 @@ public:
     cout << "event raised: " << event << endl;
   }
 
-}
+};
 
-int main_int(int /*argc*/, char** /*argv*/)
+int main(int argc, char** argv)
 {
   Listener listener;
   qpid::client::ConnectionSettings settings;
 
-  cout << "Creating SessionManager" << endl;
-  SessionManager sm;
+  SessionManager::Settings smSettings;
+  smSettings.rcvObjects = false;
+  smSettings.rcvHeartbeats = false;
+  SessionManager sm(&listener, smSettings);
   cout << "Adding broker" << endl;
-  Broker* broker;
-
-  broker = sm.addBroker(settings);
-  broker->waitForStable();
-
-  cout << "Package List:" << endl;
-  vector<string> packages;
-  sm.getPackages(packages);
-  for (vector<string>::iterator iter = packages.begin(); iter != packages.end(); iter++) {
-    cout << "    " << *iter << endl;
-    SessionManager::KeyVector classKeys;
-    sm.getClasses(classKeys, *iter);
-    for (SessionManager::KeyVector::iterator cIter = classKeys.begin();
-	 cIter != classKeys.end(); cIter++)
-      cout << "        " << *cIter << endl;
-  }
-
-  Object::Vector list;
-  cout << "getting exchanges..." << endl;
-  sm.getObjects(list, "exchange");
-  cout << "   returned " << list.size() << " elements" << endl;
-
-  for (Object::Vector::iterator i = list.begin(); i != list.end(); i++) {
-    cout << "exchange: " << *i << endl;
-  }
-
-  list.clear();
-  cout << "getting queues..." << endl;
-  sm.getObjects(list, "queue");
-  cout << "   returned " << list.size() << " elements" << endl;
-
-  for (Object::Vector::iterator i = list.begin(); i != list.end(); i++) {
-    cout << "queue: " << *i << endl;
-    cout << "  bindingCount=" << i->attrUint("bindingCount") << endl;
-    cout << "  arguments=" << i->attrMap("arguments") << endl;
-  }
-
-  list.clear();
-  sm.getObjects(list, "broker");
-  if (list.size() == 1) {
-    Object& broker = *list.begin();
-
-    cout << "Broker: " << broker << endl;
-    Object::AttributeMap args;
-    MethodResponse result;
-    args.addUint("sequence", 1);
-    args.addString("body", "Testing...");
-
-    cout << "Call echo method..." << endl;
-    broker.invokeMethod("echo", args, result);
-    cout << "Result: code=" << result.code << " text=" << result.text << endl;
-    for (Object::AttributeMap::iterator aIter = result.arguments.begin();
-	 aIter != result.arguments.end(); aIter++) {
-      cout << "   Output Arg: " << aIter->first << " => " << aIter->second->str() << endl;
-    }
-  }
+  Broker* broker = sm.addBroker(settings);
+  while(true)
+    qpid::sys::sleep(1);
 
   sm.delBroker(broker);
   return 0;
-}
-
-int main(int argc, char** argv)
-{
-  try {
-    return main_int(argc, argv);
-  } catch(std::exception& e) {
-    cout << "Top Level Exception: " << e.what() << endl;
-  }
 }
