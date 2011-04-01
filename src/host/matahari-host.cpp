@@ -36,6 +36,8 @@ extern "C" {
 
 class HostAgent : public MatahariAgent
 {
+    private:
+        qmf::org::matahariproject::PackageDefinition _package;
     public:
 	int heartbeat();
 	int setup(qmf::AgentSession session);
@@ -85,6 +87,7 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer use
 int
 HostAgent::setup(qmf::AgentSession session)
 {
+    _package.configure(session);
     _instance = qmf::Data(_package.data_Host);
     
     _instance.setProperty("update_interval", 5);

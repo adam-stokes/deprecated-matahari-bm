@@ -26,6 +26,8 @@
 #include <qpid/management/Manageable.h>
 #include <qpid/messaging/Connection.h>
 #include <qmf/AgentEvent.h>
+#include <qmf/AgentSession.h>
+#include <qmf/Data.h>
 
 extern "C" {
 #include "matahari/mainloop.h"
@@ -36,8 +38,6 @@ extern "C" {
 using namespace qpid::management;
 using namespace std;
 
-#include "qmf/org/matahariproject/QmfPackage.h" // v2 schema
-namespace _qmf = qmf::org::matahariproject;
 namespace _qtype = ::qpid::types;
 
 typedef struct mainloop_qmf_s 
@@ -67,7 +67,6 @@ class MatahariAgent
     qmf::Data _instance;
     qmf::AgentSession _agent_session;
     qpid::messaging::Connection _amqp_connection;
-    qmf::org::matahariproject::PackageDefinition _package;
     
   public:
     MatahariAgent() {};

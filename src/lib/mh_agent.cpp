@@ -38,6 +38,7 @@ int use_stderr = 0;
 #include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
+#include <qmf/DataAddr.h>
 #include "matahari/mh_agent.h"
 
 extern "C" {
@@ -47,7 +48,6 @@ extern "C" {
 using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
-namespace _qmf = qmf::org::matahariproject;
 
 void
 shutdown(int /*signal*/)
@@ -313,7 +313,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     _agent_session.setVendor("matahariproject.org");
     _agent_session.setProduct(proc_name);
 
-    _package.configure(_agent_session);
     _agent_session.open();
 
     /* Do any setup required by our agent */

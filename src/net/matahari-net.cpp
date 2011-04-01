@@ -46,6 +46,8 @@ extern "C" {
 
 class NetAgent : public MatahariAgent
 {
+    private:
+        qmf::org::matahariproject::PackageDefinition _package;
     public:
 	int setup(qmf::AgentSession session);
 	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
@@ -79,6 +81,7 @@ static int interface_status(const char *iface)
 int
 NetAgent::setup(qmf::AgentSession session)
 {
+    _package.configure(session);
     _instance = qmf::Data(_package.data_Network);
     
     _instance.setProperty("hostname", matahari_hostname());
