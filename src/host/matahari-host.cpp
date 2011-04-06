@@ -112,6 +112,7 @@ HostAgent::heartbeat()
     sigar_proc_stat_t procs;
     static uint32_t _heartbeat_sequence = 0;
     uint32_t interval = _instance.getProperty("update_interval").asInt32();
+    const char* uuid = _instance.getProperty("uuid").asString();
 
     _heartbeat_sequence++;
     mh_trace("Updating stats: %d %d", _heartbeat_sequence, interval);
@@ -154,6 +155,7 @@ HostAgent::heartbeat()
     qmf::Data event = qmf::Data(_package.event_heartbeat);
     event.setProperty("timestamp", timestamp);
     event.setProperty("sequence", _heartbeat_sequence);
+    event.setProperty("uuid", uuid);
     _agent_session.raiseEvent(event);
 
     return interval * 1000;

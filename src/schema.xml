@@ -5,6 +5,7 @@
    <!-- Common -->
    <arg name="timestamp" type="absTime" />
    <arg name="sequence"  type="uint32" />
+   <arg name="uuid"      type="sstr" />
 
    <!-- Services API -->
    <arg name="name"             type="sstr" />
