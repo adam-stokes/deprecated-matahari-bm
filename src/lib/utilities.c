@@ -373,15 +373,9 @@ const char *matahari_uuid(void)
 	  uuid = strdup("unknown");
 	  
       } else {
-	  int lpc = 0;
-	  for (; lpc < data_length; lpc++) {
-	      switch(buffer[lpc]) {
-		  case '\0':
-		  case '\n':
-		      uuid = malloc(lpc);
-		      snprintf(uuid, lpc-1, "%s", buffer);
-	      }
-	  }
+          char *tmp = strchrnul(buffer, '\n');
+          *tmp = '\0';
+          uuid = strdup(buffer);
       }
       if(input) {
           fclose(input);
