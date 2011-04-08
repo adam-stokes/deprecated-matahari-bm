@@ -47,7 +47,9 @@ cpuinfo_t cpuinfo = { NULL, 0, 0 };
 static void
 init(void)
 {
-    if(host_init.sigar_init) return;
+    if(host_init.sigar_init) {
+        return;
+    }
     sigar_open(&host_init.sigar);
     host_init.sigar_init = TRUE;
 }
@@ -67,14 +69,17 @@ host_get_hostname(void)
 const char *
 host_get_operating_system(void)
 {
+    static const char *operating_system = NULL;
+
     init();
-    sigar_sys_info_t sysinfo;
-    char *operating_system = NULL;
 
     if(operating_system == NULL) {
+        sigar_sys_info_t sysinfo;
+
         sigar_sys_info_get(host_init.sigar, &sysinfo);
         operating_system = g_strdup_printf("%s (%s)", sysinfo.vendor_name, sysinfo.version);
     }
+
     return operating_system;
 }
 
@@ -87,14 +92,17 @@ host_get_cpu_wordsize(void)
 const char *
 host_get_architecture(void)
 {
+    static const char *arch = NULL;
+
     init();
-    sigar_sys_info_t sysinfo;
-    char *arch = NULL;
 
     if(arch == NULL) {
+        sigar_sys_info_t sysinfo;
+
         sigar_sys_info_get(host_init.sigar, &sysinfo);
         arch = g_strdup(sysinfo.arch);
     }
+
     return arch;
 }
 
