@@ -34,7 +34,13 @@
 const char *
 host_os_get_cpu_flags(void)
 {
-    return strdup("unknown");
+    static char *flags = NULL;
+
+    if (!flags) {
+        flags = strdup("unknown");
+    }
+
+    return flags;
 }
 
 static void

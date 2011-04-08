@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,7 +47,9 @@ cpuinfo_t cpuinfo = { NULL, 0, 0 };
 static void
 init(void)
 {
-    if(host_init.sigar_init) return;
+    if(host_init.sigar_init) {
+        return;
+    }
     sigar_open(&host_init.sigar);
     host_init.sigar_init = TRUE;
 }
@@ -67,14 +69,17 @@ host_get_hostname(void)
 const char *
 host_get_operating_system(void)
 {
+    static const char *operating_system = NULL;
+
     init();
-    sigar_sys_info_t sysinfo;
-    char *operating_system = NULL;
 
     if(operating_system == NULL) {
+        sigar_sys_info_t sysinfo;
+
         sigar_sys_info_get(host_init.sigar, &sysinfo);
         operating_system = g_strdup_printf("%s (%s)", sysinfo.vendor_name, sysinfo.version);
     }
+
     return operating_system;
 }
 
@@ -87,14 +92,17 @@ host_get_cpu_wordsize(void)
 const char *
 host_get_architecture(void)
 {
+    static const char *arch = NULL;
+
     init();
-    sigar_sys_info_t sysinfo;
-    char *arch = NULL;
 
     if(arch == NULL) {
+        sigar_sys_info_t sysinfo;
+
         sigar_sys_info_get(host_init.sigar, &sysinfo);
         arch = g_strdup(sysinfo.arch);
     }
+
     return arch;
 }
 
@@ -152,7 +160,7 @@ host_get_processes(sigar_proc_stat_t *procs)
 }
 
 uint64_t
-host_get_memory(void) 
+host_get_memory(void)
 {
     sigar_mem_t mem;
     uint64_t total;
@@ -204,9 +212,9 @@ host_get_cpu_details(void)
 {
     int lpc = 0;
     sigar_cpu_info_list_t cpus;
-    
+
     if(cpuinfo.cpus) {
-	return;
+        return;
     }
 
     init();
@@ -214,12 +222,12 @@ host_get_cpu_details(void)
 
     cpuinfo.cpus = cpus.number;
     for(lpc = 0; lpc < cpus.number; lpc++) {
-	sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
-	if(cpuinfo.model == NULL) {
-	    cpuinfo.model = g_strdup(cpu->model);
-	}
-	cpuinfo.cores += cpu->total_cores;
+        sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
+        if(cpuinfo.model == NULL) {
+            cpuinfo.model = g_strdup(cpu->model);
+        }
+        cpuinfo.cores += cpu->total_cores;
     }
-    
+
     sigar_cpu_info_list_destroy(host_init.sigar, &cpus);
 }
