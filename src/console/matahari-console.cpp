@@ -64,14 +64,21 @@ ConsoleAgent::setup(qmf::AgentSession session)
     qmf::ConsoleSession _console_session;
     _console_session = qmf::ConsoleSession(_amqp_connection);
     _console_session.open();
+    _console_session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'console']]]");
+
     qmf::Agent agent;
+    qmf::Data cached_config;
+
     while (true) {
 	if(_console_session.getAgentCount() > 0) {
 	    agent = _console_session.getAgent(0);
-	    qmf::ConsoleEvent result(agent.query("{class:Console, package:'org.matahariproject', where:[eq, hostname, [quote, supa.kooba]]}"));
+	    qmf::ConsoleEvent result(agent.query("{class:Console, package:'org.matahariproject', where:[eq, uuid, [quote," + _instance.getProperty("uuid").asString() +"]]}"));
 	    if(result.getType() == qmf::CONSOLE_QUERY_RESPONSE) {
-		_instance.setProperty("status", "Received console event");
-		break;
+		if(result.getDataCount() == 1) {
+		    cached_config = result.getData(0);
+		    _instance.setProperty("status", "Read console event for " + _instance.getProperty("hostname").asString());
+		    break;
+		}
 	    }
 	}
 	qpid::sys::sleep(1);
@@ -86,7 +93,8 @@ ConsoleAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer 
     if(event.getType() == qmf::AGENT_METHOD) {
 	const std::string& methodName(event.getMethodName());
 	if(methodName == "update") {
-	    _instance.setProperty("status", "update method sent")
+	    _instance.setProperty("status", "update method sent");
+	}
 	goto bail;
     }
     session.methodSuccess(event);
