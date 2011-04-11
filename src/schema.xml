@@ -245,4 +245,9 @@
    </method-->
  </class>
 
+ <class name="Console">
+   <property name="uuid"        type="sstr"   access="RO"  desc="Host UUID" />
+   <property name="hostname"    type="sstr"  access="RO" desc="Hostname" index="y"/>
+   <property name="status"     type="sstr"   access="RW" desc="Status of Instance" />
+ </class>
 </schema>

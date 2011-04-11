@@ -21,6 +21,7 @@ set(MCOMMON_VERSION 0.0.1)
 set(MHOST_VERSION 0.0.1)
 set(MSRV_VERSION 0.0.1)
 set(MNET_VERSION 0.0.1)
+set(MCONSOLE_VERSION 0.0.1)
 
 option(WITH-QMF "Build the QMF daemon" ON)
 option(WITH-DBUS "Build the DBus daemon" ON)
@@ -37,8 +38,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_P
 set(M_HOST "matahari-hostd")
 set(M_NET  "matahari-netd")
 set(M_SRV  "matahari-serviced")
+set(M_CONSOLE "matahari-consoled")
 
-set(DAEMONS ${M_HOST} ${M_NET} ${M_SRV})
+set(DAEMONS ${M_HOST} ${M_NET} ${M_SRV} ${M_CONSOLE})
 
 file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 
@@ -54,6 +56,7 @@ set(SCHEMA_SOURCES
 	${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Network.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Services.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Resources.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Console.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventHeartbeat.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventService_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventResource_op.cpp
@@ -92,6 +95,9 @@ target_link_libraries(${M_NET} mnet)
 
 add_executable(${M_SRV}  service/matahari-srv.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES})
 target_link_libraries(${M_SRV} msrv)
+
+add_executable(${M_CONSOLE} console/matahari-console.cpp ${SCHEMA_SOURCES} ${COMMON_SOURCES})
+target_link_libraries(${M_CONSOLE} mhost)
 
 foreach(daemon ${DAEMONS}) 
    target_link_libraries(${daemon} mcommon)
