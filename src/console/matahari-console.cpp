@@ -71,6 +71,7 @@ ConsoleAgent::setup(qmf::AgentSession session)
 	    qmf::ConsoleEvent result(agent.query("{class:Console, package:'org.matahariproject', where:[eq, hostname, [quote, supa.kooba]]}"));
 	    if(result.getType() == qmf::CONSOLE_QUERY_RESPONSE) {
 		_instance.setProperty("status", "Received console event");
+		break;
 	    }
 	}
 	qpid::sys::sleep(1);
@@ -83,7 +84,9 @@ gboolean
 ConsoleAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
     if(event.getType() == qmf::AGENT_METHOD) {
-//	const std::string& methodName(event.getMethodName());
+	const std::string& methodName(event.getMethodName());
+	if(methodName == "update") {
+	    _instance.setProperty("status", "update method sent")
 	goto bail;
     }
     session.methodSuccess(event);
