@@ -56,7 +56,6 @@ set(SCHEMA_SOURCES
 	${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Network.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Services.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Resources.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Console.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventHeartbeat.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventService_op.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventResource_op.cpp

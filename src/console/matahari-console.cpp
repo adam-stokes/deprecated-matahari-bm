@@ -20,84 +20,78 @@
 #include "config.h"
 #endif
 
-#include "matahari/mh_agent.h"
-#include <qmf/Data.h>
-#include <qmf/ConsoleEvent.h>
-#include <qmf/ConsoleSession.h>
+#include <qpid/client/ConnectionSettings.h>
+#include <qpid/console/ConsoleListener.h>
+#include <qpid/console/SessionManager.h>
+#include <qpid/messaging/Connection.h>
+#include "qmf/org/matahariproject/QmfPackage.h"
 #include "qmf/org/matahariproject/Console.h"
 #include <qpid/sys/Time.h>
 
 #include <sstream>
+#include <vector>
 using namespace std;
+using namespace qpid::console;
 
 extern "C" {
 #include <sigar.h>
 #include "matahari/host.h"
 }
 
-class ConsoleAgent : public MatahariAgent
+class Listener : public ConsoleListener {
+public:
+    void event(Event& event) {
+	cout << event << endl;
+    }
+};
+
+class PostbootConsole
 {
 public:
-    int setup(qmf::AgentSession session);
-    gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+    PostbootConsole() {};
+    ~PostbootConsole() {};
+    qpid::client::ConnectionSettings _settings;
+    qpid::messaging::Connection _amqp_connection;
+    SessionManager::Settings _sm_settings;
+    Agent::Vector _agents;
 };
 
 int main(int argc, char** argv)
 {
-    ConsoleAgent *agent = new ConsoleAgent();;
-    int rc = agent->init(argc, argv, "console");
-    if(rc == 0) {
-	agent->run();
-    }
-    return rc;
-}
+    PostbootConsole *postboot = new PostbootConsole();
+    Listener listener;
+    string servername = "localhost";
+    string username = NULL;
+    string password = NULL;
+    string service = NULL;
+    int serverport = 49000;
 
-int
-ConsoleAgent::setup(qmf::AgentSession session)
-{
-    _instance = qmf::Data(_package.data_Console);
-    _instance.setProperty("uuid", host_get_uuid());
-    _instance.setProperty("hostname", host_get_hostname());
-    _instance.setProperty("status", "Waiting for console event");
-    session.addData(_instance);
+    postboot->_settings.host = servername;
+    postboot->_settings.port = serverport;
 
-    qmf::ConsoleSession _console_session;
-    _console_session = qmf::ConsoleSession(_amqp_connection);
-    _console_session.open();
-    _console_session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'console']]]");
+    qpid::types::Variant::Map options;
+    options["username"] = username;
+    options["password"] = password;
+    options["sasl-service"] = "qpid";
+    options["sasl-mechanism"] = "GSSAPI";
 
-    qmf::Agent agent;
-    qmf::Data cached_config;
+    std::stringstream url;
+    url << servername << ":" << serverport;
+    postboot->_amqp_connection = qpid::messaging::Connection(url.str(), options);
+    postboot->_amqp_connection.open();
+
+    // Only receive events, cut out other chatter
+    postboot->_sm_settings.rcvObjects = false;
+    postboot->_sm_settings.rcvHeartbeats = false;
+
+    SessionManager sm(&listener, postboot->_sm_settings);
+    Broker *broker = sm.addBroker(postboot->_settings);
+
+    // sm.getAgents(postboot->_agents, broker);
 
     while (true) {
-	if(_console_session.getAgentCount() > 0) {
-	    agent = _console_session.getAgent(0);
-	    qmf::ConsoleEvent result(agent.query("{class:Console, package:'org.matahariproject', where:[eq, uuid, [quote," + _instance.getProperty("uuid").asString() +"]]}"));
-	    if(result.getType() == qmf::CONSOLE_QUERY_RESPONSE) {
-		if(result.getDataCount() == 1) {
-		    cached_config = result.getData(0);
-		    _instance.setProperty("status", "Read console event for " + _instance.getProperty("hostname").asString());
-		    break;
-		}
-	    }
-	}
 	qpid::sys::sleep(1);
     }
-
+    sm.delBroker(broker);
     return 0;
-}
-
-gboolean
-ConsoleAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
-{
-    if(event.getType() == qmf::AGENT_METHOD) {
-	const std::string& methodName(event.getMethodName());
-	if(methodName == "update") {
-	    _instance.setProperty("status", "update method sent");
-	}
-	goto bail;
-    }
-    session.methodSuccess(event);
-bail:
-    return TRUE;
 }
