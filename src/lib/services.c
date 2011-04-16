@@ -37,25 +37,20 @@ GHashTable *recurring_actions = NULL;
 svc_action_t *services_action_create(
     const char *name, const char *action, int interval, int timeout)
 {
-    svc_action_t *op = malloc(sizeof(svc_action_t));
-    memset(op, 0, sizeof(svc_action_t));
+    svc_action_t *op;
 
-    op->opaque = malloc(sizeof(svc_action_private_t));
-    memset(op->opaque, 0, sizeof(svc_action_private_t));
-    
+    op = calloc(1, sizeof(svc_action_t));
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
     op->timeout = timeout;
-
     op->rclass = strdup("lsb");
     op->agent = strdup(name);
-
-    op->id = malloc(500);
-    snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
+    asprintf(&op->id, "%s_%s_%d", name, action, interval);
 
     services_os_set_exec(op);
-    
+
     return op;
 }
 
@@ -63,42 +58,33 @@ svc_action_t *resources_action_create(
     const char *name, const char *provider, const char *agent,
     const char *action, int interval, int timeout, GHashTable *params)
 {
-    svc_action_t *op = malloc(sizeof(svc_action_t));
-    memset(op, 0, sizeof(svc_action_t));
+    svc_action_t *op;
 
-    op->opaque = malloc(sizeof(svc_action_private_t));
-    memset(op->opaque, 0, sizeof(svc_action_private_t));    
-    
+    op = calloc(1, sizeof(svc_action_t));
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
     op->action = strdup(action);
     op->interval = interval;
     op->timeout = timeout;
-
     op->rclass = strdup("ocf");
     op->agent = strdup(agent);
     op->provider = strdup(provider);
-
     op->params = params;
-
-    op->id = malloc(500);
-    snprintf(op->id, 500, "%s_%s_%d", name, action, interval);
-
-    op->opaque->exec = malloc(500);
-    snprintf(op->opaque->exec, 500, "%s/resource.d/%s/%s", OCF_ROOT, provider, agent);
-
+    asprintf(&op->id, "%s_%s_%d", name, action, interval);
+    asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT,
+                            provider, agent);
     op->opaque->args[0] = strdup(op->opaque->exec);
     op->opaque->args[1] = strdup(action);
-    op->opaque->args[2] = NULL;
-    
+
     return op;
 }
 
 void services_action_free(svc_action_t *op)
 {
     if(op == NULL) {
-	return;
+        return;
     }
-    
+
     free(op->id);
     free(op->opaque->exec);
 
@@ -118,8 +104,8 @@ void services_action_free(svc_action_t *op)
     free(op->stderr_data);
 
     if(op->params) {
-	g_hash_table_destroy(op->params);
-	op->params = NULL;
+        g_hash_table_destroy(op->params);
+        op->params = NULL;
     }
 
     free(op);
@@ -128,42 +114,40 @@ void services_action_free(svc_action_t *op)
 gboolean services_action_cancel(const char *name, const char *action, int interval)
 {
     svc_action_t* op = NULL;
-    gboolean found = FALSE;
-    char *id = malloc(500);
+    char id[512];
 
-    snprintf(id, 500, "%s_%s_%d", name, action, interval);
-    op = g_hash_table_lookup(recurring_actions, id);
-    free(id);
+    snprintf(id, sizeof(id), "%s_%s_%d", name, action, interval);
 
-    if(op) {
-	found = TRUE;
-	op->opaque->cancel = TRUE;
-	mh_debug("Removing %s", op->id);
-	if(op->opaque->repeat_timer) {
-	    g_source_remove(op->opaque->repeat_timer);
-	}
-	services_action_free(op);
+    if (!(op = g_hash_table_lookup(recurring_actions, id))) {
+        return FALSE;
     }
-    
-    return found;
+
+    op->opaque->cancel = TRUE;
+    mh_debug("Removing %s", op->id);
+    if(op->opaque->repeat_timer) {
+        g_source_remove(op->opaque->repeat_timer);
+    }
+    services_action_free(op);
+
+    return TRUE;
 }
 
 gboolean
 services_action_async(svc_action_t* op, void (*action_callback)(svc_action_t*))
 {
     if(action_callback) {
-	op->opaque->callback = action_callback;
+        op->opaque->callback = action_callback;
     }
 
     if(recurring_actions == NULL) {
-	recurring_actions = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, NULL, NULL);
+        recurring_actions = g_hash_table_new_full(
+                        g_str_hash, g_str_equal, NULL, NULL);
     }
 
     if(op->interval > 0) {
-	g_hash_table_replace(recurring_actions, op->id, op);
+        g_hash_table_replace(recurring_actions, op->id, op);
     }
-    
+
     return services_os_action_execute(op, FALSE);
 }
 
@@ -173,10 +157,10 @@ services_action_sync(svc_action_t* op)
     gboolean rc = services_os_action_execute(op, TRUE);
     mh_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if(op->stdout_data) {
-	mh_trace(" >  stdout: %s", op->stdout_data);
+        mh_trace(" >  stdout: %s", op->stdout_data);
     }
     if(op->stderr_data) {
-	mh_trace(" >  stderr: %s", op->stderr_data);
+        mh_trace(" >  stderr: %s", op->stderr_data);
     }
     return rc;
 }
@@ -187,17 +171,17 @@ get_directory_list(const char *root, gboolean files)
     return services_os_get_directory_list(root, files);
 }
 
-GList *services_list(void) 
+GList *services_list(void)
 {
     return services_os_list();
 }
 
-GList *resources_list_ocf_providers(void) 
+GList *resources_list_ocf_providers(void)
 {
     return resources_os_list_ocf_providers();
 }
 
-GList *resources_list_ocf_agents(const char *provider) 
+GList *resources_list_ocf_agents(const char *provider)
 {
     return resources_os_list_ocf_agents(provider);
 }
