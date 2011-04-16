@@ -17,6 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Matahari Agent API
+ * \ingroup coreapi
+ */
+
 #ifndef __MATAHARI_DAEMON_H
 #define __MATAHARI_DAEMON_H
 

@@ -16,7 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Utilities API
+ * \ingroup coreapi
+ */
+
 #ifndef __MH_UTILITIES__
+#define __MH_UTILITIES__
+
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
@@ -48,5 +56,4 @@ extern void mh_abort(const char *file, const char *function, int line,
 	}								\
     } while(0)
 
-#define __MH_UTILITIES__
 #endif

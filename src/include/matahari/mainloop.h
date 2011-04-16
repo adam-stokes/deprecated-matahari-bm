@@ -15,6 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+/**
+ * \file
+ * \brief Main loop API
+ * \ingroup coreapi
+ */
+
 #ifndef __MH_MAINLOOP__
 #define __MH_MAINLOOP__
 
