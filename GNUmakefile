@@ -98,4 +98,11 @@ rpm-win:
 mock-win:   
 	make PROFILE=$(PROFILE) VARIANT=mingw32- srpm mock-nodeps
 
-.PHONY: check linux.build windows.build
+clean:
+	@if [ -d linux.build ] ; then \
+		$(MAKE) --no-print-dir -C linux.build clean ; \
+	elif [ -d windows.build ] ; then \
+		$(MAKE) --no-print-dir -C windows.build clean ; \
+	fi
+
+.PHONY: check linux.build windows.build clean

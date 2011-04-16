@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,7 +32,7 @@
 
 #include <qpid/agent/ManagementAgent.h>
 
-extern "C" { 
+extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
@@ -46,18 +46,19 @@ extern "C" {
 
 class NetAgent : public MatahariAgent
 {
-    public:
-	int setup(qmf::AgentSession session);
-	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+public:
+    virtual int setup(qmf::AgentSession session);
+    virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                            gpointer user_data);
 };
 
 int
 main(int argc, char **argv)
 {
     NetAgent agent;
-    int rc = agent.init(argc, argv, "net");
+    int rc = agent.init(argc, argv, "Network");
     if (rc == 0) {
-	agent.run();
+        agent.run();
     }
     return rc;
 }
@@ -67,7 +68,7 @@ static int interface_status(const char *iface)
     uint64_t flags = 0;
     if(iface == NULL)
        return 3;
-       
+
     network_status(iface, &flags);
 
     if(flags & SIGAR_IFF_UP) {
@@ -80,66 +81,65 @@ int
 NetAgent::setup(qmf::AgentSession session)
 {
     _instance = qmf::Data(_package.data_Network);
-    
+
     _instance.setProperty("hostname", matahari_hostname());
     _instance.setProperty("uuid", matahari_uuid());
 
-    _agent_session.addData(_instance);    
+    _agent_session.addData(_instance);
     return 0;
 }
 
 gboolean
 NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    if(event.getType() == qmf::AGENT_METHOD) {
-	const std::string& methodName(event.getMethodName());
-	if (methodName == "list") {
-	    GList *plist = NULL;
-	    GList *interface_list = NULL;
+    if (event.getType() != qmf::AGENT_METHOD) {
+        session.methodSuccess(event);
+        return TRUE;
+    }
 
-	    _qtype::Variant::List s_list;
-	    sigar_net_interface_config_t *ifconfig = NULL;
-	    
-	    interface_list = network_get_interfaces();
-	    for(plist = g_list_first(interface_list); plist; plist = g_list_next(plist)) {
-		ifconfig = (sigar_net_interface_config_t *)plist->data;
-		s_list.push_back(ifconfig->name);
-	    }
-	    event.addReturnArgument("iface_map", s_list);
+    const std::string& methodName(event.getMethodName());
 
-	} else if (methodName == "start") {
-	    int rc = interface_status(event.getArguments()["iface"].asString().c_str());
+    if (methodName == "list") {
+        GList *plist = NULL;
+        GList *interface_list = NULL;
 
-	    if(rc == 1) {
-		network_start(event.getArguments()["iface"].asString().c_str());
-		rc = interface_status(event.getArguments()["iface"].asString().c_str());
-	    }
-	    event.addReturnArgument("status", rc);
+        _qtype::Variant::List s_list;
+        sigar_net_interface_config_t *ifconfig = NULL;
 
-	} else if (methodName == "stop") {
-	    int rc = interface_status(event.getArguments()["iface"].asString().c_str());
-	    if(rc == 0) {
-		network_stop(event.getArguments()["iface"].asString().c_str());
-		rc = interface_status(event.getArguments()["iface"].asString().c_str());
-	    }
-	    event.addReturnArgument("status", rc);
+        interface_list = network_get_interfaces();
+        for (plist = g_list_first(interface_list); plist; plist = g_list_next(plist)) {
+            ifconfig = (sigar_net_interface_config_t *)plist->data;
+            s_list.push_back(ifconfig->name);
+        }
+        event.addReturnArgument("iface_map", s_list);
+    } else if (methodName == "start") {
+        int rc = interface_status(event.getArguments()["iface"].asString().c_str());
 
-	} else if (methodName == "status") {
-	    event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
-	    
-	} else if (methodName == "get_ip_address") {
-	    event.addReturnArgument("ip", network_get_ip_address(event.getArguments()["iface"].asString().c_str()));
-
-	} else if (methodName == "get_mac_address") {
-	    event.addReturnArgument("mac", network_get_mac_address(event.getArguments()["iface"].asString().c_str()));
-
-	} else {
-	    session.raiseException(event, MH_NOT_IMPLEMENTED);
-	    goto bail;
-	}
+        if (rc == 1) {
+            network_start(event.getArguments()["iface"].asString().c_str());
+            rc = interface_status(event.getArguments()["iface"].asString().c_str());
+        }
+        event.addReturnArgument("status", rc);
+    } else if (methodName == "stop") {
+        int rc = interface_status(event.getArguments()["iface"].asString().c_str());
+        if (rc == 0) {
+            network_stop(event.getArguments()["iface"].asString().c_str());
+            rc = interface_status(event.getArguments()["iface"].asString().c_str());
+        }
+        event.addReturnArgument("status", rc);
+    } else if (methodName == "status") {
+        event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
+    } else if (methodName == "get_ip_address") {
+        event.addReturnArgument("ip", network_get_ip_address(event.getArguments()["iface"].asString().c_str()));
+    } else if (methodName == "get_mac_address") {
+        event.addReturnArgument("mac", network_get_mac_address(event.getArguments()["iface"].asString().c_str()));
+    } else {
+        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        goto bail;
     }
 
     session.methodSuccess(event);
-  bail:
+
+bail:
     return TRUE;
 }
