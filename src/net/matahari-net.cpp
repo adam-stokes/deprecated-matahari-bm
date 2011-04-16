@@ -47,8 +47,9 @@ extern "C" {
 class NetAgent : public MatahariAgent
 {
 public:
-    int setup(qmf::AgentSession session);
-    gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+    virtual int setup(qmf::AgentSession session);
+    virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                            gpointer user_data);
 };
 
 int
