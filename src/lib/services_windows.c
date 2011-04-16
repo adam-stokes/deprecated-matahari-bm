@@ -22,10 +22,10 @@
 #include "matahari/logging.h"
 #include "matahari/mainloop.h"
 #include "matahari/services.h"
+#include "matahari/utilities.h"
 #include "services_private.h"
 
 /* Some code adapted from http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx */
-#define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 
 static wchar_t *char2wide(const char *str)
 {

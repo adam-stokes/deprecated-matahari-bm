@@ -26,7 +26,7 @@ extern const char *matahari_hostname(void);
 extern void mh_abort(const char *file, const char *function, int line,
 		     const char *assert_condition, int do_core, int do_fork);
 
-#define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
+#define DIMOF(a)	((int) (sizeof(a) / sizeof(0[a])))
 
 #ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
