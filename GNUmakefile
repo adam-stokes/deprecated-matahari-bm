@@ -33,6 +33,9 @@ WITH   ?=
 VARIANT ?=
 PROFILE ?= fedora-14-x86_64
 
+DOXYGEN:=$(shell which doxygen 2>/dev/null)
+DOT:=$(shell which dot 2>/dev/null)
+
 linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
 	mkdir -p $@
@@ -105,4 +108,31 @@ clean:
 		$(MAKE) --no-print-dir -C windows.build clean ; \
 	fi
 
-.PHONY: check linux.build windows.build clean
+doxygen:
+ifeq ($(DOXYGEN),)
+	@echo
+	@echo "***********************************************"
+	@echo "***                                         ***"
+	@echo "*** You do not have doxygen installed.      ***"
+	@echo "*** Please install it before generating the ***"
+	@echo "*** developer documentation.                ***"
+	@echo "***                                         ***"
+	@echo "***********************************************"
+	@exit 1
+endif
+ifeq ($(DOT),)
+	@echo
+	@echo "***********************************************"
+	@echo "***                                         ***"
+	@echo "*** You do not have graphviz installed.     ***"
+	@echo "*** Please install it before generating the ***"
+	@echo "*** developer documentation.                ***"
+	@echo "***                                         ***"
+	@echo "***********************************************"
+	@exit 1
+endif
+	@cp doc/Doxyfile.in doc/Doxyfile
+	@sed -i -e 's/###MATAHARI_VERSION###/$(VERSION)/' doc/Doxyfile
+	@doxygen doc/Doxyfile
+
+.PHONY: check linux.build windows.build clean doxygen
