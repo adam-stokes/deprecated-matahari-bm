@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -64,21 +64,21 @@ RegistryRead (HKEY hHive, const wchar_t *szKeyPath, const wchar_t *szValue, char
     DWORD nSize = BUFFER_SIZE;
     wchar_t szData[BUFFER_SIZE];
     long lSuccess = RegOpenKey (hHive, szKeyPath, &hKey);
-    
+
     if (lSuccess != ERROR_SUCCESS) {
-	mh_debug("Could not open %ls key from the registry: %ld", szKeyPath, lSuccess);
-	return;
+        mh_debug("Could not open %ls key from the registry: %ld", szKeyPath, lSuccess);
+        return;
     }
-    
+
     lSuccess = RegQueryValueEx (hKey, szValue, NULL, NULL, (LPBYTE) szData, &nSize);
     if (lSuccess != ERROR_SUCCESS) {
-	mh_debug("Could not read '%ls[%ls]' from the registry: %ld", szKeyPath, szValue, lSuccess);
-	return;
+        mh_debug("Could not read '%ls[%ls]' from the registry: %ld", szKeyPath, szValue, lSuccess);
+        return;
     }
     mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue, szData);
     if(out) {
-	*out = (char *)malloc( BUFFER_SIZE );
-	wcstombs(*out, szData, (size_t)BUFFER_SIZE);
+        *out = (char *)malloc( BUFFER_SIZE );
+        wcstombs(*out, szData, (size_t)BUFFER_SIZE);
     }
 }
 #else
@@ -109,15 +109,15 @@ print_usage(const char *proc_name)
 }
 #endif
 
-static gboolean 
+static gboolean
 mh_qpid_callback(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
     MatahariAgent *agent = (MatahariAgent*) user_data;
     mh_trace("Qpid message recieved");
     if(event.hasDataAddr()) {
-	mh_trace("Message is for %s (type: %s)", 
-		 event.getDataAddr().getName().c_str(), 
-		 event.getDataAddr().getAgentName().c_str());
+        mh_trace("Message is for %s (type: %s)",
+                 event.getDataAddr().getName().c_str(),
+                 event.getDataAddr().getAgentName().c_str());
     }
     return agent->invoke(session, event, user_data);
 }
@@ -149,129 +149,129 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     qpid::management::ConnectionSettings settings;
 
     /* Set up basic logging */
-    mh_log_init(proc_name, LOG_INFO, FALSE);    
+    mh_log_init(proc_name, LOG_INFO, FALSE);
 
 #ifdef WIN32
     RegistryRead (
-	HKEY_LOCAL_MACHINE,
-	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-	L"DebugLevel",
-	&value);
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+        L"DebugLevel",
+        &value);
 
     if(value) {
-	mh_log_level = LOG_INFO+atoi(value);
-	free(value);
-	value = NULL;
-    }
-    
-    RegistryRead (
-	HKEY_LOCAL_MACHINE,
-	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-	L"Broker",
-	&servername);
-
-    RegistryRead (
-	HKEY_LOCAL_MACHINE,
-	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-	L"Port",
-	&value);
-
-    if(value) {
-	serverport = atoi(value);
-	free(value);
-	value = NULL;
+        mh_log_level = LOG_INFO+atoi(value);
+        free(value);
+        value = NULL;
     }
 
     RegistryRead (
-	HKEY_LOCAL_MACHINE,
-	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-	L"Service",
-	&service);
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+        L"Broker",
+        &servername);
 
     RegistryRead (
-	HKEY_LOCAL_MACHINE,
-	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-	L"User",
-	&username);
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+        L"Port",
+        &value);
+
+    if(value) {
+        serverport = atoi(value);
+        free(value);
+        value = NULL;
+    }
+
     RegistryRead (
-	HKEY_LOCAL_MACHINE,
-	L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-	L"Password",
-	&password);
-    
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+        L"Service",
+        &service);
+
+    RegistryRead (
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+        L"User",
+        &username);
+    RegistryRead (
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+        L"Password",
+        &password);
+
 #else
-    
+
     // Get args
     while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:v", opt, &idx)) != -1) {
-	switch (arg) {
-	    case 'h':
-	    case '?':
-		print_usage(proc_name);
-		exit(0);
-		break;
-	    case 'd':
-		daemonize = true;
-		break;
-	    case 'v':
-		mh_log_level++;
-		mh_enable_stderr(1);
-		break;
-	    case 's':
-		if (optarg) {
-		    service = strdup(optarg);
-		} else {
-		    print_usage(proc_name);
-		    exit(1);
-		}
-		break;
-	    case 'u':
-		if (optarg) {
-		    username = strdup(optarg);
-		} else {
-		    print_usage(proc_name);
-		    exit(1);
-		}
-		break;
-            case 'P':
-                if (optarg) {
-                    password = strdup(optarg);
-                } else {
-                    print_usage(proc_name);
-                    exit(1);
-                }
-                break;
-	    case 'g':
-		gssapi = true;
-		break;
-	    case 'p':
-		if (optarg) {
-		    serverport = atoi(optarg);
-		} else {
-		    print_usage(proc_name);
-		    exit(1);
-		}
-		break;
-	    case 'b':
-		if (optarg) {
-		    servername = strdup(optarg);
-		} else {
-		    print_usage(proc_name);
-		    exit(1);
-		}
-		break;
-	    default:
-		fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
-		print_usage(proc_name);
-		exit(0);
-	    break;
-	}
+        switch (arg) {
+        case 'h':
+        case '?':
+            print_usage(proc_name);
+            exit(0);
+            break;
+        case 'd':
+            daemonize = true;
+            break;
+        case 'v':
+            mh_log_level++;
+            mh_enable_stderr(1);
+            break;
+        case 's':
+            if (optarg) {
+                service = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'u':
+            if (optarg) {
+                username = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'P':
+            if (optarg) {
+                password = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'g':
+            gssapi = true;
+            break;
+        case 'p':
+            if (optarg) {
+                serverport = atoi(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'b':
+            if (optarg) {
+                servername = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        default:
+            fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
+            print_usage(proc_name);
+            exit(0);
+            break;
+        }
     }
 
     if (daemonize == true) {
-	if (daemon(0, 0) < 0) {
-	    fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
-	    exit(1);
-	}
+        if (daemon(0, 0) < 0) {
+            fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
+            exit(1);
+        }
     }
 #endif
 
@@ -291,16 +291,16 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     qpid::types::Variant::Map options;
     options["reconnect"] = bool(true);
     if (username) {
-	options["username"] = username;
+        options["username"] = username;
     }
     if (password) {
-	options["password"] = password;
+        options["password"] = password;
     }
     if (service) {
-	options["sasl-service"] = service;
+        options["sasl-service"] = service;
     }
     if (gssapi) {
-	options["sasl-mechanism"] = "GSSAPI";
+        options["sasl-mechanism"] = "GSSAPI";
     }
 
     std::stringstream url;
@@ -318,14 +318,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     /* Do any setup required by our agent */
     if(this->setup(_agent_session) < 0) {
-	mh_err("Failed to set up broker connection to %s on %d for %s\n", 
-	       servername, serverport, proc_name);
-	return -1;
+        mh_err("Failed to set up broker connection to %s on %d for %s\n",
+               servername, serverport, proc_name);
+        return -1;
     }
 
     this->mainloop = g_main_new(FALSE);
     this->qpid_source = mainloop_add_qmf(
-	G_PRIORITY_HIGH, _agent_session, mh_qpid_callback, mh_qpid_disconnect, this);
+        G_PRIORITY_HIGH, _agent_session, mh_qpid_callback, mh_qpid_disconnect, this);
 
     return 0;
 }
@@ -342,9 +342,9 @@ mainloop_qmf_prepare(GSource* source, gint *timeout)
 {
     mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
     if (qmf->event) {
-	return TRUE;
+        return TRUE;
     }
-    
+
     *timeout = 1;
     return FALSE;
 }
@@ -354,10 +354,10 @@ mainloop_qmf_check(GSource* source)
 {
     mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
     if (qmf->event) {
-	return TRUE;
+        return TRUE;
 
     } else if(qmf->session.nextEvent(qmf->event, qpid::messaging::Duration::IMMEDIATE)) {
-	return TRUE;
+        return TRUE;
     }
     return FALSE;
 }
@@ -368,15 +368,15 @@ mainloop_qmf_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
     mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
     mh_trace("%p", source);
     if (qmf->dispatch != NULL) {
-	qmf::AgentEvent event = qmf->event;
-	qmf->event = NULL;
-	
-	if(qmf->dispatch(qmf->session, event, qmf->user_data) == FALSE) {
-	    g_source_unref(source); /* Really? */
-	    return FALSE;
-	}
+        qmf::AgentEvent event = qmf->event;
+        qmf->event = NULL;
+
+        if(qmf->dispatch(qmf->session, event, qmf->user_data) == FALSE) {
+            g_source_unref(source); /* Really? */
+            return FALSE;
+        }
     }
-    
+
     return TRUE;
 }
 
@@ -387,7 +387,7 @@ mainloop_qmf_destroy(GSource* source)
     mh_trace("%p", source);
 
     if (qmf->dnotify) {
-	qmf->dnotify(qmf->user_data);
+        qmf->dnotify(qmf->user_data);
     }
 }
 
@@ -400,8 +400,8 @@ static GSourceFuncs mainloop_qmf_funcs = {
 
 mainloop_qmf_t*
 mainloop_add_qmf(int priority, qmf::AgentSession session,
-		gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer userdata),
-		GDestroyNotify notify, gpointer userdata)
+                gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer userdata),
+                GDestroyNotify notify, gpointer userdata)
 {
     GSource *source = NULL;
     mainloop_qmf_t *qmf_source = NULL;
@@ -424,7 +424,7 @@ mainloop_add_qmf(int priority, qmf::AgentSession session,
 
     g_source_set_priority(source, priority);
     g_source_set_can_recurse(source, FALSE);
-    
+
     qmf_source->id = g_source_attach(source, NULL);
     mh_info("Added source: %d", qmf_source->id);
     return qmf_source;
@@ -436,6 +436,6 @@ mainloop_destroy_qmf(mainloop_qmf_t* source)
     g_source_remove(source->id);
     source->id = 0;
     g_source_unref((GSource*)source);
-    
+
     return TRUE;
 }
