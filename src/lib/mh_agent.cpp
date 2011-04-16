@@ -140,13 +140,12 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #endif
 
     bool gssapi = false;
-    char *servername = strdup(MATAHARI_BROKER);
+    char *servername = NULL;
     char *username  = NULL;
     char *password  = NULL;
     char *service   = NULL;
     int serverport  = MATAHARI_PORT;
-
-    qpid::management::ConnectionSettings settings;
+    int res = 0;
 
     /* Set up basic logging */
     mh_log_init(proc_name, LOG_INFO, FALSE);
@@ -275,28 +274,28 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     }
 #endif
 
+    if (!servername || *servername == '\0') {
+        servername = strdup(MATAHARI_BROKER);
+    }
+
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);
 
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
-    // Connect to the broker
-    settings.host = servername;
-    settings.port = serverport;
-
     mh_info("Connecting to Qpid broker at %s on port %d", servername, serverport);
 
     // Create a v2 API options map.
     qpid::types::Variant::Map options;
     options["reconnect"] = bool(true);
-    if (username) {
+    if (username && *username) {
         options["username"] = username;
     }
-    if (password) {
+    if (password && *password) {
         options["password"] = password;
     }
-    if (service) {
+    if (service && *service) {
         options["sasl-service"] = service;
     }
     if (gssapi) {
@@ -320,14 +319,22 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     if(this->setup(_agent_session) < 0) {
         mh_err("Failed to set up broker connection to %s on %d for %s\n",
                servername, serverport, proc_name);
-        return -1;
+        res = -1;
+        goto return_cleanup;
     }
 
     this->mainloop = g_main_new(FALSE);
     this->qpid_source = mainloop_add_qmf(
         G_PRIORITY_HIGH, _agent_session, mh_qpid_callback, mh_qpid_disconnect, this);
 
-    return 0;
+return_cleanup:
+
+    free(servername);
+    free(username);
+    free(password);
+    free(service);
+
+    return res;
 }
 
 void
