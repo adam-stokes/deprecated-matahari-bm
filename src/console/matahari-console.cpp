@@ -20,13 +20,13 @@
 #include "config.h"
 #endif
 
-#include <qpid/client/ConnectionSettings.h>
 #include <qpid/console/ConsoleListener.h>
 #include <qpid/console/SessionManager.h>
 #include <qpid/messaging/Connection.h>
-#include "qmf/org/matahariproject/QmfPackage.h"
-#include "qmf/org/matahariproject/Console.h"
+#include <qpid/client/ConnectionSettings.h>
 #include <qpid/sys/Time.h>
+
+#include "qmf/org/matahariproject/QmfPackage.h"
 
 #include <sstream>
 #include <vector>
@@ -40,25 +40,23 @@ extern "C" {
 
 class Listener : public ConsoleListener {
 public:
+    void brokerConnected(const Broker& broker) {
+	cout << qpid::sys::now() << " broker joined" << endl;
+    }
+
+    void brokerDisconnected(const Broker& broker) {
+	cout << qpid::sys::now() << " broker parted" << endl;
+    }
+
     void event(Event& event) {
 	cout << event << endl;
     }
 };
 
-class PostbootConsole
-{
-public:
-    PostbootConsole() {};
-    ~PostbootConsole() {};
-    qpid::client::ConnectionSettings _settings;
-    qpid::messaging::Connection _amqp_connection;
-    SessionManager::Settings _sm_settings;
-    Agent::Vector _agents;
-};
-
 int main(int argc, char** argv)
 {
-    PostbootConsole *postboot = new PostbootConsole();
+    qpid::client::ConnectionSettings settings;
+    qpid::messaging::Connection amqp_connection;
     Listener listener;
     string servername = "localhost";
     string username = NULL;
@@ -66,8 +64,8 @@ int main(int argc, char** argv)
     string service = NULL;
     int serverport = 49000;
 
-    postboot->_settings.host = servername;
-    postboot->_settings.port = serverport;
+    settings.host = servername;
+    settings.port = serverport;
 
     qpid::types::Variant::Map options;
     options["username"] = username;
@@ -77,21 +75,21 @@ int main(int argc, char** argv)
 
     std::stringstream url;
     url << servername << ":" << serverport;
-    postboot->_amqp_connection = qpid::messaging::Connection(url.str(), options);
-    postboot->_amqp_connection.open();
+    amqp_connection = qpid::messaging::Connection(url.str(), options);
+    amqp_connection.open();
 
     // Only receive events, cut out other chatter
-    postboot->_sm_settings.rcvObjects = false;
-    postboot->_sm_settings.rcvHeartbeats = false;
+    SessionManager::Settings sm_settings;
+    sm_settings.rcvObjects = false;
+    sm_settings.rcvHeartbeats = false;
 
-    SessionManager sm(&listener, postboot->_sm_settings);
-    Broker *broker = sm.addBroker(postboot->_settings);
-
-    // sm.getAgents(postboot->_agents, broker);
+    SessionManager sm(&listener, sm_settings);
+    Broker* broker = sm.addBroker(settings);
 
     while (true) {
 	qpid::sys::sleep(1);
     }
     sm.delBroker(broker);
+
     return 0;
 }
