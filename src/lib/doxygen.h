@@ -37,6 +37,10 @@
  *
  * Here are some pointers on where to go from here:
  *  - \ref coreapi
+ *  - \ref commit_messages
  */
 
-
+/**
+ * \page commit_messages Commit Message Guidelines
+ * \verbinclude doc/commit_messages.txt
+ */
