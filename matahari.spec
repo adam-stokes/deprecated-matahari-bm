@@ -1,5 +1,5 @@
-%global specversion 25
-%global upstream_version 598a300
+%global specversion 26
+%global upstream_version 7f3b067
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git

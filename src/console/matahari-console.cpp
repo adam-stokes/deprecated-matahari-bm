@@ -29,65 +29,45 @@
 #include "qmf/org/matahariproject/QmfPackage.h"
 
 #include <sstream>
-#include <vector>
 using namespace std;
 using namespace qpid::console;
 
-extern "C" {
-#include <sigar.h>
-#include "matahari/host.h"
-}
-
-class Listener : public ConsoleListener {
-public:
-    void brokerConnected(const Broker& broker) {
-	cout << qpid::sys::now() << " broker joined" << endl;
-    }
-
-    void brokerDisconnected(const Broker& broker) {
-	cout << qpid::sys::now() << " broker parted" << endl;
-    }
-
+class Listener: public ConsoleListener {
     void event(Event& event) {
-	cout << event << endl;
+		cout << "hai im watching broker: " << event.getBroker()->getUrl() << endl;
     }
+
+	void methodResponse(Broker& broker, uint32_t seq, MethodResponse& methodResponse) {
+		cout << "response" << endl;
+	}
 };
 
 int main(int argc, char** argv)
 {
-    qpid::client::ConnectionSettings settings;
-    qpid::messaging::Connection amqp_connection;
     Listener listener;
-    string servername = "localhost";
-    string username = NULL;
-    string password = NULL;
-    string service = NULL;
-    int serverport = 49000;
 
-    settings.host = servername;
-    settings.port = serverport;
+    qpid::client::ConnectionSettings settings;
+    settings.host = "localhost";
+    settings.port = 49000;
 
     qpid::types::Variant::Map options;
-    options["username"] = username;
-    options["password"] = password;
-    options["sasl-service"] = "qpid";
-    options["sasl-mechanism"] = "GSSAPI";
+    options["sasl-service"] = "";
+    options["sasl-mechanism"] = "";
 
-    std::stringstream url;
-    url << servername << ":" << serverport;
-    amqp_connection = qpid::messaging::Connection(url.str(), options);
+    qpid::messaging::Connection amqp_connection;
+    amqp_connection = qpid::messaging::Connection("localhost:49000", options);
     amqp_connection.open();
 
     // Only receive events, cut out other chatter
-    SessionManager::Settings sm_settings;
-    sm_settings.rcvObjects = false;
-    sm_settings.rcvHeartbeats = false;
+    SessionManager::Settings smsettings;
 
-    SessionManager sm(&listener, sm_settings);
+    SessionManager sm(&listener, smsettings);
+    smsettings.rcvObjects = false;
+    smsettings.rcvHeartbeats = false;
     Broker* broker = sm.addBroker(settings);
 
     while (true) {
-	qpid::sys::sleep(1);
+		qpid::sys::sleep(1);
     }
     sm.delBroker(broker);
 
