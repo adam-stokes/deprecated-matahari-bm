@@ -20,56 +20,44 @@
 #include "config.h"
 #endif
 
-#include <qpid/console/ConsoleListener.h>
-#include <qpid/console/SessionManager.h>
 #include <qpid/messaging/Connection.h>
-#include <qpid/client/ConnectionSettings.h>
-#include <qpid/sys/Time.h>
+#include <qpid/messaging/Duration.h>
+#include <qmf/ConsoleSession.h>
+#include <qmf/ConsoleEvent.h>
+#include <qmf/Data.h>
+#include <qpid/types/Variant.h>
 
 #include "qmf/org/matahariproject/QmfPackage.h"
 
-#include <sstream>
+#include <string>
+#include <iostream>
+
 using namespace std;
-using namespace qpid::console;
-
-class Listener: public ConsoleListener {
-    void event(Event& event) {
-		cout << "hai im watching broker: " << event.getBroker()->getUrl() << endl;
-    }
-
-	void methodResponse(Broker& broker, uint32_t seq, MethodResponse& methodResponse) {
-		cout << "response" << endl;
-	}
-};
+using namespace qmf;
+using qpid::types::Variant;
+using qpid::messaging::Duration;
 
 int main(int argc, char** argv)
 {
-    Listener listener;
+    string url("localhost:49000"); 
+    string connectionOptions;
+    string sessionOptions;
 
-    qpid::client::ConnectionSettings settings;
-    settings.host = "localhost";
-    settings.port = 49000;
+    qpid::messaging::Connection connection(url, connectionOptions);
+    connection.open();
 
-    qpid::types::Variant::Map options;
-    options["sasl-service"] = "";
-    options["sasl-mechanism"] = "";
-
-    qpid::messaging::Connection amqp_connection;
-    amqp_connection = qpid::messaging::Connection("localhost:49000", options);
-    amqp_connection.open();
-
-    // Only receive events, cut out other chatter
-    SessionManager::Settings smsettings;
-
-    SessionManager sm(&listener, smsettings);
-    smsettings.rcvObjects = false;
-    smsettings.rcvHeartbeats = false;
-    Broker* broker = sm.addBroker(settings);
+    ConsoleSession session(connection, sessionOptions);
+    session.open();
 
     while (true) {
-		qpid::sys::sleep(1);
+        ConsoleEvent event;
+        if(session.nextEvent(event)) {
+            if(event.getType() == CONSOLE_EVENT) {
+                const Data& data(event.getData(0));
+                cout << "Event: timestamp=" << event.getTimestamp() << " severity=" <<
+                    event.getSeverity() << " content=" << data.getProperties() << endl;
+            }
+        }
     }
-    sm.delBroker(broker);
-
     return 0;
 }

@@ -23,6 +23,7 @@
 #include "matahari/mh_agent.h"
 
 #include "qmf/org/matahariproject/Network.h"
+#include "qmf/org/matahariproject/EventConsoleevent.h"
 #include "qmf/org/matahariproject/ArgsNetworkList.h"
 #include "qmf/org/matahariproject/ArgsNetworkStop.h"
 #include "qmf/org/matahariproject/ArgsNetworkStart.h"
@@ -98,6 +99,7 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
     }
 
     const std::string& methodName(event.getMethodName());
+    qmf::Data consoleEvent = qmf::Data(_package.event_consoleevent);
 
     if (methodName == "list") {
         GList *plist = NULL;
@@ -128,6 +130,8 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
         }
         event.addReturnArgument("status", rc);
     } else if (methodName == "status") {
+        consoleEvent.setProperty("status","Status is a GOGO");
+        session.raiseEvent(consoleEvent);
         event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
     } else if (methodName == "get_ip_address") {
         event.addReturnArgument("ip", network_get_ip_address(event.getArguments()["iface"].asString().c_str()));

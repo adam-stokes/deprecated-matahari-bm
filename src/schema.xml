@@ -5,7 +5,9 @@
    <!-- Common -->
    <arg name="timestamp" type="absTime" />
    <arg name="sequence"  type="uint32" />
-   <arg name="uuid"      type="sstr" />
+
+   <!-- Network API -->
+   <arg name="status"        type="sstr" />
 
    <!-- Services API -->
    <arg name="name"             type="sstr" />
@@ -40,6 +42,8 @@
    <property name="cpu_flags"        type="lstr"   access="RO" desc="The processor(s) CPU flags." />
 
    <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
+
+   <property name="status"           type="sstr"   access="RW" desc="Receive some status updates based on events"/>
 
    <!-- statistics -->
    <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
@@ -101,6 +105,7 @@
    </method>
  </class>
 
+ <event name="consoleevent" args="status" />
  <!-- Services API -->
 
  <!-- Is sequence needed? How to tie to the async method call seq? -->
