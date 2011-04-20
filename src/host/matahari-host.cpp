@@ -72,7 +72,6 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer use
     }
 
     const std::string& methodName(event.getMethodName());
-	qmf::Data eventStuff;
 
     if (methodName == "shutdown") {
         host_shutdown();

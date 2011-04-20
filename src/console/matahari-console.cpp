@@ -52,10 +52,19 @@ int main(int argc, char** argv)
     while (true) {
         ConsoleEvent event;
         if(session.nextEvent(event)) {
-            if(event.getType() == CONSOLE_EVENT) {
-                const Data& data(event.getData(0));
-                cout << "Event: timestamp=" << event.getTimestamp() << " severity=" <<
-                    event.getSeverity() << " content=" << data.getProperties() << endl;
+            switch(event.getType()) {
+                case CONSOLE_EVENT:
+                    {
+                        const Data& data(event.getData(0));
+                        cout << "Event: timestamp=" << event.getTimestamp() << " severity=" <<
+                            event.getSeverity() << " content=" << data.getProperties() << endl;
+                    }
+                case CONSOLE_METHOD_RESPONSE:
+                    {
+                        const Data& data(event.getData(0));
+                        cout << "content=" << data.getProperties() << endl;
+                    }
+                default: {}
             }
         }
     }

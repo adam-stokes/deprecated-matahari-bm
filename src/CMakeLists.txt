@@ -54,7 +54,7 @@ add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 set(SCHEMA_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Host.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Network.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventConsoleevent.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventNetwork_overseer.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Services.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Resources.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventHeartbeat.cpp

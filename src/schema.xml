@@ -8,6 +8,7 @@
 
    <!-- Network API -->
    <arg name="status"        type="sstr" />
+   <arg name="ip"            type="sstr" /> 
 
    <!-- Services API -->
    <arg name="name"             type="sstr" />
@@ -105,7 +106,7 @@
    </method>
  </class>
 
- <event name="consoleevent" args="status" />
+ <event name="network_overseer" args="status,ip" />
  <!-- Services API -->
 
  <!-- Is sequence needed? How to tie to the async method call seq? -->
