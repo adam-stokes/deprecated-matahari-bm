@@ -50,8 +50,9 @@ class SrvAgent : public MatahariAgent
 
     public:
 	void raiseEvent(svc_action_t *op, int service);
-	int setup(qmf::AgentSession session);
-	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+	virtual int setup(qmf::AgentSession session);
+	virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+			        gpointer user_data);
 };
 
 

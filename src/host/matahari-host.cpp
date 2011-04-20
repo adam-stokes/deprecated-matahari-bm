@@ -38,8 +38,9 @@ class HostAgent : public MatahariAgent
 {
 public:
     int heartbeat();
-    int setup(qmf::AgentSession session);
-    gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+    virtual int setup(qmf::AgentSession session);
+    virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+		            gpointer user_data);
 };
 
 static gboolean heartbeat_timer(gpointer data)
