@@ -3,10 +3,12 @@
 # the following is chkconfig init header
 # matahari: host management QMF agents
 ### BEGIN INIT INFO
+# Provides:
 # Required-Start: $local_fs matahari-broker
-# Default-Start 2 3 4 5
+# Required-Stop: $local_fs matahari-broker
+# Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: start/stop matahari agents
+# Short-Description: Starts and stops the named matahari agent
 # Description: Matahari agents provide host information using AMQP protocol.
 ### END INIT INFO
 
