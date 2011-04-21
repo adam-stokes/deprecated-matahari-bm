@@ -29,6 +29,7 @@
 #include "qmf/org/matahariproject/ArgsNetworkStatus.h"
 #include "qmf/org/matahariproject/ArgsNetworkGet_ip_address.h"
 #include "qmf/org/matahariproject/ArgsNetworkGet_mac_address.h"
+#include "qmf/org/matahariproject/QmfPackage.h"
 
 #include <qpid/agent/ManagementAgent.h>
 
@@ -46,6 +47,8 @@ extern "C" {
 
 class NetAgent : public MatahariAgent
 {
+private:
+    qmf::org::matahariproject::PackageDefinition _package;
 public:
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
@@ -80,6 +83,7 @@ static int interface_status(const char *iface)
 int
 NetAgent::setup(qmf::AgentSession session)
 {
+    _package.configure(session);
     _instance = qmf::Data(_package.data_Network);
 
     _instance.setProperty("hostname", matahari_hostname());

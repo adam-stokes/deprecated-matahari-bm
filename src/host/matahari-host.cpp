@@ -26,6 +26,7 @@
 #include <qmf/Data.h>
 #include "qmf/org/matahariproject/Host.h"
 #include "qmf/org/matahariproject/EventHeartbeat.h"
+#include "qmf/org/matahariproject/QmfPackage.h"
 
 extern "C" {
 #include <string.h>
@@ -36,6 +37,8 @@ extern "C" {
 
 class HostAgent : public MatahariAgent
 {
+private:
+    qmf::org::matahariproject::PackageDefinition _package;
 public:
     int heartbeat();
     virtual int setup(qmf::AgentSession session);
@@ -91,6 +94,7 @@ bail:
 int
 HostAgent::setup(qmf::AgentSession session)
 {
+    _package.configure(session);
     _instance = qmf::Data(_package.data_Host);
 
     _instance.setProperty("update_interval", 5);

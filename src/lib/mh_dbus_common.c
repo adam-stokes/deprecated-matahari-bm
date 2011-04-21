@@ -20,7 +20,7 @@
  *
  */
 
-#include "mh_dbus_common.h"
+#include "matahari/mh_dbus_common.h"
 #include "matahari/logging.h"
 #include <glib/gi18n.h>
 

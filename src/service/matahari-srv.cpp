@@ -31,6 +31,8 @@
 #include "qmf/org/matahariproject/Resources.h"
 #include "qmf/org/matahariproject/EventResource_op.h"
 
+#include "qmf/org/matahariproject/QmfPackage.h"
+
 extern "C" {
 #include "matahari/logging.h"
 #include "matahari/services.h"
@@ -48,6 +50,7 @@ class SrvAgent : public MatahariAgent
 	gboolean invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 	gboolean invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 
+	qmf::org::matahariproject::PackageDefinition _package;
     public:
 	void raiseEvent(svc_action_t *op, int service);
 	virtual int setup(qmf::AgentSession session);
@@ -138,6 +141,7 @@ void SrvAgent::raiseEvent(svc_action_t *op, int service)
 int
 SrvAgent::setup(qmf::AgentSession session)
 {
+    _package.configure(session);
     _services = qmf::Data(_package.data_Services);
 
     _services.setProperty("uuid", matahari_uuid());
