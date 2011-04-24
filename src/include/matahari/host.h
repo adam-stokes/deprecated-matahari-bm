@@ -22,37 +22,35 @@
  * \ingroup coreapi
  */
 
-#ifndef __HOST_H
-#define __HOST_H
+#ifndef __MH_HOST_H__
+#define __MH_HOST_H__
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <sigar.h>
 
-extern const char *host_get_uuid(void);
-extern const char *host_get_hostname(void);
-extern const char *host_get_operating_system(void);
+extern const char *mh_host_get_uuid(void);
+extern const char *mh_host_get_hostname(void);
+extern const char *mh_host_get_operating_system(void);
 
-extern const char *host_get_architecture(void);
-extern const char *host_get_cpu_model(void);
-extern const char *host_get_cpu_flags(void);
+extern const char *mh_host_get_architecture(void);
+extern const char *mh_host_get_cpu_model(void);
+extern const char *mh_host_get_cpu_flags(void);
 
-extern uint64_t host_get_memory(void);
-extern uint64_t host_get_mem_free(void);
-extern uint64_t host_get_swap(void);
-extern uint64_t host_get_swap_free(void);
+extern uint64_t mh_host_get_memory(void);
+extern uint64_t mh_host_get_mem_free(void);
+extern uint64_t mh_host_get_swap(void);
+extern uint64_t mh_host_get_swap_free(void);
 
-extern int host_get_cpu_count(void);
-extern int host_get_cpu_number_of_cores(void);
-extern int host_get_cpu_wordsize(void);
+extern int mh_host_get_cpu_count(void);
+extern int mh_host_get_cpu_number_of_cores(void);
+extern int mh_host_get_cpu_wordsize(void);
 
-extern void host_identify(const unsigned int iterations);
+extern void mh_host_identify(const unsigned int iterations);
 
-extern void host_reboot(void);
-extern void host_shutdown(void);
-extern void host_get_load_averages(sigar_loadavg_t *avg);
-extern void host_get_processes(sigar_proc_stat_t *procs);
+extern void mh_host_reboot(void);
+extern void mh_host_shutdown(void);
+extern void mh_host_get_load_averages(sigar_loadavg_t *avg);
+extern void mh_host_get_processes(sigar_proc_stat_t *procs);
 
-extern void host_get_cpu_details(void);
-
-#endif // __HOST_H
+#endif // __MH_HOST_H__
