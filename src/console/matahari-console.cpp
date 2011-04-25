@@ -39,9 +39,13 @@ using qpid::messaging::Duration;
 
 int main(int argc, char** argv)
 {
-    string url("localhost:49000"); 
-    string connectionOptions;
+    string url("amqp:ssl:localhost:5674");
+    qpid::types::Variant::Map connectionOptions;
     string sessionOptions;
+
+    //connectionOptions["sasl-mechanism"] = "EXTERNAL";
+    connectionOptions["ssl-cert-name"] = "agent";
+    connectionOptions["reconnect"] = false;
 
     qpid::messaging::Connection connection(url, connectionOptions);
     connection.open();
@@ -58,11 +62,6 @@ int main(int argc, char** argv)
                         const Data& data(event.getData(0));
                         cout << "Event: timestamp=" << event.getTimestamp() << " severity=" <<
                             event.getSeverity() << " content=" << data.getProperties() << endl;
-                    }
-                case CONSOLE_METHOD_RESPONSE:
-                    {
-                        const Data& data(event.getData(0));
-                        cout << "content=" << data.getProperties() << endl;
                     }
                 default: {}
             }
