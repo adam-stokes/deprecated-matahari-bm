@@ -17,6 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Logging API
+ * \ingroup coreapi
+ */
+
 #ifndef __MH_LOGGING__
 #define __MH_LOGGING__
 

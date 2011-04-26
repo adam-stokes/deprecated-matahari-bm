@@ -1,6 +1,3 @@
-#ifndef __NETWORK_H
-#define __NETWORK_H
-
 /* network.h - Copyright (c) 2010 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
@@ -18,6 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+/**
+ * \file
+ * \brief Network API
+ * \ingroup coreapi
+ */
+
+#ifndef __NETWORK_H
+#define __NETWORK_H
 
 #include <glib.h>
 #include <stdint.h>

@@ -25,7 +25,7 @@
 
 #include <sigar.h>
 
-#include "mh_dbus_common.h"
+#include "matahari/mh_dbus_common.h"
 
 /* Network methods */
 #include "matahari/network.h"

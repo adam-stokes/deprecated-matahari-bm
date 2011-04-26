@@ -17,6 +17,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Matahari Agent API
+ * \ingroup coreapi
+ */
+
 #ifndef __MATAHARI_DAEMON_H
 #define __MATAHARI_DAEMON_H
 
@@ -26,6 +32,8 @@
 #include <qpid/management/Manageable.h>
 #include <qpid/messaging/Connection.h>
 #include <qmf/AgentEvent.h>
+#include <qmf/AgentSession.h>
+#include <qmf/Data.h>
 
 extern "C" {
 #include "matahari/mainloop.h"
@@ -36,8 +44,6 @@ extern "C" {
 using namespace qpid::management;
 using namespace std;
 
-#include "qmf/org/matahariproject/QmfPackage.h" // v2 schema
-namespace _qmf = qmf::org::matahariproject;
 namespace _qtype = ::qpid::types;
 
 typedef struct mainloop_qmf_s {
@@ -74,7 +80,6 @@ protected:
     qmf::Data _instance;
     qmf::AgentSession _agent_session;
     qpid::messaging::Connection _amqp_connection;
-    qmf::org::matahariproject::PackageDefinition _package;
 };
 
 #endif // __MATAHARI_DAEMON_H

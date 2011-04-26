@@ -63,8 +63,9 @@ static cpuinfo_t cpuinfo = {
     .cores = 0,
 };
 
-static void
-init(void)
+static void host_get_cpu_details(void);
+
+static void init(void)
 {
     if(host_init.sigar_init) {
         return;
@@ -73,20 +74,17 @@ init(void)
     host_init.sigar_init = TRUE;
 }
 
-const char *
-host_get_uuid(void)
+const char *mh_host_get_uuid(void)
 {
     return matahari_uuid();
 }
 
-const char *
-host_get_hostname(void)
+const char *mh_host_get_hostname(void)
 {
     return matahari_hostname();
 }
 
-const char *
-host_get_operating_system(void)
+const char *mh_host_get_operating_system(void)
 {
     static const char *operating_system = NULL;
 
@@ -102,14 +100,12 @@ host_get_operating_system(void)
     return operating_system;
 }
 
-int
-host_get_cpu_wordsize(void)
+int mh_host_get_cpu_wordsize(void)
 {
     return (int)(CHAR_BIT * sizeof(size_t));
 }
 
-const char *
-host_get_architecture(void)
+const char *mh_host_get_architecture(void)
 {
     static const char *arch = NULL;
 
@@ -125,61 +121,52 @@ host_get_architecture(void)
     return arch;
 }
 
-void
-host_reboot(void)
+void mh_host_reboot(void)
 {
     host_os_reboot();
 }
 
-void
-host_shutdown(void)
+void mh_host_shutdown(void)
 {
     host_os_shutdown();
 }
 
-const char*
-host_get_cpu_model(void)
+const char *mh_host_get_cpu_model(void)
 {
     host_get_cpu_details();
     return cpuinfo.model;
 }
 
-const char *
-host_get_cpu_flags(void)
+const char *mh_host_get_cpu_flags(void)
 {
     return host_os_get_cpu_flags();
 }
 
-int
-host_get_cpu_count(void)
+int mh_host_get_cpu_count(void)
 {
     host_get_cpu_details();
     return cpuinfo.cpus;
 }
 
-int
-host_get_cpu_number_of_cores(void)
+int mh_host_get_cpu_number_of_cores(void)
 {
     host_get_cpu_details();
     return cpuinfo.cores;
 }
 
-void
-host_get_load_averages(sigar_loadavg_t *avg)
+void mh_host_get_load_averages(sigar_loadavg_t *avg)
 {
     init();
     sigar_loadavg_get(host_init.sigar, avg);
 }
 
-void
-host_get_processes(sigar_proc_stat_t *procs)
+void mh_host_get_processes(sigar_proc_stat_t *procs)
 {
     init();
     sigar_proc_stat_get(host_init.sigar, procs);
 }
 
-uint64_t
-host_get_memory(void)
+uint64_t mh_host_get_memory(void)
 {
     sigar_mem_t mem;
     uint64_t total;
@@ -190,8 +177,7 @@ host_get_memory(void)
     return total;
 }
 
-uint64_t
-host_get_mem_free(void)
+uint64_t mh_host_get_mem_free(void)
 {
     sigar_mem_t mem;
     uint64_t free;
@@ -202,8 +188,7 @@ host_get_mem_free(void)
     return free;
 }
 
-uint64_t
-host_get_swap(void)
+uint64_t mh_host_get_swap(void)
 {
     sigar_swap_t swap;
     uint64_t total;
@@ -214,8 +199,7 @@ host_get_swap(void)
     return total;
 }
 
-uint64_t
-host_get_swap_free(void)
+uint64_t mh_host_get_swap_free(void)
 {
     sigar_swap_t swap;
     uint64_t free;
@@ -226,8 +210,7 @@ host_get_swap_free(void)
     return free;
 }
 
-void
-host_get_cpu_details(void)
+static void host_get_cpu_details(void)
 {
     int lpc = 0;
     sigar_cpu_info_list_t cpus;
