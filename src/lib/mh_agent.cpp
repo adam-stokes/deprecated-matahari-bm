@@ -91,6 +91,10 @@ struct option opt[] = {
     {"password", required_argument, NULL, 'P'},
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
+    {"ssl", no_argument, NULL, 'S'},
+    {"ssl-cert-db", required_argument, NULL, 'D'},
+    {"ssl-cert-name", required_argument, NULL, 'N'},
+    {"ssl-pwd-file", required_argument, NULL, 'X'},
     {0, 0, 0, 0}
 };
 
@@ -98,14 +102,18 @@ static void
 print_usage(const char *proc_name)
 {
     printf("Usage:\tmatahari-%sd <options>\n", proc_name);
-    printf("\t-d | --daemon     run as a daemon.\n");
-    printf("\t-h | --help       print this help message.\n");
-    printf("\t-b | --broker     specify broker host name..\n");
-    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
-    printf("\t-u | --username   username to use for authentication purproses.\n");
-    printf("\t-P | --password   password to use for authentication purproses.\n");
-    printf("\t-s | --service    service name to use for authentication purproses.\n");
-    printf("\t-p | --port       specify broker port.\n");
+    printf("\t-d | --daemon         run as a daemon.\n");
+    printf("\t-h | --help           print this help message.\n");
+    printf("\t-b | --broker         specify broker host name..\n");
+    printf("\t-g | --gssapi         force GSSAPI authentication.\n");
+    printf("\t-u | --username       username to use for authentication purproses.\n");
+    printf("\t-P | --password       password to use for authentication purproses.\n");
+    printf("\t-s | --service        service name to use for authentication purproses.\n");
+    printf("\t-p | --port           specify broker port.\n");
+    printf("\t-S | --ssl            enable ssl\n");
+    printf("\t-D | --ssl-cert-db    specify location of certificate database.\n");
+    printf("\t-N | --ssl-cert-name  specify certificate name.\n");
+    printf("\t-X | --ssl-pwd-file   specify password file for certificate database.\n");
 }
 #endif
 
@@ -140,10 +148,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #endif
 
     bool gssapi = false;
+    char *protocol = strdup("tcp");
     char *servername = NULL;
     char *username  = NULL;
     char *password  = NULL;
     char *service   = NULL;
+    char *ssl_cert_db = NULL;
+    char *ssl_cert_name = NULL;
+    char *ssl_pwd_file = NULL;
     int serverport  = MATAHARI_PORT;
     int res = 0;
 
@@ -201,7 +213,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #else
 
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:v", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:vSD:X:N:", opt, &idx)) != -1) {
         switch (arg) {
         case 'h':
         case '?':
@@ -258,6 +270,33 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 exit(1);
             }
             break;
+        case 'S':
+            protocol = strdup("ssl");
+            break;
+        case 'D':
+            if (optarg) {
+                ssl_cert_db = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'N':
+            if (optarg) {
+                ssl_cert_name = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'X':
+            if (optarg) {
+                ssl_pwd_file = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
         default:
             fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
             print_usage(proc_name);
@@ -301,9 +340,18 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     if (gssapi) {
         options["sasl-mechanism"] = "GSSAPI";
     }
+    if (ssl_cert_name) {
+        options["ssl-cert-name"] = ssl_cert_name;
+    }
+    if (ssl_cert_db) {
+        options["ssl-cert-db"] = ssl_cert_db;
+    }
+    if (ssl_pwd_file) {
+        options["ssl-cert-password-file"] = ssl_pwd_file;
+    }
 
     std::stringstream url;
-    url << servername << ":" << serverport ;
+    url << "amqp:" << protocol << ":" << servername << ":" << serverport ;
 
     _amqp_connection = qpid::messaging::Connection(url.str(), options);
     _amqp_connection.open();
@@ -332,6 +380,9 @@ return_cleanup:
     free(username);
     free(password);
     free(service);
+    free(ssl_cert_db);
+    free(ssl_cert_name);
+    free(ssl_pwd_file);
 
     return res;
 }

@@ -3,6 +3,7 @@
 set(MHOST_VERSION 0.0.1)
 set(MSRV_VERSION 0.0.1)
 set(MNET_VERSION 0.0.1)
+set(MCONSOLE_VERSION 0.0.1)
 set(MCOMMON_VERSION 0.0.1)
 set(MCOMMON_QMF_VERSION 0.0.1)
 set(MCOMMON_DBUS_VERSION 0.0.1)
@@ -47,7 +48,7 @@ endif(WIN32)
 if(WITH-QMF)
     add_library (mcommon_qmf SHARED mh_agent.cpp)
 
-    target_link_libraries(mcommon_qmf ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
+    target_link_libraries(mcommon_qmf ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY} ${QMF_CONSOLE})
     set_target_properties(mcommon_qmf PROPERTIES SOVERSION ${MCOMMON_QMF_VERSION})
 
     if(WIN32)
