@@ -330,7 +330,8 @@ mh_log_fn(int priority, const char * fmt, ...)
     return;
 }
 
-const char *matahari_hostname(void)
+const char *
+mh_hostname(void)
 {
   static char *hostname = NULL;
 
@@ -344,14 +345,15 @@ const char *matahari_hostname(void)
 
   if(hostname != NULL && strcmp(hostname, "localhost") == 0) {
       free(hostname);
-      hostname = matahari_uuid();
+      hostname = mh_uuid();
   }
 
   mh_trace("Got hostname: %s", hostname);
   return hostname;
 }
 
-const char *matahari_uuid(void)
+const char *
+mh_uuid(void)
 {
   static char *uuid = NULL;
 

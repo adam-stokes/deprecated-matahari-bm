@@ -197,7 +197,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
   switch (property_id)
     {
   case PROP_HOSTNAME:
-    g_value_set_string (value, matahari_hostname());
+    g_value_set_string (value, mh_hostname());
     break;
   default:
     /* We don't have any other property... */

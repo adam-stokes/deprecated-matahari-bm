@@ -79,8 +79,8 @@ NetAgent::setup(qmf::AgentSession session)
     _package.configure(session);
     _instance = qmf::Data(_package.data_Network);
 
-    _instance.setProperty("hostname", matahari_hostname());
-    _instance.setProperty("uuid", matahari_uuid());
+    _instance.setProperty("hostname", mh_hostname());
+    _instance.setProperty("uuid", mh_uuid());
 
     _agent_session.addData(_instance);
     return 0;

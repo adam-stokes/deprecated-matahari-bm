@@ -138,15 +138,15 @@ SrvAgent::setup(qmf::AgentSession session)
     _package.configure(session);
     _services = qmf::Data(_package.data_Services);
 
-    _services.setProperty("uuid", matahari_uuid());
-    _services.setProperty("hostname", matahari_hostname());
+    _services.setProperty("uuid", mh_uuid());
+    _services.setProperty("hostname", mh_hostname());
 
     _services_addr = session.addData(_services);
 
     _resources = qmf::Data(_package.data_Resources);
 
-    _resources.setProperty("uuid", matahari_uuid());
-    _resources.setProperty("hostname", matahari_hostname());
+    _resources.setProperty("uuid", mh_uuid());
+    _resources.setProperty("hostname", mh_hostname());
 
     _resources_addr = session.addData(_resources);
 

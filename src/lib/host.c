@@ -76,12 +76,12 @@ static void init(void)
 
 const char *mh_host_get_uuid(void)
 {
-    return matahari_uuid();
+    return mh_uuid();
 }
 
 const char *mh_host_get_hostname(void)
 {
-    return matahari_hostname();
+    return mh_hostname();
 }
 
 const char *mh_host_get_operating_system(void)
