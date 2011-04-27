@@ -46,7 +46,7 @@ enum status { INACTIVE = 0, RUNNING };
 static enum status interface_status(const char *iface)
 {
   uint64_t flags = 0;
-  network_status(iface, &flags);
+  mh_network_status(iface, &flags);
 
   if(flags & SIGAR_IFF_UP)
     return RUNNING;
@@ -72,7 +72,7 @@ Network_list(Matahari *matahari, DBusGMethodInvocation *context)
   }
   
   // Get the list of interfaces
-  interface_list = network_get_interfaces();
+  interface_list = mh_network_get_interfaces();
   
   // Alloc array for list of interface names
   list = g_new(char *, g_list_length(interface_list) + 1);  
@@ -106,7 +106,7 @@ Network_start(Matahari *matahari, const char *iface, DBusGMethodInvocation *cont
   status = interface_status(iface);
   if (status != RUNNING)
   {
-    network_start(iface);
+    mh_network_start(iface);
     status = interface_status(iface);
   }
   dbus_g_method_return(context, status);
@@ -128,7 +128,7 @@ Network_stop(Matahari *matahari, const char *iface, DBusGMethodInvocation *conte
   status = interface_status(iface);
   if (status != INACTIVE)
   {
-    network_stop(iface);
+    mh_network_stop(iface);
     status = interface_status(iface);
   }
   dbus_g_method_return(context, status);
@@ -159,7 +159,7 @@ Network_get_ip_address(Matahari *matahari, const char *iface, DBusGMethodInvocat
     return FALSE;
   }
   
-  dbus_g_method_return(context, g_strdup(network_get_ip_address(iface)));
+  dbus_g_method_return(context, g_strdup(mh_network_get_ip_address(iface)));
   return TRUE;
 }
 
@@ -173,7 +173,7 @@ Network_get_mac_address(Matahari *matahari, const char *iface, DBusGMethodInvoca
     return FALSE;
   }
   
-  dbus_g_method_return(context, g_strdup(network_get_mac_address(iface)));
+  dbus_g_method_return(context, g_strdup(mh_network_get_mac_address(iface)));
   return TRUE;
 }
 

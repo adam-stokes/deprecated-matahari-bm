@@ -65,7 +65,7 @@ static int interface_status(const char *iface)
     if(iface == NULL)
        return 3;
 
-    network_status(iface, &flags);
+    mh_network_status(iface, &flags);
 
     if(flags & SIGAR_IFF_UP) {
        return 0;
@@ -103,7 +103,7 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
         _qtype::Variant::List s_list;
         sigar_net_interface_config_t *ifconfig = NULL;
 
-        interface_list = network_get_interfaces();
+        interface_list = mh_network_get_interfaces();
         for (plist = g_list_first(interface_list); plist; plist = g_list_next(plist)) {
             ifconfig = (sigar_net_interface_config_t *)plist->data;
             s_list.push_back(ifconfig->name);
@@ -113,23 +113,23 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
         int rc = interface_status(event.getArguments()["iface"].asString().c_str());
 
         if (rc == 1) {
-            network_start(event.getArguments()["iface"].asString().c_str());
+            mh_network_start(event.getArguments()["iface"].asString().c_str());
             rc = interface_status(event.getArguments()["iface"].asString().c_str());
         }
         event.addReturnArgument("status", rc);
     } else if (methodName == "stop") {
         int rc = interface_status(event.getArguments()["iface"].asString().c_str());
         if (rc == 0) {
-            network_stop(event.getArguments()["iface"].asString().c_str());
+            mh_network_stop(event.getArguments()["iface"].asString().c_str());
             rc = interface_status(event.getArguments()["iface"].asString().c_str());
         }
         event.addReturnArgument("status", rc);
     } else if (methodName == "status") {
         event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
     } else if (methodName == "get_ip_address") {
-        event.addReturnArgument("ip", network_get_ip_address(event.getArguments()["iface"].asString().c_str()));
+        event.addReturnArgument("ip", mh_network_get_ip_address(event.getArguments()["iface"].asString().c_str()));
     } else if (methodName == "get_mac_address") {
-        event.addReturnArgument("mac", network_get_mac_address(event.getArguments()["iface"].asString().c_str()));
+        event.addReturnArgument("mac", mh_network_get_mac_address(event.getArguments()["iface"].asString().c_str()));
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

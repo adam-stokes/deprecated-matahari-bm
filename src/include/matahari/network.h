@@ -28,13 +28,13 @@
 #include <glib.h>
 #include <stdint.h>
 
-extern GList *network_get_interfaces(void);
-extern const char *network_get_ip_address(const char *iface);
-extern const char *network_get_mac_address(const char *iface);
+extern GList *mh_network_get_interfaces(void);
+extern const char *mh_network_get_ip_address(const char *iface);
+extern const char *mh_network_get_mac_address(const char *iface);
 
-extern void network_stop(const char *iface);
-extern void network_start(const char *iface);
-extern void network_restart(const char *iface);
-extern void network_status(const char *iface, uint64_t *flags);
+extern void mh_network_stop(const char *iface);
+extern void mh_network_start(const char *iface);
+extern void mh_network_restart(const char *iface);
+extern void mh_network_status(const char *iface, uint64_t *flags);
 
 #endif /* __NETWORK_H */
