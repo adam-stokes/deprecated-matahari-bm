@@ -1,6 +1,4 @@
-set(HOST_LIB "mconsole")
-set(HOST_QMF "matahari-qmf-consoled")
-set(HOST_DBUS "matahari-dbus-consoled")
+set(CONSOLE_QMF "matahari-qmf-consoled")
 
 # QMF daemon
 if(WITH-QMF)

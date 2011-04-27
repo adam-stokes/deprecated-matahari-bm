@@ -39,11 +39,10 @@ using qpid::messaging::Duration;
 
 int main(int argc, char** argv)
 {
-    string url("amqp:ssl:localhost:5674");
+    string url("amqp:ssl:127.0.0.1:5674");
     qpid::types::Variant::Map connectionOptions;
     string sessionOptions;
 
-    //connectionOptions["sasl-mechanism"] = "EXTERNAL";
     connectionOptions["ssl-cert-name"] = "agent";
     connectionOptions["reconnect"] = false;
 

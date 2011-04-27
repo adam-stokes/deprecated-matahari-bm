@@ -92,9 +92,7 @@ struct option opt[] = {
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
     {"ssl", no_argument, NULL, 'S'},
-    {"ssl-cert-db", required_argument, NULL, 'D'},
     {"ssl-cert-name", required_argument, NULL, 'N'},
-    {"ssl-pwd-file", required_argument, NULL, 'X'},
     {0, 0, 0, 0}
 };
 
@@ -111,9 +109,7 @@ print_usage(const char *proc_name)
     printf("\t-s | --service        service name to use for authentication purproses.\n");
     printf("\t-p | --port           specify broker port.\n");
     printf("\t-S | --ssl            enable ssl\n");
-    printf("\t-D | --ssl-cert-db    specify location of certificate database.\n");
     printf("\t-N | --ssl-cert-name  specify certificate name.\n");
-    printf("\t-X | --ssl-pwd-file   specify password file for certificate database.\n");
 }
 #endif
 
@@ -153,9 +149,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     char *username  = NULL;
     char *password  = NULL;
     char *service   = NULL;
-    char *ssl_cert_db = NULL;
     char *ssl_cert_name = NULL;
-    char *ssl_pwd_file = NULL;
     int serverport  = MATAHARI_PORT;
     int res = 0;
 
@@ -213,7 +207,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #else
 
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:vSD:X:N:", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:vSN:", opt, &idx)) != -1) {
         switch (arg) {
         case 'h':
         case '?':
@@ -273,25 +267,9 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         case 'S':
             protocol = strdup("ssl");
             break;
-        case 'D':
-            if (optarg) {
-                ssl_cert_db = strdup(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
         case 'N':
             if (optarg) {
                 ssl_cert_name = strdup(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
-        case 'X':
-            if (optarg) {
-                ssl_pwd_file = strdup(optarg);
             } else {
                 print_usage(proc_name);
                 exit(1);
@@ -343,12 +321,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     if (ssl_cert_name) {
         options["ssl-cert-name"] = ssl_cert_name;
     }
-    if (ssl_cert_db) {
-        options["ssl-cert-db"] = ssl_cert_db;
-    }
-    if (ssl_pwd_file) {
-        options["ssl-cert-password-file"] = ssl_pwd_file;
-    }
 
     std::stringstream url;
     url << "amqp:" << protocol << ":" << servername << ":" << serverport ;
@@ -380,9 +352,8 @@ return_cleanup:
     free(username);
     free(password);
     free(service);
-    free(ssl_cert_db);
     free(ssl_cert_name);
-    free(ssl_pwd_file);
+    free(protocol);
 
     return res;
 }
