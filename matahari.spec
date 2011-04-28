@@ -1,14 +1,15 @@
-%global specversion 44
-%global upstream_version 7d2a309
+%global specversion 46
+%global upstream_version 7968fe1
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
 %global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
 %bcond_without dbus
+%bcond_without qmf
 
 Name:		matahari
-Version:	0.4.0
+Version:	0.4.1
 Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Linux guests
 
@@ -20,6 +21,7 @@ URL:		http://fedorahosted.org/matahari
 Source0:	matahari-matahari-%{upstream_version}.tgz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+# NOTE: The host API uses dbus for the machine uuid
 Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
@@ -27,11 +29,15 @@ Requires:	pcre
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
-BuildRequires:	qpid-cpp-client-devel > 0.7
-BuildRequires:	qmf-devel > 0.7
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
+
+%if %{with qmf}
+BuildRequires:	qpid-cpp-client-devel > 0.7
+BuildRequires:	qmf-devel > 0.7
+%endif
+
 %if %{with dbus}
 BuildRequires:	dbus-devel dbus-glib-devel polkit-gnome-devel libxslt-devel
 %endif
@@ -49,6 +55,7 @@ AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
 
+%if %{with qmf}
 %package broker
 License:	GPLv2+
 Summary:	Optional AMQP Broker for Matahari
@@ -60,6 +67,7 @@ Requires:	qmf > 0.7
 
 %description broker
 Optional AMQP Broker for Matahari
+%endif
 
 %package lib
 License:	GPLv2+
@@ -138,26 +146,29 @@ Headers and shared libraries for developing Matahari agents.
 %setup -q -n matahari-matahari-%{upstream_version}
 
 %build
-%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} .
+%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_qmf: -DWITH-QMF:BOOL=OFF} %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} .
 make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
+%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
+%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
+
+%if %{with qmf}
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
-%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
-%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 %{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
+%endif
 
 %post -n matahari-lib -p /sbin/ldconfig
 %postun -n matahari-lib -p /sbin/ldconfig
@@ -167,6 +178,7 @@ make DESTDIR=%{buildroot} install
 # Can't use -p, gives: '/sbin/ldconfig: relative path `0' used to build cache' error
 /sbin/ldconfig
 
+%if %{with qmf}
 #== Host
 
 %post host
@@ -220,7 +232,6 @@ fi
 %post broker
 /sbin/service matahari-broker condrestart
 
-
 %preun broker
 if [ $1 = 0 ]; then
     /sbin/service matahari-broker stop >/dev/null 2>&1 || :
@@ -232,6 +243,8 @@ if [ "$1" -ge "1" ]; then
     /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
+%endif
+
 %clean
 test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
@@ -241,13 +254,17 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files agent-lib
 %defattr(644, root, root, 755)
-%{_libdir}/libmcommon_qmf.so.*
-%if %{with dbus}
-%{_libdir}/libmcommon_dbus.so.*
-%endif
 %dir %{_datadir}/matahari/
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari
 %doc AUTHORS COPYING
+
+%if %{with qmf}
+%{_libdir}/libmcommon_qmf.so.*
+%endif
+
+%if %{with dbus}
+%{_libdir}/libmcommon_dbus.so.*
+%endif
 
 %files lib
 %defattr(644, root, root, 755)
@@ -259,31 +276,44 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files network
 %defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-network
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
+%endif
+
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-networkd
 %endif
-%doc AUTHORS COPYING
 
 %files host
 %defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
+%endif
+
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-hostd
 %endif
-%doc AUTHORS COPYING
 
 %files service
 %defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-service
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
+%endif
+
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
 %endif
-%doc AUTHORS COPYING
 
+%if %{with qmf}
 %files broker
 %defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-broker
@@ -294,6 +324,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %ghost %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
 %ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 %doc AUTHORS COPYING
+
+%else
+%exclude %{_sysconfdir}/matahari-broker.conf
+%endif
 
 %if %{with dbus}
 %files dbus
@@ -313,19 +347,24 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files devel
 %defattr(644, root, root, 755)
-%{_datadir}/matahari/schema.xml
-%{_includedir}/matahari.h
-%{_includedir}/matahari/mh_agent.h
+%doc AUTHORS COPYING
+
 %{_libdir}/libm*.so
+%{_includedir}/matahari.h
+%{_datadir}/matahari/schema.xml
 %{_datadir}/cmake/Modules/FindMatahari.cmake
+
+%if %{with qmf}
+%{_includedir}/matahari/mh_agent.h
 %{_datadir}/cmake/Modules/FindQPID.cmake
+%endif
+
 %if %{with dbus}
 %{_includedir}/matahari/mh_dbus_common.h
 %{_includedir}/matahari/mh_gobject_class.h
 %{_datadir}/cmake/Modules/MatahariDBusMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
 %endif
-%doc AUTHORS COPYING
 
 %changelog
 * Wed Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.8.ad8b81b.git
