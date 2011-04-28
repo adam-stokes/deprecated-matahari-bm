@@ -1,5 +1,3 @@
-#ifndef __MH_SERVICES__
-#define __MH_SERVICES__
 /* 
  * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -17,6 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+/**
+ * \file
+ * \brief Services API
+ * \ingroup coreapi
+ */
+
+#ifndef __MH_SERVICES__
+#define __MH_SERVICES__
 
 #include <glib.h>
 #include <stdio.h>

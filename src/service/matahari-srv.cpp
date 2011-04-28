@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,7 +31,9 @@
 #include "qmf/org/matahariproject/Resources.h"
 #include "qmf/org/matahariproject/EventResource_op.h"
 
-extern "C" { 
+#include "qmf/org/matahariproject/QmfPackage.h"
+
+extern "C" {
 #include "matahari/logging.h"
 #include "matahari/services.h"
 }
@@ -47,15 +49,17 @@ class SrvAgent : public MatahariAgent
 
 	gboolean invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 	gboolean invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
-	
+
+	qmf::org::matahariproject::PackageDefinition _package;
     public:
 	void raiseEvent(svc_action_t *op, int service);
-	int setup(qmf::AgentSession session);
-	gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+	virtual int setup(qmf::AgentSession session);
+	virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+			        gpointer user_data);
 };
 
 
-extern "C" { 
+extern "C" {
 #include <stdlib.h>
 #include <string.h>
 };
@@ -74,7 +78,7 @@ static void mh_resource_callback(svc_action_t *op)
     agent.raiseEvent(op, 0);
 }
 
-static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters) 
+static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
 {
     qpid::types::Variant::Map::const_iterator qIter;
     GHashTable *hash = g_hash_table_new_full(
@@ -82,7 +86,7 @@ static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
 
     for (qIter=parameters.begin() ; qIter != parameters.end(); qIter++ ) {
 	char *key = strdup(qIter->first.c_str());
-	char *value = strdup(qIter->second.asString().c_str());	
+	char *value = strdup(qIter->second.asString().c_str());
 	g_hash_table_insert(hash, key, value);
     }
 
@@ -98,7 +102,7 @@ main(int argc, char **argv)
 	mainloop_track_children(G_PRIORITY_DEFAULT);
 	agent.run();
     }
-    
+
     return rc;
 }
 
@@ -106,7 +110,7 @@ void SrvAgent::raiseEvent(svc_action_t *op, int service)
 {
     uint64_t timestamp = 0L;
     qmf::Data event;
-    
+
 #ifndef MSVC
     timestamp = ::time(NULL);
 #endif
@@ -116,14 +120,14 @@ void SrvAgent::raiseEvent(svc_action_t *op, int service)
     } else {
 	event = qmf::Data(_package.event_resource_op);
     }
-    
+
     event.setProperty("name", op->rsc);
     event.setProperty("action", op->action);
     event.setProperty("interval", op->interval);
     event.setProperty("rc", op->rc);
     event.setProperty("timestamp", timestamp);
     event.setProperty("sequence", 0);
-    
+
 
     if(service == 0) {
 	event.setProperty("rsc_type", op->agent);
@@ -137,24 +141,25 @@ void SrvAgent::raiseEvent(svc_action_t *op, int service)
 int
 SrvAgent::setup(qmf::AgentSession session)
 {
+    _package.configure(session);
     _services = qmf::Data(_package.data_Services);
-	    
+
     _services.setProperty("uuid", matahari_uuid());
     _services.setProperty("hostname", matahari_hostname());
-	    
+
     _services_addr = session.addData(_services);
 
     _resources = qmf::Data(_package.data_Resources);
-	    
+
     _resources.setProperty("uuid", matahari_uuid());
     _resources.setProperty("hostname", matahari_hostname());
-	    
+
     _resources_addr = session.addData(_resources);
 
     return 0;
 }
 
-gboolean 
+gboolean
 SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
     if(event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
@@ -172,20 +177,20 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
 }
 
 
-gboolean 
+gboolean
 SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    int default_timeout_ms = 60000;
+    static const int default_timeout_ms = 60000;
     const std::string& methodName(event.getMethodName());
     if(event.getType() != qmf::AGENT_METHOD) {
 	return TRUE;
     }
-    
+
     if (methodName == "list") {
 	_qtype::Variant::List s_list;
 	GList *gIter = NULL;
 	GList *services = services_list();
-		
+
 	for(gIter = services; gIter != NULL; gIter = gIter->next) {
 	    s_list.push_back((const char *)gIter->data);
 	}
@@ -210,7 +215,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 	services_action_sync(op);
 	event.addReturnArgument("rc", op->rc);
 	services_action_free(op);
-	    
+
     } else if (methodName == "stop") {
 	svc_action_t * op = services_action_create(
 	    event.getArguments()["name"].asString().c_str(), "stop", 0, event.getArguments()["timeout"]);
@@ -220,16 +225,16 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 
     } else if (methodName == "status") {
 	svc_action_t *op = services_action_create(
-	    event.getArguments()["name"].asString().c_str(), "status", 
+	    event.getArguments()["name"].asString().c_str(), "status",
 	    event.getArguments()["interval"], event.getArguments()["timeout"]);
-	    
+
 	if(event.getArguments()["interval"]) {
 	    session.raiseException(event, MH_NOT_IMPLEMENTED);
 	    return TRUE;
-		
+
 	    services_action_async(op, mh_service_callback);
 	    event.addReturnArgument("rc", OCF_PENDING);
-		
+
 	} else {
 	    services_action_sync(op);
 	    event.addReturnArgument("rc", op->rc);
@@ -238,14 +243,14 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 
     } else if (methodName == "cancel") {
 	services_action_cancel(
-	    event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(), 
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
 	    event.getArguments()["interval"]);
 
     } else {
 	session.raiseException(event, MH_NOT_IMPLEMENTED);
 	return TRUE;
     }
-    
+
     session.methodSuccess(event);
     return TRUE;
 }
@@ -257,7 +262,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
     if(event.getType() != qmf::AGENT_METHOD) {
 	return TRUE;
     }
-    
+
     if (methodName == "list_classes") {
 	_qtype::Variant::List c_list;
 	c_list.push_back("ocf");
@@ -268,7 +273,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 	GList *gIter = NULL;
 	GList *providers = resources_list_ocf_providers();
 	_qtype::Variant::List p_list;
-		
+
 	for(gIter = providers; gIter != NULL; gIter = gIter->next) {
 	    p_list.push_back((const char *)gIter->data);
 	}
@@ -278,7 +283,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 	GList *gIter = NULL;
 	GList *agents = resources_list_ocf_agents(event.getArguments()["provider"].asString().c_str());
 	_qtype::Variant::List t_list;
-		
+
 	for(gIter = agents; gIter != NULL; gIter = gIter->next) {
 	    t_list.push_back((const char *)gIter->data);
 	}
@@ -306,7 +311,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 	GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
 	svc_action_t *op = resources_action_create(
 	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-	    event.getArguments()["type"].asString().c_str(), "monitor", event.getArguments()["interval"], 
+	    event.getArguments()["type"].asString().c_str(), "monitor", event.getArguments()["interval"],
 	    event.getArguments()["timeout"], params);
 
 	if(op->interval) {
@@ -324,10 +329,10 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
     } else if (methodName == "invoke") {
 	GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
 	svc_action_t *op = resources_action_create(
-	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(), 
+	    event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
 	    event.getArguments()["type"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
 	    event.getArguments()["interval"], event.getArguments()["timeout"], params);
-		
+
 	if(op->interval) {
 	    session.raiseException(event, MH_NOT_IMPLEMENTED);
 	    return TRUE;
@@ -349,7 +354,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 	session.raiseException(event, MH_NOT_IMPLEMENTED);
 	return TRUE;
     }
-	    
+
     session.methodSuccess(event);
     return TRUE;
 }

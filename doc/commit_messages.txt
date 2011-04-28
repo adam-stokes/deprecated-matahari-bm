@@ -1,0 +1,83 @@
+===============================================================================
+===                                                                         ===
+===                               Matahari                                  ===
+===                      Commit Message Guidelines                          ===
+===                                                                         ===
+===============================================================================
+
+-------------------------------------------------------------------------------
+--- Table of Contents
+-------------------------------------------------------------------------------
+
+    1) Introduction
+    2) Commit Message Structure
+    3) Commit Message Tags
+    4) References
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+--- 1) Introduction
+-------------------------------------------------------------------------------
+
+    The purpose of this document is to specify the guidelines for commit
+messages used for commits to the Matahari repository.
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+--- 2) Commit Message Structure
+-------------------------------------------------------------------------------
+
+<short one line summary>
+...blank line...
+<Verbose description of changes>
+...blank line...
+<commit message tags>
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+--- 3) Commit Message Tags
+-------------------------------------------------------------------------------
+
+a) Signed-off-by: Name <email>
+
+    The Signed-off-by tag should be on every single commit message.  A person
+that is listed as signing off on the changes is someone that helped write the
+patch.  The "-s" option to "git commit" will automatically add this for you.
+
+b) Acked-by: Name <email>
+
+    This is someone that looked at the changes and approves of them going on.
+
+c) Reported-by: Name <email>
+
+    This is the reporter of an issue being addressed in this patch.
+
+
+    If you go read the documentation on tags in commit messages for the Linux
+kernel, there are others that are used there.  However, we have decided to not
+include them here to help simplify things.  Others may be adopted in the future
+if deemed appropriate.
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+--- 4) References
+-------------------------------------------------------------------------------
+
+    In the interest of not reinventing the wheel, the guidelines presented here
+are inspired by the guidelines from the Linux kernel community:
+
+        http://www.kernel.org/doc/Documentation/SubmittingPatches
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+===============================================================================
+===============================================================================

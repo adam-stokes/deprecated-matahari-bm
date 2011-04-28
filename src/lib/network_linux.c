@@ -26,13 +26,12 @@
 void
 network_os_start(const char *iface)
 {
-    char *argv[2];
     gboolean ret;
     GError *error = NULL;
+    gchar *argv[] = {
+        "/sbin/ifup", (gchar *) iface, NULL
+    };
 
-    argv[0] = "/sbin/ifup";
-    argv[1] = strdup(iface);
-    argv[2] = NULL;
     ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
     if(ret == FALSE) {
         g_error_free(error);
@@ -42,13 +41,12 @@ network_os_start(const char *iface)
 void
 network_os_stop(const char *iface)
 {
-    char *argv[2];
     gboolean ret;
     GError *error = NULL;
+    gchar *argv[] = {
+        "/sbin/ifdown", (gchar *) iface, NULL
+    };
 
-    argv[0] = "/sbin/ifdown";
-    argv[1] = strdup(iface);
-    argv[2] = NULL;
     ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
     if(ret == FALSE) {
         g_error_free(error);

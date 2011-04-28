@@ -16,7 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Utilities API
+ * \ingroup coreapi
+ */
+
 #ifndef __MH_UTILITIES__
+#define __MH_UTILITIES__
+
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
@@ -26,7 +34,7 @@ extern const char *matahari_hostname(void);
 extern void mh_abort(const char *file, const char *function, int line,
 		     const char *assert_condition, int do_core, int do_fork);
 
-#define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
+#define DIMOF(a)	((int) (sizeof(a) / sizeof(0[a])))
 
 #ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
@@ -48,5 +56,4 @@ extern void mh_abort(const char *file, const char *function, int line,
 	}								\
     } while(0)
 
-#define __MH_UTILITIES__
 #endif

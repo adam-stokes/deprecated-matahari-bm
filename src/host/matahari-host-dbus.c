@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "mh_dbus_common.h"
+#include "matahari/mh_dbus_common.h"
 
 /* Host methods */
 #include "matahari/host.h"
@@ -69,7 +69,7 @@ Host_shutdown(Matahari* matahari, DBusGMethodInvocation *context)
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  host_shutdown();
+  mh_host_shutdown();
   dbus_g_method_return(context, TRUE);
   return TRUE;
 }
@@ -83,7 +83,7 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
     dbus_g_method_return_error(context, error);
     return FALSE;
   }
-  host_reboot();
+  mh_host_reboot();
   dbus_g_method_return(context, TRUE);
   return TRUE;
 }
@@ -121,37 +121,37 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
   switch (property_id)
     {
   case PROP_UUID:
-    g_value_set_string (value, host_get_uuid());
+    g_value_set_string (value, mh_host_get_uuid());
     break;
   case PROP_HOSTNAME:
-    g_value_set_string (value, host_get_hostname());
+    g_value_set_string (value, mh_host_get_hostname());
     break;
   case PROP_OS:
-    g_value_set_string (value, host_get_operating_system());
+    g_value_set_string (value, mh_host_get_operating_system());
     break;
   case PROP_ARCH:
-    g_value_set_string (value, host_get_architecture());
+    g_value_set_string (value, mh_host_get_architecture());
     break;
   case PROP_WORDSIZE:
-    g_value_set_uint (value, host_get_cpu_wordsize());
+    g_value_set_uint (value, mh_host_get_cpu_wordsize());
     break;
   case PROP_MEMORY:
-    g_value_set_uint64 (value, host_get_memory());
+    g_value_set_uint64 (value, mh_host_get_memory());
     break;
   case PROP_SWAP:
-    g_value_set_uint64 (value, host_get_swap());
+    g_value_set_uint64 (value, mh_host_get_swap());
     break;
   case PROP_CPU_COUNT:
-    g_value_set_uint (value, host_get_cpu_count());
+    g_value_set_uint (value, mh_host_get_cpu_count());
     break;
   case PROP_CPU_CORES:
-    g_value_set_uint (value, host_get_cpu_number_of_cores());
+    g_value_set_uint (value, mh_host_get_cpu_number_of_cores());
     break;
   case PROP_CPU_MODEL:
-    g_value_set_string (value, host_get_cpu_model());
+    g_value_set_string (value, mh_host_get_cpu_model());
     break;
   case PROP_CPU_FLAGS:
-    g_value_set_string (value, host_get_cpu_flags());
+    g_value_set_string (value, mh_host_get_cpu_flags());
     break;
   case PROP_UPDATE_INTERVAL:
     g_value_set_uint (value, priv.update_interval);
@@ -163,14 +163,14 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     // Not used in DBus module
     break;
   case PROP_FREE_MEM:
-    g_value_set_uint64 (value, host_get_mem_free());
+    g_value_set_uint64 (value, mh_host_get_mem_free());
     break;
   case PROP_FREE_SWAP:
-    g_value_set_uint64 (value, host_get_swap_free());
+    g_value_set_uint64 (value, mh_host_get_swap_free());
     break;
   case PROP_LOAD:
     // 1/5/15 minute load average - map
-    host_get_load_averages(&avg);
+    mh_host_get_load_averages(&avg);
 
     dict = dict_new(value);
     g_value_init (&value_value, G_TYPE_DOUBLE);
@@ -187,7 +187,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     break;
   case PROP_PROCESS_STATISTICS:
     // Process statistics is type map string -> int
-    host_get_processes(&procs);
+    mh_host_get_processes(&procs);
 
     dict = dict_new(value);
     g_value_init (&value_value, G_TYPE_INT);

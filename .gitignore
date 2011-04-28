@@ -22,3 +22,5 @@ build
 build-win
 src/include/matahari.h
 src/matahari-*
+linux.build
+tags

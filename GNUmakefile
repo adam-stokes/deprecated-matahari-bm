@@ -33,17 +33,20 @@ WITH   ?=
 VARIANT ?=
 PROFILE ?= fedora-14-x86_64
 
+DOXYGEN:=$(shell which doxygen 2>/dev/null)
+DOT:=$(shell which dot 2>/dev/null)
+
 linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
 	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-	@echo "Now enter the $@ directory and run 'make' as usual"
+	@$(MAKE) --no-print-dir -C $@
 
 windows.build:
 	@echo "=::=::=::= Setting up for Windows =::=::=::= "
 	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{_mingw32_cmake}"`" -DCMAKE_BUILD_TYPE=Release ..
-	@echo "Now enter the $@ directory and run 'make' as usual"
+	@$(MAKE) --no-print-dir -C $@
 
 %.check: %.build
 	DESTDIR=`pwd`/$@ make -C $^ all install
@@ -98,4 +101,38 @@ rpm-win:
 mock-win:   
 	make PROFILE=$(PROFILE) VARIANT=mingw32- srpm mock-nodeps
 
-.PHONY: check linux.build windows.build
+clean:
+	@if [ -d linux.build ] ; then \
+		$(MAKE) --no-print-dir -C linux.build clean ; \
+	elif [ -d windows.build ] ; then \
+		$(MAKE) --no-print-dir -C windows.build clean ; \
+	fi
+
+doxygen:
+ifeq ($(DOXYGEN),)
+	@echo
+	@echo "***********************************************"
+	@echo "***                                         ***"
+	@echo "*** You do not have doxygen installed.      ***"
+	@echo "*** Please install it before generating the ***"
+	@echo "*** developer documentation.                ***"
+	@echo "***                                         ***"
+	@echo "***********************************************"
+	@exit 1
+endif
+ifeq ($(DOT),)
+	@echo
+	@echo "***********************************************"
+	@echo "***                                         ***"
+	@echo "*** You do not have graphviz installed.     ***"
+	@echo "*** Please install it before generating the ***"
+	@echo "*** developer documentation.                ***"
+	@echo "***                                         ***"
+	@echo "***********************************************"
+	@exit 1
+endif
+	@cp doc/Doxyfile.in doc/Doxyfile
+	@sed -i -e 's/###MATAHARI_VERSION###/$(VERSION)/' doc/Doxyfile
+	@doxygen doc/Doxyfile
+
+.PHONY: check linux.build windows.build clean doxygen
