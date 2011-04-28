@@ -1,10 +1,11 @@
-%global specversion 36
-%global upstream_version 2fcadaa
+%global specversion 44
+%global upstream_version 7d2a309
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
-
 %global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
+
+%bcond_without dbus
 
 Name:		matahari
 Version:	0.4.0
@@ -26,12 +27,14 @@ Requires:	pcre
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
-BuildRequires:	dbus-devel dbus-glib-devel polkit-gnome-devel libxslt-devel
 BuildRequires:	qpid-cpp-client-devel > 0.7
 BuildRequires:	qmf-devel > 0.7
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
+%if %{with dbus}
+BuildRequires:	dbus-devel dbus-glib-devel polkit-gnome-devel libxslt-devel
+%endif
 
 %description
 
@@ -76,6 +79,7 @@ Requires:	qpid-cpp-client-ssl > 0.7
 %description agent-lib
 C++ library containing the base class for Matahari agents
 
+%if %{with dbus}
 %package dbus
 License:	GPLv2+
 Summary:	DBus policies for Matahari services
@@ -83,6 +87,7 @@ Group:		Applications/System
 
 %description dbus
 DBus policies for allowing Matahari to be used on the local system
+%endif
 
 %package host
 License:	GPLv2+
@@ -133,7 +138,7 @@ Headers and shared libraries for developing Matahari agents.
 %setup -q -n matahari-matahari-%{upstream_version}
 
 %build
-%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} .
 make %{?_smp_mflags}
 
 %install
@@ -237,7 +242,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files agent-lib
 %defattr(644, root, root, 755)
 %{_libdir}/libmcommon_qmf.so.*
+%if %{with dbus}
 %{_libdir}/libmcommon_dbus.so.*
+%endif
 %dir %{_datadir}/matahari/
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari
 %doc AUTHORS COPYING
@@ -254,21 +261,27 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-network
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
+%if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-networkd
+%endif
 %doc AUTHORS COPYING
 
 %files host
 %defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
+%if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-hostd
+%endif
 %doc AUTHORS COPYING
 
 %files service
 %defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-service
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
+%if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
+%endif
 %doc AUTHORS COPYING
 
 %files broker
@@ -282,6 +295,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 %doc AUTHORS COPYING
 
+%if %{with dbus}
 %files dbus
 %{_sysconfdir}/dbus-1/system.d/org.matahariproject.Host.conf
 %{_sysconfdir}/dbus-1/system.d/org.matahariproject.Network.conf
@@ -295,19 +309,22 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
 %{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
 %{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
+%endif
 
 %files devel
 %defattr(644, root, root, 755)
 %{_datadir}/matahari/schema.xml
 %{_includedir}/matahari.h
 %{_includedir}/matahari/mh_agent.h
-%{_includedir}/matahari/mh_dbus_common.h
-%{_includedir}/matahari/mh_gobject_class.h
 %{_libdir}/libm*.so
 %{_datadir}/cmake/Modules/FindMatahari.cmake
 %{_datadir}/cmake/Modules/FindQPID.cmake
+%if %{with dbus}
+%{_includedir}/matahari/mh_dbus_common.h
+%{_includedir}/matahari/mh_gobject_class.h
 %{_datadir}/cmake/Modules/MatahariDBusMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
+%endif
 %doc AUTHORS COPYING
 
 %changelog
