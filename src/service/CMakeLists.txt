@@ -5,7 +5,7 @@ set(DBUS_AGENT "matahari-dbus-${BASE}d")
 
 # QMF daemon
 if(WITH-QMF)
-    add_executable(${QMF_AGENT} matahari-srv.cpp ${SCHEMA_SOURCES})
+    add_executable(${QMF_AGENT} ${BASE}-qmf.cpp ${SCHEMA_SOURCES})
     target_link_libraries(${QMF_AGENT} ${BASE_LIB} mcommon mcommon_qmf)
 
     target_link_libraries(${QMF_AGENT} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
@@ -25,14 +25,14 @@ endif(WITH-QMF)
 if(WITH-DBUS)
     # Auto-generated stuff
     include(MatahariDBusMacros)
-    generate_dbus_headers(services ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Services.xml)
+    generate_dbus_headers(${BASE} ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Services.xml)
     # Must be included to find matahari-API-dbus-properties.h
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-    set(DBUS_AGENT_SOURCE
-        matahari-services-dbus.c
-        matahari-services-dbus-glue.h
-        matahari-services-dbus-properties.h
+    set(DBUS_AGENT_SOURCE 
+	${BASE}-dbus.c
+	${BASE}-dbus-glue.h 
+	${BASE}-dbus-properties.h
     )
 
     add_executable(${DBUS_AGENT} ${DBUS_AGENT_SOURCE})

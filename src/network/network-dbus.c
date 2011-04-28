@@ -32,7 +32,7 @@
 #include "matahari/utilities.h"
 
 /* Generated properties list */
-#include "matahari-network-dbus-properties.h"
+#include "network-dbus-properties.h"
 
 /* DBus names */
 #define NETWORK_BUS_NAME "org.matahariproject.Network"
@@ -180,7 +180,7 @@ Network_get_mac_address(Matahari *matahari, const char *iface, DBusGMethodInvoca
 /* Generated dbus stuff for network
  * MUST be after declaration of user defined functions.
  */
-#include "matahari-network-dbus-glue.h"
+#include "network-dbus-glue.h"
 
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,

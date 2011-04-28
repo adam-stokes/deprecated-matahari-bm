@@ -1,6 +1,6 @@
 # Library
 
-set(LIBS mcommon mhost mnet mservice)
+set(LIBS mcommon mhost mnetwork mservice)
 include_directories(${pcre_INCLUDE_DIRS})
 
 add_library (mcommon SHARED utilities.c mainloop.c)
@@ -11,9 +11,9 @@ add_library (mhost SHARED host.c host_${VARIANT}.c)
 set_target_properties(mhost PROPERTIES SOVERSION 0.0.1)
 target_link_libraries(mhost ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
-add_library (mnet SHARED network.c  network_${VARIANT}.c)
-set_target_properties(mnet PROPERTIES SOVERSION 0.0.1)
-target_link_libraries(mnet ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
+add_library (mnetwork SHARED network.c  network_${VARIANT}.c)
+set_target_properties(mnetwork PROPERTIES SOVERSION 0.0.1)
+target_link_libraries(mnetwork ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 add_library (mservice SHARED services.c services_${VARIANT}.c)
 set_target_properties(mservice PROPERTIES SOVERSION 0.0.1)
