@@ -48,8 +48,12 @@ function make_srpm() {
 
 env
 
+# Until qpid is usable somewhere
+#build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+build_target=`rpm --eval fedora-rawhide-%{_arch}`
+
 make_srpm 
-/usr/bin/mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
+/usr/bin/mock --root=$build_target --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
 
 rc=$?
 cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/x86_64/build.log
@@ -59,7 +63,7 @@ if [ $rc != 0 ]; then
 fi
 
 make_srpm mingw32-
-/usr/bin/mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
+/usr/bin/mock --root=$build_target --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
 
 rc=$?
 cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch/build.log

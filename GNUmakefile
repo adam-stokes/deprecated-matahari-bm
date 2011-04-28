@@ -31,7 +31,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 TAG    ?= $(shell git show --pretty="format:%h" --abbrev-commit | head -n 1)
 WITH   ?= 
 VARIANT ?=
-PROFILE ?= fedora-14-x86_64
+PROFILE ?= fedora-rawhide-x86_64
 
 DOXYGEN:=$(shell which doxygen 2>/dev/null)
 DOT:=$(shell which dot 2>/dev/null)
