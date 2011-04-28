@@ -24,8 +24,6 @@
 #include <set>
 #include "matahari/mh_agent.h"
 #include <qmf/Data.h>
-#include "qmf/org/matahariproject/Host.h"
-#include "qmf/org/matahariproject/EventHeartbeat.h"
 #include "qmf/org/matahariproject/QmfPackage.h"
 
 extern "C" {

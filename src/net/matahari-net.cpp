@@ -22,13 +22,6 @@
 
 #include "matahari/mh_agent.h"
 
-#include "qmf/org/matahariproject/Network.h"
-#include "qmf/org/matahariproject/ArgsNetworkList.h"
-#include "qmf/org/matahariproject/ArgsNetworkStop.h"
-#include "qmf/org/matahariproject/ArgsNetworkStart.h"
-#include "qmf/org/matahariproject/ArgsNetworkStatus.h"
-#include "qmf/org/matahariproject/ArgsNetworkGet_ip_address.h"
-#include "qmf/org/matahariproject/ArgsNetworkGet_mac_address.h"
 #include "qmf/org/matahariproject/QmfPackage.h"
 
 #include <qpid/agent/ManagementAgent.h>

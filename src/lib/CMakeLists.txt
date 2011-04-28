@@ -1,54 +1,40 @@
 # Library
 
-set(MHOST_VERSION 0.0.1)
-set(MSRV_VERSION 0.0.1)
-set(MNET_VERSION 0.0.1)
-set(MCOMMON_VERSION 0.0.1)
-set(MCOMMON_QMF_VERSION 0.0.1)
-set(MCOMMON_DBUS_VERSION 0.0.1)
-
-set(HOST_LIB "mhost")
-set(SRV_LIB "msrv")
-set(NET_LIB "mnet")
-
-add_library (${HOST_LIB} SHARED host.c host_${VARIANT}.c)
-add_library (${SRV_LIB} SHARED services.c services_${VARIANT}.c)
-add_library (${NET_LIB} SHARED network.c network_${VARIANT}.c)
-add_library (mcommon SHARED utilities.c mainloop.c)
-
+set(LIBS mcommon mhost mnet mservice)
 include_directories(${pcre_INCLUDE_DIRS})
-target_link_libraries(${HOST_LIB} ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
-target_link_libraries(${SRV_LIB} ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
-target_link_libraries(${NET_LIB} ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
+
+add_library (mcommon SHARED utilities.c mainloop.c)
+set_target_properties(mcommon PROPERTIES SOVERSION 0.0.1)
 target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES})
 
-set_target_properties(${HOST_LIB} PROPERTIES SOVERSION ${MHOST_VERSION})
-set_target_properties(${SRV_LIB} PROPERTIES SOVERSION ${MSRV_VERSION})
-set_target_properties(${NET_LIB} PROPERTIES SOVERSION ${MNET_VERSION})
-set_target_properties(mcommon PROPERTIES SOVERSION ${MCOMMON_VERSION})
+add_library (mhost SHARED host.c host_${VARIANT}.c)
+set_target_properties(mhost PROPERTIES SOVERSION 0.0.1)
+target_link_libraries(mhost ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
+
+add_library (mnet SHARED network.c  network_${VARIANT}.c)
+set_target_properties(mnet PROPERTIES SOVERSION 0.0.1)
+target_link_libraries(mnet ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
+
+add_library (mservice SHARED services.c services_${VARIANT}.c)
+set_target_properties(mservice PROPERTIES SOVERSION 0.0.1)
+target_link_libraries(mservice ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 if(WIN32)
-    target_link_libraries(${HOST_LIB} wsock32)
-    target_link_libraries(${SRV_LIB} wsock32)
-    target_link_libraries(${NET_LIB} wsock32)
-    target_link_libraries(mcommon wsock32)
-
-    install(TARGETS ${HOST_LIB} DESTINATION sbin)
-    install(TARGETS ${SRV_LIB} DESTINATION sbin)
-    install(TARGETS ${NET_LIB} DESTINATION sbin)
-    install(TARGETS mcommon DESTINATION sbin)
+    foreach (lib ${LIBS})
+        target_link_libraries(${lib} wsock32)
+	install(TARGETS ${lib} DESTINATION sbin)
+    endforeach (lib ${LIBS})
 else(WIN32)
-    install(TARGETS ${HOST_LIB} DESTINATION lib${LIB_SUFFIX})
-    install(TARGETS ${SRV_LIB} DESTINATION lib${LIB_SUFFIX})
-    install(TARGETS ${NET_LIB} DESTINATION lib${LIB_SUFFIX})
-    install(TARGETS mcommon DESTINATION lib${LIB_SUFFIX})
+    foreach (lib ${LIBS})
+	install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
+    endforeach (lib ${LIBS})
 endif(WIN32)
 
 if(WITH-QMF)
     add_library (mcommon_qmf SHARED mh_agent.cpp)
 
     target_link_libraries(mcommon_qmf ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
-    set_target_properties(mcommon_qmf PROPERTIES SOVERSION ${MCOMMON_QMF_VERSION})
+    set_target_properties(mcommon_qmf PROPERTIES SOVERSION 0.0.1)
 
     if(WIN32)
         target_link_libraries(mcommon_qmf wsock32)
@@ -58,7 +44,6 @@ if(WITH-QMF)
     endif(WIN32)
 endif(WITH-QMF)
 
-
 if(WITH-DBUS)
     add_library (mcommon_dbus SHARED mh_dbus_common.c)
 
@@ -66,7 +51,7 @@ if(WITH-DBUS)
     include_directories(${polkit_INCLUDE_DIRS})
 
     target_link_libraries(mcommon_dbus ${polkit_LIBRARIES})
-    set_target_properties(mcommon_dbus PROPERTIES SOVERSION ${MCOMMON_DBUS_VERSION})
+    set_target_properties(mcommon_dbus PROPERTIES SOVERSION 0.0.1)
 
     install(TARGETS mcommon_dbus DESTINATION lib${LIB_SUFFIX})
 endif(WITH-DBUS)

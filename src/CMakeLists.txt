@@ -1,7 +1,5 @@
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
-
-
 if(WIN32)
    set(VARIANT "windows")
    set(SUPPORT_TRACING 0)
@@ -103,17 +101,7 @@ if(WITH-QMF)
     add_definitions(-DMATAHARI_PORT=${MATAHARI_PORT})
     add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 
-    set(SCHEMA_SOURCES
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Host.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Network.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Services.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Resources.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventHeartbeat.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventService_op.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/EventResource_op.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/QmfPackage.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/Package.cpp)
-
+    set(SCHEMA_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/QmfPackage.cpp)
 
     find_package(QPID REQUIRED)
     if(QPID-NOTFOUND)
@@ -143,8 +131,6 @@ if(WITH-QMF)
     if (regen_schema)
         # Regenerate everything 
         execute_process(COMMAND rm -f ${SCHEMA_SOURCES})
-        execute_process(COMMAND ${QMFGEN} -o ./qmf ${SCHEMAS}
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         execute_process(COMMAND ${QMFGEN} -2 -o ./qmf ${SCHEMAS}
                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     else (regen_schema)

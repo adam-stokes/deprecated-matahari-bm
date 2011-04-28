@@ -25,12 +25,6 @@
 #include <qpid/agent/ManagementAgent.h>
 #include "matahari/mh_agent.h"
 
-#include "qmf/org/matahariproject/Services.h"
-#include "qmf/org/matahariproject/EventService_op.h"
-
-#include "qmf/org/matahariproject/Resources.h"
-#include "qmf/org/matahariproject/EventResource_op.h"
-
 #include "qmf/org/matahariproject/QmfPackage.h"
 
 extern "C" {
