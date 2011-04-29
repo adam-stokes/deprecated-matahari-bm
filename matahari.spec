@@ -1,13 +1,15 @@
-%global specversion 26
-%global upstream_version 7f3b067
+%global specversion 46
+%global upstream_version 7968fe1
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
-
 %global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
+%bcond_without dbus
+%bcond_without qmf
+
 Name:		matahari
-Version:	0.4.0
+Version:	0.4.1
 Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Linux guests
 
@@ -19,21 +21,26 @@ URL:		http://fedorahosted.org/matahari
 Source0:	matahari-matahari-%{upstream_version}.tgz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+# NOTE: The host API uses dbus for the machine uuid
 Requires:	dbus
-Requires:	hal
 Requires:	qmf > 0.7
 Requires:	pcre
 
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
-BuildRequires:	dbus-devel
-BuildRequires:	hal-devel
-BuildRequires:	qpid-cpp-client-devel > 0.7
-BuildRequires:	qmf-devel > 0.7
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
+
+%if %{with qmf}
+BuildRequires:	qpid-cpp-client-devel > 0.7
+BuildRequires:	qmf-devel > 0.7
+%endif
+
+%if %{with dbus}
+BuildRequires:	dbus-devel dbus-glib-devel polkit-devel libxslt
+%endif
 
 %description
 
@@ -47,22 +54,87 @@ QMF provides a modeling framework layer on top of qpid (which implements
 AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
+
+%if %{with qmf}
 %package broker
 License:	GPLv2+
 Summary:	Optional AMQP Broker for Matahari
 Group:		Applications/System
 Requires:	%{name} = %{version}-%{release}
 Requires:	qpid-cpp-server > 0.7
+Requires:	qpid-cpp-server-ssl > 0.7
 Requires:	qmf > 0.7
 
 %description broker
 Optional AMQP Broker for Matahari
+%endif
+
+%package lib
+License:	GPLv2+
+Summary:	C libraries used by Matahari agents
+Group:		Applications/System
+
+%description lib
+C libraries used by Matahari agents
+
+%package agent-lib
+License:	GPLv2+
+Summary:	C++ library used by Matahari agents
+Group:		Applications/System
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	qpid-cpp-client-ssl > 0.7
+
+%description agent-lib
+C++ library containing the base class for Matahari agents
+
+%if %{with dbus}
+%package dbus
+License:	GPLv2+
+Summary:	DBus policies for Matahari services
+Group:		Applications/System
+
+%description dbus
+DBus policies for allowing Matahari to be used on the local system
+%endif
+
+%package host
+License:	GPLv2+
+Summary:	QMF agent for remote hosts
+Group:		Applications/System
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
+
+%description host
+QMF agent for viewing and controlling remote hosts
+
+%package network
+License:	GPLv2+
+Summary:	QMF agent for network devices  
+Group:		Applications/System
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
+Obsoletes:	matahari-net < %{version}-%{release}
+
+%description network
+QMF agent for viewing and controlling network devices  
+
+%package service
+License:	GPLv2+
+Summary:	QMF agent for system services
+Group:		Applications/System
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
+
+%description service
+QMF agent for viewing and controlling system services
 
 %package devel
 License:	GPLv2+
 Summary:	Matahari development package
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
 Requires:	qpid-cpp-client-devel > 0.7
 Requires:	qmf-devel > 0.7
 Requires:	glib2-devel
@@ -74,44 +146,91 @@ Headers and shared libraries for developing Matahari agents.
 %setup -q -n matahari-matahari-%{upstream_version}
 
 %build
-%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_qmf: -DWITH-QMF:BOOL=OFF} %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} .
 make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
+%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
+%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
+
+%if %{with qmf}
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-net
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
-%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
-%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 %{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
+%endif
 
-%post
-for svc in net host service ; do
-    /sbin/chkconfig --level 2345 matahari-$svc on
-    /sbin/service matahari-$svc condrestart
-done
+%post -n matahari-lib -p /sbin/ldconfig
+%postun -n matahari-lib -p /sbin/ldconfig
+
+%post -n matahari-agent-lib -p /sbin/ldconfig
+%postun -n matahari-agent-lib
+# Can't use -p, gives: '/sbin/ldconfig: relative path `0' used to build cache' error
+/sbin/ldconfig
+
+%if %{with qmf}
+#== Host
+
+%post host
+/sbin/service matahari-host condrestart
+
+%preun host
+if [ $1 = 0 ]; then
+   /sbin/service matahari-host stop >/dev/null 2>&1 || :
+   chkconfig --del matahari-host
+fi
+
+%postun host
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-host condrestart >/dev/null 2>&1 || :
+fi
+
+#== Network
+
+%post network
+/sbin/service matahari-network condrestart
+
+%preun network
+if [ $1 = 0 ]; then
+   /sbin/service matahari-network stop >/dev/null 2>&1 || :
+   chkconfig --del matahari-network
+fi
+
+%postun network
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-network condrestart >/dev/null 2>&1 || :
+fi
+
+#== Services
+
+%post service
+/sbin/service matahari-service condrestart
+
+%preun service
+if [ $1 = 0 ]; then
+   /sbin/service matahari-service stop >/dev/null 2>&1 || :
+   chkconfig --del matahari-service
+fi
+
+%postun service
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-service condrestart >/dev/null 2>&1 || :
+fi
+
+#== Broker
 
 %post broker
-/sbin/chkconfig --level 2345 matahari-broker on
 /sbin/service matahari-broker condrestart
-
-%preun
-if [ $1 = 0 ]; then
-    for svc in net host service ; do
-       /sbin/service matahari-$svc stop >/dev/null 2>&1 || :
-       chkconfig --del matahari-$svc
-    done
-fi
 
 %preun broker
 if [ $1 = 0 ]; then
@@ -119,39 +238,82 @@ if [ $1 = 0 ]; then
     chkconfig --del matahari-broker
 fi
 
-%postun
-if [ "$1" -ge "1" ]; then
-    for svc in net host service ; do
-       /sbin/service matahari-$svc condrestart >/dev/null 2>&1 || :
-    done
-fi
-
 %postun broker
 if [ "$1" -ge "1" ]; then
     /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
+
+%endif
 
 %clean
 test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files
 %defattr(644, root, root, 755)
-%dir %{_datadir}/matahari/
-%{_libdir}/libm*.so.*
-
-%config(noreplace) %{_sysconfdir}/sysconfig/matahari
-
-%attr(755, root, root) %{_initddir}/matahari-net
-%attr(755, root, root) %{_sbindir}/matahari-netd
-
-%attr(755, root, root) %{_initddir}/matahari-host
-%attr(755, root, root) %{_sbindir}/matahari-hostd
-
-%attr(755, root, root) %{_initddir}/matahari-service
-%attr(755, root, root) %{_sbindir}/matahari-serviced
-
 %doc AUTHORS COPYING
 
+%files agent-lib
+%defattr(644, root, root, 755)
+%dir %{_datadir}/matahari/
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari
+%doc AUTHORS COPYING
+
+%if %{with qmf}
+%{_libdir}/libmcommon_qmf.so.*
+%endif
+
+%if %{with dbus}
+%{_libdir}/libmcommon_dbus.so.*
+%endif
+
+%files lib
+%defattr(644, root, root, 755)
+%{_libdir}/libmcommon.so.*
+%{_libdir}/libmhost.so.*
+%{_libdir}/libmnetwork.so.*
+%{_libdir}/libmservice.so.*
+%doc AUTHORS COPYING
+
+%files network
+%defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
+%attr(755, root, root) %{_initddir}/matahari-network
+%attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
+%endif
+
+%if %{with dbus}
+%attr(755, root, root) %{_sbindir}/matahari-dbus-networkd
+%endif
+
+%files host
+%defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
+%attr(755, root, root) %{_initddir}/matahari-host
+%attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
+%endif
+
+%if %{with dbus}
+%attr(755, root, root) %{_sbindir}/matahari-dbus-hostd
+%endif
+
+%files service
+%defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
+%attr(755, root, root) %{_initddir}/matahari-service
+%attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
+%endif
+
+%if %{with dbus}
+%attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
+%endif
+
+%if %{with qmf}
 %files broker
 %defattr(644, root, root, 755)
 %attr(755, root, root) %{_initddir}/matahari-broker
@@ -159,14 +321,50 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %{_sbindir}/matahari-brokerd
 
-%attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
-%attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
+%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
+%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
+%doc AUTHORS COPYING
+
+%else
+%exclude %{_sysconfdir}/matahari-broker.conf
+%endif
+
+%if %{with dbus}
+%files dbus
+%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Host.conf
+%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Network.conf
+%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Services.conf
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Host.xml
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Network.xml
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Services.xml
+%{_datadir}/dbus-1/system-services/org.matahariproject.Host.service
+%{_datadir}/dbus-1/system-services/org.matahariproject.Network.service
+%{_datadir}/dbus-1/system-services/org.matahariproject.Services.service
+%{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
+%{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
+%{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
+%endif
 
 %files devel
 %defattr(644, root, root, 755)
-%{_datadir}/matahari/schema.xml
-%{_includedir}/matahari.h
+%doc AUTHORS COPYING
+
 %{_libdir}/libm*.so
+%{_includedir}/matahari.h
+%{_datadir}/matahari/schema.xml
+%{_datadir}/cmake/Modules/FindMatahari.cmake
+
+%if %{with qmf}
+%{_includedir}/matahari/mh_agent.h
+%{_datadir}/cmake/Modules/FindQPID.cmake
+%endif
+
+%if %{with dbus}
+%{_includedir}/matahari/mh_dbus_common.h
+%{_includedir}/matahari/mh_gobject_class.h
+%{_datadir}/cmake/Modules/MatahariDBusMacros.cmake
+%{_datadir}/matahari/schema-to-dbus.xsl
+%endif
 
 %changelog
 * Wed Oct 12 2010 Andrew Beekhof <andrew@beekhof.net> - 0.4.0-0.8.ad8b81b.git

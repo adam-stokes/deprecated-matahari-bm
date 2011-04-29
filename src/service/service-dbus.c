@@ -29,7 +29,7 @@
 #include "matahari/utilities.h"
 
 /* Generated properties list */
-#include "matahari-services-dbus-properties.h"
+#include "service-dbus-properties.h"
 
 /* DBus names */
 #define SERVICES_BUS_NAME "org.matahariproject.Services"
@@ -216,7 +216,7 @@ Services_describe(Matahari *matahari, const char *name, DBusGMethodInvocation *c
 /* Generated dbus stuff for services
  * MUST be after declaration of user defined functions.
  */
-#include "matahari-services-dbus-glue.h"
+#include "service-dbus-glue.h"
 
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,

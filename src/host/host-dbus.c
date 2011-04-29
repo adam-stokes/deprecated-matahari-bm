@@ -29,7 +29,7 @@
 #include "matahari/host.h"
 
 /* Generated properties list */
-#include "matahari-host-dbus-properties.h"
+#include "host-dbus-properties.h"
 
 /* DBus names */
 #define HOST_BUS_NAME "org.matahariproject.Host"
@@ -91,7 +91,7 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
 /* Generated dbus stuff for host
  * MUST be after declaration of user defined functions.
  */
-#include "matahari-host-dbus-glue.h"
+#include "host-dbus-glue.h"
 
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,

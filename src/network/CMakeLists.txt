@@ -1,4 +1,4 @@
-set(BASE "host")
+set(BASE "network")
 set(BASE_LIB "m${BASE}")
 set(QMF_AGENT "matahari-qmf-${BASE}d")
 set(DBUS_AGENT "matahari-dbus-${BASE}d")
@@ -25,8 +25,8 @@ endif(WITH-QMF)
 if(WITH-DBUS)
     # Auto-generated stuff
     include(MatahariDBusMacros)
-    generate_dbus_headers(${BASE} ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Host.xml)
-    # Must be included to find matahari-API-dbus-properties.h
+    generate_dbus_headers(${BASE} ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Network.xml)
+    # Must be included to find API-dbus-properties.h
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
     set(DBUS_AGENT_SOURCE 
@@ -37,14 +37,19 @@ if(WITH-DBUS)
 
     add_executable(${DBUS_AGENT} ${DBUS_AGENT_SOURCE})
 
-    target_link_libraries(${DBUS_AGENT} ${BASE_LIB} mcommon_dbus ${dbus-glib_LIBRARIES})
+    target_link_libraries(${DBUS_AGENT} ${BASE_LIB} mcommon_dbus)
+
+    include_directories(${polkit_INCLUDE_DIRS})
+    target_link_libraries(${DBUS_AGENT} ${polkit_LIBRARIES})
+
     include_directories(${dbus-glib_INCLUDE_DIRS})
+    target_link_libraries(${DBUS_AGENT} ${dbus-glib_LIBRARIES})
 
     # Install targets
     # TODO: fix hardcoded paths, should go to libexec
     install(TARGETS ${DBUS_AGENT} DESTINATION sbin)
-    install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Host.xml DESTINATION share/dbus-1/interfaces)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Host.service DESTINATION share/dbus-1/system-services)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Host.conf DESTINATION /etc/dbus-1/system.d)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Host.policy DESTINATION share/polkit-1/actions)
+    install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Network.xml DESTINATION share/dbus-1/interfaces)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.service DESTINATION share/dbus-1/system-services)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.conf DESTINATION /etc/dbus-1/system.d)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.policy DESTINATION share/polkit-1/actions)
 endif(WITH-DBUS)

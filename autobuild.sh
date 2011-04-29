@@ -18,7 +18,7 @@
 #
 set -x
 PACKAGE=matahari
-VERSION=0.4.0
+VERSION=0.4.1
 
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
@@ -48,22 +48,51 @@ function make_srpm() {
 
 env
 
-make_srpm 
-/usr/bin/mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
+# When qpid is consistently usable 
+# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
+echo "=::=::=::= `date` =::=::=::= "
+echo "=::=::=::= Beginning Linux Build =::=::=::= "
+
+make_srpm 
+results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}`
+
+rm -f $results/build.log
+/usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
-cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/x86_64/build.log
 
 if [ $rc != 0 ]; then
+    cat $results/build.log
+    echo "=::=::=::= Linux Build Failed =::=::=::= "
+    echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
+
+createrepo $results
+
+# Until qpid is usable again on mingw32
+exit $rc
+
+echo "=::=::=::= `date` =::=::=::= "
+echo "=::=::=::= Beginning Windows Build =::=::=::= "
+
+# When qpid is consistently usable 
+# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+build_target=`rpm --eval fedora-14-%{_arch}`
 
 make_srpm mingw32-
-/usr/bin/mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
+results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch
 
+rm -f $results/build.log
+/usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
-cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch/build.log
 
 if [ $rc != 0 ]; then
+    cat $results/build.log
+    echo "=::=::=::= Windows Build Failed =::=::=::= "
+    echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
+
+createrepo $results
