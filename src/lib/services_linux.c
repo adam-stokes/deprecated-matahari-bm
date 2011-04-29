@@ -33,16 +33,18 @@
 #include "services_private.h"
 #include "sigar.h"
 
-#define set_fd_opts(fd,opts) do {                                    \
-        int flag;                                                    \
-        if ((flag = fcntl(fd, F_GETFL)) >= 0) {                            \
-            if (fcntl(fd, F_SETFL, flag|opts) < 0) {                    \
-                mh_perror(LOG_ERR, "fcntl() write failed");            \
-            }                                                            \
-        } else {                                                    \
-            mh_perror(LOG_ERR, "fcntl() read failed");                    \
-        }                                                            \
-    } while(0)
+static inline void
+set_fd_opts(int fd, int opts)
+{
+    int flag;
+    if ((flag = fcntl(fd, F_GETFL)) >= 0) {
+        if (fcntl(fd, F_SETFL, flag|opts) < 0) {
+            mh_perror(LOG_ERR, "fcntl() write failed");
+        }
+    } else {
+        mh_perror(LOG_ERR, "fcntl() read failed");
+    }
+}
 
 static gboolean
 read_output(int fd, gpointer user_data)
