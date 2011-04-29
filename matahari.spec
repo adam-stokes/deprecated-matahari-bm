@@ -39,7 +39,7 @@ BuildRequires:	qmf-devel > 0.7
 %endif
 
 %if %{with dbus}
-BuildRequires:	dbus-devel dbus-glib-devel polkit-gnome-devel libxslt-devel
+BuildRequires:	dbus-devel dbus-glib-devel polkit-devel libxslt
 %endif
 
 %description
