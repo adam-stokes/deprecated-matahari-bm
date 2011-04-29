@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@ enum lsb_exitcode {
     LSB_NOT_INSTALLED = 5,
     LSB_NOT_CONFIGURED = 6,
     LSB_NOT_RUNNING = 7,
-    
+
     /* 150-199	reserved for application use */
 };
 
@@ -60,52 +60,52 @@ enum lsb_status_exitcode {
 };
 
 enum ocf_exitcode {
-	OCF_PENDING = -1,
-	OCF_OK = 0,
-	OCF_UNKNOWN_ERROR = 1,
-	OCF_INVALID_PARAM = 2,
-	OCF_UNIMPLEMENT_FEATURE = 3,
-	OCF_INSUFFICIENT_PRIV = 4,
-	OCF_NOT_INSTALLED = 5,
-	OCF_NOT_CONFIGURED = 6,
-	OCF_NOT_RUNNING = 7,
-	OCF_RUNNING_MASTER = 8,
-	OCF_FAILED_MASTER = 9,
+    OCF_PENDING = -1,
+    OCF_OK = 0,
+    OCF_UNKNOWN_ERROR = 1,
+    OCF_INVALID_PARAM = 2,
+    OCF_UNIMPLEMENT_FEATURE = 3,
+    OCF_INSUFFICIENT_PRIV = 4,
+    OCF_NOT_INSTALLED = 5,
+    OCF_NOT_CONFIGURED = 6,
+    OCF_NOT_RUNNING = 7,
+    OCF_RUNNING_MASTER = 8,
+    OCF_FAILED_MASTER = 9,
 };
 
 enum op_status {
-	LRM_OP_PENDING = -1,
-	LRM_OP_DONE,
-	LRM_OP_CANCELLED,
-	LRM_OP_TIMEOUT,
-	LRM_OP_NOTSUPPORTED,
-	LRM_OP_ERROR
+    LRM_OP_PENDING = -1,
+    LRM_OP_DONE,
+    LRM_OP_CANCELLED,
+    LRM_OP_TIMEOUT,
+    LRM_OP_NOTSUPPORTED,
+    LRM_OP_ERROR
 };
 
 typedef struct svc_action_private_s svc_action_private_t;
-typedef struct svc_action_s 
+typedef struct svc_action_s
 {
-	char *id;
-	char *rsc;
-	char *action;
-	int   interval;
+    char *id;
+    char *rsc;
+    char *action;
+    int   interval;
 
-	char *rclass;
-	char *provider;
-	char *agent;
+    char *rclass;
+    char *provider;
+    char *agent;
 
-	int         timeout;
-	GHashTable *params;
+    int         timeout;
+    GHashTable *params;
 
-	int rc;
-	int pid;
-	int status;
-	
-	char          *stderr_data;
-	char          *stdout_data;
+    int rc;
+    int pid;
+    int status;
 
-	svc_action_private_t *opaque;
-	
+    char          *stderr_data;
+    char          *stdout_data;
+
+    svc_action_private_t *opaque;
+
 } svc_action_t;
 
 extern GList *get_directory_list(const char *root, gboolean files);
@@ -129,24 +129,24 @@ extern gboolean services_action_async(svc_action_t* op, void (*action_callback)(
 
 extern gboolean services_action_cancel(const char *name, const char *action, int interval);
 
-static inline enum ocf_exitcode services_get_ocf_exitcode(char *action, int lsb_exitcode) 
+static inline enum ocf_exitcode
+services_get_ocf_exitcode(char *action, int lsb_exitcode)
 {
     if(action != NULL && strcmp("status", action) == 0) {
-	switch(lsb_exitcode) {
-	    case LSB_STATUS_OK:			return OCF_OK;
-	    case LSB_STATUS_VAR_PID:		return OCF_NOT_RUNNING;
-	    case LSB_STATUS_VAR_LOCK:		return OCF_NOT_RUNNING;
-	    case LSB_STATUS_NOT_RUNNING:	return OCF_NOT_RUNNING;
-	    case LSB_STATUS_NOT_INSTALLED:	return OCF_UNKNOWN_ERROR;
-	    default:
-		return OCF_UNKNOWN_ERROR;
-	}
-	
+        switch(lsb_exitcode) {
+        case LSB_STATUS_OK:            return OCF_OK;
+        case LSB_STATUS_VAR_PID:       return OCF_NOT_RUNNING;
+        case LSB_STATUS_VAR_LOCK:      return OCF_NOT_RUNNING;
+        case LSB_STATUS_NOT_RUNNING:   return OCF_NOT_RUNNING;
+        case LSB_STATUS_NOT_INSTALLED: return OCF_UNKNOWN_ERROR;
+        default:                       return OCF_UNKNOWN_ERROR;
+        }
+
     } else if(lsb_exitcode > LSB_NOT_RUNNING) {
-	return OCF_UNKNOWN_ERROR;	
+        return OCF_UNKNOWN_ERROR;
     }
 
-    /* For non-status operations, the LSB and OCF share error code meaning for rc <= 7 */ 
+    /* For non-status operations, the LSB and OCF share error code meaning for rc <= 7 */
     return (enum ocf_exitcode)lsb_exitcode;
 }
 #endif
