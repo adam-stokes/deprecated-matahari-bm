@@ -104,6 +104,14 @@ typedef struct svc_action_s
     char          *stderr_data;
     char          *stdout_data;
 
+    /**
+     * Data stored by the creator of the action.
+     *
+     * This may be used to hold data that is needed later on by a callback,
+     * for example.
+     */
+    void *cb_data;
+
     svc_action_private_t *opaque;
 
 } svc_action_t;

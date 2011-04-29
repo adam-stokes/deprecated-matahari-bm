@@ -35,6 +35,10 @@ extern "C" {
 class SrvAgent : public MatahariAgent
 {
     private:
+        static void mh_service_callback(svc_action_t *op);
+        static void mh_resource_callback(svc_action_t *op);
+        void raiseEvent(svc_action_t *op, int service);
+
         qmf::Data _services;
         qmf::DataAddr _services_addr;
 
@@ -45,8 +49,8 @@ class SrvAgent : public MatahariAgent
         gboolean invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 
         qmf::org::matahariproject::PackageDefinition _package;
+
     public:
-        void raiseEvent(svc_action_t *op, int service);
         virtual int setup(qmf::AgentSession session);
         virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                                 gpointer user_data);
@@ -58,18 +62,20 @@ extern "C" {
 #include <string.h>
 };
 
-SrvAgent agent;
-
-static void mh_service_callback(svc_action_t *op)
+void
+SrvAgent::mh_service_callback(svc_action_t *op)
 {
+    SrvAgent *agent = static_cast<SrvAgent *>(op->cb_data);
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
-    agent.raiseEvent(op, 1);
+    agent->raiseEvent(op, 1);
 }
 
-static void mh_resource_callback(svc_action_t *op)
+void
+SrvAgent::mh_resource_callback(svc_action_t *op)
 {
+    SrvAgent *agent = static_cast<SrvAgent *>(op->cb_data);
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
-    agent.raiseEvent(op, 0);
+    agent->raiseEvent(op, 0);
 }
 
 static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
@@ -90,6 +96,7 @@ static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
 int
 main(int argc, char **argv)
 {
+    SrvAgent agent;
     int rc = agent.init(argc, argv, "service");
 
     if(rc >= 0) {
@@ -226,6 +233,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
             session.raiseException(event, MH_NOT_IMPLEMENTED);
             return TRUE;
 
+            op->cb_data = this;
             services_action_async(op, mh_service_callback);
             event.addReturnArgument("rc", OCF_PENDING);
 
@@ -312,6 +320,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
             session.raiseException(event, MH_NOT_IMPLEMENTED);
             return TRUE;
 
+            op->cb_data = this;
             services_action_async(op, mh_resource_callback);
             event.addReturnArgument("rc", OCF_PENDING);
 
@@ -331,6 +340,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
             session.raiseException(event, MH_NOT_IMPLEMENTED);
             return TRUE;
 
+            op->cb_data = this;
             services_action_async(op, mh_resource_callback);
             event.addReturnArgument("rc", OCF_PENDING);
 
