@@ -400,7 +400,8 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
                    void (*callback)(mainloop_child_t *p, int status, int signo,
                    int exitcode))
 {
-    mainloop_child_t*        p = g_new(mainloop_child_t, 1);
+    mainloop_child_t *p = g_new(mainloop_child_t, 1);
+
     if (mainloop_process_table == NULL) {
         mainloop_process_table = g_hash_table_new_full(
             g_direct_hash, g_direct_equal, NULL, NULL/*TODO: Add destructor */);
@@ -473,6 +474,11 @@ child_death_dispatch(int sig)
 void
 mainloop_track_children(int priority)
 {
+    if (mainloop_process_table == NULL) {
+        mainloop_process_table = g_hash_table_new_full(
+            g_direct_hash, g_direct_equal, NULL, NULL/*TODO: Add destructor */);
+    }
+
 #if __linux__
     mainloop_add_signal(SIGCHLD, child_death_dispatch);
 #endif
