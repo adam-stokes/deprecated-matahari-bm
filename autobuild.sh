@@ -18,7 +18,7 @@
 #
 set -x
 PACKAGE=matahari
-VERSION=0.4.0
+VERSION=0.4.1
 
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
@@ -52,22 +52,43 @@ env
 #build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
 build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
-make_srpm 
-/usr/bin/mock --root=$build_target --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}` --rebuild ${PWD}/*.src.rpm
+echo "=::=::=::= `date` =::=::=::= "
+echo "=::=::=::= Beginning Linux Build =::=::=::= "
 
+make_srpm 
+results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}`
+
+rm -f $results/build.log
+/usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
-cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/x86_64/build.log
+
+cat $results/build.log
 
 if [ $rc != 0 ]; then
+    echo "=::=::=::= Linux Build Failed =::=::=::= "
+    echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
+
+ls -al $results
+
+
+echo "=::=::=::= `date` =::=::=::= "
+echo "=::=::=::= Beginning Windows Build =::=::=::= "
 
 make_srpm mingw32-
-/usr/bin/mock --root=$build_target --resultdir=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch --rebuild ${PWD}/*.src.rpm
+results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch
 
+rm -f $results/build.log
+/usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
-cat $AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch/build.log
+
+cat $results/build.log
 
 if [ $rc != 0 ]; then
+    echo "=::=::=::= Windows Build Failed =::=::=::= "
+    echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
+
+ls -al $results
