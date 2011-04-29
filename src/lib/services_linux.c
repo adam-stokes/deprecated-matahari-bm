@@ -51,6 +51,8 @@ read_output(int fd, gpointer user_data)
     int rc = 0, len = 0;
     gboolean is_err = FALSE;
     svc_action_t* op = (svc_action_t *)user_data;
+    char buf[500];
+    static const size_t buf_read_len = sizeof(buf) - 1;
 
     if(fd == op->opaque->stderr_fd) {
         is_err = TRUE;
@@ -64,8 +66,7 @@ read_output(int fd, gpointer user_data)
     }
 
     do {
-        char buf[500];
-        rc = read(fd, buf, 500);
+        rc = read(fd, buf, buf_read_len);
         if(rc > 0) {
             buf[rc] = 0;
             data = realloc(data, len + rc + 1);
@@ -80,7 +81,7 @@ read_output(int fd, gpointer user_data)
             break;
         }
 
-    } while (rc == 500 || rc < 0);
+    } while (rc == buf_read_len || rc < 0);
 
     if (data != NULL && is_err) {
         op->stderr_data = data;
@@ -126,7 +127,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     /* TODO: Add OCF_RESKEY_ prefix to 'key' */
     char buffer[500];
-    snprintf(buffer, 500, "OCF_RESKEY_%s", (char*)key);
+    snprintf(buffer, sizeof(buffer), "OCF_RESKEY_%s", (char*)key);
     set_ocf_env(buffer, value, user_data);
 }
 
@@ -382,7 +383,7 @@ services_os_get_directory_list(const char *root, gboolean files)
 #if __linux__
     struct dirent **namelist;
     int entries = 0, lpc = 0;
-    char buffer[FILENAME_MAX+1];
+    char buffer[PATH_MAX];
 
     entries = scandir(root, &namelist, NULL, alphasort);
     if (entries <= 0) {
@@ -396,7 +397,7 @@ services_os_get_directory_list(const char *root, gboolean files)
             continue;
         }
 
-        snprintf(buffer, FILENAME_MAX, "%s/%s", root, namelist[lpc]->d_name);
+        snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
 
         stat(buffer, &sb);
         if(S_ISDIR(sb.st_mode)) {
@@ -444,8 +445,7 @@ services_os_set_exec(svc_action_t* op)
         op->opaque->args[3] = NULL;
 
     } else {
-        op->opaque->exec = malloc(500);
-        snprintf(op->opaque->exec, 500, "%s/%s", LSB_ROOT, op->agent);
+        asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT, op->agent);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
@@ -467,7 +467,7 @@ GList *resources_os_list_ocf_agents(const char *provider)
 {
     if(provider) {
         char buffer[500];
-        snprintf(buffer, 500, "%s//resource.d/%s", OCF_ROOT, provider);
+        snprintf(buffer, sizeof(buffer), "%s//resource.d/%s", OCF_ROOT, provider);
         return get_directory_list(buffer, TRUE);
     }
     return NULL;
