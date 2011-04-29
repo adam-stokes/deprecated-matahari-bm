@@ -48,8 +48,8 @@ function make_srpm() {
 
 env
 
-# Until qpid is usable somewhere
-#build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+# When qpid is consistently usable 
+# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
 build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
 echo "=::=::=::= `date` =::=::=::= "
@@ -62,19 +62,24 @@ rm -f $results/build.log
 /usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
 
-cat $results/build.log
-
 if [ $rc != 0 ]; then
+    cat $results/build.log
     echo "=::=::=::= Linux Build Failed =::=::=::= "
     echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
 
-ls -al $results
+createrepo $results
 
+# Until qpid is usable again on mingw32
+exit $rc
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
+
+# When qpid is consistently usable 
+# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+build_target=`rpm --eval fedora-14-%{_arch}`
 
 make_srpm mingw32-
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch
@@ -83,12 +88,11 @@ rm -f $results/build.log
 /usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
 
-cat $results/build.log
-
 if [ $rc != 0 ]; then
+    cat $results/build.log
     echo "=::=::=::= Windows Build Failed =::=::=::= "
     echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
 
-ls -al $results
+createrepo $results
