@@ -16,34 +16,18 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-source ./mh_common.sh
-
 CERT_DIR=`pwd`/test_cert_db
 CERT_PW_FILE=`pwd`/cert.password
+TEST_HOSTNAME=127.0.0.1
 TEST_CLIENT_CERT=agent
-COUNT=10
 
-trap cleanup EXIT
+trap EXIT
 
 error() { echo $*; exit 1; }
 
-create_certs() {
-    #create certificate and key databases with single, simple, self-signed certificate in it
-    mkdir ${CERT_DIR}
-    certutil -N -d ${CERT_DIR} -f ${CERT_PW_FILE}
-    certutil -S -d ${CERT_DIR} -n ${TEST_HOSTNAME} -s "CN=${TEST_HOSTNAME}" -t "CT,," -x -f ${CERT_PW_FILE} -z /usr/bin/certutil
-    certutil -S -d ${CERT_DIR} -n ${TEST_CLIENT_CERT} -s "CN=${TEST_CLIENT_CERT}" -t "CT,," -x -f ${CERT_PW_FILE} -z /usr/bin/certutil
-}
-
-delete_certs() {
-    if [[ -e ${CERT_DIR} ]] ;  then
-        rm -rf ${CERT_DIR}
-    fi
-}
-
-cleanup() {
-    delete_certs
-}
+if [[ -e ${CERT_DIR} ]] ;  then
+    rm -rf ${CERT_DIR}
+fi
 
 CERTUTIL=$(type -p certutil)
 if [[ !(-x $CERTUTIL) ]] ; then
@@ -55,4 +39,14 @@ if [[ !(-e ${CERT_PW_FILE}) ]] ;  then
     echo password > ${CERT_PW_FILE}
 fi
 
-create_certs
+#create certificate and key databases with single, simple, self-signed certificate in it
+mkdir ${CERT_DIR}
+certutil -N -d ${CERT_DIR} -f ${CERT_PW_FILE}
+certutil -S -d ${CERT_DIR} -n ${TEST_HOSTNAME} -s "CN=${TEST_HOSTNAME}" -t "CT,," -x -f ${CERT_PW_FILE}
+certutil -S -d ${CERT_DIR} -n ${TEST_CLIENT_CERT} -s "CN=${TEST_CLIENT_CERT}" -t "CT,," -x -f ${CERT_PW_FILE}
+
+export QPID_SSL_CERT_DB=${CERT_DIR}
+export QPID_SSL_CERT_PASSWORD_FILE=${CERT_PW_FILE}
+
+
+
