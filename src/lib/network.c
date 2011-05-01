@@ -56,7 +56,7 @@ query_interface_table(void)
 }
 
 GList *
-network_get_interfaces(void)
+mh_network_get_interfaces(void)
 {
     GList *list = NULL;
     list = query_interface_table();
@@ -64,32 +64,32 @@ network_get_interfaces(void)
 }
 
 void
-network_start(const char *iface)
+mh_network_start(const char *iface)
 {
     network_os_start(iface);
 }
 
 void
-network_stop(const char *iface)
+mh_network_stop(const char *iface)
 {
     network_os_stop(iface);
 }
 
 void
-network_restart(const char *iface)
+mh_network_restart(const char *iface)
 {
     network_os_stop(iface);
     network_os_start(iface);
 }
 
 void
-network_status(const char *iface, uint64_t *flags)
+mh_network_status(const char *iface, uint64_t *flags)
 {
     GList *list = NULL;
     GList *plist;
     sigar_net_interface_config_t *ifconfig;
 
-    list = network_get_interfaces();
+    list = mh_network_get_interfaces();
     for(plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         ifconfig = (sigar_net_interface_config_t *)plist->data;
         if((g_str_equal(ifconfig->name, iface)) == TRUE) {
@@ -99,7 +99,7 @@ network_status(const char *iface, uint64_t *flags)
 }
 
 const char *
-network_get_ip_address(const char *iface)
+mh_network_get_ip_address(const char *iface)
 {
     GList *list = NULL;
     GList *plist;
@@ -107,7 +107,7 @@ network_get_ip_address(const char *iface)
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
     char *paddr_str;
 
-    list = network_get_interfaces();
+    list = mh_network_get_interfaces();
     for(plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         ifconfig = (sigar_net_interface_config_t *)plist->data;
         if((g_str_equal(ifconfig->name, iface)) == TRUE) {
@@ -120,14 +120,14 @@ network_get_ip_address(const char *iface)
 }
 
 const char *
-network_get_mac_address(const char *iface)
+mh_network_get_mac_address(const char *iface)
 {
     GList *list = NULL;
     GList *plist;
     sigar_net_interface_config_t *ifconfig;
     char *mac;
 
-    list = network_get_interfaces();
+    list = mh_network_get_interfaces();
     for(plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         ifconfig = (sigar_net_interface_config_t *)plist->data;
         if((g_str_equal(ifconfig->name, iface)) == TRUE) {
