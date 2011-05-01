@@ -348,7 +348,7 @@ mh_hostname(void)
 
   if(hostname != NULL && strcmp(hostname, "localhost") == 0) {
       free(hostname);
-      hostname = mh_uuid();
+      hostname = strdup(mh_uuid());
   }
 
   mh_trace("Got hostname: %s", hostname);
