@@ -25,6 +25,8 @@
 #ifndef __MH_UTILITIES__
 #define __MH_UTILITIES__
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
@@ -33,6 +35,17 @@ extern const char *mh_uuid(void);
 extern const char *mh_hostname(void);
 extern void mh_abort(const char *file, const char *function, int line,
 		     const char *assert_condition, int do_core, int do_fork);
+
+#ifndef HAVE_ASPRINTF
+/**
+ * Custom implementation of asprintf()
+ *
+ * This version of asprintf() is only used when the build system doesn't find
+ * asprintf() on the system.  For more information on how to use asprintf(),
+ * see its man page.
+ */
+extern int asprintf(char **ret, const char *fmt, ...);
+#endif
 
 #define DIMOF(a)	((int) (sizeof(a) / sizeof(0[a])))
 

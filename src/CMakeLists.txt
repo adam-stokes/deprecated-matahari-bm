@@ -33,6 +33,8 @@ file(GLOB SCHEMAS "${CMAKE_CURRENT_SOURCE_DIR}/*.xml")
 include (CheckIncludeFiles)
 check_include_files (string.h HAVE_STRING_H)
 check_include_files (sys/ioctl.h HAVE_SYS_IOCTL_H)
+include (CheckFunctionExists)
+check_function_exists (asprintf HAVE_ASPRINTF)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h)
 

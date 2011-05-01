@@ -16,9 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "config.h"
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -391,3 +394,35 @@ mh_uuid(void)
   mh_trace("Got uuid: %s", uuid);
   return uuid;
 }
+
+#ifndef HAVE_ASPRINTF
+int
+asprintf(char **ret, const char *fmt, ...)
+{
+    va_list ap;
+    int len;
+    char buf[1];
+
+    /*
+     * Ask vsnprintf() how many characters it would write if the buffer
+     * were big enough.
+     */
+    va_start(ap, fmt);
+    len = vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+
+    /*
+     * Now go allocate a buffer that is big enough.
+     */
+    *ret = malloc(len + 1);
+
+    /*
+     * Now vsnprintf() the string into the final result buffer.
+     */
+    va_start(ap, fmt);
+    vsnprintf(*ret, len + 1, fmt, ap);
+    va_end(ap);
+
+    return len;
+}
+#endif /* HAVE_ASPRINTF */
