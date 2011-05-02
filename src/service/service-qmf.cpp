@@ -20,6 +20,11 @@
 #include "config.h"
 #endif
 
+extern "C" {
+#include <stdlib.h>
+#include <string.h>
+};
+
 #include <string>
 #include <qpid/management/Manageable.h>
 #include <qpid/agent/ManagementAgent.h>
@@ -32,13 +37,11 @@ extern "C" {
 #include "matahari/services.h"
 }
 
+enum service_id { SRV_RESOURCES, SRV_SERVICES };
+
 class SrvAgent : public MatahariAgent
 {
     private:
-        static void mh_service_callback(svc_action_t *op);
-        static void mh_resource_callback(svc_action_t *op);
-        void raiseEvent(svc_action_t *op, int service);
-
         qmf::Data _services;
         qmf::DataAddr _services_addr;
 
@@ -54,28 +57,62 @@ class SrvAgent : public MatahariAgent
         virtual int setup(qmf::AgentSession session);
         virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                                 gpointer user_data);
+        void raiseEvent(svc_action_t *op, enum service_id service);
 };
 
+/**
+ * Async process callback
+ *
+ * This class is used to store off some data that will be needed in the
+ * callback for a result from an asynchronous services API call being executed.
+ */
+class AsyncCB {
+public:
+    AsyncCB(SrvAgent *_agent, enum service_id _service,
+            qmf::AgentSession& _session, qmf::AgentEvent& _event) :
+            agent(_agent), service(_service), session(_session), event(_event),
+            last_rc(0), first_result(true) {};
+    ~AsyncCB() {};
 
-extern "C" {
-#include <stdlib.h>
-#include <string.h>
+    static void mh_async_callback(svc_action_t *op);
+
+    /** Cached SrvAgent instance */
+    SrvAgent *agent;
+    /** Which service this callback is associated with */
+    enum service_id service;
+    /** The QMF session that initiated this async action */
+    qmf::AgentSession session;
+    /** The method call that initiated this async action */
+    qmf::AgentEvent event;
+    /** The last result code for recurring actions */
+    int last_rc;
+    /** true if this is the first callback. */
+    bool first_result;
 };
 
 void
-SrvAgent::mh_service_callback(svc_action_t *op)
+AsyncCB::mh_async_callback(svc_action_t *op)
 {
-    SrvAgent *agent = static_cast<SrvAgent *>(op->cb_data);
-    mh_trace("Completed: %s = %d\n", op->id, op->rc);
-    agent->raiseEvent(op, 1);
-}
+    AsyncCB *cb_data = static_cast<AsyncCB *>(op->cb_data);
 
-void
-SrvAgent::mh_resource_callback(svc_action_t *op)
-{
-    SrvAgent *agent = static_cast<SrvAgent *>(op->cb_data);
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
-    agent->raiseEvent(op, 0);
+
+    if (cb_data->first_result) {
+        cb_data->event.addReturnArgument("rc", op->rc);
+        cb_data->session.methodSuccess(cb_data->event);
+        cb_data->first_result = false;
+    } else if (cb_data->last_rc != op->rc) {
+        mh_trace("Result changed on recurring action: was '%d', now '%d'\n",
+                cb_data->last_rc, op->rc);
+        cb_data->agent->raiseEvent(op, cb_data->service);
+    }
+
+    if (op->interval) { /* recurring action */
+        cb_data->last_rc = op->rc;
+    } else {
+        delete cb_data;
+        op->cb_data = NULL;
+    }
 }
 
 static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
@@ -107,7 +144,7 @@ main(int argc, char **argv)
     return rc;
 }
 
-void SrvAgent::raiseEvent(svc_action_t *op, int service)
+void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
 {
     uint64_t timestamp = 0L;
     qmf::Data event;
@@ -188,6 +225,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
     }
 
     qpid::types::Variant::Map& args = event.getArguments();
+    bool async = false;
 
     if (methodName == "list") {
         _qtype::Variant::List s_list;
@@ -234,12 +272,9 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
                 args["timeout"]);
 
         if(args["interval"]) {
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
-            return TRUE;
-
-            op->cb_data = this;
-            services_action_async(op, mh_service_callback);
-            event.addReturnArgument("rc", OCF_PENDING);
+            op->cb_data = new AsyncCB(this, SRV_SERVICES, session, event);
+            services_action_async(op, AsyncCB::mh_async_callback);
+            async = true;
 
         } else {
             services_action_sync(op);
@@ -258,7 +293,10 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
         return TRUE;
     }
 
-    session.methodSuccess(event);
+    if (!async) {
+        session.methodSuccess(event);
+    }
+
     return TRUE;
 }
 
@@ -271,6 +309,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
     }
 
     qpid::types::Variant::Map& args = event.getArguments();
+    bool async = false;
 
     if (methodName == "list_classes") {
         _qtype::Variant::List c_list;
@@ -330,12 +369,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 "monitor", args["interval"], args["timeout"], params);
 
         if(op->interval) {
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
-            return TRUE;
-
-            op->cb_data = this;
-            services_action_async(op, mh_resource_callback);
-            event.addReturnArgument("rc", OCF_PENDING);
+            op->cb_data = new AsyncCB(this, SRV_RESOURCES, session, event);
+            services_action_async(op, AsyncCB::mh_async_callback);
+            async = true;
 
         } else {
             services_action_sync(op);
@@ -352,12 +388,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 args["interval"], args["timeout"], params);
 
         if(op->interval) {
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
-            return TRUE;
-
-            op->cb_data = this;
-            services_action_async(op, mh_resource_callback);
-            event.addReturnArgument("rc", OCF_PENDING);
+            op->cb_data = new AsyncCB(this, SRV_RESOURCES, session, event);
+            services_action_async(op, AsyncCB::mh_async_callback);
+            async = true;
 
         } else {
             services_action_sync(op);
@@ -375,6 +408,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
         return TRUE;
     }
 
-    session.methodSuccess(event);
+    if (!async) {
+        session.methodSuccess(event);
+    }
+
     return TRUE;
 }
