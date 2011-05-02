@@ -166,8 +166,7 @@ void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
     event.setProperty("timestamp", timestamp);
     event.setProperty("sequence", 0);
 
-
-    if(service == 0) {
+    if (service == SRV_RESOURCES) {
         event.setProperty("rsc_type", op->agent);
         event.setProperty("rsc_class", op->rclass);
         event.setProperty("rsc_provider", op->provider);
