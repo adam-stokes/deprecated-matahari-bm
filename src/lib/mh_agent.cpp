@@ -38,6 +38,7 @@ int use_stderr = 0;
 #include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
+#include <qpid/sys/ssl/util.h>
 #include <qmf/DataAddr.h>
 #include "matahari/mh_agent.h"
 
@@ -151,8 +152,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     char *username  = NULL;
     char *password  = NULL;
     char *service   = NULL;
-    char *ssl_cert_name = NULL;
     char *ssl_cert_db = NULL;
+    char *ssl_cert_name = NULL;
     char *ssl_cert_password_file = NULL;
     int serverport  = MATAHARI_PORT;
     int res = 0;
@@ -311,20 +312,23 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         }
     }
     
-    if (ssl_cert_name) {
-        if((getenv("QPID_SSL_CERT_DB")) == NULL || (getenv("QPID_SSL_CERT_PASSWORD_FILE")) == NULL) {
-            fprintf(stderr, "Unable to read QPID_SSL environment variables. See --help for SSL options.\n");
+    if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
+        if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
+            fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
             exit(1);
-        } else {
-            if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
-                fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
-                exit(1);
-            }
-            if (!g_file_test(ssl_cert_db, G_FILE_TEST_IS_DIR)) {
-                fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
-                exit(1);
-            }
         }
+        if (!g_file_test(ssl_cert_db, G_FILE_TEST_IS_DIR)) {
+            fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
+            exit(1);
+        }
+        qpid::sys::ssl::SslOptions ssl_options;
+        ssl_options.certDbPath = strdup(ssl_cert_db);
+        ssl_options.certName = strdup(ssl_cert_name);
+        ssl_options.certPasswordFile = strdup(ssl_cert_password_file);
+        qpid::sys::ssl::initNSS(ssl_options, true);
+    } else {
+        fprintf(stderr, "Attempted to start with SSL without all required options. See --help\n");
+        exit(1);
     }
     
 #endif
@@ -359,9 +363,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     }
     if (gssapi) {
         options["sasl-mechanism"] = "GSSAPI";
-    }
-    if (ssl_cert_name) {
-        options["ssl-cert-name"] = ssl_cert_name;
     }
 
     std::stringstream url;

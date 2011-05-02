@@ -1,0 +1,4 @@
+Matahari Tests:
+
+    ssl/ - beaker tests for use with RHTS and Fedora
+           must have `beakerlib` installed.

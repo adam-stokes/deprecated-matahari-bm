@@ -1,0 +1,6 @@
+PURPOSE of /matahari/Sanity/mh_ssl_test
+Description: Test SSL agent connections
+Author: Adam Stokes <astokes@fedoraproject.org>
+
+This test performs certification database creation and verifies an SSL
+connection can be made.

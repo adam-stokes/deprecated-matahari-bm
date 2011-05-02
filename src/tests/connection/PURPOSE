@@ -1,0 +1,6 @@
+PURPOSE of /matahari/Sanity/mh_simple_connect
+Description: Test simple agent connections
+Author: Adam Stokes <astokes@fedoraproject.org>
+
+This test performs some simple connection sequences to verify matahari
+agents are able to connect and talk with the broker.
