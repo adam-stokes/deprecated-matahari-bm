@@ -37,11 +37,17 @@ extern "C" {
 #include "matahari/services.h"
 }
 
-enum service_id { SRV_RESOURCES, SRV_SERVICES };
+enum service_id {
+    SRV_RESOURCES,
+    SRV_SERVICES
+};
 
 class SrvAgent : public MatahariAgent
 {
     private:
+        void action_async(enum service_id service, qmf::AgentSession& session,
+                          qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
+
         qmf::Data _services;
         qmf::DataAddr _services_addr;
 
@@ -69,9 +75,10 @@ class SrvAgent : public MatahariAgent
 class AsyncCB {
 public:
     AsyncCB(SrvAgent *_agent, enum service_id _service,
-            qmf::AgentSession& _session, qmf::AgentEvent& _event) :
+            qmf::AgentSession& _session, qmf::AgentEvent& _event,
+            bool _has_rc) :
             agent(_agent), service(_service), session(_session), event(_event),
-            last_rc(0), first_result(true) {};
+            has_rc(_has_rc), last_rc(0), first_result(true) {};
     ~AsyncCB() {};
 
     static void mh_async_callback(svc_action_t *op);
@@ -84,6 +91,9 @@ public:
     qmf::AgentSession session;
     /** The method call that initiated this async action */
     qmf::AgentEvent event;
+    /** Whether or not this method has an rc output param. */
+    bool has_rc;
+
     /** The last result code for recurring actions */
     int last_rc;
     /** true if this is the first callback. */
@@ -98,7 +108,9 @@ AsyncCB::mh_async_callback(svc_action_t *op)
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
 
     if (cb_data->first_result) {
-        cb_data->event.addReturnArgument("rc", op->rc);
+        if (cb_data->has_rc) {
+            cb_data->event.addReturnArgument("rc", op->rc);
+        }
         cb_data->session.methodSuccess(cb_data->event);
         cb_data->first_result = false;
     } else if (cb_data->last_rc != op->rc) {
@@ -213,6 +225,13 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
     return TRUE;
 }
 
+void
+SrvAgent::action_async(enum service_id service, qmf::AgentSession& session,
+                       qmf::AgentEvent& event, svc_action_t *op, bool has_rc)
+{
+    op->cb_data = new AsyncCB(this, SRV_SERVICES, session, event, has_rc);
+    services_action_async(op, AsyncCB::mh_async_callback);
+}
 
 gboolean
 SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
@@ -241,45 +260,39 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
         svc_action_t * op = services_action_create(
                 args["name"].asString().c_str(), "enable", 0,
                 default_timeout_ms);
-        services_action_sync(op);
-        services_action_free(op);
+
+        action_async(SRV_SERVICES, session, event, op, false);
+        async = true;
 
     } else if (methodName == "disable") {
         svc_action_t * op = services_action_create(
                 args["name"].asString().c_str(), "disable", 0,
                 default_timeout_ms);
-        services_action_sync(op);
-        services_action_free(op);
+
+        action_async(SRV_SERVICES, session, event, op, false);
+        async = true;
 
     } else if (methodName == "start") {
         svc_action_t *op = services_action_create(
                 args["name"].asString().c_str(), "start", 0, args["timeout"]);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+
+        action_async(SRV_SERVICES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "stop") {
         svc_action_t * op = services_action_create(
                 args["name"].asString().c_str(), "stop", 0, args["timeout"]);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+
+        action_async(SRV_SERVICES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "status") {
         svc_action_t *op = services_action_create(
                 args["name"].asString().c_str(), "status", args["interval"],
                 args["timeout"]);
 
-        if(args["interval"]) {
-            op->cb_data = new AsyncCB(this, SRV_SERVICES, session, event);
-            services_action_async(op, AsyncCB::mh_async_callback);
-            async = true;
-
-        } else {
-            services_action_sync(op);
-            event.addReturnArgument("rc", op->rc);
-            services_action_free(op);
-        }
+        action_async(SRV_SERVICES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "cancel") {
         services_action_cancel(
@@ -344,9 +357,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 args["provider"].asString().c_str(),
                 args["type"].asString().c_str(),
                 "start", 0, args["timeout"], params);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "stop") {
         GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
@@ -355,9 +368,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 args["provider"].asString().c_str(),
                 args["type"].asString().c_str(),
                 "stop", 0, args["timeout"], params);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "monitor") {
         GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
@@ -367,16 +380,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 args["type"].asString().c_str(),
                 "monitor", args["interval"], args["timeout"], params);
 
-        if(op->interval) {
-            op->cb_data = new AsyncCB(this, SRV_RESOURCES, session, event);
-            services_action_async(op, AsyncCB::mh_async_callback);
-            async = true;
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
-        } else {
-            services_action_sync(op);
-            event.addReturnArgument("rc", op->rc);
-            services_action_free(op);
-        }
     } else if (methodName == "invoke") {
         GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
@@ -386,16 +392,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 args["action"].asString().c_str(),
                 args["interval"], args["timeout"], params);
 
-        if(op->interval) {
-            op->cb_data = new AsyncCB(this, SRV_RESOURCES, session, event);
-            services_action_async(op, AsyncCB::mh_async_callback);
-            async = true;
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
-        } else {
-            services_action_sync(op);
-            event.addReturnArgument("rc", op->rc);
-            services_action_free(op);
-        }
     } else if (methodName == "cancel") {
         services_action_cancel(
                 args["name"].asString().c_str(),
