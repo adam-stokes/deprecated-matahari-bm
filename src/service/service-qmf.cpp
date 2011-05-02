@@ -187,6 +187,8 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
         return TRUE;
     }
 
+    qpid::types::Variant::Map& args = event.getArguments();
+
     if (methodName == "list") {
         _qtype::Variant::List s_list;
         GList *gIter = NULL;
@@ -200,36 +202,38 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 
     } else if (methodName == "enable") {
         svc_action_t * op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "enable", 0, default_timeout_ms);
+                args["name"].asString().c_str(), "enable", 0,
+                default_timeout_ms);
         services_action_sync(op);
         services_action_free(op);
 
     } else if (methodName == "disable") {
         svc_action_t * op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "disable", 0, default_timeout_ms);
+                args["name"].asString().c_str(), "disable", 0,
+                default_timeout_ms);
         services_action_sync(op);
         services_action_free(op);
 
     } else if (methodName == "start") {
         svc_action_t *op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "start", 0, event.getArguments()["timeout"]);
+                args["name"].asString().c_str(), "start", 0, args["timeout"]);
         services_action_sync(op);
         event.addReturnArgument("rc", op->rc);
         services_action_free(op);
 
     } else if (methodName == "stop") {
         svc_action_t * op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "stop", 0, event.getArguments()["timeout"]);
+                args["name"].asString().c_str(), "stop", 0, args["timeout"]);
         services_action_sync(op);
         event.addReturnArgument("rc", op->rc);
         services_action_free(op);
 
     } else if (methodName == "status") {
         svc_action_t *op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "status",
-            event.getArguments()["interval"], event.getArguments()["timeout"]);
+                args["name"].asString().c_str(), "status", args["interval"],
+                args["timeout"]);
 
-        if(event.getArguments()["interval"]) {
+        if(args["interval"]) {
             session.raiseException(event, MH_NOT_IMPLEMENTED);
             return TRUE;
 
@@ -245,8 +249,9 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 
     } else if (methodName == "cancel") {
         services_action_cancel(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
-            event.getArguments()["interval"]);
+                args["name"].asString().c_str(),
+                args["action"].asString().c_str(),
+                args["interval"]);
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
@@ -264,6 +269,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
     if(event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
+
+    qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "list_classes") {
         _qtype::Variant::List c_list;
@@ -283,7 +290,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 
     } else if (methodName == "list") {
         GList *gIter = NULL;
-        GList *agents = resources_list_ocf_agents(event.getArguments()["provider"].asString().c_str());
+        GList *agents = resources_list_ocf_agents(
+                args["provider"].asString().c_str());
         _qtype::Variant::List t_list;
 
         for(gIter = agents; gIter != NULL; gIter = gIter->next) {
@@ -292,29 +300,34 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
         event.addReturnArgument("types", t_list);
 
     } else if (methodName == "start") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), "start", 0, event.getArguments()["timeout"], params);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                "start", 0, args["timeout"], params);
         services_action_sync(op);
         event.addReturnArgument("rc", op->rc);
         services_action_free(op);
 
     } else if (methodName == "stop") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), "stop", 0, event.getArguments()["timeout"], params);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                "stop", 0, args["timeout"], params);
         services_action_sync(op);
         event.addReturnArgument("rc", op->rc);
         services_action_free(op);
 
     } else if (methodName == "monitor") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), "monitor", event.getArguments()["interval"],
-            event.getArguments()["timeout"], params);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                "monitor", args["interval"], args["timeout"], params);
 
         if(op->interval) {
             session.raiseException(event, MH_NOT_IMPLEMENTED);
@@ -330,11 +343,13 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
             services_action_free(op);
         }
     } else if (methodName == "invoke") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
-            event.getArguments()["interval"], event.getArguments()["timeout"], params);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                args["action"].asString().c_str(),
+                args["interval"], args["timeout"], params);
 
         if(op->interval) {
             session.raiseException(event, MH_NOT_IMPLEMENTED);
@@ -351,8 +366,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
         }
     } else if (methodName == "cancel") {
         services_action_cancel(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
-            event.getArguments()["interval"]);
+                args["name"].asString().c_str(),
+                args["action"].asString().c_str(),
+                args["interval"]);
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
