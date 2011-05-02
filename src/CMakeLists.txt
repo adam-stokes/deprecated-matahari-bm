@@ -72,11 +72,14 @@ if(NOT glib_FOUND)
 endif(NOT glib_FOUND)
 include_directories(${glib_INCLUDE_DIRS})
 
+# Include QMF and DBus generation macros
+include(MatahariMacros)
+
 ## dbus
 if(WITH-DBUS)
     pkg_check_modules(dbus-glib REQUIRED dbus-glib-1)
     pkg_check_modules(polkit REQUIRED polkit-gobject-1)
-    
+
     if(NOT dbus-glib_FOUND)
         message(FATAL_ERROR "dbus-glib headers/libraries not found.")
     endif(NOT dbus-glib_FOUND)
@@ -86,12 +89,7 @@ if(WITH-DBUS)
     endif(NOT polkit_FOUND)
 
     # Create src/dbus directory and generate DBus XML definition files into it
-    execute_process(COMMAND mkdir -p src/dbus)
-    find_file(XSLTPROC xsltproc)
-    execute_process(
-        COMMAND ${XSLTPROC} ${CMAKE_CURRENT_SOURCE_DIR}/schema-to-dbus.xsl ${CMAKE_CURRENT_SOURCE_DIR}/schema.xml
-        WORKING_DIRECTORY src/dbus
-    )
+    generate_dbus_interface(${SCHEMAS})
 endif(WITH-DBUS)
 
 ## qpid
@@ -108,34 +106,7 @@ if(WITH-QMF)
         message(FATAL_ERROR "QPID library not found.")
     endif(QPID-NOTFOUND)
 
-    # string(REGEX REPLACE "\\." "" QPID_VERSION ${QPID_VERSION})
-
-    # message("Building against: ${QPID_VERSION_LONG} (${QPID_VERSION} )")
-    # add_definitions(-DQPID_VERSION=${QPID_VERSION})
-
-    set(regen_schema OFF)
-    message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
-    foreach (schema_file ${SCHEMAS} ${QMFGEN})
-        foreach (file ${SCHEMA_SOURCES})
-            if (EXISTS ${file})
-                if (${schema_file} IS_NEWER_THAN ${file})
-                    set(regen_schema ON)
-                message("${schema_file} is newer than ${file}")
-                endif (${schema_file} IS_NEWER_THAN ${file})
-            else (EXISTS ${file})
-                set(regen_schema ON)
-            endif (EXISTS ${file})
-        endforeach (file ${SCHEMA_SOURCES})
-    endforeach (schema_file ${SCHEMAS})
-
-    if (regen_schema)
-        # Regenerate everything 
-        execute_process(COMMAND rm -f ${SCHEMA_SOURCES})
-        execute_process(COMMAND ${QMFGEN} -2 -o ./qmf ${SCHEMAS}
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    else (regen_schema)
-        message(STATUS "No need to generate QMF schema")
-    endif (regen_schema)
+    generate_qmf_schemas(${SCHEMAS} ${SCHEMA_SOURCES})
 endif(WITH-QMF)
 
 
@@ -149,6 +120,7 @@ add_subdirectory(service)
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
 install(FILES cmake/modules/FindMatahari.cmake DESTINATION share/cmake/Modules)
+install(FILES cmake/modules/MatahariMacros.cmake DESTINATION share/cmake/Modules)
 
 if(WITH-QMF)
     install(FILES cmake/modules/FindQPID.cmake DESTINATION share/cmake/Modules)
@@ -159,5 +131,4 @@ if(WITH-DBUS)
     install(FILES schema-to-dbus.xsl DESTINATION share/matahari)
     install(FILES include/matahari/mh_dbus_common.h DESTINATION include/matahari)
     install(FILES include/matahari/mh_gobject_class.h DESTINATION include/matahari)
-    install(FILES cmake/modules/MatahariDBusMacros.cmake DESTINATION share/cmake/Modules)
 endif(WITH-DBUS)

@@ -24,7 +24,6 @@ endif(WITH-QMF)
 # DBus daemon
 if(WITH-DBUS)
     # Auto-generated stuff
-    include(MatahariDBusMacros)
     generate_dbus_headers(${BASE} ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Host.xml)
     # Must be included to find matahari-API-dbus-properties.h
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
