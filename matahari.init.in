@@ -23,7 +23,7 @@
 
 SERVICE=`readlink -f "$0"`
 SERVICE=`basename "$SERVICE"`
-PROCESS=`echo "$SERVICE"d`
+PROCESS=`echo "$SERVICE" | cut -f1 -d'-'`-qmf-`echo "$SERVICE" | cut -f2 -d'-'`d
 
 RETVAL=0
 
