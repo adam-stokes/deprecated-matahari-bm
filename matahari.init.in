@@ -21,9 +21,8 @@
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-SERVICE=`readlink -f "$0"`
-SERVICE=`basename "$SERVICE"`
-PROCESS=`echo "$SERVICE" | cut -f1 -d'-'`-qmf-`echo "$SERVICE" | cut -f2 -d'-'`d
+SERVICE=$(basename $(readlink -f "$0"))
+PROCESS=${SERVICE/-/-qmf-}d
 
 RETVAL=0
 
