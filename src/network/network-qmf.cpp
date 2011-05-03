@@ -127,7 +127,8 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
         event.addReturnArgument("status", rc);
     } else if (methodName == "status") {
         consoleEvent.setProperty("status","Status is a GOGO");
-        consoleEvent.setProperty("ip", network_get_ip_address("wlan0"));
+        consoleEvent.setProperty("ip", mh_network_get_ip_address("eth0"));
+        consoleEvent.setProperty("iface", "eth0");
         _agent_session.raiseEvent(consoleEvent);
         event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
     } else if (methodName == "get_ip_address") {

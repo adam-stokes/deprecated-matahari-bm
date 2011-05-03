@@ -38,7 +38,7 @@ int use_stderr = 0;
 #include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
-#include <qpid/sys/ssl/util.h>
+// #include <qpid/sys/ssl/util.h>
 #include <qmf/DataAddr.h>
 #include "matahari/mh_agent.h"
 
@@ -321,14 +321,13 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
             exit(1);
         }
+        /* ssl options, no ssl headers from qpid?
         qpid::sys::ssl::SslOptions ssl_options;
         ssl_options.certDbPath = strdup(ssl_cert_db);
         ssl_options.certName = strdup(ssl_cert_name);
         ssl_options.certPasswordFile = strdup(ssl_cert_password_file);
         qpid::sys::ssl::initNSS(ssl_options, true);
-    } else {
-        fprintf(stderr, "Attempted to start with SSL without all required options. See --help\n");
-        exit(1);
+        */
     }
     
 #endif

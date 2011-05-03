@@ -8,7 +8,8 @@
 
    <!-- Network API -->
    <arg name="status"        type="sstr" />
-   <arg name="ip"            type="sstr" /> 
+   <arg name="ip"            type="sstr" />
+   <arg name="iface"         type="sstr" />
 
    <!-- Services API -->
    <arg name="name"             type="sstr" />
@@ -96,7 +97,7 @@
      <arg name="iface"          dir="I"  type="sstr" />
      <arg name="status"         dir="O"  type="uint32" />
    </method>
-   <method name="get_ip_address" desc="Obtain ip addressof a network interface">
+   <method name="get_ip_address" desc="Obtain ip address of a network interface">
      <arg name="iface"          dir="I"  type="sstr" />
      <arg name="ip"             dir="O"  type="sstr" />
    </method>
@@ -106,7 +107,7 @@
    </method>
  </class>
 
- <event name="network_overseer" args="status,ip" />
+ <event name="network_overseer" args="status,ip,iface" />
  <!-- Services API -->
 
  <!-- Is sequence needed? How to tie to the async method call seq? -->

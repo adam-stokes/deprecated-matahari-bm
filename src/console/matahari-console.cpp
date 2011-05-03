@@ -24,7 +24,9 @@
 #include <qpid/messaging/Duration.h>
 #include <qmf/ConsoleSession.h>
 #include <qmf/ConsoleEvent.h>
+#include <qmf/Agent.h>
 #include <qmf/Data.h>
+#include <qmf/DataAddr.h>
 #include <qpid/types/Variant.h>
 
 #include "qmf/org/matahariproject/QmfPackage.h"
@@ -39,11 +41,12 @@ using qpid::messaging::Duration;
 
 int main(int argc, char** argv)
 {
-    string url("amqp:ssl:127.0.0.1:5674");
+    string url("amqp:tcp:127.0.0.1:49000");
     qpid::types::Variant::Map connectionOptions;
+    qpid::types::Variant::Map dataProperties;
+    qpid::types::Variant::Map consoleArgs;
     string sessionOptions;
-
-    connectionOptions["ssl-cert-name"] = "agent";
+    
     connectionOptions["reconnect"] = false;
 
     qpid::messaging::Connection connection(url, connectionOptions);
@@ -52,6 +55,7 @@ int main(int argc, char** argv)
     ConsoleSession session(connection, sessionOptions);
     session.open();
 
+    Agent agent;
     while (true) {
         ConsoleEvent event;
         if(session.nextEvent(event)) {
@@ -59,9 +63,18 @@ int main(int argc, char** argv)
                 case CONSOLE_EVENT:
                     {
                         const Data& data(event.getData(0));
-                        cout << "Event: timestamp=" << event.getTimestamp() << " severity=" <<
-                            event.getSeverity() << " content=" << data.getProperties() << endl;
+                        dataProperties = data.getProperties();
+                        cout << "Received status update from ip:" << dataProperties["ip"] << endl;
+                        cout << "Performing re-status on interface:" << dataProperties["iface"] << endl;
+                        consoleArgs["iface"] = dataProperties["iface"];
+                        agent = event.getAgent();
+                        cout << agent.getAttributes() << endl;
+                        /* segfaults, and its late at night
+                        ConsoleEvent result(agent.callMethod("status", consoleArgs, data.getAddr()));
+                        cout << result << endl;
+                        */
                     }
+                    break;
                 default: {}
             }
         }
