@@ -31,6 +31,7 @@ extern "C" {
 #include <string.h>
 #include <glib.h>
 #include <glib/gprintf.h>
+#include "matahari/mh_agent_config.h"
 #include "matahari/logging.h"
 #include "matahari/network.h"
 #include "matahari/host.h"
@@ -67,6 +68,7 @@ ConfigAgent::setup(qmf::AgentSession session)
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
+    _instance.setProperty("configured", mh_is_configured());
 
     _agent_session.addData(_instance);
     return 0;
@@ -81,12 +83,10 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     }
 
     const std::string& methodName(event.getMethodName());
-    qmf::Data consoleEvent = qmf::Data(_package.event_configure_me);
 
     if (methodName == "configure") {
-        consoleEvent.setProperty("ip", event.getArguments()["ip"].asString().c_str());
-        _agent_session.raiseEvent(consoleEvent);
-        event.addReturnArgument("ip", event.getArguments()["ip"].asString().c_str());
+        int rc = mh_is_configured();
+        event.addReturnArgument("configured", rc);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

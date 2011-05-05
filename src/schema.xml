@@ -43,8 +43,6 @@
 
    <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
 
-   <property name="status"           type="sstr"   access="RW" desc="Receive some status updates based on events"/>
-
    <!-- statistics -->
    <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
    <statistic name="sequence"        type="uint32"  desc="The heartbeat sequence number." />
@@ -254,8 +252,7 @@
  <class name="Config">
    <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
    <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
-   <method name="configure"     desc="Send configure method">
-    <arg name="ip"              dir="IO" type="sstr" />
-   </method>
+   <property name="configured"  type="uint32" access="RO" desc="Am I configured?" />
+   <method name="configure"     desc="Send configure method" />
  </class>
 </schema>

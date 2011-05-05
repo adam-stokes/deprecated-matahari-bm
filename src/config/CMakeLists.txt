@@ -5,7 +5,7 @@ set(QMF_AGENT "matahari-qmf-${BASE}d")
 # QMF daemon
 if(WITH-QMF)
     add_executable(${QMF_AGENT} ${BASE}-qmf.cpp ${SCHEMA_SOURCES})
-    target_link_libraries(${QMF_AGENT} mcommon mcommon_qmf mnetwork mhost)
+    target_link_libraries(${QMF_AGENT} ${BASE_LIB} mcommon mcommon_qmf)
 
     target_link_libraries(${QMF_AGENT} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
     if(QPIDTYPES_LIBRARY)

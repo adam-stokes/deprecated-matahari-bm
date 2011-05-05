@@ -43,8 +43,9 @@ using qpid::messaging::Duration;
 int main(int argc, char** argv)
 {
     string url("amqp:tcp:127.0.0.1:49000");
+    const string methodName("configure");
     qpid::types::Variant::Map connectionOptions;
-    qpid::types::Variant::Map dataProperties; agent
+    qpid::types::Variant::Map dataProperties;
     string sessionOptions;
     
     connectionOptions["reconnect"] = false;
@@ -60,11 +61,19 @@ int main(int argc, char** argv)
         ConsoleEvent event;
         if(session.nextEvent(event)) {
             switch(event.getType()) {
-                case CONSOLE_EVENT:
+                case CONSOLE_AGENT_ADD:
                     {
-                        const Data& data(event.getData(0));
-                        dataProperties = data.getProperties();
-                        cout << "Received status update from ip : " << dataProperties << endl;
+                        cout << "Agent added : " << event.getAgent().getName() << endl;
+                        agent = event.getAgent();
+                        ConsoleEvent result(agent.query("{class:Config, package:'org.matahariproject'}"));
+                        if(result.getDataCount() == 1) {
+                            const Data& data(result.getData(0));
+                            dataProperties = data.getProperties();
+                            cout << "data : " << dataProperties << endl;
+                            ConsoleEvent result(agent.callMethod(methodName, dataProperties, data.getAddr(), qpid::messaging::Duration(4000)));
+                        } else {
+                            cout << "No objects in query" << endl;
+                        }
                     }
                     break;
                 default: {}
