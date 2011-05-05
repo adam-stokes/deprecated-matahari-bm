@@ -11,7 +11,12 @@ if(WIN32)
 else(WIN32)
    set(VARIANT "linux")
    # DBus makes sense only on linux
-   option(WITH-DBUS "Build the DBus daemon" ON)
+   # WITH-DBUS == OFF means no DBus,
+   #              TRY means autodetection
+   #              ON means explicit support
+   if(NOT DEFINED WITH-DBUS)
+      set(WITH-DBUS "TRY" CACHE STRING "Build the DBus daemons (ON|TRY|OFF)")
+   endif(NOT DEFINED WITH-DBUS)
 endif(WIN32)
 option(WITH-QMF "Build the QMF daemon" ON)
 
@@ -78,7 +83,8 @@ include_directories(${glib_INCLUDE_DIRS})
 include(MatahariMacros)
 
 ## dbus
-if(WITH-DBUS)
+if(WITH-DBUS STREQUAL "ON")
+    # Explicitly turned ON => fail when not found
     pkg_check_modules(dbus-glib REQUIRED dbus-glib-1)
     pkg_check_modules(polkit REQUIRED polkit-gobject-1)
 
@@ -89,9 +95,30 @@ if(WITH-DBUS)
     if(NOT polkit_FOUND)
         message(FATAL_ERROR "polkit headers/libraries not found.")
     endif(NOT polkit_FOUND)
+elseif(WITH-DBUS STREQUAL "OFF")
+    # Explicitly turned OFF => no action
+else(WITH-DBUS STREQUAL "ON")
+    # All other options means TRY
+    pkg_check_modules(dbus-glib dbus-glib-1)
+    pkg_check_modules(polkit polkit-gobject-1)
 
+    if(NOT dbus-glib_FOUND)
+        message(STATUS "dbus-glib headers/libraries not found => DBus disabled")
+        set(WITH-DBUS "OFF")
+    endif(NOT dbus-glib_FOUND)
+
+    if(NOT polkit_FOUND)
+        message(STATUS "polkit headers/libraries not found => DBus disabled")
+        set(WITH-DBUS "OFF")
+    endif(NOT polkit_FOUND)
+endif(WITH-DBUS STREQUAL "ON")
+
+if(WITH-DBUS)
+    message(STATUS "DBus is enabled")
     # Create src/dbus directory and generate DBus XML definition files into it
     generate_dbus_interface(${SCHEMAS})
+else(WITH-DBUS)
+    message(STATUS "DBus is disabled")
 endif(WITH-DBUS)
 
 ## qpid
