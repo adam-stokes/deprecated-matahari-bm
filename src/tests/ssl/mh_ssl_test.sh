@@ -27,6 +27,9 @@ TEST_HOSTNAME=127.0.0.1
 TEST_CLIENT_CERT=agent
 SSL_PORT=5674
 
+export QPID_SSL_CERT_DB=${CERT_DIR}
+export QPID_SSL_CERT_PASSWORD_FILE=${CERT_PW_FILE}
+
 rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm $PACKAGE
@@ -53,6 +56,3 @@ rlJournalStart
     rlPhaseEnd
 rlJournalEnd
 rlJournalPrintText
-
-#export QPID_SSL_CERT_DB=${CERT_DIR}
-#export QPID_SSL_CERT_PASSWORD_FILE=${CERT_PW_FILE}

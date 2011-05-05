@@ -95,7 +95,6 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
     }
 
     const std::string& methodName(event.getMethodName());
-    qmf::Data consoleEvent = qmf::Data(_package.event_network_overseer);
 
     if (methodName == "list") {
         GList *plist = NULL;
@@ -126,10 +125,6 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
         }
         event.addReturnArgument("status", rc);
     } else if (methodName == "status") {
-        consoleEvent.setProperty("status","Status is a GOGO");
-        consoleEvent.setProperty("ip", mh_network_get_ip_address("eth0"));
-        consoleEvent.setProperty("iface", "eth0");
-        _agent_session.raiseEvent(consoleEvent);
         event.addReturnArgument("status", interface_status(event.getArguments()["iface"].asString().c_str()));
     } else if (methodName == "get_ip_address") {
         event.addReturnArgument("ip", mh_network_get_ip_address(event.getArguments()["iface"].asString().c_str()));

@@ -27,6 +27,7 @@
 #include <qmf/Agent.h>
 #include <qmf/Data.h>
 #include <qmf/DataAddr.h>
+#include <qmf/Query.h>
 #include <qpid/types/Variant.h>
 
 #include "qmf/org/matahariproject/QmfPackage.h"
@@ -43,8 +44,7 @@ int main(int argc, char** argv)
 {
     string url("amqp:tcp:127.0.0.1:49000");
     qpid::types::Variant::Map connectionOptions;
-    qpid::types::Variant::Map dataProperties;
-    qpid::types::Variant::Map consoleArgs;
+    qpid::types::Variant::Map dataProperties; agent
     string sessionOptions;
     
     connectionOptions["reconnect"] = false;
@@ -64,15 +64,7 @@ int main(int argc, char** argv)
                     {
                         const Data& data(event.getData(0));
                         dataProperties = data.getProperties();
-                        cout << "Received status update from ip:" << dataProperties["ip"] << endl;
-                        cout << "Performing re-status on interface:" << dataProperties["iface"] << endl;
-                        consoleArgs["iface"] = dataProperties["iface"];
-                        agent = event.getAgent();
-                        cout << agent.getAttributes() << endl;
-                        /* segfaults, and its late at night
-                        ConsoleEvent result(agent.callMethod("status", consoleArgs, data.getAddr()));
-                        cout << result << endl;
-                        */
+                        cout << "Received status update from ip : " << dataProperties << endl;
                     }
                     break;
                 default: {}

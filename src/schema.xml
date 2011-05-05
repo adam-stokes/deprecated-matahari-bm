@@ -6,11 +6,9 @@
    <arg name="timestamp" type="absTime" />
    <arg name="sequence"  type="uint32" />
 
-   <!-- Network API -->
-   <arg name="status"        type="sstr" />
-   <arg name="ip"            type="sstr" />
-   <arg name="iface"         type="sstr" />
-
+   <!-- Network -->
+   <arg name="ip"               type="sstr" />
+   
    <!-- Services API -->
    <arg name="name"             type="sstr" />
    <arg name="action"           type="sstr" />
@@ -107,7 +105,6 @@
    </method>
  </class>
 
- <event name="network_overseer" args="status,ip,iface" />
  <!-- Services API -->
 
  <!-- Is sequence needed? How to tie to the async method call seq? -->
@@ -250,5 +247,15 @@
      <arg name="interval"       dir="O"  type="uint32" />
      <arg name="timeout"        dir="O"  type="uint32" />
    </method-->
+ </class>
+ 
+ <event name="configure_me"	args="ip,sequence,timestamp" />
+ 
+ <class name="Config">
+   <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
+   <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
+   <method name="configure"     desc="Send configure method">
+    <arg name="ip"              dir="IO" type="sstr" />
+   </method>
  </class>
 </schema>

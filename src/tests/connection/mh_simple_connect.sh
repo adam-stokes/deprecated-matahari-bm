@@ -38,5 +38,3 @@ rlJournalStart
     rlPhaseEnd
 rlJournalEnd
 rlJournalPrintText
-#export QPID_SSL_CERT_DB=${CERT_DIR}
-#export QPID_SSL_CERT_PASSWORD_FILE=${CERT_PW_FILE}
