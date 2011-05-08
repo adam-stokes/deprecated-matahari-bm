@@ -109,26 +109,26 @@ AsyncCB::mh_async_callback(svc_action_t *op)
     const char *userdata = NULL;
     AsyncCB *cb_data = static_cast<AsyncCB *>(op->cb_data);
 
-    mh_trace("Completed: %s = %d\n", op->id, op->rc);
+    mh_trace("Completed: %s = %d", op->id, op->rc);
 
     qpid::types::Variant::Map& args = cb_data->event.getArguments();
     if (args.count("userdata") > 0) {
-	userdata = args["userdata"].asString().c_str();
+        userdata = args["userdata"].asString().c_str();
     }
 
     if (cb_data->first_result) {
         if (cb_data->has_rc) {
             cb_data->event.addReturnArgument("rc", op->rc);
         }
-	if (userdata) {
-	    cb_data->event.addReturnArgument("userdata", userdata);
-	}
+        if (userdata) {
+            cb_data->event.addReturnArgument("userdata", userdata);
+        }
         cb_data->session.methodSuccess(cb_data->event);
         cb_data->first_result = false;
 
     } else if (cb_data->last_rc != op->rc) {
         mh_trace("Result changed on recurring action: was '%d', now '%d'",
-		 cb_data->last_rc, op->rc);
+                 cb_data->last_rc, op->rc);
         cb_data->agent->raiseEvent(op, cb_data->service, userdata);
     }
 
@@ -182,7 +182,7 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
 
     if (service) {
         // event = qmf::Data(_package.event_service_op);
-	return;
+        return;
     } else {
         event = qmf::Data(_package.event_resource_op);
     }
@@ -196,9 +196,9 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
 
     if (service == SRV_RESOURCES) {
         event.setProperty("standard", op->standard);
-	if(op->provider) {
-	    event.setProperty("provider", op->provider);
-	}
+        if(op->provider) {
+            event.setProperty("provider", op->provider);
+        }
         event.setProperty("agent", op->agent);
         event.setProperty("expected-rc", op->expected_rc);
     }
@@ -249,11 +249,11 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
             return invoke_services(session, event, user_data);
 
         } else if (event.getDataAddr().getName() == "Resources") {
-	    return invoke_resources(session, event, user_data);
+            return invoke_resources(session, event, user_data);
 
         } else {
-	    mh_err("Unknown agent: %s", event.getDataAddr().getName().c_str());
-	}
+            mh_err("Unknown agent: %s", event.getDataAddr().getName().c_str());
+        }
     }
 
     mh_err("Unhandled message");
@@ -293,20 +293,20 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
 
     } else if (methodName == "enable" || methodName == "disable") {
         svc_action_t *op = services_action_create(
-	    args["name"].asString().c_str(), methodName.c_str(), 0,
-	    default_timeout_ms);
+            args["name"].asString().c_str(), methodName.c_str(), 0,
+            default_timeout_ms);
 
         action_async(SRV_SERVICES, session, event, op, false);
-	return TRUE;
+        return TRUE;
 
     } else if (methodName == "start"
-	       || methodName == "stop"
-	       || methodName == "status") {
+               || methodName == "stop"
+               || methodName == "status") {
         svc_action_t *op = services_action_create(
                 args["name"].asString().c_str(), methodName.c_str(), 0, args["timeout"].asInt32());
 
         action_async(SRV_SERVICES, session, event, op, true);
-	return TRUE;
+        return TRUE;
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
@@ -336,7 +336,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
         GList *providers = NULL;
         _qtype::Variant::List p_list;
 
-	providers = resources_list_providers(args["standard"].asString().c_str());
+        providers = resources_list_providers(args["standard"].asString().c_str());
         for (gIter = providers; gIter != NULL; gIter = gIter->next) {
             p_list.push_back((const char *) gIter->data);
         }
@@ -345,86 +345,86 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
     } else if (methodName == "list") {
         GList *gIter = NULL;
         GList *agents = NULL;
-	const char *standard = "ocf";
-	const char *provider = "heartbeat";
+        const char *standard = "ocf";
+        const char *provider = "heartbeat";
         _qtype::Variant::List t_list;
 
-	if(args.count("standard") > 0) {
-	    standard = args["standard"].asString().c_str();
-	}
-	if(args.count("provider") > 0) {
-	    provider = args["provider"].asString().c_str();
-	}
+        if(args.count("standard") > 0) {
+            standard = args["standard"].asString().c_str();
+        }
+        if(args.count("provider") > 0) {
+            provider = args["provider"].asString().c_str();
+        }
 
-	agents = resources_list_agents(standard, provider);
+        agents = resources_list_agents(standard, provider);
         for (gIter = agents; gIter != NULL; gIter = gIter->next) {
             t_list.push_back((const char *) gIter->data);
         }
         event.addReturnArgument("agents", t_list);
 
     } else if (methodName == "invoke") {
-	svc_action_t *op = NULL;
-	bool valid_standard = false;
-	_qtype::Variant::List::iterator iter;
-	_qtype::Variant::Map map;
+        svc_action_t *op = NULL;
+        bool valid_standard = false;
+        _qtype::Variant::List::iterator iter;
+        _qtype::Variant::Map map;
 
-	if(args.count("parameters") == 1) {
-	    map = args["parameters"].asMap();
-	}
-	
-	GHashTable *params = qmf_map_to_hash(map);
+        if(args.count("parameters") == 1) {
+            map = args["parameters"].asMap();
+        }
 
-	int32_t interval = 0;
-	int32_t timeout = 60000;
-	const char *agent = NULL;
-	const char *standard = "ocf";
-	const char *provider = "heartbeat";
+        GHashTable *params = qmf_map_to_hash(map);
 
-	for ( iter=standards.begin() ; iter != standards.end(); iter++ ) {
-	    if(args["standard"].asString() == (*iter).asString()) {
-		valid_standard = true;
-		break;
-	    }
-	}
+        int32_t interval = 0;
+        int32_t timeout = 60000;
+        const char *agent = NULL;
+        const char *standard = "ocf";
+        const char *provider = "heartbeat";
 
-	if(valid_standard == false) {
-	    mh_err("%s is not a known resource standard", args["standard"].asString().c_str());
-	    session.raiseException(event, MH_NOT_IMPLEMENTED);
-	    return TRUE;
-	}
+        for ( iter=standards.begin() ; iter != standards.end(); iter++ ) {
+            if(args["standard"].asString() == (*iter).asString()) {
+                valid_standard = true;
+                break;
+            }
+        }
 
-	if(args.count("standard") > 0) {
-	    standard = args["standard"].asString().c_str();
-	}
-	if(args.count("provider") > 0) {
-	    provider = args["provider"].asString().c_str();
-	}
-	if(args.count("agent") > 0) {
-	    agent = args["agent"].asString().c_str();
-	} else {
-	    agent = args["name"].asString().c_str();	    
-	}
+        if(valid_standard == false) {
+            mh_err("%s is not a known resource standard", args["standard"].asString().c_str());
+            session.raiseException(event, MH_NOT_IMPLEMENTED);
+            return TRUE;
+        }
 
-	if(args.count("interval") > 0) {
-	    interval = args["interval"].asInt32();
-	}
-	if(args.count("timeout") > 0) {
-	    timeout = args["timeout"].asInt32();
-	}
+        if(args.count("standard") > 0) {
+            standard = args["standard"].asString().c_str();
+        }
+        if(args.count("provider") > 0) {
+            provider = args["provider"].asString().c_str();
+        }
+        if(args.count("agent") > 0) {
+            agent = args["agent"].asString().c_str();
+        } else {
+            agent = args["name"].asString().c_str();
+        }
 
-	op = resources_action_create(
-	    args["name"].asString().c_str(),
-	    standard, provider, agent,
-	    args["action"].asString().c_str(),
-	    interval, timeout, params);
+        if(args.count("interval") > 0) {
+            interval = args["interval"].asInt32();
+        }
+        if(args.count("timeout") > 0) {
+            timeout = args["timeout"].asInt32();
+        }
 
-	if(args.count("expected-rc") == 1) {
-	    op->expected_rc = args["expected-rc"].asInt32();
-	}
-	
-	action_async(SRV_RESOURCES, session, event, op, true);
-	return TRUE;
-	
+        op = resources_action_create(
+            args["name"].asString().c_str(),
+            standard, provider, agent,
+            args["action"].asString().c_str(),
+            interval, timeout, params);
+
+        if(args.count("expected-rc") == 1) {
+            op->expected_rc = args["expected-rc"].asInt32();
+        }
+
+        action_async(SRV_RESOURCES, session, event, op, true);
+        return TRUE;
+
     } else if (methodName == "cancel") {
         services_action_cancel(
                 args["name"].asString().c_str(),
