@@ -59,8 +59,8 @@ check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *
   authority = polkit_authority_get_sync(NULL, &err);
   if (err != NULL)
   {
-    g_printerr("Error in obtaining authority: %s", err->message);
-    g_propagate_error(error, err);
+    g_printerr("Error in obtaining authority: %s\n", err->message);
+    g_set_error(error, MATAHARI_ERROR, MATAHARI_AUTHENTICATION_ERROR, err->message);
     g_error_free(err);
     return FALSE;
   }
@@ -68,8 +68,8 @@ check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *
   result = polkit_authority_check_authorization_sync(authority, subject, action, NULL, POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION, NULL, &err);
   if (err != NULL)
   {
-    g_printerr("Error in checking authorization: %s", err->message);
-    g_propagate_error(error, err);
+    g_printerr("Error in checking authorization: %s\n", err->message);
+    g_set_error(error, MATAHARI_ERROR, MATAHARI_AUTHENTICATION_ERROR, err->message);
     g_error_free(err);
     return FALSE;
   }
