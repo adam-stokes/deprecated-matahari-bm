@@ -20,6 +20,11 @@
 #include "config.h"
 #endif
 
+extern "C" {
+#include <stdlib.h>
+#include <string.h>
+};
+
 #include <string>
 #include <qpid/management/Manageable.h>
 #include <qpid/agent/ManagementAgent.h>
@@ -32,12 +37,16 @@ extern "C" {
 #include "matahari/services.h"
 }
 
+enum service_id {
+    SRV_RESOURCES,
+    SRV_SERVICES
+};
+
 class SrvAgent : public MatahariAgent
 {
     private:
-        static void mh_service_callback(svc_action_t *op);
-        static void mh_resource_callback(svc_action_t *op);
-        void raiseEvent(svc_action_t *op, int service);
+        void action_async(enum service_id service, qmf::AgentSession& session,
+                          qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
 
         qmf::Data _services;
         qmf::DataAddr _services_addr;
@@ -54,28 +63,68 @@ class SrvAgent : public MatahariAgent
         virtual int setup(qmf::AgentSession session);
         virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                                 gpointer user_data);
+        void raiseEvent(svc_action_t *op, enum service_id service);
 };
 
+/**
+ * Async process callback
+ *
+ * This class is used to store off some data that will be needed in the
+ * callback for a result from an asynchronous services API call being executed.
+ */
+class AsyncCB {
+public:
+    AsyncCB(SrvAgent *_agent, enum service_id _service,
+            qmf::AgentSession& _session, qmf::AgentEvent& _event,
+            bool _has_rc) :
+            agent(_agent), service(_service), session(_session), event(_event),
+            has_rc(_has_rc), last_rc(0), first_result(true) {};
+    ~AsyncCB() {};
 
-extern "C" {
-#include <stdlib.h>
-#include <string.h>
+    static void mh_async_callback(svc_action_t *op);
+
+    /** Cached SrvAgent instance */
+    SrvAgent *agent;
+    /** Which service this callback is associated with */
+    enum service_id service;
+    /** The QMF session that initiated this async action */
+    qmf::AgentSession session;
+    /** The method call that initiated this async action */
+    qmf::AgentEvent event;
+    /** Whether or not this method has an rc output param. */
+    bool has_rc;
+
+    /** The last result code for recurring actions */
+    int last_rc;
+    /** true if this is the first callback. */
+    bool first_result;
 };
 
 void
-SrvAgent::mh_service_callback(svc_action_t *op)
+AsyncCB::mh_async_callback(svc_action_t *op)
 {
-    SrvAgent *agent = static_cast<SrvAgent *>(op->cb_data);
-    mh_trace("Completed: %s = %d\n", op->id, op->rc);
-    agent->raiseEvent(op, 1);
-}
+    AsyncCB *cb_data = static_cast<AsyncCB *>(op->cb_data);
 
-void
-SrvAgent::mh_resource_callback(svc_action_t *op)
-{
-    SrvAgent *agent = static_cast<SrvAgent *>(op->cb_data);
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
-    agent->raiseEvent(op, 0);
+
+    if (cb_data->first_result) {
+        if (cb_data->has_rc) {
+            cb_data->event.addReturnArgument("rc", op->rc);
+        }
+        cb_data->session.methodSuccess(cb_data->event);
+        cb_data->first_result = false;
+    } else if (cb_data->last_rc != op->rc) {
+        mh_trace("Result changed on recurring action: was '%d', now '%d'\n",
+                cb_data->last_rc, op->rc);
+        cb_data->agent->raiseEvent(op, cb_data->service);
+    }
+
+    if (op->interval) { /* recurring action */
+        cb_data->last_rc = op->rc;
+    } else {
+        delete cb_data;
+        op->cb_data = NULL;
+    }
 }
 
 static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
@@ -107,7 +156,7 @@ main(int argc, char **argv)
     return rc;
 }
 
-void SrvAgent::raiseEvent(svc_action_t *op, int service)
+void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
 {
     uint64_t timestamp = 0L;
     qmf::Data event;
@@ -129,8 +178,7 @@ void SrvAgent::raiseEvent(svc_action_t *op, int service)
     event.setProperty("timestamp", timestamp);
     event.setProperty("sequence", 0);
 
-
-    if(service == 0) {
+    if (service == SRV_RESOURCES) {
         event.setProperty("rsc_type", op->agent);
         event.setProperty("rsc_class", op->rclass);
         event.setProperty("rsc_provider", op->provider);
@@ -177,6 +225,13 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user
     return TRUE;
 }
 
+void
+SrvAgent::action_async(enum service_id service, qmf::AgentSession& session,
+                       qmf::AgentEvent& event, svc_action_t *op, bool has_rc)
+{
+    op->cb_data = new AsyncCB(this, SRV_SERVICES, session, event, has_rc);
+    services_action_async(op, AsyncCB::mh_async_callback);
+}
 
 gboolean
 SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
@@ -186,6 +241,9 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
     if(event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
+
+    qpid::types::Variant::Map& args = event.getArguments();
+    bool async = false;
 
     if (methodName == "list") {
         _qtype::Variant::List s_list;
@@ -200,60 +258,57 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 
     } else if (methodName == "enable") {
         svc_action_t * op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "enable", 0, default_timeout_ms);
-        services_action_sync(op);
-        services_action_free(op);
+                args["name"].asString().c_str(), "enable", 0,
+                default_timeout_ms);
+
+        action_async(SRV_SERVICES, session, event, op, false);
+        async = true;
 
     } else if (methodName == "disable") {
         svc_action_t * op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "disable", 0, default_timeout_ms);
-        services_action_sync(op);
-        services_action_free(op);
+                args["name"].asString().c_str(), "disable", 0,
+                default_timeout_ms);
+
+        action_async(SRV_SERVICES, session, event, op, false);
+        async = true;
 
     } else if (methodName == "start") {
         svc_action_t *op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "start", 0, event.getArguments()["timeout"]);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+                args["name"].asString().c_str(), "start", 0, args["timeout"]);
+
+        action_async(SRV_SERVICES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "stop") {
         svc_action_t * op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "stop", 0, event.getArguments()["timeout"]);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+                args["name"].asString().c_str(), "stop", 0, args["timeout"]);
+
+        action_async(SRV_SERVICES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "status") {
         svc_action_t *op = services_action_create(
-            event.getArguments()["name"].asString().c_str(), "status",
-            event.getArguments()["interval"], event.getArguments()["timeout"]);
+                args["name"].asString().c_str(), "status", args["interval"],
+                args["timeout"]);
 
-        if(event.getArguments()["interval"]) {
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
-            return TRUE;
-
-            op->cb_data = this;
-            services_action_async(op, mh_service_callback);
-            event.addReturnArgument("rc", OCF_PENDING);
-
-        } else {
-            services_action_sync(op);
-            event.addReturnArgument("rc", op->rc);
-            services_action_free(op);
-        }
+        action_async(SRV_SERVICES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "cancel") {
         services_action_cancel(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
-            event.getArguments()["interval"]);
+                args["name"].asString().c_str(),
+                args["action"].asString().c_str(),
+                args["interval"]);
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         return TRUE;
     }
 
-    session.methodSuccess(event);
+    if (!async) {
+        session.methodSuccess(event);
+    }
+
     return TRUE;
 }
 
@@ -264,6 +319,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
     if(event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
+
+    qpid::types::Variant::Map& args = event.getArguments();
+    bool async = false;
 
     if (methodName == "list_classes") {
         _qtype::Variant::List c_list;
@@ -283,7 +341,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 
     } else if (methodName == "list") {
         GList *gIter = NULL;
-        GList *agents = resources_list_ocf_agents(event.getArguments()["provider"].asString().c_str());
+        GList *agents = resources_list_ocf_agents(
+                args["provider"].asString().c_str());
         _qtype::Variant::List t_list;
 
         for(gIter = agents; gIter != NULL; gIter = gIter->next) {
@@ -292,73 +351,64 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
         event.addReturnArgument("types", t_list);
 
     } else if (methodName == "start") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), "start", 0, event.getArguments()["timeout"], params);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                "start", 0, args["timeout"], params);
+
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "stop") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), "stop", 0, event.getArguments()["timeout"], params);
-        services_action_sync(op);
-        event.addReturnArgument("rc", op->rc);
-        services_action_free(op);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                "stop", 0, args["timeout"], params);
+
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
     } else if (methodName == "monitor") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), "monitor", event.getArguments()["interval"],
-            event.getArguments()["timeout"], params);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                "monitor", args["interval"], args["timeout"], params);
 
-        if(op->interval) {
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
-            return TRUE;
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
-            op->cb_data = this;
-            services_action_async(op, mh_resource_callback);
-            event.addReturnArgument("rc", OCF_PENDING);
-
-        } else {
-            services_action_sync(op);
-            event.addReturnArgument("rc", op->rc);
-            services_action_free(op);
-        }
     } else if (methodName == "invoke") {
-        GHashTable *params = qmf_map_to_hash(event.getArguments()["parameters"].asMap());
+        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
         svc_action_t *op = resources_action_create(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["provider"].asString().c_str(),
-            event.getArguments()["type"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
-            event.getArguments()["interval"], event.getArguments()["timeout"], params);
+                args["name"].asString().c_str(),
+                args["provider"].asString().c_str(),
+                args["type"].asString().c_str(),
+                args["action"].asString().c_str(),
+                args["interval"], args["timeout"], params);
 
-        if(op->interval) {
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
-            return TRUE;
+        action_async(SRV_RESOURCES, session, event, op, true);
+        async = true;
 
-            op->cb_data = this;
-            services_action_async(op, mh_resource_callback);
-            event.addReturnArgument("rc", OCF_PENDING);
-
-        } else {
-            services_action_sync(op);
-            event.addReturnArgument("rc", op->rc);
-            services_action_free(op);
-        }
     } else if (methodName == "cancel") {
         services_action_cancel(
-            event.getArguments()["name"].asString().c_str(), event.getArguments()["action"].asString().c_str(),
-            event.getArguments()["interval"]);
+                args["name"].asString().c_str(),
+                args["action"].asString().c_str(),
+                args["interval"]);
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         return TRUE;
     }
 
-    session.methodSuccess(event);
+    if (!async) {
+        session.methodSuccess(event);
+    }
+
     return TRUE;
 }
