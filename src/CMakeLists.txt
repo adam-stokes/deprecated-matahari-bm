@@ -158,6 +158,7 @@ endif(WITH-QMF)
 
 if(WITH-DBUS)
     install(FILES schema-to-dbus.xsl DESTINATION share/matahari)
+    install(FILES dbus-to-c.xsl DESTINATION share/matahari)
     install(FILES include/matahari/mh_dbus_common.h DESTINATION include/matahari)
     install(FILES include/matahari/mh_gobject_class.h DESTINATION include/matahari)
 endif(WITH-DBUS)

@@ -7,6 +7,9 @@
 macro(generate_dbus_headers API XML)
     find_file(XSLTPROC xsltproc)
     find_file(BIND_TOOL dbus-binding-tool)
+    find_file(DBUS_TO_C dbus-to-c.xsl
+              ${CMAKE_CURRENT_SOURCE_DIR}/..
+              /usr/share/matahari)
 
     # Convert dbus interface to glue and properties files
     add_custom_command(
@@ -15,14 +18,16 @@ macro(generate_dbus_headers API XML)
             --output=${API}-dbus-glue.h
             ${XML}
         COMMENT "Generating ${API}-dbus-glue.h"
+        VERBATIM
     )
 
     add_custom_command(
         OUTPUT ${API}-dbus-properties.h
         COMMAND ${XSLTPROC} --output ${API}-dbus-properties.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/../dbus-to-c.xsl
+            ${DBUS_TO_C}
             ${XML}
         COMMENT "Generating ${API}-dbus-properties.h"
+        VERBATIM
     )
 endmacro(generate_dbus_headers)
 
