@@ -91,6 +91,7 @@ struct option opt[] = {
     {"password", required_argument, NULL, 'P'},
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
+    {"reconnect", no_argument, NULL, 'r'},
     {0, 0, 0, 0}
 };
 
@@ -106,6 +107,7 @@ print_usage(const char *proc_name)
     printf("\t-P | --password   password to use for authentication purproses.\n");
     printf("\t-s | --service    service name to use for authentication purproses.\n");
     printf("\t-p | --port       specify broker port.\n");
+    printf("\t-r | --reconnect  attempt to reconnect on failure.\n");
 }
 #endif
 
@@ -140,6 +142,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #endif
 
     bool gssapi = false;
+    bool reconnect = false;
     char *servername = NULL;
     char *username  = NULL;
     char *password  = NULL;
@@ -201,7 +204,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #else
 
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gu:P:s:p:v", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gru:P:s:p:v", opt, &idx)) != -1) {
         switch (arg) {
         case 'h':
         case '?':
@@ -241,6 +244,9 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             break;
         case 'g':
             gssapi = true;
+            break;
+        case 'r':
+            reconnect = true;
             break;
         case 'p':
             if (optarg) {
@@ -288,7 +294,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     // Create a v2 API options map.
     qpid::types::Variant::Map options;
-    options["reconnect"] = bool(true);
+    options["reconnect"] = reconnect;
     if (username && *username) {
         options["username"] = username;
     }
