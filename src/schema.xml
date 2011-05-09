@@ -6,9 +6,6 @@
    <arg name="timestamp" type="absTime" />
    <arg name="sequence"  type="uint32" />
 
-   <!-- Network -->
-   <arg name="ip"               type="sstr" />
-   
    <!-- Services API -->
    <arg name="name"             type="sstr" />
    <arg name="action"           type="sstr" />
