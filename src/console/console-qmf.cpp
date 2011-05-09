@@ -1,4 +1,4 @@
-/* matahari-console.cpp - Copyright (c) 2011 Red Hat, Inc.
+/* console-qmf.cpp - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This library is free software; you can redistribute it and/or
