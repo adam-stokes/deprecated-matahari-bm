@@ -34,7 +34,7 @@ uint32_t mh_is_configured(void)
 {
     int config_file_exist = 0;
     const char *filename = "/tmp/.mh_configured";
-    const char *contents = "I've been configured.";
+    const char *contents = "I've been configured.\n";
     
     if(!g_file_test(filename, G_FILE_TEST_EXISTS)) {
         if(!g_file_set_contents(filename, contents, -1, NULL)) {

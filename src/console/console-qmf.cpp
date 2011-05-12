@@ -63,8 +63,11 @@ int main(int argc, char** argv)
             switch(event.getType()) {
                 case CONSOLE_AGENT_ADD:
                     {
-                        cout << "Agent added : " << event.getAgent().getName() << endl;
+                        const DataAddr& _agent_addr = DataAddr(methodName, event.getAgent().getName());
+                        cout << "_agent_addr: " << _agent_addr.asMap() << endl;
                         agent = event.getAgent();
+                        ConsoleEvent result(agent.callMethod(methodName, dataProperties, _agent_addr, qpid::messaging::Duration(4000)));
+                        /*
                         ConsoleEvent result(agent.query("{class:Config, package:'org.matahariproject'}"));
                         if(result.getDataCount() == 1) {
                             const Data& data(result.getData(0));
@@ -74,6 +77,7 @@ int main(int argc, char** argv)
                         } else {
                             cout << "No objects in query" << endl;
                         }
+                        */
                     }
                     break;
                 default: {}

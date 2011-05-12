@@ -144,8 +144,8 @@ add_subdirectory(lib)
 add_subdirectory(host)
 add_subdirectory(network)
 add_subdirectory(service)
-#add_subdirectory(console)
-#add_subdirectory(config)
+add_subdirectory(console)
+add_subdirectory(config)
 
 ### Installation
 install(FILES ${SCHEMAS} DESTINATION share/matahari)

@@ -2,7 +2,7 @@ set(CONSOLE_QMF "matahari-qmf-consoled")
 
 # QMF daemon
 if(WITH-QMF)
-    add_executable(${CONSOLE_QMF} matahari-console.cpp)
+    add_executable(${CONSOLE_QMF} console-qmf.cpp)
     target_link_libraries(${CONSOLE_QMF} mcommon mcommon_qmf)
 
     target_link_libraries(${CONSOLE_QMF} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})

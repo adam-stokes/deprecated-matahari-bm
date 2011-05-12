@@ -21,6 +21,7 @@
 TEST="/matahari/Sanity/mh_ssl_test"
 PACKAGE="matahari"
 
+QPIDC_CONF_FILE=/etc/qpid/qpidc.conf
 CERT_DIR=test_cert_db
 CERT_PW_FILE=cert.password
 TEST_HOSTNAME=127.0.0.1
@@ -34,12 +35,16 @@ rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm $PACKAGE
         rlAssertRpm nss-tools
+        rlAssertGrep "ssl\-cert\-db=" "$QPIDC_CONF_FILE"
+        rlAssertGrep "ssl\-cert\-password\-file=" "$QPIDC_CONF_FILE"
+        rlAssertGrep "ssl\-cert\-name=" "$QPIDC_CONF_FILE"
         rlRun "TmpDir=\`mktemp -d\` " 0 "Creating tmp directory"
         rlRun "pushd $TmpDir"
         rlRun "mkdir $CERT_DIR"
     rlPhaseEnd
 
     rlPhaseStartTest
+        rlAssertExists "$QPIDC_CONF_FILE"
         rlRun "echo password > $CERT_PW_FILE" 0 "Creating password file"
         rlAssertExists "$CERT_PW_FILE"
         rlRun "certutil -N -d $CERT_DIR -f $CERT_PW_FILE" 0 "Creating certificate database"

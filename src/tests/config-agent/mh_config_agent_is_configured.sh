@@ -29,7 +29,7 @@ TEST_CONFIGURED_FILE=/tmp/.mh_configured
 if [ ! $# == 3 ]; then
     TEST_HOSTNAME=127.0.0.1
     TEST_PORT=49000
-    TEST_AGENT=matahari-configd
+    TEST_AGENT=matahari-qmf-configd
 fi
 
 rlJournalStart
