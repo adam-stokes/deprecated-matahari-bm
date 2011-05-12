@@ -1,0 +1,50 @@
+<schema package="org.matahariproject">
+
+ <eventArguments>
+
+   <!-- Common -->
+   <arg name="timestamp" type="absTime" />
+   <arg name="sequence"  type="uint32" />
+
+ </eventArguments>
+
+<!-- Host API -->
+ <class name="Host">
+   <!-- properties -->
+   <property name="uuid"             type="sstr"   access="RO" desc="Host UUID" index="y" />
+   <property name="hostname"         type="sstr"   access="RO" desc="Hostname" index="y" />
+   <property name="hardware_uuid"    type="sstr"   access="RO" desc="Host Hardware UUID"  />
+
+   <property name="os"               type="sstr"   access="RO" desc="The installed operating system." />
+   <property name="arch"             type="sstr"   access="RO" desc="The host's architecture" />
+   <property name="wordsize"         type="uint8"  access="RO" desc="The wordsize for the host" unit="bit"/>
+
+   <property name="memory"           type="uint64" access="RO" desc="Amount of primary memory for host" unit="kb" />
+   <property name="swap"             type="uint64" access="RO" desc="Amount of swap for host" unit="kb" />
+
+   <property name="cpu_count"        type="uint8"  access="RO" desc="The number of physical CPUs." />
+   <property name="cpu_cores"        type="uint8"  access="RO" desc="The total number of processor cores." />
+   <property name="cpu_model"        type="lstr"   access="RO" desc="The processor(s) model description." />
+   <property name="cpu_flags"        type="lstr"   access="RO" desc="The processor(s) CPU flags." />
+
+   <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
+
+   <!-- statistics -->
+   <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
+   <statistic name="sequence"        type="uint32"  desc="The heartbeat sequence number." />
+
+   <statistic name="free_mem"        type="uint64"  desc="Amount of available memory for host" unit="kb" />
+   <statistic name="free_swap"       type="uint64"  desc="Amount of available swap for host" unit="kb" />
+
+   <statistic name="load"	        type="map"  desc="The one/five/fifteen minute load average" />
+   <statistic name="process_statistics" type="map"  desc="Number of processes in each possible state" />
+
+   <!-- APIs -->
+   <method name="identify"                desc="Tells the host to beep its pc speaker." />
+   <method name="shutdown"                desc="Shutdown node" />
+   <method name="reboot"                  desc="Reboot node" />
+ </class>
+
+ <event name="heartbeat" args="timestamp,sequence" />
+
+</schema>

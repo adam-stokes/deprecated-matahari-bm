@@ -53,7 +53,6 @@ endmacro(generate_dbus_interface)
 # Variable SCHEMA_SOURCES - list of generated cpp files (it can be added
 #                           to add_executable command for proper compliation)
 macro(generate_qmf_schemas SCHEMAS SCHEMA_SOURCES)
-    message(STATUS "Regenerating QMF schemas: ${SCHEMAS}")
     set(regen_schema OFF)
 
     if (SCHEMA_SOURCES)
@@ -78,10 +77,12 @@ macro(generate_qmf_schemas SCHEMAS SCHEMA_SOURCES)
 
     if (regen_schema)
         # Regenerate everything
+	    message(STATUS "Regenerating QMFv2 classes from: ${SCHEMAS}")
         execute_process(COMMAND rm -f ${SCHEMA_SOURCES})
+        message("${QMFGEN} -2 -o ./qmf ${SCHEMAS}  in ${CMAKE_CURRENT_BINARY_DIR}")
         execute_process(COMMAND ${QMFGEN} -2 -o ./qmf ${SCHEMAS}
                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     else (regen_schema)
-        message(STATUS "No need to generate QMF schema")
+        message(STATUS "No need to generate QMFv2 classes from: ${SCHEMAS}")
     endif (regen_schema)
 endmacro(generate_qmf_schemas)
