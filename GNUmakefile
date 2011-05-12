@@ -101,6 +101,22 @@ rpm-win:
 mock-win:   
 	make PROFILE=$(PROFILE) VARIANT=mingw32- srpm mock-nodeps
 
+COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
+COVHOST		?= coverity.example.com
+COVPASS		?= password
+
+coverity:
+	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
+	mkdir -p $(COVERITY_DIR).build
+	cd $(COVERITY_DIR).build && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DWITH-DBUS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+	cov-build --dir $(COVERITY_DIR) make -C $(COVERITY_DIR).build all
+	@echo "Waiting for a Coverity license..."
+	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
+	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
+	cov-format-errors --dir $(COVERITY_DIR)
+	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+#	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
+
 clean:
 	@if [ -d linux.build ] ; then \
 		$(MAKE) --no-print-dir -C linux.build clean ; \
