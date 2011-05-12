@@ -45,11 +45,11 @@ b) Line Length
 b) Pointers
 
     - The '*' goes by the variable name, not the type:
-    
+
         char *foo;
 
     - Use a space before the '*' and after the closing parenthesis in a cast:
-    
+
         char *foo = (char *) bar;
 
 c) Functions
@@ -63,7 +63,7 @@ c) Functions
 
     - For functions with enough arguments that they must break to the next
       line, align arguments with the first argument:
-      
+
         static int
         function_name(int bar, const char *a, const char *b,
                       const char *c, const char *d)
@@ -78,6 +78,57 @@ c) Functions
                 const char *c, const char *d)
         {
 
+d) Control statements (if, else, while, for, switch)
+
+    - Keyword is followed by one space, then left parenthesis witout space,
+      condition, right parenthesis, space, opening bracket on the same line.
+    - "else" and "else if" are on the same line with ending brace and opening
+      brace, separated by space
+
+        if (condition1) {
+            statement1;
+        } else if (condition2) {
+            statement2;
+        } else {
+            statement3;
+        }
+
+    - Cases in switch statement have same indentation as switch. Body of cases
+      is indented by one level. Opening brace is on the same line as switch.
+
+        switch (expression)
+        {
+        case 0:
+            command0;
+            break;
+        case 1:
+            command1;
+            break;
+        default:
+            command;
+        }
+
+e) Operators
+
+    - Operators have spaces from both sides. Do not rely on operator precedence,
+      use brackets when mixing operators with different priority.
+    - No space after opening bracked and before closing bracket.
+
+        x = a + b - (c * d);
+
+f) Classes
+
+    - Visibility modifiers have same indentation as the class, methods and
+      properties are indented.
+
+        class TestClass : public ParentClass
+        {
+        private:
+            int x;
+        public:
+            void test();
+        };
+
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
@@ -86,6 +137,9 @@ c) Functions
 -------------------------------------------------------------------------------
 
 a) Public C API calls and type names must begin with "mh_".
+
+b) Name of the class should be Upper-CamelCase (first letter of each word
+   upper cased).
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
