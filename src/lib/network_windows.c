@@ -40,7 +40,8 @@ network_os_stop(const char *iface)
     char *exe_path;
 
     p = getenv("WINDIR");
-    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface %s disabled", p, iface);
+    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface "
+                               "%s disabled", p, iface);
 
     gboolean ok = CreateProcess(NULL,
                                 exe_path,
@@ -67,7 +68,8 @@ network_os_start(const char *iface)
     char *exe_path;
 
     p = getenv("WINDIR");
-    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface %s enabled", p, iface);
+    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface "
+                               "%s enabled", p, iface);
 
     gboolean ok = CreateProcess(NULL,
                                 exe_path,

@@ -63,55 +63,63 @@ static cpuinfo_t cpuinfo = {
     .cores = 0,
 };
 
-static void host_get_cpu_details(void);
+static void
+host_get_cpu_details(void);
 
-static void init(void)
+static void
+init(void)
 {
-    if(host_init.sigar_init) {
+    if (host_init.sigar_init) {
         return;
     }
     sigar_open(&host_init.sigar);
     host_init.sigar_init = TRUE;
 }
 
-const char *mh_host_get_uuid(void)
+const char *
+mh_host_get_uuid(void)
 {
     return mh_uuid();
 }
 
-const char *mh_host_get_hostname(void)
+const char *
+mh_host_get_hostname(void)
 {
     return mh_hostname();
 }
 
-const char *mh_host_get_operating_system(void)
+const char *
+mh_host_get_operating_system(void)
 {
     static const char *operating_system = NULL;
 
     init();
 
-    if(operating_system == NULL) {
+    if (operating_system == NULL) {
         sigar_sys_info_t sysinfo;
 
         sigar_sys_info_get(host_init.sigar, &sysinfo);
-        operating_system = g_strdup_printf("%s (%s)", sysinfo.vendor_name, sysinfo.version);
+        operating_system = g_strdup_printf("%s (%s)", sysinfo.vendor_name,
+                                           sysinfo.version);
     }
 
     return operating_system;
 }
 
-int mh_host_get_cpu_wordsize(void)
+int
+mh_host_get_cpu_wordsize(void)
 {
     return (int)(CHAR_BIT * sizeof(size_t));
 }
 
-const char *mh_host_get_architecture(void)
+const char *
+mh_host_get_architecture(void)
 {
     static const char *arch = NULL;
 
     init();
 
-    if(arch == NULL) {
+    if (arch == NULL) {
         sigar_sys_info_t sysinfo;
 
         sigar_sys_info_get(host_init.sigar, &sysinfo);
@@ -121,52 +129,61 @@ const char *mh_host_get_architecture(void)
     return arch;
 }
 
-void mh_host_reboot(void)
+void
+mh_host_reboot(void)
 {
     host_os_reboot();
 }
 
-void mh_host_shutdown(void)
+void
+mh_host_shutdown(void)
 {
     host_os_shutdown();
 }
 
-const char *mh_host_get_cpu_model(void)
+const char *
+mh_host_get_cpu_model(void)
 {
     host_get_cpu_details();
     return cpuinfo.model;
 }
 
-const char *mh_host_get_cpu_flags(void)
+const char *
+mh_host_get_cpu_flags(void)
 {
     return host_os_get_cpu_flags();
 }
 
-int mh_host_get_cpu_count(void)
+int
+mh_host_get_cpu_count(void)
 {
     host_get_cpu_details();
     return cpuinfo.cpus;
 }
 
-int mh_host_get_cpu_number_of_cores(void)
+int
+mh_host_get_cpu_number_of_cores(void)
 {
     host_get_cpu_details();
     return cpuinfo.cores;
 }
 
-void mh_host_get_load_averages(sigar_loadavg_t *avg)
+void
+mh_host_get_load_averages(sigar_loadavg_t *avg)
 {
     init();
     sigar_loadavg_get(host_init.sigar, avg);
 }
 
-void mh_host_get_processes(sigar_proc_stat_t *procs)
+void
+mh_host_get_processes(sigar_proc_stat_t *procs)
 {
     init();
     sigar_proc_stat_get(host_init.sigar, procs);
 }
 
-uint64_t mh_host_get_memory(void)
+uint64_t
+mh_host_get_memory(void)
 {
     sigar_mem_t mem;
     uint64_t total;
@@ -177,7 +194,8 @@ uint64_t mh_host_get_memory(void)
     return total;
 }
 
-uint64_t mh_host_get_mem_free(void)
+uint64_t
+mh_host_get_mem_free(void)
 {
     sigar_mem_t mem;
     uint64_t free;
@@ -188,7 +206,8 @@ uint64_t mh_host_get_mem_free(void)
     return free;
 }
 
-uint64_t mh_host_get_swap(void)
+uint64_t
+mh_host_get_swap(void)
 {
     sigar_swap_t swap;
     uint64_t total;
@@ -199,7 +218,8 @@ uint64_t mh_host_get_swap(void)
     return total;
 }
 
-uint64_t mh_host_get_swap_free(void)
+uint64_t
+mh_host_get_swap_free(void)
 {
     sigar_swap_t swap;
     uint64_t free;
@@ -210,12 +230,13 @@ uint64_t mh_host_get_swap_free(void)
     return free;
 }
 
-static void host_get_cpu_details(void)
+static void
+host_get_cpu_details(void)
 {
     int lpc = 0;
     sigar_cpu_info_list_t cpus;
 
-    if(cpuinfo.cpus) {
+    if (cpuinfo.cpus) {
         return;
     }
 
@@ -223,9 +244,9 @@ static void host_get_cpu_details(void)
     sigar_cpu_info_list_get(host_init.sigar, &cpus);
 
     cpuinfo.cpus = cpus.number;
-    for(lpc = 0; lpc < cpus.number; lpc++) {
+    for (lpc = 0; lpc < cpus.number; lpc++) {
         sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
-        if(cpuinfo.model == NULL) {
+        if (cpuinfo.model == NULL) {
             cpuinfo.model = g_strdup(cpu->model);
         }
         cpuinfo.cores += cpu->total_cores;

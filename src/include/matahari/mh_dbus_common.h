@@ -30,7 +30,8 @@
 #include "mh_gobject_class.h"
 
 /* Private struct in Matahari class */
-#define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), MATAHARI_TYPE, MatahariPrivate))
+#define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
+        MATAHARI_TYPE, MatahariPrivate))
 
 // Matahari error codes
 #define MATAHARI_ERROR matahari_error_quark ()
@@ -44,7 +45,8 @@ matahari_error_quark (void);
  * user is authorized, otherwise return FALSE and 'error' is set.
  */
 gboolean
-check_authorization(const gchar *action, GError** error, DBusGMethodInvocation *context);
+check_authorization(const gchar *action, GError** error,
+                    DBusGMethodInvocation *context);
 
 typedef struct {
     int prop;
@@ -67,14 +69,16 @@ run_dbus_server(char *bus_name, char *object_path);
  * action interface.name
  */
 gboolean
-matahari_get(Matahari* matahari, const char *interface, const char *name, DBusGMethodInvocation *context);
+matahari_get(Matahari* matahari, const char *interface, const char *name,
+             DBusGMethodInvocation *context);
 
 /**
  * Check the authorization for setting the parameter 'name' using PolicyKit
  * action interface.name
  */
 gboolean
-matahari_set(Matahari *matahari, const char *interface, const char *name, GValue *value, DBusGMethodInvocation *context);
+matahari_set(Matahari *matahari, const char *interface, const char *name,
+             GValue *value, DBusGMethodInvocation *context);
 
 /**
  * This method is used for getting value of DBus property.
@@ -82,7 +86,8 @@ matahari_set(Matahari *matahari, const char *interface, const char *name, GValue
  * Set the value of property_id parameter to parameter value.
  */
 void
-matahari_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
+matahari_get_property(GObject *object, guint property_id, GValue *value,
+                      GParamSpec *pspec);
 
 /**
  * This method is used for setting value of DBus property.
@@ -90,7 +95,8 @@ matahari_get_property(GObject *object, guint property_id, GValue *value, GParamS
  * New value of property_id is in parameter value.
  */
 void
-matahari_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
+matahari_set_property(GObject *object, guint property_id, const GValue *value,
+                      GParamSpec *pspec);
 
 /**
  * This method is used to determine type of value in all dictionary parameters.
@@ -110,7 +116,8 @@ typedef struct
 } Dict;
 
 /**
- * Constructor of dictionary type. Key is string, type of value is defined by type of 'value'.
+ * Constructor of dictionary type. Key is string, type of value is defined
+ * by type of 'value'.
  * New value will be stored in 'value'. Use dict_free after setting all values.
  */
 Dict *dict_new(GValue *value);

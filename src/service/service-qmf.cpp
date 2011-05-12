@@ -44,26 +44,28 @@ enum service_id {
 
 class SrvAgent : public MatahariAgent
 {
-    private:
-        void action_async(enum service_id service, qmf::AgentSession& session,
-                          qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
+private:
+    void action_async(enum service_id service, qmf::AgentSession& session,
+                      qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
 
-        qmf::Data _services;
-        qmf::DataAddr _services_addr;
+    qmf::Data _services;
+    qmf::DataAddr _services_addr;
 
-        qmf::Data _resources;
-        qmf::DataAddr _resources_addr;
+    qmf::Data _resources;
+    qmf::DataAddr _resources_addr;
 
-        gboolean invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
-        gboolean invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+    gboolean invoke_services(qmf::AgentSession session,
+                             qmf::AgentEvent event, gpointer user_data);
+    gboolean invoke_resources(qmf::AgentSession session,
+                              qmf::AgentEvent event, gpointer user_data);
 
-        qmf::org::matahariproject::PackageDefinition _package;
+    qmf::org::matahariproject::PackageDefinition _package;
 
-    public:
-        virtual int setup(qmf::AgentSession session);
-        virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
-                                gpointer user_data);
-        void raiseEvent(svc_action_t *op, enum service_id service);
+public:
+    virtual int setup(qmf::AgentSession session);
+    virtual gboolean invoke(qmf::AgentSession session,
+                            qmf::AgentEvent event, gpointer user_data);
+    void raiseEvent(svc_action_t *op, enum service_id service);
 };
 
 /**
@@ -115,7 +117,7 @@ AsyncCB::mh_async_callback(svc_action_t *op)
         cb_data->first_result = false;
     } else if (cb_data->last_rc != op->rc) {
         mh_trace("Result changed on recurring action: was '%d', now '%d'\n",
-                cb_data->last_rc, op->rc);
+                 cb_data->last_rc, op->rc);
         cb_data->agent->raiseEvent(op, cb_data->service);
     }
 
@@ -127,13 +129,14 @@ AsyncCB::mh_async_callback(svc_action_t *op)
     }
 }
 
-static GHashTable *qmf_map_to_hash(::qpid::types::Variant::Map parameters)
+static GHashTable *
+qmf_map_to_hash(::qpid::types::Variant::Map parameters)
 {
     qpid::types::Variant::Map::const_iterator qIter;
     GHashTable *hash = g_hash_table_new_full(
         g_str_hash, g_str_equal, free, free);
 
-    for (qIter=parameters.begin() ; qIter != parameters.end(); qIter++ ) {
+    for (qIter = parameters.begin(); qIter != parameters.end(); qIter++) {
         char *key = strdup(qIter->first.c_str());
         char *value = strdup(qIter->second.asString().c_str());
         g_hash_table_insert(hash, key, value);
@@ -148,7 +151,7 @@ main(int argc, char **argv)
     SrvAgent agent;
     int rc = agent.init(argc, argv, "service");
 
-    if(rc >= 0) {
+    if (rc >= 0) {
         mainloop_track_children(G_PRIORITY_DEFAULT);
         agent.run();
     }
@@ -156,7 +159,8 @@ main(int argc, char **argv)
     return rc;
 }
 
-void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
+void
+SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
 {
     uint64_t timestamp = 0L;
     qmf::Data event;
@@ -165,7 +169,7 @@ void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
     timestamp = ::time(NULL);
 #endif
 
-    if(service) {
+    if (service) {
         event = qmf::Data(_package.event_service_op);
     } else {
         event = qmf::Data(_package.event_resource_op);
@@ -209,10 +213,11 @@ SrvAgent::setup(qmf::AgentSession session)
 }
 
 gboolean
-SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
+SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                 gpointer user_data)
 {
-    if(event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
-        if(_services_addr == event.getDataAddr()) {
+    if (event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
+        if (_services_addr == event.getDataAddr()) {
             mh_info("Calling services API");
             return invoke_services(session, event, user_data);
         }
@@ -234,11 +239,12 @@ SrvAgent::action_async(enum service_id service, qmf::AgentSession& session,
 }
 
 gboolean
-SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
+SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
+                          gpointer user_data)
 {
     static const int default_timeout_ms = 60000;
     const std::string& methodName(event.getMethodName());
-    if(event.getType() != qmf::AGENT_METHOD) {
+    if (event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
 
@@ -250,8 +256,8 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
         GList *gIter = NULL;
         GList *services = services_list();
 
-        for(gIter = services; gIter != NULL; gIter = gIter->next) {
-            s_list.push_back((const char *)gIter->data);
+        for (gIter = services; gIter != NULL; gIter = gIter->next) {
+            s_list.push_back((const char *) gIter->data);
         }
 
         event.addReturnArgument("services", s_list);
@@ -313,10 +319,11 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 }
 
 gboolean
-SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
+SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
+                           gpointer user_data)
 {
     const std::string& methodName(event.getMethodName());
-    if(event.getType() != qmf::AGENT_METHOD) {
+    if (event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
 
@@ -334,8 +341,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
         GList *providers = resources_list_ocf_providers();
         _qtype::Variant::List p_list;
 
-        for(gIter = providers; gIter != NULL; gIter = gIter->next) {
-            p_list.push_back((const char *)gIter->data);
+        for (gIter = providers; gIter != NULL; gIter = gIter->next) {
+            p_list.push_back((const char *) gIter->data);
         }
         event.addReturnArgument("providers", p_list);
 
@@ -345,8 +352,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
                 args["provider"].asString().c_str());
         _qtype::Variant::List t_list;
 
-        for(gIter = agents; gIter != NULL; gIter = gIter->next) {
-            t_list.push_back((const char *)gIter->data);
+        for (gIter = agents; gIter != NULL; gIter = gIter->next) {
+            t_list.push_back((const char *) gIter->data);
         }
         event.addReturnArgument("types", t_list);
 

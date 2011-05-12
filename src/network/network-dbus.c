@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Red Hat, Inc.
  * Written by Radek Novacek <rnovacek@redhat.com>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -43,14 +43,15 @@
 enum status { INACTIVE = 0, RUNNING };
 
 /* Get status of the interface */
-static enum status interface_status(const char *iface)
+static enum status
+interface_status(const char *iface)
 {
-  uint64_t flags = 0;
-  mh_network_status(iface, &flags);
+    uint64_t flags = 0;
+    mh_network_status(iface, &flags);
 
-  if(flags & SIGAR_IFF_UP)
-    return RUNNING;
-  return INACTIVE; /* Inactive */
+    if (flags & SIGAR_IFF_UP)
+        return RUNNING;
+    return INACTIVE; /* Inactive */
 }
 
 /* Dbus methods */
@@ -58,123 +59,123 @@ static enum status interface_status(const char *iface)
 gboolean
 Network_list(Matahari *matahari, DBusGMethodInvocation *context)
 {
-  GError* error = NULL;
-  GList *interface_list;
-  GList *plist;
-  sigar_net_interface_config_t *ifconfig;
-  char **list;
-  int i = 0;
-  
-  if (!check_authorization(NETWORK_BUS_NAME ".list", &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    return FALSE;
-  }
-  
-  // Get the list of interfaces
-  interface_list = mh_network_get_interfaces();
-  
-  // Alloc array for list of interface names
-  list = g_new(char *, g_list_length(interface_list) + 1);  
+    GError* error = NULL;
+    GList *interface_list;
+    GList *plist;
+    sigar_net_interface_config_t *ifconfig;
+    char **list;
+    int i = 0;
 
-  // Convert list of interfaces to the array of names
-  for(plist = g_list_first(interface_list); plist; plist = g_list_next(plist))
-  {
-    ifconfig = (sigar_net_interface_config_t *)plist->data;
-    list[i++] = strdup(ifconfig->name);
-  }
-  list[i] = NULL; // Sentinel
+    if (!check_authorization(NETWORK_BUS_NAME ".list", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
 
-  dbus_g_method_return(context, list);
-  g_strfreev(list);
-  g_list_free(interface_list);
-  return TRUE;
+    // Get the list of interfaces
+    interface_list = mh_network_get_interfaces();
+
+    // Alloc array for list of interface names
+    list = g_new(char *, g_list_length(interface_list) + 1);
+
+    // Convert list of interfaces to the array of names
+    for (plist = g_list_first(interface_list);
+         plist;
+         plist = g_list_next(plist)) {
+        ifconfig = (sigar_net_interface_config_t *)plist->data;
+        list[i++] = strdup(ifconfig->name);
+    }
+    list[i] = NULL; // Sentinel
+
+    dbus_g_method_return(context, list);
+    g_strfreev(list);
+    g_list_free(interface_list);
+    return TRUE;
 }
 
 gboolean
-Network_start(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
+Network_start(Matahari *matahari, const char *iface,
+              DBusGMethodInvocation *context)
 {
-  GError* error = NULL;
-  int status;
+    GError* error = NULL;
+    int status;
 
-  if (!check_authorization(NETWORK_BUS_NAME ".start", &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    return FALSE;
-  }
-  
-  status = interface_status(iface);
-  if (status != RUNNING)
-  {
-    mh_network_start(iface);
+    if (!check_authorization(NETWORK_BUS_NAME ".start", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
+
     status = interface_status(iface);
-  }
-  dbus_g_method_return(context, status);
-  return TRUE;
+    if (status != RUNNING) {
+        mh_network_start(iface);
+        status = interface_status(iface);
+    }
+    dbus_g_method_return(context, status);
+    return TRUE;
 }
 
 gboolean
-Network_stop(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
+Network_stop(Matahari *matahari, const char *iface,
+             DBusGMethodInvocation *context)
 {
-  GError* error = NULL;
-  int status;
+    GError* error = NULL;
+    int status;
 
-  if (!check_authorization(NETWORK_BUS_NAME ".stop", &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    return FALSE;
-  }
-  
-  status = interface_status(iface);
-  if (status != INACTIVE)
-  {
-    mh_network_stop(iface);
+    if (!check_authorization(NETWORK_BUS_NAME ".stop", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
+
     status = interface_status(iface);
-  }
-  dbus_g_method_return(context, status);
-  return TRUE;
+    if (status != INACTIVE) {
+        mh_network_stop(iface);
+        status = interface_status(iface);
+    }
+    dbus_g_method_return(context, status);
+    return TRUE;
 }
 
 gboolean
-Network_status(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
+Network_status(Matahari *matahari, const char *iface,
+               DBusGMethodInvocation *context)
 {
-  GError* error = NULL;
-  if (!check_authorization(NETWORK_BUS_NAME ".status", &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    return FALSE;
-  }
+    GError* error = NULL;
+    if (!check_authorization(NETWORK_BUS_NAME ".status", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
 
-  dbus_g_method_return(context, interface_status(iface));
-  return TRUE;
+    dbus_g_method_return(context, interface_status(iface));
+    return TRUE;
 }
 
 gboolean
-Network_get_ip_address(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
+Network_get_ip_address(Matahari *matahari, const char *iface,
+                       DBusGMethodInvocation *context)
 {
-  GError* error = NULL;
-  if (!check_authorization(NETWORK_BUS_NAME ".get_ip_address", &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    return FALSE;
-  }
-  
-  dbus_g_method_return(context, g_strdup(mh_network_get_ip_address(iface)));
-  return TRUE;
+    GError* error = NULL;
+    if (!check_authorization(NETWORK_BUS_NAME ".get_ip_address", &error,
+                             context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
+
+    dbus_g_method_return(context, g_strdup(mh_network_get_ip_address(iface)));
+    return TRUE;
 }
 
 gboolean
-Network_get_mac_address(Matahari *matahari, const char *iface, DBusGMethodInvocation *context)
+Network_get_mac_address(Matahari *matahari, const char *iface,
+                        DBusGMethodInvocation *context)
 {
-  GError* error = NULL;
-  if (!check_authorization(NETWORK_BUS_NAME ".get_mac_address", &error, context))
-  {
-    dbus_g_method_return_error(context, error);
-    return FALSE;
-  }
-  
-  dbus_g_method_return(context, g_strdup(mh_network_get_mac_address(iface)));
-  return TRUE;
+    GError* error = NULL;
+    if (!check_authorization(NETWORK_BUS_NAME ".get_mac_address", &error,
+                             context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
+
+    dbus_g_method_return(context, g_strdup(mh_network_get_mac_address(iface)));
+    return TRUE;
 }
 
 /* Generated dbus stuff for network
@@ -184,37 +185,38 @@ Network_get_mac_address(Matahari *matahari, const char *iface, DBusGMethodInvoca
 
 void
 matahari_set_property(GObject *object, guint property_id, const GValue *value,
-    GParamSpec *pspec)
+                      GParamSpec *pspec)
 {
-  // We don't have writable other property...
-  G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    // We don't have writable other property...
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
 
 void
 matahari_get_property(GObject *object, guint property_id, GValue *value,
-    GParamSpec *pspec)
+                      GParamSpec *pspec)
 {
-  switch (property_id)
-    {
-  case PROP_HOSTNAME:
-    g_value_set_string (value, mh_hostname());
-    break;
-  default:
-    /* We don't have any other property... */
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
+    switch (property_id) {
+    case PROP_HOSTNAME:
+        g_value_set_string (value, mh_hostname());
+        break;
+    default:
+        /* We don't have any other property... */
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+        break;
     }
 }
 
-GType matahari_dict_type(int prop)
+GType
+matahari_dict_type(int prop)
 {
-  g_printerr("Type of property %s is map of unknown types\n", properties[prop].name);
-  return G_TYPE_VALUE;
+    g_printerr("Type of property %s is map of unknown types\n",
+               properties[prop].name);
+    return G_TYPE_VALUE;
 }
 
 int
 main(int argc, char** argv)
 {
-  g_type_init();
-  return run_dbus_server(NETWORK_BUS_NAME, NETWORK_OBJECT_PATH);
+    g_type_init();
+    return run_dbus_server(NETWORK_BUS_NAME, NETWORK_OBJECT_PATH);
 }

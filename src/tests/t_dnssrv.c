@@ -24,10 +24,10 @@ int main(int argc, char **argv)
     struct srv_reply **srvl = NULL, *srv = NULL;
     int i;
 
-    if(srvl = srv_lookup("qpid-broker", "tcp", "qpid-broker:49000")) {
+    if (srvl = srv_lookup("qpid-broker", "tcp", "qpid-broker:49000")) {
         srv = *srvl;
-        for(i = 1; srvl[i]; i++) {
-            if(srvl[i]->prio < srv->prio)
+        for (i = 1; srvl[i]; i++) {
+            if (srvl[i]->prio < srv->prio)
                 srv = srvl[i];
         }
 

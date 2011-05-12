@@ -41,15 +41,15 @@ query_interface_table(void)
 
     sigar_open(&sigar);
     status = sigar_net_interface_list_get(sigar, &iflist);
-    if(status == SIGAR_OK) {
-	for(lpc = 0; lpc < iflist.number; lpc++) {
+    if (status == SIGAR_OK) {
+        for (lpc = 0; lpc < iflist.number; lpc++) {
             ifconfig = g_new0(sigar_net_interface_config_t, 1);
-	    status = sigar_net_interface_config_get(sigar, iflist.data[lpc],
-						    ifconfig);
-            if(status == SIGAR_OK)
+            status = sigar_net_interface_config_get(sigar, iflist.data[lpc],
+                                                    ifconfig);
+            if (status == SIGAR_OK)
                 interfaces = g_list_prepend(interfaces, ifconfig);
         }
-	sigar_net_interface_list_destroy(sigar, &iflist);
+        sigar_net_interface_list_destroy(sigar, &iflist);
     }
     sigar_close(sigar);
     return interfaces;
@@ -90,9 +90,9 @@ mh_network_status(const char *iface, uint64_t *flags)
     sigar_net_interface_config_t *ifconfig;
 
     list = mh_network_get_interfaces();
-    for(plist = g_list_first(list); plist; plist = g_list_next(plist)) {
+    for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         ifconfig = (sigar_net_interface_config_t *)plist->data;
-        if((g_str_equal(ifconfig->name, iface)) == TRUE) {
+        if ((g_str_equal(ifconfig->name, iface)) == TRUE) {
             *flags = ifconfig->flags;
         }
     }
@@ -108,9 +108,9 @@ mh_network_get_ip_address(const char *iface)
     char *paddr_str;
 
     list = mh_network_get_interfaces();
-    for(plist = g_list_first(list); plist; plist = g_list_next(plist)) {
+    for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         ifconfig = (sigar_net_interface_config_t *)plist->data;
-        if((g_str_equal(ifconfig->name, iface)) == TRUE) {
+        if ((g_str_equal(ifconfig->name, iface)) == TRUE) {
             sigar_net_address_to_string(NULL, &ifconfig->address, addr_str);
             paddr_str = g_strdup(addr_str);
             return paddr_str;
@@ -128,9 +128,9 @@ mh_network_get_mac_address(const char *iface)
     char *mac;
 
     list = mh_network_get_interfaces();
-    for(plist = g_list_first(list); plist; plist = g_list_next(plist)) {
+    for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         ifconfig = (sigar_net_interface_config_t *)plist->data;
-        if((g_str_equal(ifconfig->name, iface)) == TRUE) {
+        if ((g_str_equal(ifconfig->name, iface)) == TRUE) {
             mac = g_strdup_printf("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",
                                   ifconfig->hwaddr.addr.mac[0],
                                   ifconfig->hwaddr.addr.mac[1],

@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,8 @@
 #include "matahari/host.h"
 #include "host_private.h"
 
-const char *host_os_get_cpu_flags(void)
+const char *
+host_os_get_cpu_flags(void)
 {
     static const char regexstr[] = "(.*\\S)\\s*:\\s*(\\S.*)";
     static char *flags = NULL;
@@ -75,7 +76,7 @@ const char *host_os_get_cpu_flags(void)
     regex = pcre_compile(regexstr, 0, &pcre_error, &pcre_error_offset, NULL);
     if (!regex) {
         mh_err("Unable to compile regular expression '%s' at offset %d: %s",
-                regexstr, pcre_error_offset, pcre_error);
+               regexstr, pcre_error_offset, pcre_error);
         goto done;
     }
 
@@ -87,8 +88,8 @@ const char *host_os_get_cpu_flags(void)
         int found[9];
 
         match = pcre_exec(regex, NULL, cur, strlen(cur),
-                            0, PCRE_NOTEMPTY, found,
-                            sizeof(found) / sizeof(found[0]));
+                          0, PCRE_NOTEMPTY, found,
+                          sizeof(found) / sizeof(found[0]));
 
         if (match != expected || strncmp(cur + found[2], "flags", 5)) {
             continue;
