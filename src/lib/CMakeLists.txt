@@ -3,20 +3,23 @@
 set(LIBS mcommon mhost mnetwork mservice)
 include_directories(${pcre_INCLUDE_DIRS})
 
+# See http://sourceware.org/autobook/autobook/autobook_91.html for
+# how to set the library version appropriately 
+
 add_library (mcommon SHARED utilities.c mainloop.c)
-set_target_properties(mcommon PROPERTIES SOVERSION 0.0.1)
+set_target_properties(mcommon PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES})
 
 add_library (mhost SHARED host.c host_${VARIANT}.c)
-set_target_properties(mhost PROPERTIES SOVERSION 0.0.1)
+set_target_properties(mhost PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mhost ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 add_library (mnetwork SHARED network.c  network_${VARIANT}.c)
-set_target_properties(mnetwork PROPERTIES SOVERSION 0.0.1)
+set_target_properties(mnetwork PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mnetwork ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 add_library (mservice SHARED services.c services_${VARIANT}.c)
-set_target_properties(mservice PROPERTIES SOVERSION 0.0.1)
+set_target_properties(mservice PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mservice ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 if(WIN32)
@@ -34,7 +37,7 @@ if(WITH-QMF)
     add_library (mcommon_qmf SHARED mh_agent.cpp)
 
     target_link_libraries(mcommon_qmf ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
-    set_target_properties(mcommon_qmf PROPERTIES SOVERSION 0.0.1)
+    set_target_properties(mcommon_qmf PROPERTIES SOVERSION 1.0.0)
 
     if(WIN32)
         target_link_libraries(mcommon_qmf wsock32)
@@ -51,7 +54,7 @@ if(WITH-DBUS)
     include_directories(${polkit_INCLUDE_DIRS})
 
     target_link_libraries(mcommon_dbus ${polkit_LIBRARIES})
-    set_target_properties(mcommon_dbus PROPERTIES SOVERSION 0.0.1)
+    set_target_properties(mcommon_dbus PROPERTIES SOVERSION 1.0.0)
 
     install(TARGETS mcommon_dbus DESTINATION lib${LIB_SUFFIX})
 endif(WITH-DBUS)
