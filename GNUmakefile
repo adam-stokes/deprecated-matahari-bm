@@ -124,6 +124,9 @@ clean:
 		$(MAKE) --no-print-dir -C windows.build clean ; \
 	fi
 
+tags:
+	ctags --recurse -e src
+
 doxygen:
 ifeq ($(DOXYGEN),)
 	@echo
