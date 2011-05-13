@@ -3,27 +3,31 @@
  <eventArguments>
 
    <!-- Common -->
-   <arg name="timestamp" type="absTime" />
-   <arg name="sequence"  type="uint32" />
+   <arg name="timestamp"      type="absTime" />
+   <arg name="sequence"       type="uint32"  />
 
-   <arg name="name"             type="sstr" />
-   <arg name="action"           type="sstr" />
-   <arg name="interval"         type="uint32"/>
+   <arg name="name"           type="sstr"    />
+   <arg name="standard"       type="sstr"    />
+   <arg name="provider"       type="sstr"    />
+   <arg name="type"           type="sstr"    />
 
-   <arg name="rc"               type="uint32" />
+   <arg name="action"         type="sstr"    />
+   <arg name="interval"       type="uint32"  />
+   <arg name="rc"             type="uint32"  />
 
-   <arg name="rsc_type"         type="sstr" />
-   <arg name="rsc_class"        type="sstr" />
-   <arg name="rsc_provider"     type="sstr" />
+   <arg name="expected-rc"    type="uint32"  />
+   <arg name="userdata"       type="sstr"    />
 
  </eventArguments>
 
- <!-- Services API -->
+ <event name="resource_op"	args="timestamp,sequence,name,standard,provider,type,action,interval,rc,expected-rc,userdata" />
 
- <!-- Is sequence needed? How to tie to the async method call seq? -->
- <!-- Is timestamp needed? Possibly available for all events already -->
- <event name="service_op"	args="name,action,interval,rc,sequence,timestamp" />
- <event name="resource_op"	args="name,action,interval,rc,sequence,timestamp,rsc_type,rsc_class,rsc_provider" />
+ <!--
+     Services API
+     Simple API for accessing system services
+     
+     For more advanced functionality, use the Resources API with standard="lsb"
+  -->
 
  <class name="Services">
    <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
@@ -41,28 +45,19 @@
      <arg name="name"           dir="I"  type="sstr" />
    </method>
    <method name="start"         desc="Start a system service">
-     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="name"           dir="I"  type="sstr" />
      <arg name="timeout"        dir="I"  type="uint32" />
      <arg name="rc"             dir="O"  type="uint32" />
    </method>
    <method name="stop"          desc="Stop a system service">
-     <arg name="name"           dir="IO" type="sstr" />
+     <arg name="name"           dir="I"  type="sstr" />
      <arg name="timeout"        dir="I"  type="uint32" />
      <arg name="rc"             dir="O"  type="uint32" />
    </method>
    <method name="status"        desc="Check the health of a system service">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="interval"       dir="IO"  type="uint32" />
+     <arg name="name"           dir="I"  type="sstr" />
      <arg name="timeout"        dir="I"  type="uint32" />
      <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="cancel"        desc="Cancel a pending or running action on a system service">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="action"         dir="I"  type="sstr" />
-     <arg name="interval"       dir="I"  type="uint32" />
-   </method>
-   <method name="fail"          desc="Raise a failure event for a system service">
-     <arg name="name"           dir="IO" type="sstr" />
    </method>
    <method name="describe"      desc="Obtain XML description of a system service">
      <arg name="name"           dir="I"  type="sstr" />
@@ -70,98 +65,88 @@
    </method>
  </class>
 
+ <!--
+     Resources API
+
+     Fully featured API for controlling and monitoring services
+     conforming to a standardized specification.
+     
+     Currently supported standards:  windows, lsb (Linux Standard Base), ocf (Open Cluster Framework)
+     On Windows, 'lsb' is an alias for 'windows'
+  -->
+
  <class name="Resources">
    <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
-   <property name="hostname"    type="sstr"  access="RO" desc="Hostname" index="y"/>
+   <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
 
-   <method name="list_classes"  desc="List known resource classes (OCF, LSB, Upstart, etc)">
-     <arg name="classes"        dir="O"  type="list" />
+   <method name="list_standards" desc="List known resource standards (OCF, LSB, Upstart, etc)">
+     <arg name="standards"       dir="O"  type="list" />
    </method>
-   <method name="list_ocf_providers"  desc="List known OCF providers (if supported)">
-     <arg name="providers"      dir="O"  type="list" />
+   <method name="list_providers" desc="List known providers (if supported) for a given standard">
+     <arg name="standard"        dir="I"  type="sstr" />
+     <arg name="providers"       dir="O"  type="list" />
    </method>
-   <method name="list"          desc="List known resource types for a given provider">
+   <method name="list"          desc="List known resource types for a given standard and provider">
+     <arg name="standard"       dir="I"  type="sstr" />
      <arg name="provider"       dir="I"  type="sstr" />
      <arg name="types"          dir="O"  type="list" />
    </method>
-   <!-- Something we can add later if necessary 
-    method name="list_variants" desc="List known implementations of a given resource type">
-     <arg name="type"           dir="I"  type="sstr" />
-     <arg name="class"          dir="O"  type="list" />
-     <arg name="providers"      dir="O"  type="list" />
-   </method-->
 
    <method name="describe"      desc="Obtain XML description of a resource">
-     <arg name="class"          dir="I"  type="sstr" />
+     <arg name="standard"       dir="I"  type="sstr" />
      <arg name="provider"       dir="I"  type="sstr" />
      <arg name="type"           dir="I"  type="sstr" />
      <arg name="xml"            dir="O"  type="sstr" />
    </method>
-   <method name="start"         desc="Start a resource">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
-     <arg name="parameters"     dir="I"  type="map" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="stop"          desc="Stop a resource">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
-     <arg name="parameters"     dir="I"  type="map" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="monitor"       desc="Check the health of a resource">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
-     <arg name="interval"       dir="IO" type="uint32" />
-     <arg name="parameters"     dir="I"  type="map" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
    <method name="invoke"        desc="Perform a custom action on a resource">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
-     <arg name="action"         dir="IO" type="sstr" />
-     <arg name="interval"       dir="IO" type="uint32" />
-     <arg name="parameters"     dir="I"  type="map" />
+     <arg name="name"           dir="I"  type="sstr"   />
+     <arg name="standard"       dir="I"  type="sstr"   />
+     <arg name="provider"       dir="I"  type="sstr"   />
+     <arg name="type"           dir="I"  type="sstr"   />
+     <arg name="action"         dir="I"  type="sstr"   />
+     <arg name="interval"       dir="I"  type="uint32" />
+     <arg name="parameters"     dir="I"  type="map"    />
      <arg name="timeout"        dir="I"  type="uint32" />
+     <arg name="expected-rc"    dir="I"  type="uint32" />
      <arg name="rc"             dir="O"  type="uint32" />
+     <arg name="sequence"       dir="O"  type="uint32" />
+     <arg name="userdata"       dir="IO" type="sstr"   />
    </method>
    <method name="cancel"        desc="Cancel a pending or running action on a resource">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
-     <arg name="action"         dir="IO" type="sstr" />
-     <arg name="interval"       dir="IO" type="uint32" />
+     <arg name="name"           dir="I"  type="sstr"   />
+     <arg name="action"         dir="I"  type="sstr"   />
+     <arg name="interval"       dir="I"  type="uint32" />
      <arg name="timeout"        dir="I"  type="uint32" />
    </method>
    <method name="fail"          desc="Indicate a resource has failed">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
+     <arg name="name"           dir="I"  type="sstr"   />
+     <arg name="rc"             dir="I"  type="uint32" />
    </method>
-   <!-- Something we can add later if necessary
-    method name="last"          desc="Retrieve the last action for a resource">
-     <arg name="name"           dir="IO" type="sstr" />
-     <arg name="class"          dir="IO" type="sstr" />
-     <arg name="provider"       dir="IO" type="sstr" />
-     <arg name="type"           dir="IO" type="sstr" />
-     <arg name="action"         dir="O"  type="sstr" />
-     <arg name="parameters"     dir="O"  type="map" />
+   <!-- Something functions we can add later if necessary
+   <method name="list_variants" desc="List known implementations of a given resource type">
+     <arg name="type"           dir="I"  type="sstr" />
+     <arg name="standard"       dir="I"  type="sstr" />
+     <arg name="providers"      dir="O"  type="list" />
+   </method>
+   <method name="last"          desc="Retrieve the last action for a resource">
+     <arg name="name"           dir="I"  type="sstr"   />
+     <arg name="standard"       dir="O"  type="sstr"   />
+     <arg name="provider"       dir="O"  type="sstr"   />
+     <arg name="type"           dir="O"  type="sstr"   />
+     <arg name="action"         dir="O"  type="sstr"   />
      <arg name="interval"       dir="O"  type="uint32" />
+     <arg name="parameters"     dir="O"  type="map"    />
      <arg name="timeout"        dir="O"  type="uint32" />
-   </method-->
+     <arg name="expected-rc"    dir="O"  type="uint32" />
+     <arg name="rc"             dir="O"  type="uint32" />
+     <arg name="sequence"       dir="O"  type="uint32" />
+     <arg name="userdata"       dir="O"  type="sstr"   />
+   </method>
+   <method name="history"       desc="Retrieve all recorded actions for a resource">
+     <arg name="name"           dir="I"  type="sstr" />
+     <arg name="operations"     dir="O"  type="list" />
+   </method>
+   -->
  </class>
 
 </schema>

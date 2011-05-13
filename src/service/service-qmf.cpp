@@ -54,6 +54,8 @@ class SrvAgent : public MatahariAgent
         qmf::Data _resources;
         qmf::DataAddr _resources_addr;
 
+        _qtype::Variant::List standards;
+
         gboolean invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
         gboolean invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 
@@ -63,7 +65,7 @@ class SrvAgent : public MatahariAgent
         virtual int setup(qmf::AgentSession session);
         virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                                 gpointer user_data);
-        void raiseEvent(svc_action_t *op, enum service_id service);
+        void raiseEvent(svc_action_t *op, enum service_id service, const char *userdata);
 };
 
 /**
@@ -103,20 +105,30 @@ public:
 void
 AsyncCB::mh_async_callback(svc_action_t *op)
 {
+    const char *userdata = NULL;
     AsyncCB *cb_data = static_cast<AsyncCB *>(op->cb_data);
 
     mh_trace("Completed: %s = %d\n", op->id, op->rc);
+
+    qpid::types::Variant::Map& args = cb_data->event.getArguments();
+    if (args.count("userdata") > 0) {
+	userdata = args["userdata"].asString().c_str();
+    }
 
     if (cb_data->first_result) {
         if (cb_data->has_rc) {
             cb_data->event.addReturnArgument("rc", op->rc);
         }
+	if (userdata) {
+	    cb_data->event.addReturnArgument("userdata", userdata);
+	}
         cb_data->session.methodSuccess(cb_data->event);
         cb_data->first_result = false;
+
     } else if (cb_data->last_rc != op->rc) {
         mh_trace("Result changed on recurring action: was '%d', now '%d'\n",
                 cb_data->last_rc, op->rc);
-        cb_data->agent->raiseEvent(op, cb_data->service);
+        cb_data->agent->raiseEvent(op, cb_data->service, userdata);
     }
 
     if (op->interval) { /* recurring action */
@@ -156,7 +168,7 @@ main(int argc, char **argv)
     return rc;
 }
 
-void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
+void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *userdata)
 {
     uint64_t timestamp = 0L;
     qmf::Data event;
@@ -166,7 +178,9 @@ void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
 #endif
 
     if(service) {
-        event = qmf::Data(_package.event_service_op);
+        // event = qmf::Data(_package.event_service_op);
+	return;
+
     } else {
         event = qmf::Data(_package.event_resource_op);
     }
@@ -176,12 +190,17 @@ void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
     event.setProperty("interval", op->interval);
     event.setProperty("rc", op->rc);
     event.setProperty("timestamp", timestamp);
-    event.setProperty("sequence", 0);
+    event.setProperty("sequence", op->sequence);
 
     if (service == SRV_RESOURCES) {
-        event.setProperty("rsc_type", op->agent);
-        event.setProperty("rsc_class", op->rclass);
-        event.setProperty("rsc_provider", op->provider);
+        event.setProperty("standard", op->standard);
+        event.setProperty("provider", op->provider);
+        event.setProperty("type", op->agent);
+        event.setProperty("expected-rc", op->expected_rc);
+    }
+
+    if(userdata) {
+        event.setProperty("userdata", userdata);
     }
 
     _agent_session.raiseEvent(event);
@@ -190,6 +209,14 @@ void SrvAgent::raiseEvent(svc_action_t *op, enum service_id service)
 int
 SrvAgent::setup(qmf::AgentSession session)
 {
+#ifdef __linux__
+    standards.push_back("ocf");
+#endif
+    standards.push_back("lsb");
+#ifndef WIN32
+    standards.push_back("windows");
+#endif
+
     _package.configure(session);
     _services = qmf::Data(_package.data_Services);
 
@@ -243,7 +270,6 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
     }
 
     qpid::types::Variant::Map& args = event.getArguments();
-    bool async = false;
 
     if (methodName == "list") {
         _qtype::Variant::List s_list;
@@ -256,59 +282,29 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event, gpoi
 
         event.addReturnArgument("services", s_list);
 
-    } else if (methodName == "enable") {
-        svc_action_t * op = services_action_create(
-                args["name"].asString().c_str(), "enable", 0,
-                default_timeout_ms);
+    } else if (methodName == "enable" || methodName == "disable") {
+        svc_action_t *op = services_action_create(
+	    args["name"].asString().c_str(), methodName.c_str(), 0,
+	    default_timeout_ms);
 
         action_async(SRV_SERVICES, session, event, op, false);
-        async = true;
+	return TRUE;
 
-    } else if (methodName == "disable") {
-        svc_action_t * op = services_action_create(
-                args["name"].asString().c_str(), "disable", 0,
-                default_timeout_ms);
-
-        action_async(SRV_SERVICES, session, event, op, false);
-        async = true;
-
-    } else if (methodName == "start") {
+    } else if (methodName == "start"
+	       || methodName == "stop"
+	       || methodName == "status") {
         svc_action_t *op = services_action_create(
-                args["name"].asString().c_str(), "start", 0, args["timeout"]);
+                args["name"].asString().c_str(), methodName.c_str(), 0, args["timeout"].asInt32());
 
         action_async(SRV_SERVICES, session, event, op, true);
-        async = true;
-
-    } else if (methodName == "stop") {
-        svc_action_t * op = services_action_create(
-                args["name"].asString().c_str(), "stop", 0, args["timeout"]);
-
-        action_async(SRV_SERVICES, session, event, op, true);
-        async = true;
-
-    } else if (methodName == "status") {
-        svc_action_t *op = services_action_create(
-                args["name"].asString().c_str(), "status", args["interval"],
-                args["timeout"]);
-
-        action_async(SRV_SERVICES, session, event, op, true);
-        async = true;
-
-    } else if (methodName == "cancel") {
-        services_action_cancel(
-                args["name"].asString().c_str(),
-                args["action"].asString().c_str(),
-                args["interval"]);
+	return TRUE;
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         return TRUE;
     }
 
-    if (!async) {
-        session.methodSuccess(event);
-    }
-
+    session.methodSuccess(event);
     return TRUE;
 }
 
@@ -321,19 +317,16 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
     }
 
     qpid::types::Variant::Map& args = event.getArguments();
-    bool async = false;
 
-    if (methodName == "list_classes") {
-        _qtype::Variant::List c_list;
-        c_list.push_back("ocf");
-        c_list.push_back("lsb");
-        event.addReturnArgument("classes", c_list);
+    if (methodName == "list_standards") {
+        event.addReturnArgument("standards", standards);
 
-    } else if (methodName == "list_ocf_providers") {
+    } else if (methodName == "list_providers") {
         GList *gIter = NULL;
-        GList *providers = resources_list_ocf_providers();
+        GList *providers = NULL;
         _qtype::Variant::List p_list;
 
+	providers = resources_list_providers(args["standard"].asString().c_str());
         for(gIter = providers; gIter != NULL; gIter = gIter->next) {
             p_list.push_back((const char *)gIter->data);
         }
@@ -341,74 +334,61 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event, gpo
 
     } else if (methodName == "list") {
         GList *gIter = NULL;
-        GList *agents = resources_list_ocf_agents(
-                args["provider"].asString().c_str());
+        GList *agents = NULL;
         _qtype::Variant::List t_list;
 
+	agents = resources_list_agents(
+	    args["standard"].asString().c_str(),                
+	    args["provider"].asString().c_str());
+	
         for(gIter = agents; gIter != NULL; gIter = gIter->next) {
             t_list.push_back((const char *)gIter->data);
         }
         event.addReturnArgument("types", t_list);
 
-    } else if (methodName == "start") {
-        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
-        svc_action_t *op = resources_action_create(
-                args["name"].asString().c_str(),
-                args["provider"].asString().c_str(),
-                args["type"].asString().c_str(),
-                "start", 0, args["timeout"], params);
-
-        action_async(SRV_RESOURCES, session, event, op, true);
-        async = true;
-
-    } else if (methodName == "stop") {
-        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
-        svc_action_t *op = resources_action_create(
-                args["name"].asString().c_str(),
-                args["provider"].asString().c_str(),
-                args["type"].asString().c_str(),
-                "stop", 0, args["timeout"], params);
-
-        action_async(SRV_RESOURCES, session, event, op, true);
-        async = true;
-
-    } else if (methodName == "monitor") {
-        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
-        svc_action_t *op = resources_action_create(
-                args["name"].asString().c_str(),
-                args["provider"].asString().c_str(),
-                args["type"].asString().c_str(),
-                "monitor", args["interval"], args["timeout"], params);
-
-        action_async(SRV_RESOURCES, session, event, op, true);
-        async = true;
-
     } else if (methodName == "invoke") {
-        GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
-        svc_action_t *op = resources_action_create(
-                args["name"].asString().c_str(),
-                args["provider"].asString().c_str(),
-                args["type"].asString().c_str(),
-                args["action"].asString().c_str(),
-                args["interval"], args["timeout"], params);
+	svc_action_t *op = NULL;
+	bool valid_standard = false;
+	_qtype::Variant::List::iterator iter;
+	GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
 
-        action_async(SRV_RESOURCES, session, event, op, true);
-        async = true;
+	for ( iter=standards.begin() ; iter != standards.end(); iter++ ) {
+	    if(args["standard"].asString() == (*iter).asString()) {
+		valid_standard = true;
+		break;
+	    }
+	}
 
+	if(valid_standard == false) {
+	    mh_err("%s is not a known resource standard", args["standard"].asString().c_str());
+	    session.raiseException(event, MH_NOT_IMPLEMENTED);
+	    return TRUE;
+	}
+
+	op = resources_action_create(
+	    args["name"].asString().c_str(),
+	    args["standard"].asString().c_str(),
+	    args["provider"].asString().c_str(),
+	    args["type"].asString().c_str(),
+	    args["action"].asString().c_str(),
+	    args["interval"].asInt32(), args["timeout"].asInt32(), params);
+
+	op->expected_rc = args["expected-rc"].asInt32();
+
+	action_async(SRV_RESOURCES, session, event, op, true);
+	return TRUE;
+	
     } else if (methodName == "cancel") {
         services_action_cancel(
                 args["name"].asString().c_str(),
                 args["action"].asString().c_str(),
-                args["interval"]);
+                args["interval"].asInt32());
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         return TRUE;
     }
 
-    if (!async) {
-        session.methodSuccess(event);
-    }
-
+    session.methodSuccess(event);
     return TRUE;
 }

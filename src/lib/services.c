@@ -31,31 +31,19 @@
 
 MH_TRACE_INIT_DATA(mh_services);
 
+/* TODO: Develop a rollover strategy */
 
+static int operations = 0;
 GHashTable *recurring_actions = NULL;
 
 svc_action_t *services_action_create(
     const char *name, const char *action, int interval, int timeout)
 {
-    svc_action_t *op;
-
-    op = calloc(1, sizeof(svc_action_t));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
-    op->rsc = strdup(name);
-    op->action = strdup(action);
-    op->interval = interval;
-    op->timeout = timeout;
-    op->rclass = strdup("lsb");
-    op->agent = strdup(name);
-    asprintf(&op->id, "%s_%s_%d", name, action, interval);
-
-    services_os_set_exec(op);
-
-    return op;
+    return resources_action_create(name, "lsb", NULL, name, action, interval, timeout, NULL);
 }
 
 svc_action_t *resources_action_create(
-    const char *name, const char *provider, const char *agent,
+    const char *name, const char *standard, const char *provider, const char *agent,
     const char *action, int interval, int timeout, GHashTable *params)
 {
     svc_action_t *op;
@@ -66,16 +54,29 @@ svc_action_t *resources_action_create(
     op->action = strdup(action);
     op->interval = interval;
     op->timeout = timeout;
-    op->rclass = strdup("ocf");
+    op->standard = strdup(standard);
     op->agent = strdup(agent);
-    op->provider = strdup(provider);
-    op->params = params;
+    op->sequence = ++operations;
     asprintf(&op->id, "%s_%s_%d", name, action, interval);
-    asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT,
-                            provider, agent);
-    op->opaque->args[0] = strdup(op->opaque->exec);
-    op->opaque->args[1] = strdup(action);
 
+    if(strcmp(standard, "ocf") == 0) {
+	op->provider = strdup(provider);
+	op->params = params;
+
+	asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT,
+		 provider, agent);
+	op->opaque->args[0] = strdup(op->opaque->exec);
+	op->opaque->args[1] = strdup(action);
+
+    } else if(strcmp(standard, "lsb") == 0 || strcmp(standard, "windows") == 0) {
+	services_os_set_exec(op);
+
+    } else {
+	mh_err("Unknown resource standard: %s", standard);
+	services_action_free(op);
+	op = NULL;
+    }
+    
     return op;
 }
 
@@ -96,7 +97,7 @@ void services_action_free(svc_action_t *op)
     free(op->rsc);
     free(op->action);
 
-    free(op->rclass);
+    free(op->standard);
     free(op->agent);
     free(op->provider);
 
@@ -173,16 +174,27 @@ get_directory_list(const char *root, gboolean files)
 
 GList *services_list(void)
 {
-    return services_os_list();
+    return resources_list_agents("lsb", NULL);
 }
 
-GList *resources_list_ocf_providers(void)
+GList *resources_list_providers(const char *standard)
 {
-    return resources_os_list_ocf_providers();
+    if(strcmp(standard, "ocf") == 0) {
+	return resources_os_list_ocf_providers();
+    }
+    
+    return NULL;
 }
 
-GList *resources_list_ocf_agents(const char *provider)
+GList *resources_list_agents(const char *standard, const char *provider)
 {
-    return resources_os_list_ocf_agents(provider);
-}
+    if(strcmp(standard, "ocf") == 0) {
+	return resources_os_list_ocf_agents(provider);
 
+    } else if(strcmp(standard, "lsb") == 0
+	      || strcmp(standard, "windows") == 0) {
+	return services_os_list();
+    }
+    
+    return NULL;
+}

@@ -90,7 +90,7 @@ typedef struct svc_action_s
     char *action;
     int   interval;
 
-    char *rclass;
+    char *standard;
     char *provider;
     char *agent;
 
@@ -100,6 +100,8 @@ typedef struct svc_action_s
     int rc;
     int pid;
     int status;
+    int sequence;
+    int expected_rc;
 
     char          *stderr_data;
     char          *stdout_data;
@@ -119,15 +121,15 @@ typedef struct svc_action_s
 extern GList *get_directory_list(const char *root, gboolean files);
 
 extern GList *services_list(void);
-extern GList *resources_list_ocf_providers(void);
-extern GList *resources_list_ocf_agents(const char *provider);
+extern GList *resources_list_providers(const char *standard);
+extern GList *resources_list_agents(const char *standard, const char *provider);
 
 extern svc_action_t *services_action_create(
     const char *name, const char *action, int interval /* ms */, int timeout /* ms */);
 
 /* After the call, 'params' is owned, and later free'd by the svc_action_t result */
 extern svc_action_t *resources_action_create(
-    const char *name, const char *provider, const char *agent,
+    const char *name, const char *standard, const char *provider, const char *agent,
     const char *action, int interval /* ms */, int timeout /* ms */, GHashTable *params);
 
 extern void services_action_free(svc_action_t *op);

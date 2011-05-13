@@ -136,7 +136,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_OCF_env_vars(svc_action_t *op)
 {
-    if (strcmp("ocf", op->rclass) != 0) {
+    if (strcmp("ocf", op->standard) != 0) {
         return;
     }
 
