@@ -1,35 +1,35 @@
 #!/bin/sh
 
 # the following is chkconfig init header
-# matahari: host management QMF agents
+# matahari-@BASE@: QMF agent for @BASE@
 ### BEGIN INIT INFO
 # Provides:
 # Required-Start: $local_fs matahari-broker
 # Required-Stop: $local_fs matahari-broker
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: Starts and stops the named matahari agent
-# Description: Matahari agents provide host information using AMQP protocol.
+# Short-Description: Starts and stops the @BASE@ matahari agent
+# Description: Matahari agent providing a @BASE@-related API using the AMQP protocol.
 ### END INIT INFO
 
 # chkconfig: - 99 01
-# description: Matahari agents provide host information using AMQP protocol.
-# processname: matahari-*
-# pidfile: @localstatedir@/run/matahari-*.pid
+# description: Matahari agent providing a @BASE@-related API using the AMQP protocol.
+# processname: matahari-@BASE@d
+# pidfile: @localstatedir@/run/matahari-@BASE@.pid
 #
 
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-SERVICE=$(basename $(readlink -f "$0"))
-PROCESS=${SERVICE/-/-qmf-}d
+SERVICE=matahari-@BASE@
+PROCESS=matahari-qmf-@BASE@d
 
 RETVAL=0
 
 test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
 
 start() {
-    echo -n $"Starting $SERVICE daemon: "
+    echo -n $"Starting the $SERVICE daemon: "
     daemon $PROCESS --broker $MATAHARI_BROKER --port $MATAHARI_PORT $MATAHARI_AGENT_ARGS --daemon
     RETVAL=$?
     echo
@@ -37,7 +37,7 @@ start() {
 }
 
 stop() {
-    echo -n $"Stopping $SERVICE daemon: "
+    echo -n $"Stopping the $SERVICE daemon: "
 
     killproc $PROCESS
     RETVAL=$?
@@ -54,7 +54,7 @@ restart() {
 }
 
 reload() {
-    echo -n $"Reloading $SERVICE configuration: "
+    echo -n $"Reloading the $SERVICE configuration: "
 
     killproc $PROCESS -HUP
     RETVAL=$?

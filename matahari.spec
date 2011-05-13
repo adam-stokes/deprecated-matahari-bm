@@ -158,9 +158,6 @@ make DESTDIR=%{buildroot} install
 
 %if %{with qmf}
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker

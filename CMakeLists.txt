@@ -28,7 +28,8 @@ inherit_value(QPID_PATH "C:/Program Files/Apache/qpid-0.6")
 
 # Build Prefixes
 inherit_value(localstatedir "/var")
-inherit_value(sysconfdir    "/etc")
+inherit_value(sysconfdir    "${SYSCONF_INSTALL_DIR}")
+inherit_value(initdir	    "${SYSCONF_INSTALL_DIR}/init.d")
 
 # Add sub-directories
 add_subdirectory(src)
