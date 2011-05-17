@@ -1,5 +1,5 @@
-/* host.h - Copyright (C) 2009 Red Hat, Inc.
- * Written by Arjun Roy <arroy@redhat.com>
+/* mh_agent_config.h - Copyright (C) 2011 Red Hat, Inc.
+ * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-extern uint32_t mh_is_configured(const char *uri);
+extern uint32_t mh_is_configured();
+extern void mh_configure(const char *uri);
 
 #endif // __MH_CONFIG_H__

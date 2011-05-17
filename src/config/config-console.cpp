@@ -1,4 +1,4 @@
-/* config.cpp - Copyright (c) 2011 Red Hat, Inc.
+/* config-console.cpp - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -67,10 +67,10 @@ int main(int argc, char** argv)
                         if (session.getAgentCount() == 1) {
                             agent = session.getAgent(0);
                             DataAddr agent_event_addr("config", agent.getName(), 0);
+                            cout << "callMethod:configure : " << dataProperties << endl;
                             ConsoleEvent result(agent.callMethod("configure", 
                                                                   dataProperties,
                                                                   agent_event_addr));
-                            cout << result.getArguments() << endl;
                         }
                     }
                     break;

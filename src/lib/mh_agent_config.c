@@ -24,24 +24,26 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <glib.h>
-#include <glib/gprintf.h>
 #include "matahari/mh_agent_config.h"
 #include "matahari/logging.h"
 
 MH_TRACE_INIT_DATA(mh_config);
 
-uint32_t mh_is_configured(const char *uri)
+static const char *filename = "/var/cache/matahari/.mh_configured";
+
+uint32_t mh_is_configured()
 {
     int config_file_exist = 0;
-    const char *filename = "/tmp/.mh_configured";
     
-    if(!g_file_test(filename, G_FILE_TEST_EXISTS)) {
-        if(!g_file_set_contents(filename, uri, -1, NULL)) {
-            mh_log(LOG_DEBUG, "Unable to create file.");
-        }
-        config_file_exist = 1;
-    } else {
+    if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
         config_file_exist = 1;
     }
     return config_file_exist;
+}
+
+void mh_configure(const char *uri)
+{
+    if(!g_file_set_contents(filename, uri, -1, NULL)) {
+        mh_log(LOG_DEBUG, "Unable to create file.");
+    }
 }

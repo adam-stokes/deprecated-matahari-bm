@@ -1,5 +1,5 @@
-%global specversion 46
-%global upstream_version 7968fe1
+%global specversion 47
+%global upstream_version fedf8df
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -128,6 +128,16 @@ Requires:	%{name}-agent-lib = %{version}-%{release}
 %description service
 QMF agent for viewing and controlling system services
 
+%package config
+License:	GPLv2+
+Summary:	QMF agent for post boot configuration services.
+Group:		Applications/System
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
+
+%description config
+QMF agent/console for providing post boot capabilities.
+
 %package devel
 License:	GPLv2+
 Summary:	Matahari development package
@@ -161,6 +171,8 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
 %{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-config
+%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-config-console
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
@@ -168,6 +180,7 @@ make DESTDIR=%{buildroot} install
 
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
+%{__install} -d -m0755 %{buildroot}%{_localstatedir}/cache/%{name}
 %endif
 
 %post -n matahari-lib -p /sbin/ldconfig
@@ -225,6 +238,26 @@ fi
 %postun service
 if [ "$1" -ge "1" ]; then
     /sbin/service matahari-service condrestart >/dev/null 2>&1 || :
+fi
+
+#== Config
+
+%post config
+/sbin/service matahari-config condrestart
+/sbin/service matahari-config-console condrestart
+
+%preun config
+if [ $1 = 0 ]; then
+   /sbin/service matahari-config-console stop >/dev/null 2>&1 || :
+   /sbin/service matahari-config stop >/dev/null 2>&1 || :
+   chkconfig --del matahari-config-console
+   chkconfig --del matahari-config
+fi
+
+%postun config
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-config-console condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-config condrestart >/dev/null 2>&1 || :
 fi
 
 #== Broker
@@ -311,6 +344,16 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
+%endif
+
+%files network
+%defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
+%attr(755, root, root) %{_initddir}/matahari-config
+%attr(755, root, root) %{_sbindir}/matahari-qmf-configd
+%attr(755, root, root) %{_sbindir}/matahari-console-configd
 %endif
 
 %if %{with qmf}

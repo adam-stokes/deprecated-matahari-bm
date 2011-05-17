@@ -68,6 +68,7 @@ ConfigAgent::setup(qmf::AgentSession session)
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
+    _instance.setProperty("is_configured", mh_is_configured());
 
     _agent_session.addData(_instance, "config");
     return 0;
@@ -84,8 +85,10 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     const std::string& methodName(event.getMethodName());
 
     if (methodName == "configure") {
-        int rc = mh_is_configured(
-                event.getArguments()["uri"].asString().c_str());
+        int rc = mh_is_configured();
+        if(rc == 0) {
+            mh_configure(event.getArguments()["uri"].asString().c_str());
+        }
         event.addReturnArgument("configured", rc);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
