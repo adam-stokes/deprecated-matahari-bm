@@ -1,5 +1,5 @@
-%global specversion 46
-%global upstream_version 7968fe1
+%global specversion 62
+%global upstream_version 1915fdd
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -146,7 +146,7 @@ Headers and shared libraries for developing Matahari agents.
 %setup -q -n matahari-matahari-%{upstream_version}
 
 %build
-%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_qmf: -DWITH-QMF:BOOL=OFF} %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} .
+%{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_qmf: -DWITH-QMF:BOOL=OFF} %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} -Dinitdir=%{_initddir} -Dsysconfdir=%{_sysconfdir} .
 make %{?_smp_mflags}
 
 %install
@@ -359,8 +359,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with dbus}
 %{_includedir}/matahari/mh_dbus_common.h
 %{_includedir}/matahari/mh_gobject_class.h
-%{_datadir}/cmake/Modules/MatahariDBusMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
+%{_datadir}/matahari/dbus-to-c.xsl
+%{_datadir}/cmake/Modules/MatahariMacros.cmake
 %endif
 
 %changelog
