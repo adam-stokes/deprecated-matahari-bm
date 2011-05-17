@@ -98,9 +98,11 @@ struct option opt[] = {
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
     {"reconnect", required_argument, NULL, 'r'},
+#ifdef MH_SSL
     {"ssl-cert-name", required_argument, NULL, 'N'},
     {"ssl-cert-db", required_argument, NULL, 'C'},
     {"ssl-cert-password-file", required_argument, NULL, 'f'},
+#endif
     {0, 0, 0, 0}
 };
 
@@ -117,9 +119,11 @@ print_usage(const char *proc_name)
     printf("\t-s | --service                 service name to use for authentication purproses.\n");
     printf("\t-p | --port                    specify broker port.\n");
     printf("\t-r | --reconnect [yes|no]      attempt to reconnect on failure.\n");
+#ifdef MH_SSL
     printf("\t-N | --ssl-cert-name           specify certificate name.\n");
     printf("\t-C | --ssl-cert-db             specify certificate database.\n");
     printf("\t-f | --ssl-cert-password-file  specify certificate password file.\n");
+#endif
 }
 #endif
 
@@ -161,9 +165,11 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     char *username  = NULL;
     char *password  = NULL;
     char *service   = NULL;
+#ifdef MH_SSL
     char *ssl_cert_db = NULL;
     char *ssl_cert_name = NULL;
     char *ssl_cert_password_file = NULL;
+#endif
     int serverport  = MATAHARI_PORT;
     int res = 0;
 
@@ -288,6 +294,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 exit(1);
             }
             break;
+#ifdef MH_SSL
         case 'N':
             if (optarg) {
                 protocol = strdup("ssl");
@@ -316,6 +323,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 exit(1);
             }
             break;
+#endif
         default:
             fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
             print_usage(proc_name);
@@ -331,6 +339,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         }
     }
     
+#ifdef MH_SSL
     if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
         if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
             fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
@@ -340,14 +349,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
             exit(1);
         }
-        /* ssl options, no ssl headers from qpid?
+
         qpid::sys::ssl::SslOptions ssl_options;
         ssl_options.certDbPath = strdup(ssl_cert_db);
         ssl_options.certName = strdup(ssl_cert_name);
         ssl_options.certPasswordFile = strdup(ssl_cert_password_file);
         qpid::sys::ssl::initNSS(ssl_options, true);
-        */
     }
+#endif
     
 #endif
 
@@ -415,9 +424,11 @@ return_cleanup:
     free(username);
     free(password);
     free(service);
+#ifdef MH_SSL
     free(ssl_cert_name);
     free(ssl_cert_db);
     free(ssl_cert_password_file);
+#endif
     free(protocol);
 
     return res;
