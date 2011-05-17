@@ -39,6 +39,9 @@ prog=matahari-brokerd
 lockfile=@localstatedir@/lock/subsys/matahari-broker
 pidfile=@localstatedir@/run/matahari-broker.pid
 
+# Turn off automatic systemd redirects
+SYSTEMCTL_SKIP_REDIRECT=1
+
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
