@@ -1,0 +1,15 @@
+<schema package="org.matahariproject">
+
+    <!-- Config API -->
+    <class name="Config">
+        <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
+        <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
+        
+        <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
+        
+        <method name="configure"         desc="Send configure method">
+          <arg name="uri"                dir="I" type="sstr" />
+          <arg name="configured"         dir="O" type="uint32" />
+        </method>
+    </class>
+</schema>
