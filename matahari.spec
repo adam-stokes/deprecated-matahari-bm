@@ -1,5 +1,5 @@
-%global specversion 48
-%global upstream_version 312c009
+%global specversion 49
+%global upstream_version 4ba5d4f
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -352,7 +352,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-config
 %attr(755, root, root) %{_sbindir}/matahari-qmf-configd
-%attr(755, root, root) %{_sbindir}/matahari-console-configd
+%attr(755, root, root) %{_sbindir}/matahari-qmf-console-configd
 %endif
 
 %if %{with qmf}
