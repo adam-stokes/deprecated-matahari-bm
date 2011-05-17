@@ -58,7 +58,7 @@ echo "=::=::=::= Beginning Linux Build =::=::=::= "
 make_srpm 
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}`
 
-rm -f $results/build.log
+rm -f $results/build.log $results/*.rpm
 /usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
 
@@ -69,22 +69,22 @@ if [ $rc != 0 ]; then
     exit $rc
 fi
 
-createrepo $results
+# Packages get copied to:
+#   /home/builder/matahari/public_html/dist/rpm/ 
 
-# Until qpid is usable again on mingw32
-exit $rc
+$results
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
 
 # When qpid is consistently usable 
 # build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
-build_target=`rpm --eval fedora-14-%{_arch}`
+build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
 make_srpm mingw32-
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch
 
-rm -f $results/build.log
+rm -f $results/build.log $results/*.rpm
 /usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
 
@@ -94,5 +94,3 @@ if [ $rc != 0 ]; then
     echo "=::=::=::= `date` =::=::=::= "
     exit $rc
 fi
-
-createrepo $results

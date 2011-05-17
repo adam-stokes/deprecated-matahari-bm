@@ -32,8 +32,9 @@ network_os_start(const char *iface)
         "/sbin/ifup", (gchar *) iface, NULL
     };
 
-    ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
-    if(ret == FALSE) {
+    ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
+                        &error);
+    if (ret == FALSE) {
         g_error_free(error);
     }
 }
@@ -47,8 +48,9 @@ network_os_stop(const char *iface)
         "/sbin/ifdown", (gchar *) iface, NULL
     };
 
-    ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
-    if(ret == FALSE) {
+    ret = g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
+                        &error);
+    if (ret == FALSE) {
         g_error_free(error);
     }
 }

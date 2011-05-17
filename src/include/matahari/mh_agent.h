@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,14 +53,16 @@ typedef struct mainloop_qmf_s {
         guint id;
         void *user_data;
         GDestroyNotify dnotify;
-        gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
+        gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event,
+                             gpointer user_data);
 } mainloop_qmf_t;
 
 extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,
-                                  gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer userdata),
-                                  GDestroyNotify notify, gpointer userdata);
+        gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event,
+                             gpointer userdata),
+        GDestroyNotify notify, gpointer userdata);
 
-extern gboolean mainloop_destroy_qmf(mainloop_qmf_t* source);
+extern gboolean mainloop_destroy_qmf(mainloop_qmf_t *source);
 
 class MatahariAgent
 {
@@ -69,7 +71,8 @@ public:
     ~MatahariAgent() {};
 
     virtual int setup(qmf::AgentSession session) { return 0; };
-    virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data) { return FALSE; };
+    virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                            gpointer user_data) { return FALSE; };
     int init(int argc, char **argv, const char* proc_name);
     void run();
 

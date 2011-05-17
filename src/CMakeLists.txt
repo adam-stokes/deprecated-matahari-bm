@@ -128,14 +128,11 @@ if(WITH-QMF)
     add_definitions(-DMATAHARI_PORT=${MATAHARI_PORT})
     add_definitions(-DMATAHARI_BROKER="${MATAHARI_BROKER}")
 
-    set(SCHEMA_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/QmfPackage.cpp)
-
     find_package(QPID REQUIRED)
     if(QPID-NOTFOUND)
         message(FATAL_ERROR "QPID library not found.")
     endif(QPID-NOTFOUND)
 
-    generate_qmf_schemas(${SCHEMAS} ${SCHEMA_SOURCES})
 endif(WITH-QMF)
 
 

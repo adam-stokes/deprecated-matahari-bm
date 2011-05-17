@@ -1,4 +1,4 @@
-/* console-qmf.cpp - Copyright (c) 2011 Red Hat, Inc.
+/* config.cpp - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -30,8 +30,6 @@
 #include <qmf/Query.h>
 #include <qpid/types/Variant.h>
 
-#include "qmf/org/matahariproject/QmfPackage.h"
-
 #include <string>
 #include <iostream>
 
@@ -42,20 +40,23 @@ using qpid::messaging::Duration;
 
 int main(int argc, char** argv)
 {
-    string url("amqp:tcp:127.0.0.1:49000");
-    const string methodName("configure");
+    string brokerUrl("amqp:tcp:127.0.0.1:49000");
     qpid::types::Variant::Map connectionOptions;
     qpid::types::Variant::Map dataProperties;
     string sessionOptions;
     
-    connectionOptions["reconnect"] = false;
+    connectionOptions["reconnect"] = true;
+    
+    dataProperties["uri"] = argv[1] ? argv[1] : "http://localhost/config/uuid";
 
-    qpid::messaging::Connection connection(url, connectionOptions);
+    qpid::messaging::Connection connection(brokerUrl, connectionOptions);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);
     session.open();
 
+    // Only filter connecting agents under matahariproject.org vendor
+    session.setAgentFilter("[eq, _vendor, [quote, 'matahariproject.org']]]");
     Agent agent;
     while (true) {
         ConsoleEvent event;
@@ -63,21 +64,14 @@ int main(int argc, char** argv)
             switch(event.getType()) {
                 case CONSOLE_AGENT_ADD:
                     {
-                        const DataAddr& _agent_addr = DataAddr(methodName, event.getAgent().getName());
-                        cout << "_agent_addr: " << _agent_addr.asMap() << endl;
-                        agent = event.getAgent();
-                        ConsoleEvent result(agent.callMethod(methodName, dataProperties, _agent_addr, qpid::messaging::Duration(4000)));
-                        /*
-                        ConsoleEvent result(agent.query("{class:Config, package:'org.matahariproject'}"));
-                        if(result.getDataCount() == 1) {
-                            const Data& data(result.getData(0));
-                            dataProperties = data.getProperties();
-                            cout << "data : " << dataProperties << endl;
-                            ConsoleEvent result(agent.callMethod(methodName, dataProperties, data.getAddr(), qpid::messaging::Duration(4000)));
-                        } else {
-                            cout << "No objects in query" << endl;
+                        if (session.getAgentCount() == 1) {
+                            agent = session.getAgent(0);
+                            DataAddr agent_event_addr("config", agent.getName(), 0);
+                            ConsoleEvent result(agent.callMethod("configure", 
+                                                                  dataProperties,
+                                                                  agent_event_addr));
+                            cout << result.getArguments() << endl;
                         }
-                        */
                     }
                     break;
                 default: {}

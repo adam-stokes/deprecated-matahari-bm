@@ -53,33 +53,38 @@ using namespace std;
 void
 shutdown(int /*signal*/)
 {
-  exit(0);
+    exit(0);
 }
 
 #ifdef WIN32
 #define BUFFER_SIZE 1024
 static void
-RegistryRead (HKEY hHive, const wchar_t *szKeyPath, const wchar_t *szValue, char **out)
+RegistryRead(HKEY hHive, const wchar_t *szKeyPath, const wchar_t *szValue,
+             char **out)
 {
     HKEY hKey;
     DWORD nSize = BUFFER_SIZE;
     wchar_t szData[BUFFER_SIZE];
-    long lSuccess = RegOpenKey (hHive, szKeyPath, &hKey);
+    long lSuccess = RegOpenKey(hHive, szKeyPath, &hKey);
 
     if (lSuccess != ERROR_SUCCESS) {
-        mh_debug("Could not open %ls key from the registry: %ld", szKeyPath, lSuccess);
+        mh_debug("Could not open %ls key from the registry: %ld", szKeyPath,
+                 lSuccess);
         return;
     }
 
-    lSuccess = RegQueryValueEx (hKey, szValue, NULL, NULL, (LPBYTE) szData, &nSize);
+    lSuccess = RegQueryValueEx(hKey, szValue, NULL, NULL, (LPBYTE) szData,
+                               &nSize);
     if (lSuccess != ERROR_SUCCESS) {
-        mh_debug("Could not read '%ls[%ls]' from the registry: %ld", szKeyPath, szValue, lSuccess);
+        mh_debug("Could not read '%ls[%ls]' from the registry: %ld", szKeyPath,
+                 szValue, lSuccess);
         return;
     }
-    mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue, szData);
-    if(out) {
-        *out = (char *)malloc( BUFFER_SIZE );
-        wcstombs(*out, szData, (size_t)BUFFER_SIZE);
+    mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue,
+            szData);
+    if (out) {
+        *out = (char *) malloc(BUFFER_SIZE);
+        wcstombs(*out, szData, (size_t) BUFFER_SIZE);
     }
 }
 #else
@@ -92,7 +97,7 @@ struct option opt[] = {
     {"password", required_argument, NULL, 'P'},
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
-    {"reconnect", no_argument, NULL, 'r'},
+    {"reconnect", required_argument, NULL, 'r'},
     {"ssl-cert-name", required_argument, NULL, 'N'},
     {"ssl-cert-db", required_argument, NULL, 'C'},
     {"ssl-cert-password-file", required_argument, NULL, 'f'},
@@ -111,7 +116,7 @@ print_usage(const char *proc_name)
     printf("\t-P | --password                password to use for authentication purproses.\n");
     printf("\t-s | --service                 service name to use for authentication purproses.\n");
     printf("\t-p | --port                    specify broker port.\n");
-    printf("\t-r | --reconnect               attempt to reconnect on failure.\n");
+    printf("\t-r | --reconnect [yes|no]      attempt to reconnect on failure.\n");
     printf("\t-N | --ssl-cert-name           specify certificate name.\n");
     printf("\t-C | --ssl-cert-db             specify certificate database.\n");
     printf("\t-f | --ssl-cert-password-file  specify certificate password file.\n");
@@ -119,11 +124,12 @@ print_usage(const char *proc_name)
 #endif
 
 static gboolean
-mh_qpid_callback(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
+mh_qpid_callback(qmf::AgentSession session, qmf::AgentEvent event,
+                 gpointer user_data)
 {
     MatahariAgent *agent = (MatahariAgent*) user_data;
     mh_trace("Qpid message recieved");
-    if(event.hasDataAddr()) {
+    if (event.hasDataAddr()) {
         mh_trace("Message is for %s (type: %s)",
                  event.getDataAddr().getName().c_str(),
                  event.getDataAddr().getAgentName().c_str());
@@ -149,7 +155,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #endif
 
     bool gssapi = false;
-    bool reconnect = false;
+    bool reconnect = true;
     char *protocol = NULL;
     char *servername = NULL;
     char *username  = NULL;
@@ -171,8 +177,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         L"DebugLevel",
         &value);
 
-    if(value) {
-        mh_log_level = LOG_INFO+atoi(value);
+    if (value) {
+        mh_log_level = LOG_INFO + atoi(value);
         free(value);
         value = NULL;
     }
@@ -189,7 +195,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         L"Port",
         &value);
 
-    if(value) {
+    if (value) {
         serverport = atoi(value);
         free(value);
         value = NULL;
@@ -215,7 +221,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #else
 
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gru:P:s:p:vN:C:f:", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gr:u:P:s:p:vN:C:f:", opt, &idx)) != -1) {
         switch (arg) {
         case 'h':
         case '?':
@@ -257,7 +263,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             gssapi = true;
             break;
         case 'r':
-            reconnect = true;
+			if (optarg) {
+				if (strcmp(optarg, "no") == 0) {
+					reconnect = false;
+				}
+			} else {
+				print_usage(proc_name);
+				exit(1);
+			}
             break;
         case 'p':
             if (optarg) {
@@ -352,7 +365,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
-    mh_info("Connecting to Qpid broker at %s on port %d", servername, serverport);
+    mh_info("Connecting to Qpid broker at %s on port %d", servername,
+            serverport);
 
     // Create a v2 API options map.
     qpid::types::Variant::Map options;
@@ -383,7 +397,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     _agent_session.open();
 
     /* Do any setup required by our agent */
-    if(this->setup(_agent_session) < 0) {
+    if (this->setup(_agent_session) < 0) {
         mh_err("Failed to set up broker connection to %s on %d for %s\n",
                servername, serverport, proc_name);
         res = -1;
@@ -391,8 +405,9 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     }
 
     this->mainloop = g_main_new(FALSE);
-    this->qpid_source = mainloop_add_qmf(
-        G_PRIORITY_HIGH, _agent_session, mh_qpid_callback, mh_qpid_disconnect, this);
+    this->qpid_source = mainloop_add_qmf(G_PRIORITY_HIGH, _agent_session,
+                                         mh_qpid_callback, mh_qpid_disconnect,
+                                         this);
 
 return_cleanup:
 
@@ -418,7 +433,7 @@ MatahariAgent::run()
 static gboolean
 mainloop_qmf_prepare(GSource* source, gint *timeout)
 {
-    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    mainloop_qmf_t *qmf = (mainloop_qmf_t *) source;
     if (qmf->event) {
         return TRUE;
     }
@@ -430,11 +445,12 @@ mainloop_qmf_prepare(GSource* source, gint *timeout)
 static gboolean
 mainloop_qmf_check(GSource* source)
 {
-    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    mainloop_qmf_t *qmf = (mainloop_qmf_t *) source;
     if (qmf->event) {
         return TRUE;
 
-    } else if(qmf->session.nextEvent(qmf->event, qpid::messaging::Duration::IMMEDIATE)) {
+    } else if (qmf->session.nextEvent(qmf->event,
+                                      qpid::messaging::Duration::IMMEDIATE)) {
         return TRUE;
     }
     return FALSE;
@@ -443,13 +459,13 @@ mainloop_qmf_check(GSource* source)
 static gboolean
 mainloop_qmf_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
 {
-    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    mainloop_qmf_t *qmf = (mainloop_qmf_t *) source;
     mh_trace("%p", source);
     if (qmf->dispatch != NULL) {
         qmf::AgentEvent event = qmf->event;
         qmf->event = NULL;
 
-        if(qmf->dispatch(qmf->session, event, qmf->user_data) == FALSE) {
+        if (qmf->dispatch(qmf->session, event, qmf->user_data) == FALSE) {
             g_source_unref(source); /* Really? */
             return FALSE;
         }
@@ -459,9 +475,9 @@ mainloop_qmf_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
 }
 
 static void
-mainloop_qmf_destroy(GSource* source)
+mainloop_qmf_destroy(GSource *source)
 {
-    mainloop_qmf_t *qmf = (mainloop_qmf_t*)source;
+    mainloop_qmf_t *qmf = (mainloop_qmf_t *) source;
     mh_trace("%p", source);
 
     if (qmf->dnotify) {
@@ -476,10 +492,11 @@ static GSourceFuncs mainloop_qmf_funcs = {
     mainloop_qmf_destroy,
 };
 
-mainloop_qmf_t*
+mainloop_qmf_t *
 mainloop_add_qmf(int priority, qmf::AgentSession session,
-                gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer userdata),
-                GDestroyNotify notify, gpointer userdata)
+                 gboolean (*dispatch)(qmf::AgentSession session,
+                                      qmf::AgentEvent event, gpointer userdata),
+                 GDestroyNotify notify, gpointer userdata)
 {
     GSource *source = NULL;
     mainloop_qmf_t *qmf_source = NULL;
@@ -487,14 +504,15 @@ mainloop_add_qmf(int priority, qmf::AgentSession session,
     source = g_source_new(&mainloop_qmf_funcs, sizeof(mainloop_qmf_t));
     MH_ASSERT(source != NULL);
 
-    qmf_source = (mainloop_qmf_t*)source;
+    qmf_source = (mainloop_qmf_t *) source;
     qmf_source->id = 0;
     qmf_source->event = NULL;
     qmf_source->session = session;
 
     /*
-     * Normally we'd use g_source_set_callback() to specify the dispatch function,
-     * But we want to supply the qmf session too, so we store it in qmf_source->dispatch instead
+     * Normally we'd use g_source_set_callback() to specify the dispatch
+     * function, but we want to supply the qmf session too, so we store it in
+     * qmf_source->dispatch instead
      */
     qmf_source->dnotify = notify;
     qmf_source->dispatch = dispatch;
@@ -509,11 +527,11 @@ mainloop_add_qmf(int priority, qmf::AgentSession session,
 }
 
 gboolean
-mainloop_destroy_qmf(mainloop_qmf_t* source)
+mainloop_destroy_qmf(mainloop_qmf_t *source)
 {
     g_source_remove(source->id);
     source->id = 0;
-    g_source_unref((GSource*)source);
+    g_source_unref((GSource *) source);
 
     return TRUE;
 }

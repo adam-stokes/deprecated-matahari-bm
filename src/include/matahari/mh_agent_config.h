@@ -28,6 +28,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-extern uint32_t mh_is_configured(void);
+extern uint32_t mh_is_configured(const char *uri);
 
 #endif // __MH_CONFIG_H__
