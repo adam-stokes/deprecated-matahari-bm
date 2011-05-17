@@ -1,5 +1,5 @@
-%global specversion 49
-%global upstream_version 4ba5d4f
+%global specversion 58
+%global upstream_version 79c52d2
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -304,6 +304,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_libdir}/libmhost.so.*
 %{_libdir}/libmnetwork.so.*
 %{_libdir}/libmservice.so.*
+%{_libdir}/libmconfig.so.*
 %doc AUTHORS COPYING
 
 %files network
@@ -345,14 +346,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
 %endif
 
-%files network
+%files config
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-config
+%attr(755, root, root) %{_initddir}/matahari-config-console
 %attr(755, root, root) %{_sbindir}/matahari-qmf-configd
-%attr(755, root, root) %{_sbindir}/matahari-qmf-console-configd
+%attr(755, root, root) %{_sbindir}/matahari-qmf-config-consoled
 %endif
 
 %if %{with qmf}
@@ -404,8 +406,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with dbus}
 %{_includedir}/matahari/mh_dbus_common.h
 %{_includedir}/matahari/mh_gobject_class.h
-%{_datadir}/cmake/Modules/MatahariDBusMacros.cmake
+%{_datadir}/cmake/Modules/MatahariMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
+%{_datadir}/matahari/dbus-to-c.xsl
 %endif
 
 %changelog
