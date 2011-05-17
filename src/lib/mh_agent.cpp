@@ -55,9 +55,15 @@ shutdown(int /*signal*/)
   exit(0);
 }
 
+
+#ifndef MAX_CHAR
+/* 'z' + 1 */
+#define MAX_CHAR 123
+#endif
+
 #ifdef WIN32
 #define BUFFER_SIZE 1024
-static void
+static int
 RegistryRead (HKEY hHive, const wchar_t *szKeyPath, const wchar_t *szValue, char **out)
 {
     HKEY hKey;
@@ -67,47 +73,20 @@ RegistryRead (HKEY hHive, const wchar_t *szKeyPath, const wchar_t *szValue, char
 
     if (lSuccess != ERROR_SUCCESS) {
         mh_debug("Could not open %ls key from the registry: %ld", szKeyPath, lSuccess);
-        return;
+        return -1;
     }
 
     lSuccess = RegQueryValueEx (hKey, szValue, NULL, NULL, (LPBYTE) szData, &nSize);
     if (lSuccess != ERROR_SUCCESS) {
         mh_debug("Could not read '%ls[%ls]' from the registry: %ld", szKeyPath, szValue, lSuccess);
-        return;
+        return -1;
     }
     mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue, szData);
     if(out) {
         *out = (char *)malloc( BUFFER_SIZE );
         wcstombs(*out, szData, (size_t)BUFFER_SIZE);
     }
-}
-#else
-struct option opt[] = {
-    {"help", no_argument, NULL, 'h'},
-    {"daemon", no_argument, NULL, 'd'},
-    {"broker", required_argument, NULL, 'b'},
-    {"gssapi", no_argument, NULL, 'g'},
-    {"username", required_argument, NULL, 'u'},
-    {"password", required_argument, NULL, 'P'},
-    {"service", required_argument, NULL, 's'},
-    {"port", required_argument, NULL, 'p'},
-    {"reconnect", no_argument, NULL, 'r'},
-    {0, 0, 0, 0}
-};
-
-static void
-print_usage(const char *proc_name)
-{
-    printf("Usage:\tmatahari-%sd <options>\n", proc_name);
-    printf("\t-d | --daemon     run as a daemon.\n");
-    printf("\t-h | --help       print this help message.\n");
-    printf("\t-b | --broker     specify broker host name..\n");
-    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
-    printf("\t-u | --username   username to use for authentication purproses.\n");
-    printf("\t-P | --password   password to use for authentication purproses.\n");
-    printf("\t-s | --service    service name to use for authentication purproses.\n");
-    printf("\t-p | --port       specify broker port.\n");
-    printf("\t-r | --reconnect  attempt to reconnect on failure.\n");
+    return 0;
 }
 #endif
 
@@ -130,159 +109,236 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
-int
-MatahariAgent::init(int argc, char **argv, const char* proc_name)
+
+typedef struct mh_opt_s 
 {
-#ifdef WIN32
-    char *value = NULL;
-#else
+	int	    code;
+	int	    has_arg;
+	const char *long_name;
+	const char *description;
+	void	   *userdata;
+	int	  (*callback)(int code, const char *name, const char *arg, void *userdata);
+
+} mh_option;
+
+
+static mh_option matahari_options[MAX_CHAR];
+
+static int 
+connection_option(int code, const char *name, const char *arg, void *userdata)
+{
+    qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
+
+    if(strcmp(name, "service") == 0) {
+	options->insert(std::pair<std::string, qpid::types::Variant>("sasl-service", arg));
+	options->insert(std::pair<std::string, qpid::types::Variant>("sasl-mechanism", "GSSAPI"));
+	
+    } else if(strcmp(name, "reconnect") == 0) {
+	if(arg && strcmp(arg, "no") == 0) {
+	    options->insert(std::pair<std::string, qpid::types::Variant>("reconnect", false));
+	}
+	
+    } else {
+	options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
+    }
+    return 0;
+}
+
+static int print_help(int code, const char *name, const char *arg, void *userdata)
+{
+    int lpc = 0;
+    printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
+    printf("\nCommon options:\n");
+    printf("\t-h | --help	      print this help message.\n");
+    printf("\t-b | --broker value     specify broker host name..\n");
+    printf("\t-p | --port value       specify broker port.\n");
+    printf("\t-u | --username value   username to use for authentication purproses.\n");
+    printf("\t-P | --password value   password to use for authentication purproses.\n");
+    printf("\t-s | --service value    service name to use for authentication purproses.\n");
+    printf("\t-r | --reconnect value  attempt to reconnect on failure.\n");
+
+    printf("\nCustom options:\n");
+    for(lpc = 0; lpc < MAX_CHAR; lpc++) {
+	if(matahari_options[lpc].callback
+	    && matahari_options[lpc].callback != connection_option) {
+	    printf("\t-%c | --%s\t %s\n", matahari_options[lpc].code,
+		   matahari_options[lpc].long_name, matahari_options[lpc].description);
+	}
+    }
+    return 0;
+}
+
+string
+mh_parse_connection_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options) 
+{
+    std::stringstream url;
+
     int arg;
     int idx = 0;
-    bool daemonize = false;
-#endif
-
-    bool gssapi = false;
-    bool reconnect = false;
-    char *servername = NULL;
-    char *username  = NULL;
-    char *password  = NULL;
-    char *service   = NULL;
     int serverport  = MATAHARI_PORT;
-    int res = 0;
+    char *servername = strdup(MATAHARI_BROKER);
 
-    /* Set up basic logging */
-    mh_log_init(proc_name, LOG_INFO, FALSE);
+    options["reconnect"] = true;
+
+    /* Force local-only handling */
+    mh_add_option('b', required_argument, "broker", NULL, NULL, NULL);
+    mh_add_option('p', required_argument, "port", NULL, NULL, NULL);
+    mh_add_option('u', required_argument, "username",  NULL, &options, connection_option);
+    mh_add_option('P', required_argument, "password",  NULL, &options, connection_option);
+    mh_add_option('s', required_argument, "service",   NULL, &options, connection_option);
+    mh_add_option('r', required_argument, "reconnect", NULL, &options, connection_option);
 
 #ifdef WIN32
-    RegistryRead (
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-        L"DebugLevel",
-        &value);
+    char *value = NULL;
 
-    if(value) {
-        mh_log_level = LOG_INFO+atoi(value);
-        free(value);
-        value = NULL;
+    if(RegistryRead (HKEY_LOCAL_MACHINE,
+		     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+		     L"broker", &value) == 0) {
+	free(servername);
+	servername = value;
+	value = NULL;
     }
 
-    RegistryRead (
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-        L"Broker",
-        &servername);
-
-    RegistryRead (
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-        L"Port",
-        &value);
-
-    if(value) {
+    if(RegistryRead (HKEY_LOCAL_MACHINE,
+		     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+		     L"port", &value) == 0) {
         serverport = atoi(value);
         free(value);
         value = NULL;
     }
 
-    RegistryRead (
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-        L"Service",
-        &service);
-
-    RegistryRead (
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-        L"User",
-        &username);
-    RegistryRead (
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-        L"Password",
-        &password);
+    for(lpc = 0; lpc < MAX_CHAR; lpc++) {
+	if(matahari_options[lpc].callback) {
+	    if(RegistryRead (HKEY_LOCAL_MACHINE,
+			     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+			     matahari_options[arg].long_name, &value) == 0) {
+		matahari_options[arg].callback(
+		    matahari_options[arg].code, matahari_options[arg].long_name,
+		    value, matahari_options[lpc].userdata);
+	}
+    }
 
 #else
+    int lpc = 0;
+    int num_options = 0;
+    int opt_string_len = 0;
+    char opt_string[2*MAX_CHAR];
+    struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
 
-    // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gru:P:s:p:v", opt, &idx)) != -1) {
+    /* Force more local-only processing */
+    mh_add_option('h', no_argument, "help", NULL, NULL, NULL);
+    mh_add_option('v', no_argument, "verbose", NULL, NULL, NULL);
+
+    opt_string[0] = 0;
+    for(lpc = 0; lpc < MAX_CHAR; lpc++) {
+	if(matahari_options[lpc].code) {
+	    long_opts = (struct option *)realloc(long_opts, (2 + num_options) * sizeof(struct option));
+	    long_opts[num_options].name = matahari_options[lpc].long_name;
+	    long_opts[num_options].has_arg = matahari_options[lpc].has_arg;
+	    long_opts[num_options].flag = NULL;
+	    long_opts[num_options].val = matahari_options[lpc].code;
+
+	    num_options++;
+
+	    long_opts[num_options].name = 0;
+	    long_opts[num_options].has_arg = 0;
+	    long_opts[num_options].flag = 0;
+	    long_opts[num_options].val = 0;
+
+	    opt_string[opt_string_len++] = matahari_options[lpc].code;
+	    if(matahari_options[lpc].has_arg == required_argument) {
+		opt_string[opt_string_len++] = ':'; 
+	    }
+	    opt_string[opt_string_len] = 0;
+	}
+    }
+    
+    while ((arg = getopt_long(argc, argv, opt_string, long_opts, &idx)) != -1) {
         switch (arg) {
-        case 'h':
-        case '?':
-            print_usage(proc_name);
-            exit(0);
-            break;
-        case 'd':
-            daemonize = true;
-            break;
-        case 'v':
-            mh_log_level++;
-            mh_enable_stderr(1);
-            break;
-        case 's':
-            if (optarg) {
-                service = strdup(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
-        case 'u':
-            if (optarg) {
-                username = strdup(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
-        case 'P':
-            if (optarg) {
-                password = strdup(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
-        case 'g':
-            gssapi = true;
-            break;
-        case 'r':
-            reconnect = true;
-            break;
-        case 'p':
-            if (optarg) {
-                serverport = atoi(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
-        case 'b':
-            if (optarg) {
-                servername = strdup(optarg);
-            } else {
-                print_usage(proc_name);
-                exit(1);
-            }
-            break;
-        default:
-            fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
-            print_usage(proc_name);
-            exit(0);
-            break;
-        }
-    }
+	    case 'h':
+		print_help('h', NULL, NULL, (void*)proc_name);
+		exit(0);
+		break;
+	    case 'v':
+		mh_log_level++;
+		mh_enable_stderr(1);
+		break;
+	    case 'p':
+		serverport = atoi(optarg);
+		break;
+	    case 'b':
+		free(servername);
+		servername = strdup(optarg);
+		break;
+	    default:
+		if(arg > 0 && arg < MAX_CHAR && matahari_options[arg].callback) {
+		    matahari_options[arg].callback(
+			matahari_options[arg].code, matahari_options[arg].long_name, 
+			optarg, matahari_options[arg].userdata);
 
-    if (daemonize == true) {
-        if (daemon(0, 0) < 0) {
-            fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
-            exit(1);
+		} else {
+		    print_help(arg, NULL, NULL, (void*)proc_name);
+		    exit(1);
+		}
+		break;
         }
     }
+    free(long_opts);
 #endif
 
-    if (!servername || *servername == '\0') {
-        servername = strdup(MATAHARI_BROKER);
+    url << servername << ":" << serverport;
+    return url.str();
+}
+
+int
+mh_add_option(int code, int has_arg, const char *name, const char *description, 
+	      void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata))
+{
+    if(code > 0 && code < MAX_CHAR) {
+	matahari_options[code].code = code;
+	matahari_options[code].has_arg = has_arg;
+	matahari_options[code].long_name = name;
+	matahari_options[code].description = description;
+	matahari_options[code].userdata = userdata;
+	matahari_options[code].callback = callback;
+	return 0;
     }
+    return -1;
+}
+
+static int should_daemonize(int code, const char *name, const char *arg, void *userdata)
+{
+    if (daemon(0, 0) < 0) {
+	fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
+	exit(1);
+    }
+    return 0;
+}
+
+int
+MatahariAgent::init(int argc, char **argv, const char* proc_name)
+{
+    qpid::types::Variant::Map options;
+    int res = 0;
+
+    /* Set up basic logging */
+    mh_log_init(proc_name, LOG_TRACE, TRUE);
+    mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
+
+    string url = mh_parse_connection_options(proc_name, argc, argv, options);
+    
+    cout << options << endl;
+
+#ifdef WIN32
+    char *value = NULL;
+    if(RegistryRead (HKEY_LOCAL_MACHINE,
+		     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+		     L"DebugLevel", &value) == 0) {
+        mh_log_level = LOG_INFO+atoi(value);
+        free(value);
+        value = NULL;
+    }
+#endif
 
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);
@@ -290,28 +346,9 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
-    mh_info("Connecting to Qpid broker at %s on port %d", servername, serverport);
+    mh_info("Connecting %s to Qpid broker at %s", proc_name, url.c_str());
 
-    // Create a v2 API options map.
-    qpid::types::Variant::Map options;
-    options["reconnect"] = reconnect;
-    if (username && *username) {
-        options["username"] = username;
-    }
-    if (password && *password) {
-        options["password"] = password;
-    }
-    if (service && *service) {
-        options["sasl-service"] = service;
-    }
-    if (gssapi) {
-        options["sasl-mechanism"] = "GSSAPI";
-    }
-
-    std::stringstream url;
-    url << servername << ":" << serverport ;
-
-    _amqp_connection = qpid::messaging::Connection(url.str(), options);
+    _amqp_connection = qpid::messaging::Connection(url, options);
     _amqp_connection.open();
 
     _agent_session = qmf::AgentSession(_amqp_connection);
@@ -322,8 +359,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     /* Do any setup required by our agent */
     if(this->setup(_agent_session) < 0) {
-        mh_err("Failed to set up broker connection to %s on %d for %s\n",
-               servername, serverport, proc_name);
+        mh_err("Failed to set up broker connection to %s for %s\n", url.c_str(), proc_name);
         res = -1;
         goto return_cleanup;
     }
@@ -333,11 +369,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         G_PRIORITY_HIGH, _agent_session, mh_qpid_callback, mh_qpid_disconnect, this);
 
 return_cleanup:
-
-    free(servername);
-    free(username);
-    free(password);
-    free(service);
 
     return res;
 }

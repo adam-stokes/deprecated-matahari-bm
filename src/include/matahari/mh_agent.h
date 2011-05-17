@@ -56,6 +56,10 @@ typedef struct mainloop_qmf_s {
         gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data);
 } mainloop_qmf_t;
 
+extern int mh_add_option(
+    int code, int has_arg, const char *name, const char *description,
+    void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata));
+
 extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,
                                   gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event, gpointer userdata),
                                   GDestroyNotify notify, gpointer userdata);
