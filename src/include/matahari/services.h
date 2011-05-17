@@ -45,6 +45,12 @@ enum lsb_exitcode {
     LSB_NOT_RUNNING = 7,
 
     /* 150-199	reserved for application use */
+    LSB_SIGNAL        = 194,
+    LSB_NOT_SUPPORTED = 195,
+    LSB_PENDING       = 196,
+    LSB_CANCELLED     = 197,
+    LSB_TIMEOUT       = 198,
+    LSB_UNKNOWN_ERROR = 199,
 };
 
 /* The return codes for the status operation are not the same for other operatios - go figure */
@@ -56,6 +62,11 @@ enum lsb_status_exitcode {
     LSB_STATUS_NOT_INSTALLED = 4,
 
     /* 150-199	reserved for application use */
+    LSB_STATUS_SIGNAL        = 194,
+    LSB_STATUS_NOT_SUPPORTED = 195,
+    LSB_STATUS_PENDING       = 196,
+    LSB_STATUS_CANCELLED     = 197,
+    LSB_STATUS_TIMEOUT       = 198,
     LSB_STATUS_UNKNOWN_ERROR = 199,
 };
 
@@ -71,6 +82,14 @@ enum ocf_exitcode {
     OCF_NOT_RUNNING = 7,
     OCF_RUNNING_MASTER = 8,
     OCF_FAILED_MASTER = 9,
+
+    /* 150-199	reserved for application use */
+    OCF_SIGNAL        = 194,
+    OCF_NOT_SUPPORTED = 195,
+    OCF_PENDING       = 196,
+    OCF_CANCELLED     = 197,
+    OCF_TIMEOUT       = 198,
+    OCF_OTHER_ERROR   = 199, /* Keep the same codes as LSB */
 };
 
 enum op_status {
