@@ -29,7 +29,7 @@
 
 MH_TRACE_INIT_DATA(mh_config);
 
-static const char *filename = "/var/cache/matahari/.mh_configured";
+static const char *filename = "/var/lib/matahari/.mh_configured";
 
 uint32_t mh_is_configured()
 {

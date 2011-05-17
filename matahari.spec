@@ -1,5 +1,5 @@
-%global specversion 47
-%global upstream_version fedf8df
+%global specversion 48
+%global upstream_version 312c009
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -180,7 +180,6 @@ make DESTDIR=%{buildroot} install
 
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
 %{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
-%{__install} -d -m0755 %{buildroot}%{_localstatedir}/cache/%{name}
 %endif
 
 %post -n matahari-lib -p /sbin/ldconfig
