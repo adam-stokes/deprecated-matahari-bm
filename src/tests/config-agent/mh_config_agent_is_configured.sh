@@ -33,15 +33,14 @@ rlJournalStart
         rlAssertRpm $PACKAGE
         rlAssertExists "$TEST_STORAGE_DIR"
         TEST_PID=$(get_pid_of "$TEST_QMF_CONSOLE")
-        echo $TEST_PID
         if [ $TEST_PID ]; then
-            rlRun "lsof -p $TEST_PID |grep -q '$MATAHARI_BROKER_PORT.*ESTABLISHED'" "0" "Verify $TEST_QMF_CONSOLE is connected to broker."
+            rlRun "$(is_established $TEST_PID $MATAHARI_BROKER_PORT)" "0" "Verify $TEST_QMF_CONSOLE ($TEST_PID) is connected to broker."
         else
             rlFail "Failed to find pid of $TEST_QMF_CONSOLE."
         fi
         TEST_PID=$(get_pid_of "$TEST_QMF_AGENT")
         if [ $TEST_PID ]; then
-            rlRun "lsof -p $TEST_PID |grep -q '$MATAHARI_BROKER_PORT.*ESTABLISHED'" "0" "Verify $TEST_QMF_AGENT is connected to broker."
+            rlRun "$(is_established $TEST_PID $MATAHARI_BROKER_PORT)" "0" "Verify $TEST_QMF_AGENT ($TEST_PID) is connected to broker."
         else
             rlFail "Failed to find pid of $TEST_QMF_AGENT"
         fi

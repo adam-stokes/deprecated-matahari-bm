@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 . /usr/share/beakerlib/beakerlib.sh
+. ../commonlib.sh
 
 TEST="/matahari/Sanity/mh_simple_connect"
 PACKAGE="matahari"
@@ -37,16 +38,16 @@ rlJournalStart
     rlRun "lsof -i :$MATAHARI_BROKER_PORT | grep -q ':$MATAHARI_BROKER_PORT.*LISTEN'" "0" "Verify broker is listening on $MATAHARI_BROKER_PORT."
     for i in "${TEST_DEFAULT_AGENTS[@]}"
     do
-        rlRun "ps -ef|grep -v grep|grep -q $i" "0" "Verifying $i is running."
-        TEST_PID=`ps -ef|grep $i|grep -v grep|cut -f4 -d' '`
+        TEST_PID=$(get_pid_of $i)
         if [ $TEST_PID ]; then
-            rlRun "lsof -p $TEST_PID |grep -q '$MATAHARI_BROKER_PORT.*ESTABLISHED'" "0" "Verify $i is connected to broker."
+            rlRun "$(is_established $TEST_PID $MATAHARI_BROKER_PORT)" "0" "Verify $i ($TEST_PID) is connected to broker."
+        else
+            rlFail "Failed to find pid of $i"
         fi
     done
     rlPhaseEnd
     
     rlPhaseStartCleanup
-        unset $TEST_PID
     rlPhaseEnd
 rlJournalEnd
 rlJournalPrintText
