@@ -38,6 +38,7 @@ int use_stderr = 0;
 #include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
+// #include <qpid/sys/ssl/util.h>
 #include <qmf/DataAddr.h>
 #include "matahari/mh_agent.h"
 
@@ -96,7 +97,12 @@ struct option opt[] = {
     {"password", required_argument, NULL, 'P'},
     {"service", required_argument, NULL, 's'},
     {"port", required_argument, NULL, 'p'},
-    {"reconnect", no_argument, NULL, 'r'},
+    {"reconnect", required_argument, NULL, 'r'},
+#ifdef MH_SSL
+    {"ssl-cert-name", required_argument, NULL, 'N'},
+    {"ssl-cert-db", required_argument, NULL, 'C'},
+    {"ssl-cert-password-file", required_argument, NULL, 'f'},
+#endif
     {0, 0, 0, 0}
 };
 
@@ -104,18 +110,20 @@ static void
 print_usage(const char *proc_name)
 {
     printf("Usage:\tmatahari-%sd <options>\n", proc_name);
-    printf("\t-d | --daemon     run as a daemon.\n");
-    printf("\t-h | --help       print this help message.\n");
-    printf("\t-b | --broker     specify broker host name..\n");
-    printf("\t-g | --gssapi     force GSSAPI authentication.\n");
-    printf("\t-u | --username   username to use for authentication "
-           "purproses.\n");
-    printf("\t-P | --password   password to use for authentication "
-           "purproses.\n");
-    printf("\t-s | --service    service name to use for authentication "
-           "purproses.\n");
-    printf("\t-p | --port       specify broker port.\n");
-    printf("\t-r | --reconnect  attempt to reconnect on failure.\n");
+    printf("\t-d | --daemon                  run as a daemon.\n");
+    printf("\t-h | --help                    print this help message.\n");
+    printf("\t-b | --broker                  specify broker host name..\n");
+    printf("\t-g | --gssapi                  force GSSAPI authentication.\n");
+    printf("\t-u | --username                username to use for authentication purproses.\n");
+    printf("\t-P | --password                password to use for authentication purproses.\n");
+    printf("\t-s | --service                 service name to use for authentication purproses.\n");
+    printf("\t-p | --port                    specify broker port.\n");
+    printf("\t-r | --reconnect [yes|no]      attempt to reconnect on failure.\n");
+#ifdef MH_SSL
+    printf("\t-N | --ssl-cert-name           specify certificate name.\n");
+    printf("\t-C | --ssl-cert-db             specify certificate database.\n");
+    printf("\t-f | --ssl-cert-password-file  specify certificate password file.\n");
+#endif
 }
 #endif
 
@@ -151,11 +159,17 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #endif
 
     bool gssapi = false;
-    bool reconnect = false;
+    bool reconnect = true;
+    char *protocol = NULL;
     char *servername = NULL;
     char *username  = NULL;
     char *password  = NULL;
     char *service   = NULL;
+#ifdef MH_SSL
+    char *ssl_cert_db = NULL;
+    char *ssl_cert_name = NULL;
+    char *ssl_cert_password_file = NULL;
+#endif
     int serverport  = MATAHARI_PORT;
     int res = 0;
 
@@ -213,7 +227,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 #else
 
     // Get args
-    while ((arg = getopt_long(argc, argv, "hdb:gru:P:s:p:v", opt, &idx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "hdb:gr:u:P:s:p:vN:C:f:", opt, &idx)) != -1) {
         switch (arg) {
         case 'h':
         case '?':
@@ -255,7 +269,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             gssapi = true;
             break;
         case 'r':
-            reconnect = true;
+			if (optarg) {
+				if (strcmp(optarg, "no") == 0) {
+					reconnect = false;
+				}
+			} else {
+				print_usage(proc_name);
+				exit(1);
+			}
             break;
         case 'p':
             if (optarg) {
@@ -273,6 +294,36 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 exit(1);
             }
             break;
+#ifdef MH_SSL
+        case 'N':
+            if (optarg) {
+                protocol = strdup("ssl");
+                ssl_cert_name = strdup(optarg);
+            } else {
+                fprintf(stderr, "An SSL Certificate name must be supplied.\n\n");
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'C':
+            if (optarg) {
+                setenv("QPID_SSL_CERT_DB", optarg, 1);
+                ssl_cert_db = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+        case 'f':
+            if (optarg) {
+                setenv("QPID_SSL_CERT_PASSWORD_FILE", optarg, 1);
+                ssl_cert_password_file = strdup(optarg);
+            } else {
+                print_usage(proc_name);
+                exit(1);
+            }
+            break;
+#endif
         default:
             fprintf(stderr, "unsupported option '-%c'.  See --help.\n", arg);
             print_usage(proc_name);
@@ -287,10 +338,34 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             exit(1);
         }
     }
+    
+#ifdef MH_SSL
+    if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
+        if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
+            fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
+            exit(1);
+        }
+        if (!g_file_test(ssl_cert_db, G_FILE_TEST_IS_DIR)) {
+            fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
+            exit(1);
+        }
+
+        qpid::sys::ssl::SslOptions ssl_options;
+        ssl_options.certDbPath = strdup(ssl_cert_db);
+        ssl_options.certName = strdup(ssl_cert_name);
+        ssl_options.certPasswordFile = strdup(ssl_cert_password_file);
+        qpid::sys::ssl::initNSS(ssl_options, true);
+    }
+#endif
+    
 #endif
 
     if (!servername || *servername == '\0') {
         servername = strdup(MATAHARI_BROKER);
+    }
+    
+    if (!protocol || *protocol == '\0') {
+        protocol = strdup("tcp");
     }
 
     /* Re-initialize logging now that we've completed option processing */
@@ -319,7 +394,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     }
 
     std::stringstream url;
-    url << servername << ":" << serverport;
+    url << "amqp:" << protocol << ":" << servername << ":" << serverport ;
 
     _amqp_connection = qpid::messaging::Connection(url.str(), options);
     _amqp_connection.open();
@@ -349,6 +424,12 @@ return_cleanup:
     free(username);
     free(password);
     free(service);
+#ifdef MH_SSL
+    free(ssl_cert_name);
+    free(ssl_cert_db);
+    free(ssl_cert_password_file);
+#endif
+    free(protocol);
 
     return res;
 }
