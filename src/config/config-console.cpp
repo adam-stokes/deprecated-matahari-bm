@@ -53,10 +53,10 @@ int main(int argc, char** argv)
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);
+    // Only filter connecting agents under matahariproject.org vendor and Config product
+    session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'Config']]]");
     session.open();
-
-    // Only filter connecting agents under matahariproject.org vendor
-    session.setAgentFilter("[eq, _vendor, [quote, 'matahariproject.org']]]");
+    
     Agent agent;
     while (true) {
         ConsoleEvent event;
@@ -64,14 +64,11 @@ int main(int argc, char** argv)
             switch(event.getType()) {
                 case CONSOLE_AGENT_ADD:
                     {
-                        if (session.getAgentCount() == 1) {
-                            agent = session.getAgent(0);
-                            DataAddr agent_event_addr("config", agent.getName(), 0);
-                            cout << "callMethod:configure : " << dataProperties << endl;
-                            ConsoleEvent result(agent.callMethod("configure", 
-                                                                  dataProperties,
-                                                                  agent_event_addr));
-                        }
+                        agent = event.getAgent();
+                        DataAddr agent_event_addr("config", agent.getName(), 0);
+                        ConsoleEvent result(agent.callMethod("configure", 
+                                                              dataProperties,
+                                                              agent_event_addr));
                     }
                     break;
                 default: {}
