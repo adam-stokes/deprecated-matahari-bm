@@ -90,7 +90,7 @@
      <arg name="iface"          dir="I"  type="sstr" />
      <arg name="status"         dir="O"  type="uint32" />
    </method>
-   <method name="get_ip_address" desc="Obtain ip addressof a network interface">
+   <method name="get_ip_address" desc="Obtain ip address of a network interface">
      <arg name="iface"          dir="I"  type="sstr" />
      <arg name="ip"             dir="O"  type="sstr" />
    </method>
@@ -243,5 +243,15 @@
      <arg name="timeout"        dir="O"  type="uint32" />
    </method-->
  </class>
-
+ 
+ <event name="configure_me"	args="control,sequence,timestamp" />
+ 
+ <class name="Config">
+   <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
+   <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
+   <property name="configured"  type="uint32" access="RO" desc="Am I configured?" />
+   <method name="configure"     desc="Send configure method">
+     <arg name="uri"    dir="I" type="sstr" />
+   </method>
+ </class>
 </schema>
