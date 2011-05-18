@@ -1,3 +1,12 @@
+# common lib vars
+TEST_DEFAULT_AGENTS=( matahari-qmf-hostd \
+                     matahari-qmf-networkd \
+                     matahari-qmf-serviced \
+                     matahari-qmf-configd  )
+TEST_DEFAULT_SERVICE_NAMES=( matahari-network \
+                            matahari-host \
+                            matahari-service \
+                            matahari-config )
 # common lib functions
 
 function get_pid_of() {

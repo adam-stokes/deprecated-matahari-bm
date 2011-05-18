@@ -52,7 +52,7 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest
-        rlRun "service matahari-broker start" "0" "Starting SSL enabled matahari broker."
+        rlServiceStart matahari-broker matahari-config matahari-config-console
     rlPhaseEnd
     
     rlPhaseStartCleanup
