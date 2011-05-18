@@ -38,7 +38,7 @@ set_fd_opts(int fd, int opts)
 {
     int flag;
     if ((flag = fcntl(fd, F_GETFL)) >= 0) {
-        if (fcntl(fd, F_SETFL, flag|opts) < 0) {
+        if (fcntl(fd, F_SETFL, flag | opts) < 0) {
             mh_perror(LOG_ERR, "fcntl() write failed");
         }
     } else {
@@ -52,30 +52,30 @@ read_output(int fd, gpointer user_data)
     char * data = NULL;
     int rc = 0, len = 0;
     gboolean is_err = FALSE;
-    svc_action_t* op = (svc_action_t *)user_data;
+    svc_action_t* op = (svc_action_t *) user_data;
     char buf[500];
     static const size_t buf_read_len = sizeof(buf) - 1;
 
-    if(fd == op->opaque->stderr_fd) {
+    if (fd == op->opaque->stderr_fd) {
         is_err = TRUE;
-        if(op->stderr_data) {
+        if (op->stderr_data) {
             len = strlen(op->stderr_data);
             data = op->stderr_data;
         }
-    } else if(op->stdout_data) {
+    } else if (op->stdout_data) {
         len = strlen(op->stdout_data);
         data = op->stdout_data;
     }
 
     do {
         rc = read(fd, buf, buf_read_len);
-        if(rc > 0) {
+        if (rc > 0) {
             buf[rc] = 0;
             data = realloc(data, len + rc + 1);
-            sprintf(data+len, "%s", buf);
+            sprintf(data + len, "%s", buf);
             len += rc;
 
-        } else if(errno != EINTR) {
+        } else if (errno != EINTR) {
             /* error or EOF
              * Cleanup happens in pipe_done()
              */
@@ -87,7 +87,7 @@ read_output(int fd, gpointer user_data)
 
     if (data != NULL && is_err) {
         op->stderr_data = data;
-    } else if(data != NULL) {
+    } else if (data != NULL) {
         op->stdout_data = data;
     }
 
@@ -97,7 +97,7 @@ read_output(int fd, gpointer user_data)
 static void
 pipe_out_done(gpointer user_data)
 {
-    svc_action_t* op = (svc_action_t *)user_data;
+    svc_action_t* op = (svc_action_t *) user_data;
     op->opaque->stdout_gsource = NULL;
     if (op->opaque->stdout_fd > STDERR_FILENO) {
         close(op->opaque->stdout_fd);
@@ -108,7 +108,7 @@ pipe_out_done(gpointer user_data)
 static void
 pipe_err_done(gpointer user_data)
 {
-    svc_action_t* op = (svc_action_t *)user_data;
+    svc_action_t* op = (svc_action_t *) user_data;
     op->opaque->stderr_gsource = NULL;
     if (op->opaque->stderr_fd > STDERR_FILENO) {
         close(op->opaque->stderr_fd);
@@ -129,7 +129,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     /* TODO: Add OCF_RESKEY_ prefix to 'key' */
     char buffer[500];
-    snprintf(buffer, sizeof(buffer), "OCF_RESKEY_%s", (char*)key);
+    snprintf(buffer, sizeof(buffer), "OCF_RESKEY_%s", (char *) key);
     set_ocf_env(buffer, value, user_data);
 }
 
@@ -140,7 +140,7 @@ add_OCF_env_vars(svc_action_t *op)
         return;
     }
 
-    if(op->params) {
+    if (op->params) {
         g_hash_table_foreach(op->params, set_ocf_env_with_prefix, NULL);
     }
 
@@ -148,7 +148,7 @@ add_OCF_env_vars(svc_action_t *op)
     set_ocf_env("OCF_RA_VERSION_MINOR", "0", NULL);
     set_ocf_env("OCF_ROOT", OCF_ROOT, NULL);
 
-    if(op->rsc) {
+    if (op->rsc) {
         set_ocf_env("OCF_RESOURCE_INSTANCE", op->rsc, NULL);
     }
 
@@ -186,14 +186,16 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     op->status = LRM_OP_DONE;
     MH_ASSERT(op->pid == p->pid);
 
-    if( signo ) {
-        if( p->timeout ) {
-            mh_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+    if (signo) {
+        if (p->timeout) {
+            mh_warn("%s:%d - timed out after %dms", op->id, op->pid,
+                    op->timeout);
             op->status = LRM_OP_TIMEOUT;
 	    op->rc = OCF_TIMEOUT;
 
         } else {
-            mh_warn("%s:%d - terminated with signal %d", op->id, op->pid, signo);
+            mh_warn("%s:%d - terminated with signal %d", op->id, op->pid,
+                    signo);
             op->status = LRM_OP_ERROR;
 	    op->rc = OCF_SIGNAL;
         }
@@ -202,45 +204,50 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
         op->rc = exitcode;
         mh_debug("%s:%d - exited with rc=%d", op->id, op->pid, exitcode);
 
-        if(op->stdout_data) {
+        if (op->stdout_data) {
             next = op->stdout_data;
             do {
                 offset = next;
                 next = strchrnul(offset, '\n');
-                mh_debug("%s:%d [ %.*s ]", op->id, op->pid, (int)(next-offset), offset);
-                if(next[0] != 0) {
+                mh_debug("%s:%d [ %.*s ]", op->id, op->pid,
+                         (int) (next - offset), offset);
+                if (next[0] != 0) {
                     next++;
                 }
 
-            } while(next != NULL && next[0] != 0);
+            } while (next != NULL && next[0] != 0);
         }
 
-        if(op->stderr_data) {
+        if (op->stderr_data) {
             next = op->stderr_data;
             do {
                 offset = next;
                 next = strchrnul(offset, '\n');
-                mh_notice("%s:%d [ %.*s ]", op->id, op->pid, (int)(next-offset), offset);
-                if(next[0] != 0) {
+                mh_notice("%s:%d [ %.*s ]", op->id, op->pid,
+                          (int) (next - offset), offset);
+                if (next[0] != 0) {
                     next++;
                 }
 
-            } while(next != NULL && next[0] != 0);
+            } while (next != NULL && next[0] != 0);
         }
     }
 
-    if(op->interval && op->opaque->cancel == FALSE) {
-        op->opaque->repeat_timer = g_timeout_add(op->interval, recurring_action_timer, (void*)op);
+    if (op->interval && op->opaque->cancel == FALSE) {
+        op->opaque->repeat_timer = g_timeout_add(op->interval,
+                                                 recurring_action_timer,
+                                                 (void *) op);
     }
 
     op->pid = 0;
-    if(op->opaque->callback) {
-        /* Callback might call cancel which would result in the message being free'd
+    if (op->opaque->callback) {
+        /* Callback might call cancel which would result in the message
+         * being free'd
          * Do not access 'op' after this line
          */
         op->opaque->callback(op);
 
-    } else if(op->opaque->repeat_timer == 0) {
+    } else if (op->opaque->repeat_timer == 0) {
         services_action_free(op);
     }
 }
@@ -252,69 +259,69 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
     int stdout_fd[2];
     int stderr_fd[2];
 
-    if ( pipe(stdout_fd) < 0 ) {
+    if (pipe(stdout_fd) < 0) {
         mh_perror(LOG_ERR, "pipe() failed");
     }
 
-    if ( pipe(stderr_fd) < 0 ) {
+    if (pipe(stderr_fd) < 0) {
         mh_perror(LOG_ERR, "pipe() failed");
     }
 
     op->pid = fork();
-    switch(op->pid) {
-        case -1:
-            mh_perror(LOG_ERR, "fork() failed");
-            close(stdout_fd[0]);
+    switch (op->pid) {
+    case -1:
+        mh_perror(LOG_ERR, "fork() failed");
+        close(stdout_fd[0]);
+        close(stdout_fd[1]);
+        close(stderr_fd[0]);
+        close(stderr_fd[1]);
+        return FALSE;
+
+    case 0:                /* Child */
+        /* Man: The call setpgrp() is equivalent to setpgid(0,0)
+         * _and_ compiles on BSD variants too
+         * need to investigate if it works the same too.
+         */
+        setpgid(0, 0);
+        close(stdout_fd[0]);
+        close(stderr_fd[0]);
+        if (STDOUT_FILENO != stdout_fd[1]) {
+            if (dup2(stdout_fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
+                mh_perror(LOG_ERR, "dup2() failed (stdout)");
+            }
             close(stdout_fd[1]);
-            close(stderr_fd[0]);
+        }
+        if (STDERR_FILENO != stderr_fd[1]) {
+            if (dup2(stderr_fd[1], STDERR_FILENO) != STDERR_FILENO) {
+                mh_perror(LOG_ERR, "dup2() failed (stderr)");
+            }
             close(stderr_fd[1]);
-            return FALSE;
+        }
 
-        case 0:                /* Child */
-            /* Man: The call setpgrp() is equivalent to setpgid(0,0)
-             * _and_ compiles on BSD variants too
-             * need to investigate if it works the same too.
-             */
-            setpgid(0,0);
-            close(stdout_fd[0]);
-            close(stderr_fd[0]);
-            if (STDOUT_FILENO != stdout_fd[1]) {
-                if (dup2(stdout_fd[1], STDOUT_FILENO)!=STDOUT_FILENO) {
-                    mh_perror(LOG_ERR, "dup2() failed (stdout)");
-                }
-                close(stdout_fd[1]);
-            }
-            if (STDERR_FILENO != stderr_fd[1]) {
-                if (dup2(stderr_fd[1], STDERR_FILENO)!=STDERR_FILENO) {
-                    mh_perror(LOG_ERR, "dup2() failed (stderr)");
-                }
-                close(stderr_fd[1]);
-            }
+        /* close all descriptors except stdin/out/err and channels to logd */
+        for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
+            close(lpc);
+        }
 
-            /* close all descriptors except stdin/out/err and channels to logd */
-            for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
-                close(lpc);
-            }
+        /* Setup environment correctly */
+        add_OCF_env_vars(op);
 
-            /* Setup environment correctly */
-            add_OCF_env_vars(op);
+        /* execute the RA */
+        execvp(op->opaque->exec, op->opaque->args);
 
-            /* execute the RA */
-            execvp(op->opaque->exec, op->opaque->args);
-
-            switch (errno) { /* see execve(2) */
-                case ENOENT:  /* No such file or directory */
-                case EISDIR:   /* Is a directory */
-                    rc = OCF_NOT_INSTALLED;
-                    break;
-                case EACCES:   /* permission denied (various errors) */
-                    rc = OCF_INSUFFICIENT_PRIV;
-                    break;
-                default:
-                    rc = OCF_UNKNOWN_ERROR;
-                    break;
-            }
-            _exit(rc);
+        switch (errno) { /* see execve(2) */
+        case ENOENT:  /* No such file or directory */
+        case EISDIR:   /* Is a directory */
+            rc = OCF_NOT_INSTALLED;
+            break;
+        case EACCES:   /* permission denied (various errors) */
+            rc = OCF_INSUFFICIENT_PRIV;
+            break;
+        default:
+            rc = OCF_UNKNOWN_ERROR;
+            break;
+        }
+        _exit(rc);
     }
 
     /* Only the parent reaches here */
@@ -327,21 +334,22 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
     op->opaque->stderr_fd = stderr_fd[0];
     set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
 
-    if(synchronous) {
+    if (synchronous) {
         int status = 0;
         int timeout = 1 + op->timeout / 1000;
         mh_trace("Waiting for %d", op->pid);
-        while(timeout > 0 && waitpid(op->pid, &status, WNOHANG) <= 0) {
+        while (timeout > 0 && waitpid(op->pid, &status, WNOHANG) <= 0) {
             sleep(1);
             timeout--;
         }
 
         mh_trace("Child done: %d", op->pid);
-        if(timeout == 0) {
+        if (timeout == 0) {
             int killrc = sigar_proc_kill(op->pid, 9 /*SIGKILL*/);
 
             op->status = LRM_OP_TIMEOUT;
-            mh_warn("%s:%d - timed out after %dms", op->id, op->pid, op->timeout);
+            mh_warn("%s:%d - timed out after %dms", op->id, op->pid,
+                    op->timeout);
 
             if (killrc != SIGAR_OK && killrc != ESRCH) {
                 mh_err("kill(%d, KILL) failed: %d", op->pid, killrc);
@@ -350,12 +358,14 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
         } else if (WIFEXITED(status)) {
             op->status = LRM_OP_DONE;
             op->rc = WEXITSTATUS(status);
-            mh_err("Managed %s process %d exited with rc=%d", op->id, op->pid, op->rc);
+            mh_err("Managed %s process %d exited with rc=%d", op->id, op->pid,
+                   op->rc);
 
         } else if (WIFSIGNALED(status)) {
             int signo = WTERMSIG(status);
             op->status = LRM_OP_ERROR;
-            mh_err("Managed %s process %d exited with signal=%d", op->id, op->pid, signo);
+            mh_err("Managed %s process %d exited with signal=%d", op->id,
+                   op->pid, signo);
         }
 #ifdef WCOREDUMP
         if (WCOREDUMP(status)) {
@@ -368,13 +378,14 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 
     } else {
         mh_trace("Async waiting for %d - %s", op->pid, op->opaque->exec);
-        mainloop_add_child(op->pid, op->timeout, op->id, op, operation_finished);
+        mainloop_add_child(op->pid, op->timeout, op->id, op,
+                           operation_finished);
 
-        op->opaque->stdout_gsource = mainloop_add_fd(
-            G_PRIORITY_LOW, op->opaque->stdout_fd, read_output, pipe_out_done, op);
+        op->opaque->stdout_gsource = mainloop_add_fd(G_PRIORITY_LOW,
+                op->opaque->stdout_fd, read_output, pipe_out_done, op);
 
-        op->opaque->stderr_gsource = mainloop_add_fd(
-            G_PRIORITY_LOW, op->opaque->stderr_fd, read_output, pipe_err_done, op);
+        op->opaque->stderr_gsource = mainloop_add_fd(G_PRIORITY_LOW,
+                op->opaque->stderr_fd, read_output, pipe_err_done, op);
     }
 
     return TRUE;
@@ -383,7 +394,7 @@ services_os_action_execute(svc_action_t* op, gboolean synchronous)
 GList *
 services_os_get_directory_list(const char *root, gboolean files)
 {
-    GList* list = NULL;
+    GList *list = NULL;
 #if __linux__
     struct dirent **namelist;
     int entries = 0, lpc = 0;
@@ -404,20 +415,20 @@ services_os_get_directory_list(const char *root, gboolean files)
         snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
 
         stat(buffer, &sb);
-        if(S_ISDIR(sb.st_mode)) {
-            if(files) {
+        if (S_ISDIR(sb.st_mode)) {
+            if (files) {
                 free(namelist[lpc]);
                 continue;
             }
 
-        } else if(S_ISREG(sb.st_mode)) {
-            if(files == FALSE) {
+        } else if (S_ISREG(sb.st_mode)) {
+            if (files == FALSE) {
                 free(namelist[lpc]);
                 continue;
 
-            } else if( (sb.st_mode & S_IXUSR) == 0
+            } else if ((sb.st_mode & S_IXUSR) == 0
                        && (sb.st_mode & S_IXGRP) == 0
-                       && (sb.st_mode & S_IXOTH) == 0 ) {
+                       && (sb.st_mode & S_IXOTH) == 0) {
                 free(namelist[lpc]);
                 continue;
             }
@@ -432,16 +443,16 @@ services_os_get_directory_list(const char *root, gboolean files)
 }
 
 void
-services_os_set_exec(svc_action_t* op)
+services_os_set_exec(svc_action_t *op)
 {
-    if(strcmp("enable", op->action) == 0) {
+    if (strcmp("enable", op->action) == 0) {
         op->opaque->exec = strdup("/sbin/chkconfig");
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->agent);
         op->opaque->args[2] = strdup("on");
         op->opaque->args[3] = NULL;
 
-    } else if(strcmp("disable", op->action) == 0) {
+    } else if (strcmp("disable", op->action) == 0) {
         op->opaque->exec = strdup("/sbin/chkconfig");
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->agent);
@@ -456,22 +467,26 @@ services_os_set_exec(svc_action_t* op)
     }
 }
 
-GList *services_os_list(void)
+GList *
+services_os_list(void)
 {
     return get_directory_list(LSB_ROOT, TRUE);
 }
 
 
-GList *resources_os_list_ocf_providers(void)
+GList *
+resources_os_list_ocf_providers(void)
 {
-    return get_directory_list(OCF_ROOT"/resource.d", FALSE);
+    return get_directory_list(OCF_ROOT "/resource.d", FALSE);
 }
 
-GList *resources_os_list_ocf_agents(const char *provider)
+GList *
+resources_os_list_ocf_agents(const char *provider)
 {
-    if(provider) {
+    if (provider) {
         char buffer[500];
-        snprintf(buffer, sizeof(buffer), "%s//resource.d/%s", OCF_ROOT, provider);
+        snprintf(buffer, sizeof(buffer), "%s//resource.d/%s", OCF_ROOT,
+                 provider);
         return get_directory_list(buffer, TRUE);
     }
     return NULL;

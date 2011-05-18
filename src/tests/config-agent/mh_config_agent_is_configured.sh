@@ -1,5 +1,5 @@
 #!/bin/bash
-# mh_ssl_simple_connect.sh - Copyright (c) 2011 Red Hat, Inc.
+# mh_config_agent_is_configured.sh - Copyright (c) 2011 Red Hat, Inc.
 # Written by Adam Stokes <astokes@fedoraproject.org>
 # 
 # This library is free software; you can redistribute it and/or
@@ -18,17 +18,18 @@
 
 . /usr/share/beakerlib/beakerlib.sh
 
-TEST="/matahari/Sanity/mh_simple_connect"
+TEST="/matahari/Sanity/mh_config_agent_is_configured"
 PACKAGE="matahari"
 
 TEST_HOSTNAME=$1
 TEST_PORT=$2
 TEST_AGENT=$3
+TEST_CONFIGURED_FILE=/tmp/.mh_configured
 
 if [ ! $# == 3 ]; then
     TEST_HOSTNAME=127.0.0.1
     TEST_PORT=49000
-    TEST_AGENT=matahari-hostd
+    TEST_AGENT=matahari-qmf-configd
 fi
 
 rlJournalStart
@@ -38,6 +39,7 @@ rlJournalStart
 
     rlPhaseStartTest
         rlRun "$TEST_AGENT --broker $TEST_HOSTNAME --port $TEST_PORT"
+        rlAssertExists "$TEST_CONFIGURED_FILE"
     rlPhaseEnd
     
     rlPhaseStartCleanup

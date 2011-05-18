@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Red Hat, Inc.
  * Written by Roman Rakus <rrakus@redhat.com>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -23,12 +23,17 @@
 #ifndef MHGOBJECTCLASS_H_
 #define MHGOBJECTCLASS_H_
 
-#define MATAHARI_TYPE          (matahari_get_type())
-#define MATAHARI(object)       (G_TYPE_CHECK_INSTANCE_CAST ((object), MATAHARI_TYPE, Matahari))
-#define MATAHARI_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), MATAHARI_TYPE, MatahariClass))
-#define IS_MATAHARI(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), MATAHARI_TYPE))
-#define IS_MATAHARI_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), MATAHARI_TYPE))
-#define MATAHARI_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), MATAHARI_TYPE, MatahariClass))
+#define MATAHARI_TYPE            (matahari_get_type())
+#define MATAHARI(object)         (G_TYPE_CHECK_INSTANCE_CAST ((object), \
+                                  MATAHARI_TYPE, Matahari))
+#define MATAHARI_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), \
+                                  MATAHARI_TYPE, MatahariClass))
+#define IS_MATAHARI(object)      (G_TYPE_CHECK_INSTANCE_TYPE ((object), \
+                                  MATAHARI_TYPE))
+#define IS_MATAHARI_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), \
+                                  MATAHARI_TYPE))
+#define MATAHARI_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), \
+                                  MATAHARI_TYPE, MatahariClass))
 
 typedef struct _Matahari Matahari;
 typedef struct _MatahariClass MatahariClass;
@@ -39,13 +44,13 @@ matahari_get_type(void);
 
 struct _Matahari
 {
-  GObject parent;
-  MatahariPrivate *priv;
+    GObject parent;
+    MatahariPrivate *priv;
 };
 
 struct _MatahariClass
 {
-  GObjectClass parent;
+    GObjectClass parent;
 };
 
 #endif /* MHGOBJECTCLASS_H_ */

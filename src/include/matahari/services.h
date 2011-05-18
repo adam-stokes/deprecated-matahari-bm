@@ -34,7 +34,6 @@
 #define LSB_ROOT "/etc/init.d"
 
 enum lsb_exitcode {
-    LSB_PENDING = -1,
     LSB_OK = 0,
     LSB_UNKNOWN_ERROR = 1,
     LSB_INVALID_PARAM = 2,
@@ -50,10 +49,11 @@ enum lsb_exitcode {
     LSB_PENDING       = 196,
     LSB_CANCELLED     = 197,
     LSB_TIMEOUT       = 198,
-    LSB_UNKNOWN_ERROR = 199,
+    LSB_OTHER_ERROR   = 199,
 };
 
-/* The return codes for the status operation are not the same for other operatios - go figure */
+/* The return codes for the status operation are not the same for other
+ * operatios - go figure */
 enum lsb_status_exitcode {
     LSB_STATUS_OK = 0,
     LSB_STATUS_VAR_PID = 1,
@@ -61,17 +61,16 @@ enum lsb_status_exitcode {
     LSB_STATUS_NOT_RUNNING = 3,
     LSB_STATUS_NOT_INSTALLED = 4,
 
-    /* 150-199	reserved for application use */
+    /* 150-199 reserved for application use */
     LSB_STATUS_SIGNAL        = 194,
     LSB_STATUS_NOT_SUPPORTED = 195,
     LSB_STATUS_PENDING       = 196,
     LSB_STATUS_CANCELLED     = 197,
     LSB_STATUS_TIMEOUT       = 198,
-    LSB_STATUS_UNKNOWN_ERROR = 199,
+    LSB_STATUS_OTHER_ERROR   = 199,
 };
 
 enum ocf_exitcode {
-    OCF_PENDING = -1,
     OCF_OK = 0,
     OCF_UNKNOWN_ERROR = 1,
     OCF_INVALID_PARAM = 2,
@@ -153,16 +152,18 @@ extern svc_action_t *resources_action_create(
 
 extern void services_action_free(svc_action_t *op);
 
-extern gboolean services_action_sync(svc_action_t* op);
-extern gboolean services_action_async(svc_action_t* op, void (*action_callback)(svc_action_t*));
+extern gboolean services_action_sync(svc_action_t *op);
+extern gboolean services_action_async(svc_action_t *op,
+                                      void (*action_callback)(svc_action_t *));
 
-extern gboolean services_action_cancel(const char *name, const char *action, int interval);
+extern gboolean services_action_cancel(const char *name, const char *action,
+                                       int interval);
 
 static inline enum ocf_exitcode
 services_get_ocf_exitcode(char *action, int lsb_exitcode)
 {
-    if(action != NULL && strcmp("status", action) == 0) {
-        switch(lsb_exitcode) {
+    if (action != NULL && strcmp("status", action) == 0) {
+        switch (lsb_exitcode) {
         case LSB_STATUS_OK:            return OCF_OK;
         case LSB_STATUS_VAR_PID:       return OCF_NOT_RUNNING;
         case LSB_STATUS_VAR_LOCK:      return OCF_NOT_RUNNING;
@@ -171,11 +172,12 @@ services_get_ocf_exitcode(char *action, int lsb_exitcode)
         default:                       return OCF_UNKNOWN_ERROR;
         }
 
-    } else if(lsb_exitcode > LSB_NOT_RUNNING) {
+    } else if (lsb_exitcode > LSB_NOT_RUNNING) {
         return OCF_UNKNOWN_ERROR;
     }
 
-    /* For non-status operations, the LSB and OCF share error code meaning for rc <= 7 */
+    /* For non-status operations, the LSB and OCF share error code meaning
+     * for rc <= 7 */
     return (enum ocf_exitcode)lsb_exitcode;
 }
 #endif

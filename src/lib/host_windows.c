@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,15 +47,15 @@ static void
 get_token_priv(HANDLE token, TOKEN_PRIVILEGES tkp)
 {
     OpenProcessToken(GetCurrentProcess(),
-		     TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token);
+                     TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token);
     LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME,
-			 &tkp.Privileges[0].Luid);
+                         &tkp.Privileges[0].Luid);
 
     tkp.PrivilegeCount = 1;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     AdjustTokenPrivileges(token, FALSE, &tkp, 0,
-			  (PTOKEN_PRIVILEGES)NULL, 0);
+                          (PTOKEN_PRIVILEGES) NULL, 0);
 }
 
 void
@@ -66,7 +66,7 @@ host_os_reboot(void)
 
     get_token_priv(token, tkp);
     ExitWindowsEx(EWX_REBOOT | EWX_FORCE,
-		  SHTDN_REASON_FLAG_PLANNED);
+                  SHTDN_REASON_FLAG_PLANNED);
 }
 
 void
@@ -77,5 +77,5 @@ host_os_shutdown(void)
 
     get_token_priv(token, tkp);
     ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE,
-		  SHTDN_REASON_FLAG_PLANNED);
+                  SHTDN_REASON_FLAG_PLANNED);
 }

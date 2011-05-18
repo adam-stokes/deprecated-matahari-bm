@@ -1,0 +1,7 @@
+PURPOSE of /matahari/Sanity/mh_config_agent_is_configured
+Description: Test if a config agent responds to event handler
+Author: Adam Stokes <astokes@fedoraproject.org>
+
+This tests makes sure that when the config agent connects to the broker we are
+able to determine if a configuration file is set in order to let the broker
+know whether or not this is a new agent/system or this system is already configured.

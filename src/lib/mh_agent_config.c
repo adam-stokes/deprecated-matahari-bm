@@ -1,5 +1,5 @@
-/* host_private.h - Copyright (C) 2010 Red Hat, Inc.
- * Written by Darryl L. Pierce <dpierce@redhat.com>
+/* mh_agent_config.c - Copyright (C) 2011 Red Hat, Inc.
+ * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -16,28 +16,34 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/**
- * \file
- * \brief Platform specific function prototypes.
- *
- * The functions in this header must be implemented by the platform
- * specific host data code.
- *  - host_linux.c
- *  - host_windows.c
- */
+#ifndef WIN32
+#include "config.h"
+#endif
 
-#ifndef __MH_HOST_PRIVATE_H__
-#define __MH_HOST_PRIVATE_H__
-
+#include <stdint.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <glib.h>
+#include "matahari/mh_agent_config.h"
+#include "matahari/logging.h"
 
-extern const char *
-host_os_get_cpu_flags(void);
+MH_TRACE_INIT_DATA(mh_config);
 
-extern void
-host_os_reboot(void);
+static const char *filename = "/var/lib/matahari/.mh_configured";
 
-extern void
-host_os_shutdown(void);
+uint32_t mh_is_configured()
+{
+    int config_file_exist = 0;
+    
+    if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
+        config_file_exist = 1;
+    }
+    return config_file_exist;
+}
 
-#endif /* __MH_HOST_PRIVATE_H__ */
+void mh_configure(const char *uri)
+{
+    if(!g_file_set_contents(filename, uri, -1, NULL)) {
+        mh_log(LOG_DEBUG, "Unable to create file.");
+    }
+}

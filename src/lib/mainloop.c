@@ -51,12 +51,13 @@ mainloop_trigger_check(GSource *source)
 }
 
 static gboolean
-mainloop_trigger_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
+mainloop_trigger_dispatch(GSource *source, GSourceFunc callback,
+                          gpointer userdata)
 {
     mainloop_trigger_t *trig = (mainloop_trigger_t *) source;
     trig->trigger = FALSE;
 
-    if(callback) {
+    if (callback) {
         return callback(trig->user_data);
     }
     return TRUE;
@@ -81,7 +82,7 @@ mainloop_setup_trigger(GSource *source, int priority,
     trigger->trigger = FALSE;
     trigger->user_data = userdata;
 
-    if(dispatch) {
+    if (dispatch) {
         g_source_set_callback(source, dispatch, trigger, NULL);
     }
 
@@ -134,13 +135,13 @@ static gboolean
 mainloop_signal_dispatch(GSource *source, GSourceFunc callback,
                          gpointer userdata)
 {
-    mainloop_signal_t *sig = (mainloop_signal_t*)source;
+    mainloop_signal_t *sig = (mainloop_signal_t *) source;
 #if __linux__
     mh_info("Invoking handler for signal %d: %s",
-             sig->signal, strsignal(sig->signal));
+            sig->signal, strsignal(sig->signal));
 #endif
     sig->trigger.trigger = FALSE;
-    if(sig->handler) {
+    if (sig->handler) {
         sig->handler(sig->signal);
     }
     return TRUE;
@@ -149,8 +150,8 @@ mainloop_signal_dispatch(GSource *source, GSourceFunc callback,
 static void
 mainloop_signal_handler(int sig)
 {
-    if(sig > 0 && sig < NSIG && mainloop_signals[sig] != NULL) {
-        mainloop_set_trigger((mainloop_trigger_t*)mainloop_signals[sig]);
+    if (sig > 0 && sig < NSIG && mainloop_signals[sig] != NULL) {
+        mainloop_set_trigger((mainloop_trigger_t *) mainloop_signals[sig]);
     }
 }
 
@@ -169,7 +170,7 @@ mainloop_signal(int sig, void (*dispatch)(int sig))
     struct sigaction sa;
     struct sigaction old;
 
-    if(sigemptyset(&mask) < 0) {
+    if (sigemptyset(&mask) < 0) {
         mh_perror(LOG_ERR, "Call to sigemptyset failed");
         return FALSE;
     }
@@ -178,8 +179,9 @@ mainloop_signal(int sig, void (*dispatch)(int sig))
     sa.sa_flags = SA_RESTART;
     sa.sa_mask = mask;
 
-    if(sigaction(sig, &sa, &old) < 0) {
-        mh_perror(LOG_ERR, "Could not install signal handler for signal %d", sig);
+    if (sigaction(sig, &sa, &old) < 0) {
+        mh_perror(LOG_ERR, "Could not install signal handler for signal %d",
+                  sig);
         return FALSE;
     }
 
@@ -195,7 +197,7 @@ mainloop_add_signal(int sig, void (*dispatch)(int sig))
 {
     GSource *source = NULL;
     int priority = G_PRIORITY_HIGH - 1;
-    if(sig == SIGTERM) {
+    if (sig == SIGTERM) {
         /* TERM is higher priority than other signals,
          *   signals are higher priority than other ipc.
          * Yes, minus: smaller is "higher"
@@ -203,11 +205,11 @@ mainloop_add_signal(int sig, void (*dispatch)(int sig))
         priority--;
     }
 
-    if(sig >= NSIG || sig < 0) {
+    if (sig >= NSIG || sig < 0) {
         mh_err("Signal %d is out of range", sig);
         return FALSE;
 
-    } else if(mainloop_signals[sig] != NULL) {
+    } else if (mainloop_signals[sig] != NULL) {
         mh_err("Signal handler for %d is already installed", sig);
         return FALSE;
     }
@@ -215,19 +217,20 @@ mainloop_add_signal(int sig, void (*dispatch)(int sig))
     MH_ASSERT(sizeof(mainloop_signal_t) > sizeof(GSource));
     source = g_source_new(&mainloop_signal_funcs, sizeof(mainloop_signal_t));
 
-    mainloop_signals[sig] = (mainloop_signal_t*)mainloop_setup_trigger(source, priority, NULL, NULL);
-    if(mainloop_signals[sig] == NULL) {
+    mainloop_signals[sig] = (mainloop_signal_t *) mainloop_setup_trigger(
+            source, priority, NULL, NULL);
+    if (mainloop_signals[sig] == NULL) {
         return FALSE;
     }
 
     mainloop_signals[sig]->handler = dispatch;
     mainloop_signals[sig]->signal = sig;
 
-    if(mainloop_signal(sig, mainloop_signal_handler) == FALSE) {
+    if (mainloop_signal(sig, mainloop_signal_handler) == FALSE) {
         mainloop_signal_t *tmp = mainloop_signals[sig];
         mainloop_signals[sig] = NULL;
 
-        mainloop_destroy_trigger((mainloop_trigger_t*)tmp);
+        mainloop_destroy_trigger((mainloop_trigger_t *) tmp);
         return FALSE;
     }
 
@@ -239,21 +242,22 @@ mainloop_destroy_signal(int sig)
 {
     mainloop_signal_t *tmp = NULL;
 
-    if(sig >= NSIG || sig < 0) {
+    if (sig >= NSIG || sig < 0) {
         mh_err("Signal %d is out of range", sig);
         return FALSE;
 
-    } else if(mainloop_signal(sig, NULL) == FALSE) {
-        mh_perror(LOG_ERR, "Could not uninstall signal handler for signal %d", sig);
+    } else if (mainloop_signal(sig, NULL) == FALSE) {
+        mh_perror(LOG_ERR, "Could not uninstall signal handler for signal %d",
+                  sig);
         return FALSE;
 
-    } else if(mainloop_signals[sig] == NULL) {
+    } else if (mainloop_signals[sig] == NULL) {
         return TRUE;
     }
 
     tmp = mainloop_signals[sig];
     mainloop_signals[sig] = NULL;
-    mainloop_destroy_trigger((mainloop_trigger_t*)tmp);
+    mainloop_destroy_trigger((mainloop_trigger_t *) tmp);
     return TRUE;
 }
 
@@ -326,15 +330,16 @@ mainloop_add_fd(int priority, int fd,
     source = g_source_new(&mainloop_fd_funcs, sizeof(mainloop_fd_t));
     MH_ASSERT(source != NULL);
 
-    fd_source = (mainloop_fd_t*)source;
+    fd_source = (mainloop_fd_t *) source;
     fd_source->id = 0;
     fd_source->gpoll.fd = fd;
     fd_source->gpoll.events = G_IO_ERR|G_IO_NVAL|G_IO_IN|G_IO_PRI|G_IO_HUP;
     fd_source->gpoll.revents = 0;
 
     /*
-     * Normally we'd use g_source_set_callback() to specify the dispatch function,
-     * But we want to supply the fd too, so we store it in fd_source->dispatch instead
+     * Normally we'd use g_source_set_callback() to specify the dispatch
+     * function, but we want to supply the fd too, so we store it in
+     * fd_source->dispatch instead
      */
     fd_source->dnotify = notify;
     fd_source->dispatch = dispatch;
@@ -351,10 +356,10 @@ mainloop_add_fd(int priority, int fd,
 gboolean
 mainloop_destroy_fd(mainloop_fd_t *source)
 {
-    g_source_remove_poll((GSource*)source, &source->gpoll);
+    g_source_remove_poll((GSource *) source, &source->gpoll);
     g_source_remove(source->id);
     source->id = 0;
-    g_source_unref((GSource*)source);
+    g_source_unref((GSource *) source);
 
     return TRUE;
 }
@@ -363,7 +368,8 @@ static gboolean
 child_timeout_callback(gpointer p)
 {
     pid_t pid = (pid_t) GPOINTER_TO_INT(p);
-    mainloop_child_t *pinfo = (mainloop_child_t *) g_hash_table_lookup(mainloop_process_table, p);
+    mainloop_child_t *pinfo = (mainloop_child_t *) g_hash_table_lookup(
+            mainloop_process_table, p);
 
     if (pinfo == NULL) {
         return FALSE;
@@ -398,7 +404,7 @@ child_timeout_callback(gpointer p)
 void
 mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
                    void (*callback)(mainloop_child_t *p, int status, int signo,
-                   int exitcode))
+                                    int exitcode))
 {
     mainloop_child_t *p = g_new(mainloop_child_t, 1);
 
@@ -414,7 +420,7 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
     p->privatedata = privatedata;
     p->callback = callback;
 
-    if(timeout) {
+    if (timeout) {
         p->timerid = g_timeout_add(
             timeout, child_timeout_callback, GINT_TO_POINTER(pid));
     }
@@ -427,12 +433,13 @@ static void
 child_death_dispatch(int sig)
 {
     int status = 0;
-    while(TRUE) {
+    while (TRUE) {
         pid_t pid = wait3(&status, WNOHANG, NULL);
         if (pid > 0) {
-            int        signo = 0, exitcode = 0;
+            int signo = 0, exitcode = 0;
 
-            mainloop_child_t *p = g_hash_table_lookup(mainloop_process_table, GINT_TO_POINTER(pid));
+            mainloop_child_t *p = g_hash_table_lookup(mainloop_process_table,
+                                                      GINT_TO_POINTER(pid));
             mh_trace("Managed process %d exited: %p", pid, p);
             if (p == NULL) {
                 continue;
@@ -440,11 +447,13 @@ child_death_dispatch(int sig)
 
             if (WIFEXITED(status)) {
                 exitcode = WEXITSTATUS(status);
-                mh_trace("Managed process %d (%s) exited with rc=%d", pid, p->desc, exitcode);
+                mh_trace("Managed process %d (%s) exited with rc=%d", pid,
+                         p->desc, exitcode);
 
             } else if (WIFSIGNALED(status)) {
                 signo = WTERMSIG(status);
-                mh_trace("Managed process %d (%s) exited with signal=%d", pid, p->desc, signo);
+                mh_trace("Managed process %d (%s) exited with signal=%d", pid,
+                         p->desc, signo);
             }
 #ifdef WCOREDUMP
             if (WCOREDUMP(status)) {
@@ -462,7 +471,7 @@ child_death_dispatch(int sig)
             return;
 
         } else {
-            if(errno != ECHILD) {
+            if (errno != ECHILD) {
                 mh_perror(LOG_ERR, "wait3() failed");
             }
             break;

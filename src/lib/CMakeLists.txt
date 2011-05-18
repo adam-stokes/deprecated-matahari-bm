@@ -1,6 +1,6 @@
 # Library
 
-set(LIBS mcommon mhost mnetwork mservice)
+set(LIBS mcommon mhost mnetwork mservice mconfig)
 include_directories(${pcre_INCLUDE_DIRS})
 
 # See http://sourceware.org/autobook/autobook/autobook_91.html for
@@ -21,6 +21,10 @@ target_link_libraries(mnetwork ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARI
 add_library (mservice SHARED services.c services_${VARIANT}.c)
 set_target_properties(mservice PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mservice ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
+
+add_library (mconfig SHARED mh_agent_config.c)
+set_target_properties(mconfig PROPERTIES SOVERSION 0.0.1)
+target_link_libraries(mconfig ${pcre_LIBRARIES} mcommon ${glib_LIBRARIES})
 
 if(WIN32)
     foreach (lib ${LIBS})

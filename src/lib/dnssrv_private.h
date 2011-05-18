@@ -1,4 +1,4 @@
-/* t_dnssrv.c - Copyright (c) 2011 Red Hat, Inc.
+/* dnssrv.h - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -16,26 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <glib.h>
-#include "dnssrv_private.h"
+#define MAX_NAME_LEN 1024
 
-int main(int argc, char **argv)
+struct srv_reply
 {
-    struct srv_reply **srvl = NULL, *srv = NULL;
-    int i;
+    int prio;
+    int weight;
+    int port;
+    char name[];
+};
 
-    if (srvl = srv_lookup("qpid-broker", "tcp", "qpid-broker:49000")) {
-        srv = *srvl;
-        for (i = 1; srvl[i]; i++) {
-            if (srvl[i]->prio < srv->prio)
-                srv = srvl[i];
-        }
+struct srv_reply **srv_lookup(char *service,
+                              char *protocol,
+                              char *domain);
 
-        fprintf("\tAccessible QPID Broker: %s\n", srv->name);
-        return 0;
-    }
-    return -1;
-}
+void srv_free(struct srv_reply **srv);
 
 /*
  * Local Variables:
@@ -45,4 +40,3 @@ int main(int argc, char **argv)
  * End:
  * vim: et
  */
-

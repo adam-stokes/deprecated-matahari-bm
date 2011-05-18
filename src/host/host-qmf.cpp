@@ -41,10 +41,11 @@ public:
     int heartbeat();
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
-		            gpointer user_data);
+                            gpointer user_data);
 };
 
-static gboolean heartbeat_timer(gpointer data)
+static gboolean
+heartbeat_timer(gpointer data)
 {
     HostAgent *agent = (HostAgent *)data;
     g_timeout_add(agent->heartbeat(), heartbeat_timer, data);
@@ -65,7 +66,8 @@ main(int argc, char **argv)
 }
 
 gboolean
-HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
+HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                  gpointer user_data)
 {
     if (event.getType() != qmf::AGENT_METHOD) {
         session.methodSuccess(event);
@@ -124,9 +126,9 @@ HostAgent::heartbeat()
     _heartbeat_sequence++;
     mh_trace("Updating stats: %d %d", _heartbeat_sequence, interval);
 
-    if(interval == 0) {
+    if (interval == 0) {
         /* Updates disabled, check again in 5min */
-        return 5*60*1000;
+        return 5 * 60 * 1000;
     }
 
 #ifndef MSVC
