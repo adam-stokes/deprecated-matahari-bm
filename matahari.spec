@@ -392,6 +392,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_includedir}/matahari.h
 %{_datadir}/matahari/schema.xml
 %{_datadir}/cmake/Modules/FindMatahari.cmake
+%{_datadir}/matahari/tests/*.h
 
 %if %{with qmf}
 %{_includedir}/matahari/mh_agent.h
