@@ -26,7 +26,6 @@ CERT_DIR=test_cert_db
 CERT_PW_FILE=cert.password
 TEST_HOSTNAME=127.0.0.1
 TEST_CLIENT_CERT=agent
-SSL_PORT=5674
 
 export QPID_SSL_CERT_DB=${CERT_DIR}
 export QPID_SSL_CERT_PASSWORD_FILE=${CERT_PW_FILE}
@@ -41,9 +40,6 @@ rlJournalStart
         rlRun "TmpDir=\`mktemp -d\` " 0 "Creating tmp directory"
         rlRun "pushd $TmpDir"
         rlRun "mkdir $CERT_DIR"
-    rlPhaseEnd
-
-    rlPhaseStartTest
         rlAssertExists "$QPIDC_CONF_FILE"
         rlRun "echo password > $CERT_PW_FILE" 0 "Creating password file"
         rlAssertExists "$CERT_PW_FILE"
@@ -53,6 +49,10 @@ rlJournalStart
         rlRun "certutil -L -d $CERT_DIR -n $TEST_HOSTNAME"
         rlRun "certutil -S -d $CERT_DIR -n $TEST_CLIENT_CERT -s 'CN=$TEST_CLIENT_CERT' -t 'CT,,' -x -f $CERT_PW_FILE -z /usr/bin/certutil" 0 "Creating agent certficiate"
         rlRun "certutil -L -d $CERT_DIR -n $TEST_CLIENT_CERT"
+    rlPhaseEnd
+
+    rlPhaseStartTest
+        rlServiceStart matahari-broker matahari-config matahari-config-console
     rlPhaseEnd
     
     rlPhaseStartCleanup
