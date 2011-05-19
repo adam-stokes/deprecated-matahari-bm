@@ -1,5 +1,5 @@
-%global specversion 62
-%global upstream_version 1915fdd
+%global specversion 80
+%global upstream_version 162a7b8
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -168,14 +168,6 @@ make DESTDIR=%{buildroot} install
 
 %if %{with qmf}
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
-<<<<<<< HEAD
-=======
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-config
-%{__install} matahari.init   $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-config-console
->>>>>>> 51d318293cd754467309722985e1097ce94a5a6a
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
