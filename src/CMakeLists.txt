@@ -1,13 +1,5 @@
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
-find_package(CxxTest)
-if(CXXTEST_FOUND)
-   include_directories(${CXXTEST_INCLUDE_DIR})
-   ENABLE_TESTING()
-   CXXTEST_ADD_TEST(mh_api_network_unittest mh_api_network_unittest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/tests/mh_api_network.h)
-   target_link_libraries(mh_api_network_unittest mh_api_network_unittest)
-endif(CXXTEST_FOUND)
-
 if(WIN32)
    set(VARIANT "windows")
    set(SUPPORT_TRACING 0)
