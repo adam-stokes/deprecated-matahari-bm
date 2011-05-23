@@ -21,7 +21,6 @@
 
 TEST="/matahari/Sanity/mh_simple_connect"
 PACKAGE="matahari"
-                          
 MATAHARI_BROKER_PORT=`grep -P 'MATAHARI_PORT=\d+' /etc/sysconfig/matahari-broker|cut -f2 -d=`
 
 rlJournalStart
