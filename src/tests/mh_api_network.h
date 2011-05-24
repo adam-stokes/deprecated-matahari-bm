@@ -42,38 +42,37 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
 
     void testListNetworkDevices(void)
     {
-        unsigned int i;
-
         /* only initialize on first test in suite */
         init();
 
-        for(i=0; i<iface_names.size(); i++) {
-            TS_TRACE(iface_names[i]);
-            TS_ASSERT(iface_names[i]);
+        for(std::vector<char *>::iterator it = iface_names.begin(); 
+            it != iface_names.end(); ++it) {
+            TS_TRACE(*it);
+            TS_ASSERT(*it);
         }
     }
 
     void testGetNetworkIP(void)
     {
-        unsigned int i;
         const char *ip = NULL;
-        for(i=0; i<iface_names.size(); i++) {
-            ip = mh_network_get_ip_address(iface_names[i]);
-            TS_TRACE(ip);
-            TS_ASSERT((is_match("^\\d+\\.\\d+\\.\\d+\\.\\d+",
-                                ip)) >= 0);
+        for(std::vector<char *>::iterator it = iface_names.begin(); 
+            it != iface_names.end(); ++it) {
+          ip = mh_network_get_ip_address(*it);
+          TS_TRACE(ip);
+          TS_ASSERT((mh_test_is_match("^\\d+\\.\\d+\\.\\d+\\.\\d+",
+                                      ip)) >= 0);
         }
     }
 
     void testGetNetworkMAC(void)
     {
-        unsigned int i;
         const char *mac = NULL;
-        for(i=0; i<iface_names.size(); i++) {
-            mac = mh_network_get_mac_address(iface_names[i]);
+        for(std::vector<char *>::iterator it = iface_names.begin(); 
+            it != iface_names.end(); ++it) {
+            mac = mh_network_get_mac_address(*it);
             TS_TRACE(mac);
-            TS_ASSERT((is_match("^([0-9a-fA-F]{2}([:-]|$)){6}$",
-                                mac)) >= 0);
+            TS_ASSERT((mh_test_is_match("^([0-9a-fA-F]{2}([:-]|$)){6}$",
+                                        mac)) >= 0);
         }
     }
 };

@@ -57,8 +57,8 @@ class MhApiHostSuite : public CxxTest::TestSuite
     {
         infomsg << "Verify " << mh_host_get_hostname() << " format";
         TS_TRACE(infomsg.str());
-        TS_ASSERT((is_match("^([0-9a-zA-Z]+([\\.]|$)){2,3}$",
-                            mh_host_get_hostname())) >= 0);
+        TS_ASSERT((mh_test_is_match("^([0-9a-zA-Z]+([\\.]|$)){2,3}$",
+                                    mh_host_get_hostname())) >= 0);
         infomsg.str("");
     }
 
@@ -66,7 +66,7 @@ class MhApiHostSuite : public CxxTest::TestSuite
     {
         infomsg << "Verify " << mh_host_get_uuid() << " exists";
         TS_TRACE(infomsg.str());
-        TS_ASSERT((is_match("^[0-9a-zA-Z]+$", mh_host_get_uuid())) >= 0);
+        TS_ASSERT((mh_test_is_match("^[0-9a-zA-Z]+$", mh_host_get_uuid())) >= 0);
         infomsg.str("");
     }
 
@@ -74,7 +74,7 @@ class MhApiHostSuite : public CxxTest::TestSuite
     {
         infomsg << "Verify OS : " << mh_host_get_operating_system();
         TS_TRACE(infomsg.str());
-        TS_ASSERT((is_match("^Linux.*|Windows.*|Solaris.*$",
+        TS_ASSERT((mh_test_is_match("^Linux.*|Windows.*|Solaris.*$",
                             mh_host_get_operating_system())) >= 0);
         infomsg.str("");
     }
@@ -84,7 +84,7 @@ class MhApiHostSuite : public CxxTest::TestSuite
         infomsg << "Verify architecture property: " \
                 << mh_host_get_architecture();
         TS_TRACE(infomsg.str());
-        TS_ASSERT((is_match("^[0-9a-zA-Z_]+$",
+        TS_ASSERT((mh_test_is_match("^[0-9a-zA-Z_]+$",
                             mh_host_get_architecture())) >= 0);
         infomsg.str("");
     }
@@ -93,7 +93,7 @@ class MhApiHostSuite : public CxxTest::TestSuite
     {
         infomsg << "Verify cpu model: " << mh_host_get_cpu_model();
         TS_TRACE(infomsg.str());
-        TS_ASSERT((is_match("\\sCPU\\s", mh_host_get_cpu_model())) >= 0);
+        TS_ASSERT((mh_test_is_match("\\sCPU\\s", mh_host_get_cpu_model())) >= 0);
         infomsg.str("");
     }
 
@@ -101,7 +101,7 @@ class MhApiHostSuite : public CxxTest::TestSuite
     {
         infomsg << "Verify cpu flags: " << mh_host_get_cpu_flags();
         TS_TRACE(infomsg.str());
-        TS_ASSERT((is_match("\\d+", mh_host_get_cpu_flags())) >= 0);
+        TS_ASSERT((mh_test_is_match("\\d+", mh_host_get_cpu_flags())) >= 0);
         infomsg.str("");
     }
 

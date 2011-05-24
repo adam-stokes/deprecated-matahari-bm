@@ -23,6 +23,14 @@
 #ifndef __MH_TEST_UTILITIES_H
 #define __MH_TEST_UTILITIES_H
 
-extern int is_match(const char *pattern, const char *subject);
+/**
+ * Regex match against specific pattern
+ *
+ * \param[in] pattern perl regular expression pattern
+ * \param[in] subject content used to match against
+ *
+ * \return 0 or greater for successful match
+ */
+extern int mh_test_is_match(const char *pattern, const char *subject);
 
 #endif /* __MH_TEST_UTILITIES */

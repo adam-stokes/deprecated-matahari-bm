@@ -21,13 +21,15 @@
  */
 
 #include "mh_test_utilities.h"
+#include "matahari/utilities.h"
 #include <pcre.h>
 #include <string.h>
+#include <stdio.h>
 
 #define OVECCOUNT 30
 
 int
-is_match(const char *pattern, const char *subject)
+mh_test_is_match(const char *pattern, const char *subject)
 {
     int erroroffset;
     int ovector[OVECCOUNT];
@@ -52,7 +54,7 @@ is_match(const char *pattern, const char *subject)
         0,
         0,
         ovector,
-        OVECCOUNT);
+        DIMOF(ovector));
 
     /* Since we only care about return code for now free the regex */
     pcre_free(re);
