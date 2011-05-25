@@ -9,9 +9,9 @@ if(CXXTEST_FOUND)
    add_library(mh_tester SHARED mh_test_utilities.c ../lib/utilities.c)
    target_link_libraries(mh_api_network_unittest mnetwork mh_tester)
    target_link_libraries(mh_api_host_unittest mhost pcre mh_tester)
-   message(STATUS "Testing Found.")
 endif(CXXTEST_FOUND)
 
 file(GLOB SRCS "*.cpp")
 file(GLOB HEADERS "*.h")
 install(FILES ${SRCS} ${HEADERS} DESTINATION share/matahari/tests)
+

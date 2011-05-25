@@ -105,6 +105,62 @@ class MhApiHostSuite : public CxxTest::TestSuite
         infomsg.str("");
     }
 
+    void testCpuCount(void)
+    {
+        infomsg << "Verify cpu count: " << mh_host_get_cpu_count();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_cpu_count()) > 0);
+        infomsg.str("");
+    }
+
+    void testCpuNumberOfCores(void)
+    {
+        infomsg << "Verify cpu num of cores: " << mh_host_get_cpu_number_of_cores();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_cpu_number_of_cores()) > 0);
+        infomsg.str("");
+    }
+
+    void testCpuWordSize(void)
+    {
+        infomsg << "Verify cpu wordsize: " << mh_host_get_cpu_wordsize();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_cpu_wordsize()) > 0);
+        infomsg.str("");
+    }
+
+    void testMemory(void)
+    {
+        infomsg << "Verify memory exist: " << mh_host_get_memory();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_memory()) > 0);
+        infomsg.str("");
+    }
+
+    void testMemoryFree(void)
+    {
+        infomsg << "Verify memory free: " << mh_host_get_mem_free();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_mem_free()) > 0);
+        infomsg.str("");
+    }
+
+    void testSwap(void)
+    {
+        infomsg << "Verify swap exists: " << mh_host_get_swap();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_swap()) > 0);
+        infomsg.str("");
+    }
+
+    void testSwapFree(void)
+    {
+        infomsg << "Verify swap free: " << mh_host_get_swap_free();
+        TS_TRACE(infomsg.str());
+        TS_ASSERT((mh_host_get_swap_free()) > 0);
+        infomsg.str("");
+    }
+
 };
 
 #endif

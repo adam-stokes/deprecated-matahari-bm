@@ -2,6 +2,7 @@
 #define __MH_API_NETWORK_UNITTEST_H
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
 #include <cstdlib>
@@ -28,6 +29,7 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
     GList *interface_list;
     sigar_net_interface_config_t *ifconfig;
     vector<char*> iface_names;
+    std::stringstream infomsg;
 
     void init()
     {
@@ -44,11 +46,13 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
     {
         /* only initialize on first test in suite */
         init();
-
+        
         for(std::vector<char *>::iterator it = iface_names.begin(); 
             it != iface_names.end(); ++it) {
-            TS_TRACE(*it);
+            infomsg << "Checking for available interfaces: " << *it;
+            TS_TRACE(infomsg.str());
             TS_ASSERT(*it);
+            infomsg.str("");
         }
     }
 
@@ -58,9 +62,11 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
         for(std::vector<char *>::iterator it = iface_names.begin(); 
             it != iface_names.end(); ++it) {
           ip = mh_network_get_ip_address(*it);
-          TS_TRACE(ip);
+          infomsg << "Verify IP address format: " << ip;
+          TS_TRACE(infomsg.str());
           TS_ASSERT((mh_test_is_match("^\\d+\\.\\d+\\.\\d+\\.\\d+",
                                       ip)) >= 0);
+          infomsg.str("");
         }
     }
 
@@ -70,9 +76,11 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
         for(std::vector<char *>::iterator it = iface_names.begin(); 
             it != iface_names.end(); ++it) {
             mac = mh_network_get_mac_address(*it);
-            TS_TRACE(mac);
+            infomsg << "Verify MAC address format: " << mac;
+            TS_TRACE(infomsg.str());
             TS_ASSERT((mh_test_is_match("^([0-9a-fA-F]{2}([:-]|$)){6}$",
                                         mac)) >= 0);
+            infomsg.str("");
         }
     }
 };
