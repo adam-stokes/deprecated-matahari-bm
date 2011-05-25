@@ -31,9 +31,11 @@
     </xsl:if>
 </xsl:template>
 
-<!-- This is needed for converting properties names to uppercase -->
-<xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
-<xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
+<!-- This is needed for converting properties names to uppercase.
+     The dash is always converted to underscore, so C compiler doesn't
+     interpret is as minus. -->
+<xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz-'" />
+<xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'" />
 
 <xsl:template name="enum">
     <!-- Create enum of the properties and first property with id 0 -->
