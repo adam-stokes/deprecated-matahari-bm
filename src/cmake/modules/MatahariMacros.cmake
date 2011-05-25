@@ -32,20 +32,16 @@ macro(generate_dbus_headers API XML)
 endmacro(generate_dbus_headers)
 
 # This macro will transform QMF interface XML to DBus interface XML file
-# Arguments SCHEMAS - paths to XML schema files
-macro(generate_dbus_interface SCHEMAS)
+# Argument SCHEMA - path to XML schema file
+macro(generate_dbus_interface SCHEMA)
     find_file(SCHEMA_TO_DBUS schema-to-dbus.xsl
-              ${CMAKE_CURRENT_SOURCE_DIR} /usr/share/matahari)
+              ${CMAKE_CURRENT_SOURCE_DIR}/.. /usr/share/matahari)
     find_file(XSLTPROC xsltproc)
-    # Create dbus subdirectory
-    execute_process(COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/dbus)
-    foreach(SCHEMA ${SCHEMAS})
-        # Generate files for each schema
-        execute_process(
-            COMMAND ${XSLTPROC} ${SCHEMA_TO_DBUS} ${SCHEMA}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dbus
-        )
-    endforeach(SCHEMA ${SCHEMAS})
+    # Generate files
+    execute_process(
+        COMMAND ${XSLTPROC} ${SCHEMA_TO_DBUS} ${SCHEMA}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endmacro(generate_dbus_interface)
 
 # This macro will generate QMF definition files from QMF schema

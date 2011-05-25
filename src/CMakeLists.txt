@@ -113,14 +113,6 @@ else(WITH-DBUS STREQUAL "ON")
     endif(NOT polkit_FOUND)
 endif(WITH-DBUS STREQUAL "ON")
 
-if(WITH-DBUS)
-    message(STATUS "DBus is enabled")
-    # Create src/dbus directory and generate DBus XML definition files into it
-    generate_dbus_interface(${SCHEMAS})
-else(WITH-DBUS)
-    message(STATUS "DBus is disabled")
-endif(WITH-DBUS)
-
 ## qpid
 if(WITH-QMF)
     # Defines
