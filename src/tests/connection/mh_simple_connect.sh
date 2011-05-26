@@ -21,17 +21,15 @@
 
 TEST="/matahari/Sanity/mh_simple_connect"
 PACKAGE="matahari"
-
-TEST_DEFAULT_AGENTS=( matahari-qmf-hostd \
-                         matahari-qmf-networkd \
-                         matahari-qmf-serviced \
-                         matahari-qmf-configd  )
-                             
 MATAHARI_BROKER_PORT=`grep -P 'MATAHARI_PORT=\d+' /etc/sysconfig/matahari-broker|cut -f2 -d=`
 
 rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm $PACKAGE
+        for i in "${TEST_DEFAULT_SERVICE_NAMES[@]}"
+        do
+            rlServiceStart $i
+        done
     rlPhaseEnd
 
     rlPhaseStartTest
@@ -48,6 +46,10 @@ rlJournalStart
     rlPhaseEnd
     
     rlPhaseStartCleanup
+    for i in "${TEST_DEFAULT_SERVICE_NAMES[@]}"
+    do
+        rlServiceStop $i
+    done
     rlPhaseEnd
 rlJournalEnd
 rlJournalPrintText
