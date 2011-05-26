@@ -25,6 +25,16 @@ if(WITH-QMF)
         target_link_libraries(${QMF_CONSOLE} wsock32)
     endif(WIN32)
 
+    if(NOT WIN32)
+        configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
+    	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
+    	# Override BASE for matahari-config-console
+    	unset(BASE)
+    	set(BASE "config-console")
+    	configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
+    	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
+    endif(NOT WIN32)
+    
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
     install(TARGETS ${QMF_CONSOLE} DESTINATION sbin)
 endif(WITH-QMF)
