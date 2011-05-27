@@ -421,6 +421,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     _agent_session = qmf::AgentSession(_amqp_connection);
     _agent_session.setVendor("matahariproject.org");
     _agent_session.setProduct(proc_name);
+    _agent_session.setAttribute("uuid", mh_uuid());
+    _agent_session.setAttribute("hostname", mh_hostname());
 
     _agent_session.open();
 
