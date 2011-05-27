@@ -22,6 +22,7 @@ PACKAGE		?= matahari
 VERSION		?= 0.4.0
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
+HTML_ROOT	= root@www.clusterlabs.org:/var/www/html
 
 RPM_ROOT	?= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
@@ -114,7 +115,7 @@ coverity:
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
-	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ $(HTML_ROOT)/coverity/$(PACKAGE)/$(TAG)
 #	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
 
 clean:
@@ -126,6 +127,9 @@ clean:
 
 tags:
 	ctags --recurse -e src
+
+doxygen-www: doxygen
+	rsync -avzxlSD --progress doc/api/html/ $(HTML_ROOT)/doxygen/$(PACKAGE)/$(TAG)
 
 doxygen:
 ifeq ($(DOXYGEN),)
