@@ -264,7 +264,7 @@ void
 SrvAgent::action_async(enum service_id service, qmf::AgentSession& session,
                        qmf::AgentEvent& event, svc_action_t *op, bool has_rc)
 {
-    op->cb_data = new AsyncCB(this, SRV_SERVICES, session, event, has_rc);
+    op->cb_data = new AsyncCB(this, service, session, event, has_rc);
     services_action_async(op, AsyncCB::mh_async_callback);
 }
 
