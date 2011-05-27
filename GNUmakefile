@@ -120,6 +120,7 @@ coverity:
 #	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
 
 clean:
+	rm -f *.tgz *.sed *.gres *~
 	@if [ -d linux.build ] ; then \
 		$(MAKE) --no-print-dir -C linux.build clean ; \
 	elif [ -d windows.build ] ; then \
