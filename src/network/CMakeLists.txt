@@ -17,10 +17,6 @@ if(WITH-QMF)
         target_link_libraries(${QMF_AGENT} ${QPIDTYPES_LIBRARY})
     endif(QPIDTYPES_LIBRARY)
 
-    if(WIN32)
-        target_link_libraries(${QMF_AGENT} wsock32)
-    endif(WIN32)
-
     if(NOT WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
     	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
