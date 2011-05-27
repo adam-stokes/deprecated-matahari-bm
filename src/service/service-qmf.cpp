@@ -37,6 +37,8 @@ extern "C" {
 #include "matahari/services.h"
 }
 
+#include <iostream>
+
 enum service_id {
     SRV_RESOURCES,
     SRV_SERVICES
@@ -49,10 +51,7 @@ private:
                       qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
 
     qmf::Data _services;
-    qmf::DataAddr _services_addr;
-
     qmf::Data _resources;
-    qmf::DataAddr _resources_addr;
 
     _qtype::Variant::List standards;
 
@@ -128,7 +127,7 @@ AsyncCB::mh_async_callback(svc_action_t *op)
         cb_data->first_result = false;
 
     } else if (cb_data->last_rc != op->rc) {
-        mh_trace("Result changed on recurring action: was '%d', now '%d'\n",
+        mh_trace("Result changed on recurring action: was '%d', now '%d'",
 		 cb_data->last_rc, op->rc);
         cb_data->agent->raiseEvent(op, cb_data->service, userdata);
     }
@@ -197,8 +196,10 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
 
     if (service == SRV_RESOURCES) {
         event.setProperty("standard", op->standard);
-        event.setProperty("provider", op->provider);
-        event.setProperty("type", op->agent);
+	if(op->provider) {
+	    event.setProperty("provider", op->provider);
+	}
+        event.setProperty("agent", op->agent);
         event.setProperty("expected-rc", op->expected_rc);
     }
 
@@ -221,19 +222,20 @@ SrvAgent::setup(qmf::AgentSession session)
 #endif
 
     _package.configure(session);
+
     _services = qmf::Data(_package.data_Services);
 
     _services.setProperty("uuid", mh_uuid());
     _services.setProperty("hostname", mh_hostname());
 
-    _services_addr = session.addData(_services);
+    session.addData(_services, "Services");
 
     _resources = qmf::Data(_package.data_Resources);
 
     _resources.setProperty("uuid", mh_uuid());
     _resources.setProperty("hostname", mh_hostname());
 
-    _resources_addr = session.addData(_resources);
+    session.addData(_resources, "Resources");
 
     return 0;
 }
@@ -243,13 +245,15 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
                  gpointer user_data)
 {
     if (event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
-        if (_services_addr == event.getDataAddr()) {
-            mh_info("Calling services API");
+        if (event.getDataAddr().getName() == "Services") {
             return invoke_services(session, event, user_data);
-        }
 
-        mh_info("Calling resources API");
-        return invoke_resources(session, event, user_data);
+        } else if (event.getDataAddr().getName() == "Resources") {
+	    return invoke_resources(session, event, user_data);
+
+        } else {
+	    mh_err("Unknown agent: %s", event.getDataAddr().getName().c_str());
+	}
     }
 
     mh_err("Unhandled message");
@@ -285,7 +289,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
             s_list.push_back((const char *) gIter->data);
         }
 
-        event.addReturnArgument("services", s_list);
+        event.addReturnArgument("agents", s_list);
 
     } else if (methodName == "enable" || methodName == "disable") {
         svc_action_t *op = services_action_create(
@@ -341,22 +345,40 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
     } else if (methodName == "list") {
         GList *gIter = NULL;
         GList *agents = NULL;
+	const char *standard = "ocf";
+	const char *provider = "heartbeat";
         _qtype::Variant::List t_list;
 
-	agents = resources_list_agents(
-	    args["standard"].asString().c_str(),                
-	    args["provider"].asString().c_str());
-	
+	if(args.count("standard") > 0) {
+	    standard = args["standard"].asString().c_str();
+	}
+	if(args.count("provider") > 0) {
+	    provider = args["provider"].asString().c_str();
+	}
+
+	agents = resources_list_agents(standard, provider);
         for (gIter = agents; gIter != NULL; gIter = gIter->next) {
             t_list.push_back((const char *) gIter->data);
         }
-        event.addReturnArgument("types", t_list);
+        event.addReturnArgument("agents", t_list);
 
     } else if (methodName == "invoke") {
 	svc_action_t *op = NULL;
 	bool valid_standard = false;
 	_qtype::Variant::List::iterator iter;
-	GHashTable *params = qmf_map_to_hash(args["parameters"].asMap());
+	_qtype::Variant::Map map;
+
+	if(args.count("parameters") == 1) {
+	    map = args["parameters"].asMap();
+	}
+	
+	GHashTable *params = qmf_map_to_hash(map);
+
+	int32_t interval = 0;
+	int32_t timeout = 60000;
+	const char *agent = NULL;
+	const char *standard = "ocf";
+	const char *provider = "heartbeat";
 
 	for ( iter=standards.begin() ; iter != standards.end(); iter++ ) {
 	    if(args["standard"].asString() == (*iter).asString()) {
@@ -371,16 +393,35 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
 	    return TRUE;
 	}
 
+	if(args.count("standard") > 0) {
+	    standard = args["standard"].asString().c_str();
+	}
+	if(args.count("provider") > 0) {
+	    provider = args["provider"].asString().c_str();
+	}
+	if(args.count("agent") > 0) {
+	    agent = args["agent"].asString().c_str();
+	} else {
+	    agent = args["name"].asString().c_str();	    
+	}
+
+	if(args.count("interval") > 0) {
+	    interval = args["interval"].asInt32();
+	}
+	if(args.count("timeout") > 0) {
+	    timeout = args["timeout"].asInt32();
+	}
+
 	op = resources_action_create(
 	    args["name"].asString().c_str(),
-	    args["standard"].asString().c_str(),
-	    args["provider"].asString().c_str(),
-	    args["type"].asString().c_str(),
+	    standard, provider, agent,
 	    args["action"].asString().c_str(),
-	    args["interval"].asInt32(), args["timeout"].asInt32(), params);
+	    interval, timeout, params);
 
-	op->expected_rc = args["expected-rc"].asInt32();
-
+	if(args.count("expected-rc") == 1) {
+	    op->expected_rc = args["expected-rc"].asInt32();
+	}
+	
 	action_async(SRV_RESOURCES, session, event, op, true);
 	return TRUE;
 	
