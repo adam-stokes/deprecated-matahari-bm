@@ -37,6 +37,12 @@
 
 extern "C" {
 #include "matahari/mainloop.h"
+#ifdef WIN32
+int no_argument = 0;
+int required_argument = 1;
+#else
+#  include <getopt.h>
+#endif
 }
 
 #define MH_NOT_IMPLEMENTED "Not implemented"
@@ -60,6 +66,9 @@ typedef struct mainloop_qmf_s {
 extern int mh_add_option(
     int code, int has_arg, const char *name, const char *description,
     void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata));
+
+extern string mh_parse_options(
+    const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options);
 
 extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,
         gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event,

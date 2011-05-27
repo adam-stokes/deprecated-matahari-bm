@@ -20,7 +20,6 @@
 #include <windows.h>
 int use_stderr = 1;
 #else
-#include <getopt.h>
 int use_stderr = 0;
 #endif
 
@@ -49,6 +48,8 @@ extern "C" {
 using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
+
+int print_help(int code, const char *name, const char *arg, void *userdata);
 
 void
 shutdown(int /*signal*/)
@@ -151,7 +152,7 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
     return 0;
 }
 
-static int print_help(int code, const char *name, const char *arg, void *userdata)
+int print_help(int code, const char *name, const char *arg, void *userdata)
 {
     int lpc = 0;
     printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
@@ -181,12 +182,11 @@ static int print_help(int code, const char *name, const char *arg, void *userdat
 }
 
 string
-mh_parse_connection_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options) 
+mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options) 
 {
     std::stringstream url;
 
     int arg;
-    int idx = 0;
     int serverport  = MATAHARI_PORT;
     char *servername = NULL;
 
@@ -194,6 +194,7 @@ mh_parse_connection_options(const char *proc_name, int argc, char **argv, qpid::
     const char *ssl_cert_db = NULL;
     const char *ssl_cert_name = NULL;
     const char *ssl_cert_password_file = NULL;
+    int lpc = 0;
 
     options["reconnect"] = true;
 
@@ -232,17 +233,20 @@ mh_parse_connection_options(const char *proc_name, int argc, char **argv, qpid::
 
     for (lpc = 0; lpc < MAX_CHAR; lpc++) {
 	if (matahari_options[lpc].callback) {
+	    wchar_t *name_ws = char2wide(matahari_options[lpc].long_name);
 	    if (RegistryRead (HKEY_LOCAL_MACHINE,
 			     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-			     matahari_options[arg].long_name, &value) == 0) {
-		matahari_options[arg].callback(
-		    matahari_options[arg].code, matahari_options[arg].long_name,
+			     name_ws, &value) == 0) {
+		matahari_options[lpc].callback(
+		    matahari_options[lpc].code, matahari_options[lpc].long_name,
 		    value, matahari_options[lpc].userdata);
+	    }
+	    free(name_ws);
 	}
     }
 
 #else
-    int lpc = 0;
+    int idx = 0;
     int num_options = 0;
     int opt_string_len = 0;
     char opt_string[2*MAX_CHAR];
@@ -362,6 +366,10 @@ mh_add_option(int code, int has_arg, const char *name, const char *description,
 	      void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata))
 {
     if(code > 0 && code < MAX_CHAR) {
+	if(matahari_options[code].code != 0) {
+	    mh_err("Replacing '-%c|--%s' with '-%c|--%s'", 
+		   matahari_options[code].code, matahari_options[code].long_name, code, name);
+	}
 	matahari_options[code].code = code;
 	matahari_options[code].has_arg = has_arg;
 	matahari_options[code].long_name = name;
@@ -375,10 +383,12 @@ mh_add_option(int code, int has_arg, const char *name, const char *description,
 
 static int should_daemonize(int code, const char *name, const char *arg, void *userdata)
 {
+#ifndef WIN32
     if (daemon(0, 0) < 0) {
 	fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
 	exit(1);
     }
+#endif
     return 0;
 }
 
@@ -389,10 +399,10 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     int res = 0;
 
     /* Set up basic logging */
-    mh_log_init(proc_name, LOG_TRACE, TRUE);
+    mh_log_init(proc_name, LOG_INFO, TRUE);
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
 
-    string url = mh_parse_connection_options(proc_name, argc, argv, options);
+    string url = mh_parse_options(proc_name, argc, argv, options);
     
     cout << options << endl;
 

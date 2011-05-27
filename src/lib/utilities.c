@@ -405,6 +405,21 @@ mh_uuid(void)
     return uuid;
 }
 
+#ifdef WIN32
+wchar_t *
+char2wide(const char *str)
+{
+    wchar_t *result = NULL;
+    if (str != NULL) {
+        size_t str_size = strlen(str) + 1;
+        result = malloc(str_size * sizeof(wchar_t));
+        mbstowcs(result, str, str_size);
+    }
+    return result;
+}
+#endif
+
+
 #ifndef HAVE_ASPRINTF
 int
 asprintf(char **ret, const char *fmt, ...)

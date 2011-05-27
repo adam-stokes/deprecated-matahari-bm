@@ -6,11 +6,12 @@ if(MSVC)
    find_library(QMFCONSOLE_LIBRARY qmfconsole.lib "${QPID_PATH}")
    find_library(QPIDCLIENT_LIBRARY qpidclient.lib "${QPID_PATH}")
    find_library(QPIDCOMMON_LIBRARY qpidcommon.lib "${QPID_PATH}")
-   find_library(QPIDCOMMON_LIBRARY qpidtypes.lib "${QPID_PATH}")
+   find_library(QPIDTYPES_LIBRARY qpidtypes.lib "${QPID_PATH}")
+   find_library(QPIDMESSAGING_LIBRARY qpidmessaging.lib "${QPID_PATH}")
 
    # Figure out some way to do this automatically on windows
    # Perhaps with the strings command
-   set(QPID_VERSION_LONG "qpidd (qpidc) version 0.6")
+   set(QPID_VERSION_LONG "qpidd (qpidc) version 0.10")
 
 else(MSVC)
    find_library(QMF_LIBRARY qmf)

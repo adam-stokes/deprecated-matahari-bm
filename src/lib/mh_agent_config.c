@@ -18,14 +18,15 @@
 
 #ifndef WIN32
 #include "config.h"
+#include <stddef.h>
 #endif
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stddef.h>
 #include <glib.h>
-#include "matahari/mh_agent_config.h"
 #include "matahari/logging.h"
+#include "matahari/mh_agent_config.h"
+
 
 MH_TRACE_INIT_DATA(mh_config);
 

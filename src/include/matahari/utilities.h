@@ -36,6 +36,10 @@ extern const char *mh_hostname(void);
 extern void mh_abort(const char *file, const char *function, int line,
                      const char *assert_condition, int do_core, int do_fork);
 
+#ifdef WIN32
+extern wchar_t *char2wide(const char *str);
+#endif
+
 #ifndef HAVE_ASPRINTF
 /**
  * Custom implementation of asprintf()
