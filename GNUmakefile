@@ -22,6 +22,7 @@ PACKAGE		?= matahari
 VERSION		?= 0.4.0
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
+HTML_ROOT	= root@www.clusterlabs.org:/var/www/html
 
 RPM_ROOT	?= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
@@ -76,7 +77,7 @@ export:
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
 	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(VARIANT)$(PACKAGE).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(firstword $(shell git show --pretty="format: %h"))/' $(VARIANT)$(PACKAGE).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -85,6 +86,7 @@ rpm:	srpm
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
 overlay: export
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	cp $(TARFILE) ~/rpmbuild/SOURCES
 	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
 	make -C ~/rpmbuild/SOURCES $(VARIANT)$(PACKAGE)
@@ -117,10 +119,11 @@ coverity:
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
 	cov-format-errors --dir $(COVERITY_DIR)
-	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ $(HTML_ROOT)/coverity/$(PACKAGE)/$(TAG)
 #	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
 
 clean:
+	rm -f *.tgz *.sed *.gres *~
 	@if [ -d linux.build ] ; then \
 		$(MAKE) --no-print-dir -C linux.build clean ; \
 	elif [ -d windows.build ] ; then \
@@ -129,6 +132,9 @@ clean:
 
 tags:
 	ctags --recurse -e src
+
+doxygen-www: doxygen
+	rsync -avzxlSD --progress doc/api/html/ $(HTML_ROOT)/doxygen/$(PACKAGE)/$(TAG)
 
 doxygen:
 ifeq ($(DOXYGEN),)

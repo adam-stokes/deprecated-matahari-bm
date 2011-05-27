@@ -9,7 +9,7 @@
    <arg name="name"           type="sstr"    />
    <arg name="standard"       type="sstr"    />
    <arg name="provider"       type="sstr"    />
-   <arg name="type"           type="sstr"    />
+   <arg name="agent"           type="sstr"    />
 
    <arg name="action"         type="sstr"    />
    <arg name="interval"       type="uint32"  />
@@ -20,7 +20,7 @@
 
  </eventArguments>
 
- <event name="resource_op"	args="timestamp,sequence,name,standard,provider,type,action,interval,rc,expected-rc,userdata" />
+ <event name="resource_op"	args="timestamp,sequence,name,standard,provider,agent,action,interval,rc,expected-rc,userdata" />
 
  <!--
      Services API
@@ -36,7 +36,7 @@
    <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
 
    <method name="list"          desc="List known system services">
-     <arg name="services"       dir="O"  type="list" />
+     <arg name="agents"       dir="O"  type="list" />
    </method>
    <method name="enable"        desc="Configure a system service to start at boot">
      <arg name="name"           dir="I"  type="sstr" />
@@ -89,20 +89,20 @@
    <method name="list"          desc="List known resource types for a given standard and provider">
      <arg name="standard"       dir="I"  type="sstr" />
      <arg name="provider"       dir="I"  type="sstr" />
-     <arg name="types"          dir="O"  type="list" />
+     <arg name="agents"         dir="O"  type="list" />
    </method>
 
    <method name="describe"      desc="Obtain XML description of a resource">
      <arg name="standard"       dir="I"  type="sstr" />
      <arg name="provider"       dir="I"  type="sstr" />
-     <arg name="type"           dir="I"  type="sstr" />
+     <arg name="agent"           dir="I"  type="sstr" />
      <arg name="xml"            dir="O"  type="sstr" />
    </method>
    <method name="invoke"        desc="Perform a custom action on a resource">
      <arg name="name"           dir="I"  type="sstr"   />
      <arg name="standard"       dir="I"  type="sstr"   />
      <arg name="provider"       dir="I"  type="sstr"   />
-     <arg name="type"           dir="I"  type="sstr"   />
+     <arg name="agent"          dir="I"  type="sstr"   />
      <arg name="action"         dir="I"  type="sstr"   />
      <arg name="interval"       dir="I"  type="uint32" />
      <arg name="parameters"     dir="I"  type="map"    />
@@ -124,7 +124,7 @@
    </method>
    <!-- Something functions we can add later if necessary
    <method name="list_variants" desc="List known implementations of a given resource type">
-     <arg name="type"           dir="I"  type="sstr" />
+     <arg name="agent"           dir="I"  type="sstr" />
      <arg name="standard"       dir="I"  type="sstr" />
      <arg name="providers"      dir="O"  type="list" />
    </method>
@@ -132,7 +132,7 @@
      <arg name="name"           dir="I"  type="sstr"   />
      <arg name="standard"       dir="O"  type="sstr"   />
      <arg name="provider"       dir="O"  type="sstr"   />
-     <arg name="type"           dir="O"  type="sstr"   />
+     <arg name="agent"          dir="O"  type="sstr"   />
      <arg name="action"         dir="O"  type="sstr"   />
      <arg name="interval"       dir="O"  type="uint32" />
      <arg name="parameters"     dir="O"  type="map"    />
