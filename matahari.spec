@@ -335,6 +335,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-service
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
+%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
 %endif
 
 %if %{with dbus}
