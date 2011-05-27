@@ -27,18 +27,6 @@
 
 /* Some code adapted from http://msdn.microsoft.com/en-us/library/ms682499(v=vs.85).aspx */
 
-static wchar_t *
-char2wide(const char *str)
-{
-    wchar_t *result = NULL;
-    if (str != NULL) {
-        size_t str_size = strlen(str) + 1;
-        result = malloc(str_size * sizeof(wchar_t));
-        mbstowcs(result, str, str_size);
-    }
-    return result;
-}
-
 static void
 create_service_key(const wchar_t *template, wchar_t *buffer, int size,
                    char *name)
@@ -121,7 +109,7 @@ static int
 extract_service_status(const char *unmutable, int max)
 {
     int lpc = 0, last = 0;
-    int rc = LSB_STATUS_UNKNOWN_ERROR;
+    int rc = LSB_STATUS_OTHER_ERROR;
 
     if (unmutable == NULL || max < 10) {
         return rc;
@@ -255,7 +243,7 @@ services_os_action_execute(svc_action_t *op, gboolean synchronous)
     }
 
     if (status == STILL_ACTIVE) {
-        op->rc = LSB_UNKNOWN_ERROR;
+        op->rc = LSB_OTHER_ERROR;
         op->status = LRM_OP_TIMEOUT;
         TerminateProcess(piProcInfo.hProcess, 1);
         mh_err("Operation for %s timeout out after %dms", op->id, op->timeout);
@@ -276,7 +264,7 @@ services_os_action_execute(svc_action_t *op, gboolean synchronous)
 
     } else {
         op->status = LRM_OP_ERROR;
-        op->rc = LSB_UNKNOWN_ERROR;
+        op->rc = LSB_OTHER_ERROR;
         mh_info("Result of '%ls' for '%s' was %d", exec_w, op->id, (int)status);
     }
 
@@ -307,17 +295,17 @@ services_os_action_execute(svc_action_t *op, gboolean synchronous)
     CloseHandle(piProcInfo.hThread);
     CloseHandle(child_pipe_rd);
 
-    if (is_status_op && op->rc == LSB_UNKNOWN_ERROR) {
-        op->rc = LSB_STATUS_UNKNOWN_ERROR;
+    if (is_status_op && op->rc == LSB_OTHER_ERROR) {
+        op->rc = LSB_STATUS_OTHER_ERROR;
     }
 
     return TRUE;
 
 fail:
     op->status = LRM_OP_ERROR;
-    op->rc = LSB_UNKNOWN_ERROR;
-    if (is_status_op && op->rc == LSB_UNKNOWN_ERROR) {
-        op->rc = LSB_STATUS_UNKNOWN_ERROR;
+    op->rc = LSB_OTHER_ERROR;
+    if (is_status_op && op->rc == LSB_OTHER_ERROR) {
+        op->rc = LSB_STATUS_OTHER_ERROR;
     }
     return FALSE;
 }

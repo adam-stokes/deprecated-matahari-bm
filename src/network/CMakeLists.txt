@@ -33,7 +33,10 @@ endif(WITH-QMF)
 # DBus daemon
 if(WITH-DBUS)
     # Auto-generated stuff
-    generate_dbus_headers(${BASE} ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Network.xml)
+    generate_dbus_headers(${BASE} ${CMAKE_CURRENT_BINARY_DIR}/org.matahariproject.Network.xml)
+    # Create src/dbus directory and generate DBus XML definition files into it
+    generate_dbus_interface(${CMAKE_CURRENT_SOURCE_DIR}/schema.xml)
+
     # Must be included to find API-dbus-properties.h
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -56,7 +59,7 @@ if(WITH-DBUS)
     # Install targets
     # TODO: fix hardcoded paths, should go to libexec
     install(TARGETS ${DBUS_AGENT} DESTINATION sbin)
-    install(FILES ${CMAKE_BINARY_DIR}/src/dbus/org.matahariproject.Network.xml DESTINATION share/dbus-1/interfaces)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.matahariproject.Network.xml DESTINATION share/dbus-1/interfaces)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.service DESTINATION share/dbus-1/system-services)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.conf DESTINATION /etc/dbus-1/system.d)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/org.matahariproject.Network.policy DESTINATION share/polkit-1/actions)

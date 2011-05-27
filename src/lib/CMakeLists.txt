@@ -23,7 +23,7 @@ set_target_properties(mservice PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mservice ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 add_library (mconfig SHARED mh_agent_config.c)
-set_target_properties(mconfig PROPERTIES SOVERSION 0.0.1)
+set_target_properties(mconfig PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mconfig ${pcre_LIBRARIES} mcommon ${glib_LIBRARIES})
 
 if(WIN32)
@@ -40,7 +40,7 @@ endif(WIN32)
 if(WITH-QMF)
     add_library (mcommon_qmf SHARED mh_agent.cpp)
 
-    target_link_libraries(mcommon_qmf ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
+    target_link_libraries(mcommon_qmf mcommon ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY} ${QPIDTYPES_LIBRARY})
     set_target_properties(mcommon_qmf PROPERTIES SOVERSION 1.0.0)
 
     if(WIN32)

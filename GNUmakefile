@@ -157,4 +157,4 @@ endif
 	@sed -i -e 's/###MATAHARI_VERSION###/$(VERSION)/' doc/Doxyfile
 	@doxygen doc/Doxyfile
 
-.PHONY: check linux.build windows.build clean doxygen
+.PHONY: check linux.build windows.build clean doxygen www-doxygen coverity
