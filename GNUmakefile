@@ -74,7 +74,7 @@ export:
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
 	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(VARIANT)$(PACKAGE).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(firstword $(shell git show --pretty="format: %h"))/' $(VARIANT)$(PACKAGE).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -83,6 +83,7 @@ rpm:	srpm
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
 overlay: export
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	cp $(TARFILE) ~/rpmbuild/SOURCES
 	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
 	make -C ~/rpmbuild/SOURCES $(VARIANT)$(PACKAGE)
