@@ -29,6 +29,7 @@ if(WITH-QMF)
     endif(NOT WIN32)
 
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
+    install(TARGETS ${QMF_CONSOLE} DESTINATION sbin)
 endif(WITH-QMF)
 
 
