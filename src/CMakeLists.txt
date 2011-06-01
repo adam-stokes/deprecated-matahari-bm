@@ -134,6 +134,7 @@ add_subdirectory(host)
 add_subdirectory(network)
 add_subdirectory(service)
 add_subdirectory(config)
+add_subdirectory(tests)
 
 ### Installation
 install(FILES ${SCHEMAS} DESTINATION share/matahari)

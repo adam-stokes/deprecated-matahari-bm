@@ -1,0 +1,13 @@
+set(CXXTEST_USE_PYTHON TRUE)
+find_package(CxxTest)
+if(CXXTEST_FOUND)
+   include_directories(${CXXTEST_INCLUDE_DIR})
+   ENABLE_TESTING()
+   CXXTEST_ADD_TEST(mh_api_network_unittest network_unittest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/mh_api_network.h)
+   CXXTEST_ADD_TEST(mh_api_host_unittest host_unittest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/mh_api_host.h)
+   add_library(mh_tester SHARED test_utilities.c)
+   target_link_libraries(mh_tester ${pcre_LIBRARIES} mcommon mnetwork mhost)
+   target_link_libraries(mh_api_network_unittest mh_tester)
+   target_link_libraries(mh_api_host_unittest mh_tester)
+endif(CXXTEST_FOUND)
+

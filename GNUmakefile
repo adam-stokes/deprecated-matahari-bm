@@ -42,6 +42,9 @@ linux.build:
 	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 	@$(MAKE) --no-print-dir -C $@
+	@if [ -f $@/src/tests/CTestTestfile.cmake ]; then \
+		cd $@/src/tests && ctest; \
+	fi
 
 windows.build:
 	@echo "=::=::=::= Setting up for Windows =::=::=::= "
