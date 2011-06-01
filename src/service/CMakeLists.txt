@@ -11,17 +11,10 @@ if(WITH-QMF)
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
     add_executable(${QMF_AGENT} ${BASE}-qmf.cpp ${SCHEMA_SOURCES})
-    target_link_libraries(${QMF_AGENT} ${BASE_LIB} mcommon mcommon_qmf)
+    target_link_libraries(${QMF_AGENT} ${BASE_LIB} mcommon_qmf)
 
     add_executable(${QMF_CONSOLE} ${BASE}-qmf-console.cpp)
-    target_link_libraries(${QMF_CONSOLE} mcommon mcommon_qmf)
-    target_link_libraries(${QMF_CONSOLE} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
-
-    target_link_libraries(${QMF_AGENT} ${QPIDCOMMON_LIBRARY} ${QPIDCLIENT_LIBRARY} ${QPIDMESSAGING_LIBRARY} ${QMF2_LIBRARY})
-    IF(QPIDTYPES_LIBRARY)
-        target_link_libraries(${QMF_AGENT} ${QPIDTYPES_LIBRARY})
-        target_link_libraries(${QMF_CONSOLE} ${QPIDTYPES_LIBRARY})
-    ENDIF(QPIDTYPES_LIBRARY)
+    target_link_libraries(${QMF_CONSOLE} mcommon_qmf)
 
     if(NOT WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
@@ -29,6 +22,7 @@ if(WITH-QMF)
     endif(NOT WIN32)
 
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
+    install(TARGETS ${QMF_CONSOLE} DESTINATION sbin)
 endif(WITH-QMF)
 
 

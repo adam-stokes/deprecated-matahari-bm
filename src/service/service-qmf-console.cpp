@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 	}
 	
 	while(session.getAgentCount() == 0) {
-	    sleep(1);
+	    g_usleep(1000);
 	}
 
 	for(lpc = 0; lpc < session.getAgentCount(); lpc++) {
