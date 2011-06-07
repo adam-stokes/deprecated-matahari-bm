@@ -1,4 +1,4 @@
-/* mh_agent_config.c - Copyright (C) 2011 Red Hat, Inc.
+/* postboot.c - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -25,10 +25,10 @@
 #include <stdio.h>
 #include <glib.h>
 #include "matahari/logging.h"
-#include "matahari/mh_agent_config.h"
+#include "matahari/postboot.h"
 
 
-MH_TRACE_INIT_DATA(mh_config);
+MH_TRACE_INIT_DATA(mh_postboot);
 
 static const char *filename = "/var/lib/matahari/.mh_configured";
 

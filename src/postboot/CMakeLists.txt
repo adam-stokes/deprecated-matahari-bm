@@ -1,4 +1,4 @@
-set(BASE "config")
+set(BASE "postboot")
 set(BASE_LIB "m${BASE}")
 set(QMF_AGENT "matahari-qmf-${BASE}d")
 set(QMF_CONSOLE "matahari-qmf-${BASE}-consoled")
