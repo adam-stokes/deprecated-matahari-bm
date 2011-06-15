@@ -1,0 +1,429 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family sfdefault
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 2
+\tocdepth 2
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+\family sans
+Matahari Developer's Guide
+\end_layout
+
+\begin_layout Author
+by the Matahari Team
+\begin_inset Newline newline
+\end_inset
+
+version 0.4
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+This document is intended for developers who wish to implement an enterprise
+ messaging framework within their organization.
+\end_layout
+
+\begin_layout Section
+Requirements
+\end_layout
+
+\begin_layout Subsection
+Packages
+\end_layout
+
+\begin_layout Standard
+Packages to install for source based compilation and rpm building
+\end_layout
+
+\begin_layout Quote
+
+\size small
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\family sans
+\size small
+# yum groupinstall "Fedora Packager" 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family sans
+\size small
+"Development Libraries" 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family sans
+\size small
+"Development Tools" 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family sans
+\size small
+"MinGW cross-compiler"
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Developer
+\end_layout
+
+\begin_layout Subsection
+Setup
+\end_layout
+
+\begin_layout Subsubsection
+Checkout Source Code
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+git clone git://github.com/matahari/matahari.git
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Develop against Fedora packages
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+# yum install matahari*
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Verify Matahari Builds
+\end_layout
+
+\begin_layout Standard
+It's always a good idea to build and test the existing code to make sure
+ no problems crop up before attempting to develop an agent.
+ There are 2 commands provided for cross compilation.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Building for *nix platform
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ make linux.build
+\end_layout
+
+\end_inset
+
+Building for Windows platform
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ make windows.build
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Once building is complete our unittest's should run automatically on the
+ *nix platform.
+ Windows builds will need their unittests run on a Windows host.
+ In both cases the unittests should never fail.
+\end_layout
+
+\begin_layout Subsection
+Preparing Agent
+\end_layout
+
+\begin_layout Subsubsection
+The End Result
+\end_layout
+
+\begin_layout Standard
+What is it exactly the agent in question is going to be responsible for?
+ Once that is defined an API needs to be outlined.
+ For simplicities sake the API will only consist of generating a report
+ when an agent is disconnected from the broker.
+ A simulation of a crash can be considered when an agent unintentially disconnec
+ts.
+\end_layout
+
+\begin_layout Subsubsection
+Directory and File Structure
+\end_layout
+
+\begin_layout Standard
+All agents are kept in a separate directory, for example, an agent is created
+ with the name CrashReporter.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename /home/akimbo/Pictures/matahari-developer-guide-images/dir-src-crashreporter.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Creating the API
+\end_layout
+
+\begin_layout Standard
+All public API routines are kept within 
+\begin_inset Quotes eld
+\end_inset
+
+matahari/src/include/matahari/
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename /home/akimbo/Pictures/matahari-developer-guide-images/dir-src-crashreporter-include.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+crashreporter.h
+\begin_inset Quotes erd
+\end_inset
+
+ will be the header file used for defining our API.
+\end_layout
+
+\begin_layout Itemize
+Create the routines that will be publicly accessible.
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+All public API routines are prefixed with mh_*
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "/home/akimbo/hacking/projects/matahari/src/include/matahari/crashreporter.h"
+lstparams "language=C"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Schema Definition
+\end_layout
+
+\begin_layout Subsubsection
+Build Instructions with cmake
+\end_layout
+
+\begin_layout Subsection
+Writing Agent
+\end_layout
+
+\begin_layout Subsection
+Writing Test Cases
+\end_layout
+
+\begin_layout Subsection
+Testing Agent
+\end_layout
+
+\begin_layout Subsubsection
+CxxTest
+\end_layout
+
+\begin_layout Subsubsection
+Beaker
+\end_layout
+
+\begin_layout Section
+Build 
+\end_layout
+
+\begin_layout Subsection
+Using Mock
+\end_layout
+
+\begin_layout Subsection
+Source Building
+\end_layout
+
+\begin_layout Section
+Packaging
+\end_layout
+
+\begin_layout Subsection
+Verify developer status
+\end_layout
+
+\begin_layout Subsection
+Prepare for review
+\end_layout
+
+\begin_layout Subsection
+Submit for review
+\end_layout
+
+\begin_layout Subsection
+Building with Koji
+\end_layout
+
+\end_body
+\end_document
