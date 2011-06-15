@@ -53,6 +53,7 @@ RETVAL=0
 
 start() {
 	echo -n $"Starting Matahari broker daemon: "
+	install -o qpidd -g qpidd -d @localstatedir@/{run,lib}/matahari
 	daemon --pidfile $pidfile --check $prog --user qpidd /usr/sbin/$prog --daemon --pid-dir @localstatedir@/run/matahari --data-dir @localstatedir@/lib/matahari $QPIDD_OPTIONS
 	RETVAL=$?
 	echo
