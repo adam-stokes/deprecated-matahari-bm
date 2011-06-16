@@ -16,81 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <sys/utsname.h> 
-#include <netdb.h>      
-#include <string.h>     
-#include <stdio.h>      
+#include <string.h>
 #include <glib.h>
+#include <stdio.h>      
 #include "dnssrv_private.h"
-
-
-int 
-gethostdomain(char* domain, size_t domainlen)
-{
-    struct utsname sysinfo;
-    struct addrinfo hints, *res, *p;
-    int error;
-    char* offset;
-
-    if (uname(&sysinfo) != 0) {
-        return -1;
-    }
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_CANONNAME;
-
-    if ((error = getaddrinfo(sysinfo.nodename, NULL, &hints, &res)) != 0) {
-        printf("warning: %s", gai_strerror(error));
-        goto fail;
-    }
-
-    /* strip host from fqdn */
-    if ((offset = strchr(res->ai_canonname, '.')) == NULL) {
-        goto fail;
-    }
-    strncpy(domain, ++offset, domainlen);
-    freeaddrinfo(res);
-
-    return 0;
-    
-fail:
-    freeaddrinfo(res);    
-    return -1;
-}
 
 
 int main(int argc, char **argv)
 {
-    struct srv_reply **srvl = NULL, *srv = NULL;
-    int i;
+    int ret;
+    char target[MAX_NAME_LEN];
 
-    char hostdomain[MAX_NAME_LEN];
-    if (gethostdomain(hostdomain, sizeof hostdomain) != 0) {
-        perror("Could not determine host domain");
-        return 0;
-    }
-
-    if (srvl = srv_lookup("matahari", "tcp", hostdomain)) {
-        srv = *srvl;
-        for (i = 1; srvl[i]; i++) {
-            if (srvl[i]->prio < srv->prio)
-                srv = srvl[i];
-        }
-
-        printf("\tAccessible QPID Broker: %s\n", srv->name);
-        return 0;
-    }
-    return -1;
+    ret = srv_lookup("_matahari._tcp.matahariproject.org", target);
+    fprintf(stderr, "returns %d with a target of: %s\n", ret, target);
+    return 0;
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * indent-tabs-mode: nil
- * End:
- * vim: et
- */
-

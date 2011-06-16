@@ -6,9 +6,9 @@ include_directories(${pcre_INCLUDE_DIRS})
 # See http://sourceware.org/autobook/autobook/autobook_91.html for
 # how to set the library version appropriately 
 
-add_library (mcommon SHARED utilities.c mainloop.c)
+add_library (mcommon SHARED utilities.c mainloop.c dnssrv_${VARIANT}.c)
 set_target_properties(mcommon PROPERTIES SOVERSION 1.0.0)
-target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES})
+target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES} resolv)
 
 add_library (mhost SHARED host.c host_${VARIANT}.c)
 set_target_properties(mhost PROPERTIES SOVERSION 1.0.0)
@@ -29,11 +29,11 @@ target_link_libraries(mpostboot ${pcre_LIBRARIES} mcommon ${glib_LIBRARIES})
 if(WIN32)
     foreach (lib ${LIBS})
         target_link_libraries(${lib} wsock32)
-	install(TARGETS ${lib} DESTINATION sbin)
+        install(TARGETS ${lib} DESTINATION sbin)
     endforeach (lib ${LIBS})
 else(WIN32)
     foreach (lib ${LIBS})
-	install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
+        install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
     endforeach (lib ${LIBS})
 endif(WIN32)
 

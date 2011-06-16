@@ -17,14 +17,14 @@ options {
   allow-query     { localhost; };
   recursion yes;
 
-  dnssec-enable yes;
-  dnssec-validation yes;
-  dnssec-lookaside auto;
+  // dnssec-enable no;
+  // dnssec-validation no;
+  // dnssec-lookaside auto;
 
   /* Path to ISC DLV key */
-  bindkeys-file "/etc/named.iscdlv.key";
+  // bindkeys-file "/etc/named.iscdlv.key";
 
-  managed-keys-directory "/var/named/dynamic";
+  // managed-keys-directory "/var/named/dynamic";
 };
 
 logging {
@@ -34,13 +34,33 @@ logging {
         };
 };
 
-zone "." IN {
-  type hint;
-  file "named.ca";
+zone "matahariproject.org" {
+  type master;
+  notify no;
+  allow-query { any; };
+  file "matahariproject.zone";
 };
 
-include "/etc/named.rfc1912.zones";
-include "/etc/named.root.key";
+zone "1.168.192.in-addr.arpa" {
+  type master;
+  notify no;
+  allow-query { any; };
+  file "192-168-1.zone";
+};
+
+view "localhost_resolver"
+{
+  match-clients { localhost; };
+  match-destinations { localhost; };
+  recursion yes;
+  zone "." IN {
+    type hint;
+    file "named.ca";
+  };
+
+  include "/etc/named.rfc1912.zones";
+  //include "/etc/named.root.key";
+};
 |
     end
     

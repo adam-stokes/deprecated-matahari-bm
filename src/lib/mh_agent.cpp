@@ -43,6 +43,7 @@ int use_stderr = 0;
 
 extern "C" {
 #include "matahari/logging.h"
+#include "dnssrv_private.h"
 }
 
 using namespace qpid::management;
@@ -351,10 +352,25 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         protocol = "tcp";
     }
 
-    if(servername == NULL) {
-	servername = strdup(MATAHARI_BROKER);
+    /*
+     * Based on servername do a SRV lookup for best possible
+     * server providing this service.
+     */
+    if (servername) {
+#ifdef HAVE_RESOLV_A
+        int ret;
+        char query[MAX_NAME_LEN];
+        char target[MAX_NAME_LEN];
+        g_snprintf(query, MAX_NAME_LEN - 1, "_matahari._tcp.%s", servername); 
+        ret = srv_lookup(query, target);
+        if (ret == 0) {
+            servername = strdup(target);
+        } 
+#endif
+    } else {
+        servername = strdup(MATAHARI_BROKER);
     }
-    
+
     url << "amqp:" << protocol << ":" << servername << ":" << serverport ;
 
     free(servername);
@@ -403,9 +419,6 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
 
     string url = mh_parse_options(proc_name, argc, argv, options);
-    
-    cout << options << endl;
-
     
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);

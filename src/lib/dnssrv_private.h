@@ -16,27 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>
+
 #define MAX_NAME_LEN 1024
 
-struct srv_reply
-{
-    int prio;
-    int weight;
-    int port;
-    char name[];
-};
-
-struct srv_reply **srv_lookup(char *service,
-                              char *protocol,
-                              char *domain);
-
-void srv_free(struct srv_reply **srv);
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * indent-tabs-mode: nil
- * End:
- * vim: et
- */
+int srv_lookup(char *query, char *target);
