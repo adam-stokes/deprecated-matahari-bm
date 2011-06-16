@@ -17,15 +17,18 @@
  */
 
 #include <netinet/in.h>
+#include <string.h>
+#include <glib.h>
+
+#ifdef HAVE_RESOLV_A
 #include <arpa/nameser.h>
 #include <resolv.h>
-#include <glib.h>
+#endif
 
 #include "dnssrv_private.h"
 
-struct srv_reply **srv_lookup(char *service,
-			      char *protocol,
-			      char *domain)
+struct srv_reply **
+srv_lookup(char *service, char *protocol, char *domain)
 {
     struct srv_reply **replies = NULL;
 #ifdef HAVE_RESOLV_A
@@ -35,39 +38,39 @@ struct srv_reply **srv_lookup(char *service,
     const unsigned char *buf;
     ns_msg nsh;
     ns_rr rr;
-    int, i, n, len, size;
+    int i, n, len, size;
 
     g_snprintf(name, sizeof(name), "_%s._%s.%s", service, protocol, domain);
-    if((size = res_query(name, C_IN, T_SRV, querybuf, sizeof(querybuf))) < 0) {
+    if ((size = res_query(name, C_IN, T_SRV, querybuf, sizeof(querybuf))) < 0) {
         return NULL;
     }
 
-    if(ns_initparse(querybuf, size, &nsh) != 0) {
-        reutnr NULL;
+    if (ns_initparse(querybuf, size, &nsh) != 0) {
+        return NULL;
     }
 
     n = 0;
-    while(ns_parserr(&nsh, ns_s_an, n, &rr) == 0) {
+    while (ns_parserr(&nsh, ns_s_an, n, &rr) == 0) {
         size = ns_rr_rdlen(rr);
         buf = ns_rr_rdata(rr);
         
         len = 0;
-        for(i=6; i < size && buf[i]; i+= buf[i] + 1) {
+        for (i = 6; i < size && buf[i]; i+= buf[i] + 1) {
             len += buf[i] + 1;
         }
 
-        if(i > size) {
+        if (i > size) {
             break;
         }
 
         reply = g_malloc(sizeof(struct srv_reply) + len);
         memcpy(reply->name, buf+7, len);
 
-        for(i=buf[6]; i < len && buf[7+i]; i += buf[7+i] + 1) {
+        for (i = buf[6]; i < len && buf[7 + i]; i += buf[7 + i] + 1) {
             reply->name[i] = '.';
         }
 
-        if(i > len) {
+        if (i > len) {
             g_free(reply);
             break;
         }
@@ -77,9 +80,9 @@ struct srv_reply **srv_lookup(char *service,
         reply->port = (buf[4] << 8) | buf[5];
         n++;
         replies = g_renew(struct srv_reply *, replies, n+1);
-        replies[n-1] = reply;
+        replies[n - 1] = reply;
     }
-    if(replies) {
+    if (replies) {
         replies[n] = NULL;
     }
 #endif
@@ -89,11 +92,11 @@ struct srv_reply **srv_lookup(char *service,
 void srv_free(struct srv_reply **srv)
 {
     int i;
-    if(srv == NULL) {
+    if (srv == NULL) {
         return;
     }
 
-    for(i = 0; srv[i]; i++) {
+    for (i = 0; srv[i]; i++) {
         g_free(srv[i]);
     }
     g_free(srv);
