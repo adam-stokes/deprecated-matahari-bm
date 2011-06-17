@@ -43,7 +43,7 @@ int use_stderr = 0;
 
 extern "C" {
 #include "matahari/logging.h"
-#include "dnssrv_private.h"
+#include "matahari/dnssrv.h"
 }
 
 using namespace qpid::management;

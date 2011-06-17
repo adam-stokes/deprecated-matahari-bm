@@ -16,10 +16,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <netinet/in.h>
-#include <arpa/nameser.h>
-#include <resolv.h>
+/**
+ * \file
+ * \brief Config API
+ * \ingroup coreapi
+ */
+
+#ifndef __MH_DNSSRV_H__
+#define __MH_DNSSRV_H__
 
 #define MAX_NAME_LEN 1024
 
-int srv_lookup(char *query, char *target);
+extern int srv_lookup(char *query, char *target);
+
+#endif /* __MH_DNSSRV_H__ */

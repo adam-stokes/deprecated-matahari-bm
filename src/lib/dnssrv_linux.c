@@ -24,7 +24,7 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 
-#include "dnssrv_private.h"
+#include "matahari/dnssrv.h"
 
 int
 srv_lookup(char *query, char *target)
@@ -35,7 +35,7 @@ srv_lookup(char *query, char *target)
     } answer;
     ns_msg nsh;
     ns_rr rr;
-    unsigned char buf[MAX_NAME_LEN], *p;
+    char buf[MAX_NAME_LEN], *p;
     int t, size;
 
     size = res_query(query, C_IN, T_SRV, (unsigned char*)&answer, sizeof(answer));
