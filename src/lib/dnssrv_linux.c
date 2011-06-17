@@ -27,7 +27,7 @@
 #include "matahari/dnssrv.h"
 
 int
-srv_lookup(char *query, char *target)
+mh_srv_lookup(const char *query, char *target)
 {
     union {
         HEADER hdr;

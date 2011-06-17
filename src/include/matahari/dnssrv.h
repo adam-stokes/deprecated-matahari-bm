@@ -18,7 +18,7 @@
 
 /**
  * \file
- * \brief Config API
+ * \brief DNS SRV Lookup
  * \ingroup coreapi
  */
 
@@ -27,6 +27,6 @@
 
 #define MAX_NAME_LEN 1024
 
-extern int srv_lookup(char *query, char *target);
+extern int mh_srv_lookup(const char *query, char *target);
 
 #endif /* __MH_DNSSRV_H__ */

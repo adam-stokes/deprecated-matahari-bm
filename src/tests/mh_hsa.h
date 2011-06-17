@@ -25,6 +25,7 @@
 #define __MH_HSA_UNITTEST_H
 
 #include <string.h>
+#include <stdlib.h>
 #include <cxxtest/TestSuite.h>
 
 extern "C" {
@@ -43,14 +44,13 @@ class MhHsaSuite : public CxxTest::TestSuite
      {
          int ret;
          char target[MAX_NAME_LEN];
-         char *host = strdup("_matahari._tcp.matahariproject.org");
-         const char *subject = NULL;
+         const char *host = "_matahari._tcp.matahariproject.org";
 
-         if ((ret = srv_lookup(host, target)) == 0) {
+         if ((ret = mh_srv_lookup(host, target)) == 0) {
              infomsg << "SRV record: " << target;
              TS_TRACE(infomsg.str());
-             subject = strdup(target);
-             TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$", subject)) >= 0);
+             TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
+                                         target)) >= 0);
          }
      }
 };
