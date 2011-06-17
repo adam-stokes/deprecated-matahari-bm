@@ -38,7 +38,7 @@ mh_srv_lookup(const char *query, char *target)
     char buf[MAX_NAME_LEN], *p;
     int t, size;
 
-    size = res_query(query, C_IN, T_SRV, (unsigned char*)&answer, sizeof(answer));
+    size = res_query(query, C_IN, T_SRV, answer.buf, sizeof(answer));
 
     ns_initparse(answer.buf, size, &nsh);
     if (ns_msg_count(nsh, ns_s_an) == 0) {
