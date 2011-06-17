@@ -1,0 +1,11 @@
+$TTL 1D
+@	IN 	SOA	www.matahariproject.org. hostmaster.matahariproject.org. (
+					1	; serial
+					1D	; refresh
+					1H	; retry
+					1W	; expire
+					3H )	; minimum
+		NS 	qpid.matahariproject.org.	
+40		PTR	qpid.matahariproject.org. 
+41		PTR	qpid2.matahariproject.org. 
+42		PTR	qpid3.matahariproject.org. 

@@ -1,0 +1,6 @@
+PURPOSE of /matahari/Sanity/hsa
+Description: Validate DNS SRV and HSA (High Service Availability)
+Author: Adam Stokes <astokes@fedoraproject.org>
+
+These tests create a default DNS server with SRV records in order
+to test HSA when connecting matahari agents to brokers.

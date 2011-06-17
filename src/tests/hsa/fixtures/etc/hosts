@@ -1,0 +1,5 @@
+127.0.0.1		localhost.localdomain localhost matahariproject.org matahariproject
+::1		localhost6.localdomain6 localhost6
+192.168.0.40 	qpid
+192.168.0.41 	qpid2
+192.168.0.42 	qpid3

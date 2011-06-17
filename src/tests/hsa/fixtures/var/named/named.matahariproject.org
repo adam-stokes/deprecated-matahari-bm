@@ -1,0 +1,18 @@
+$TTL 1D 
+@	IN SOA	ns1.matahariproject.org. hostmaster.matahariproject.org. (
+				2       ; serial
+				1D	; refresh
+				3H	; retry
+				1W	; expire
+				3H )	; minimum
+
+			NS      qpid.matahariproject.org.	
+_matahari._tcp		SRV 0 3 49000 qpid.matahariproject.org.
+			SRV 0 2 49000 qpid2.matahariproject.org.
+			SRV 0 1 49000 qpid3.matahariproject.org.
+localhost 	        A	127.0.0.1
+qpid			A	192.168.0.40
+qpid2			A	192.168.0.41
+qpid3			A	192.168.0.42
+ns1			CNAME 	qpid
+www			CNAME	qpid
