@@ -176,7 +176,7 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
     uint64_t timestamp = 0L;
     qmf::Data event;
 
-#ifndef MSVC
+#ifdef HAVE_TIME
     timestamp = ::time(NULL);
 #endif
 

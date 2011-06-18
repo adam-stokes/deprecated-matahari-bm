@@ -166,7 +166,7 @@ HostAgent::heartbeat()
         return 5 * 60 * 1000;
     }
 
-#ifndef MSVC
+#ifdef HAVE_TIME
     timestamp = ::time(NULL);
 #endif
 
