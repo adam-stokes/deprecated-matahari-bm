@@ -180,7 +180,7 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
     timestamp = ::time(NULL);
 #endif
 
-    if (service) {
+    if (service == SRV_SERVICES) {
         // event = qmf::Data(_package.event_service_op);
         return;
     } else {
