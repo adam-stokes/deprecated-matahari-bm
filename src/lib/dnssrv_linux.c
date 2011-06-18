@@ -56,6 +56,11 @@ mh_srv_lookup(const char *query, char *target)
 
         if (ns_rr_type(rr) == T_SRV) {
             char buf[NS_MAXDNAME];
+            /* Only care about domain name from rdata
+             * First 6 elements in rdata are broken up
+             * contain dns information such as type, class
+             * ttl, rdlength.
+             */
             ns_name_uncompress(ns_msg_base(nsh),
                                ns_msg_end(nsh),
                                ns_rr_rdata(rr)+6,
