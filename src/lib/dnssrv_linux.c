@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <errno.h>
 #include <glib.h>
 #include <stdlib.h>
 
@@ -26,39 +27,41 @@
 
 #include "matahari/dnssrv.h"
 
-int
+void
 mh_srv_lookup(const char *query, char *target)
 {
     union {
         HEADER hdr;
-        unsigned char buf[MAX_NAME_LEN];
+        unsigned char buf[NS_PACKETSZ];
     } answer;
     ns_msg nsh;
     ns_rr rr;
-    char buf[MAX_NAME_LEN], *p;
-    int t, size;
+    int size, rrnum;
 
-    size = res_query(query, C_IN, T_SRV, answer.buf, sizeof(answer));
-
-    ns_initparse(answer.buf, size, &nsh);
-    if (ns_msg_count(nsh, ns_s_an) == 0) {
-        return -1;
+    size = res_query(query,
+                     C_IN, 
+                     T_SRV,
+                     (u_char *)&answer,
+                     sizeof(answer));
+    if (size > 0) {
+        if (ns_initparse(answer.buf, size, &nsh) < 0) {
+            fprintf(stderr, "ns_initparse: %s\n", strerror(errno));
+        }
     }
 
-    if (ns_parserr(&nsh, ns_s_an, 0, &rr) < 0) {
-        return -1;
-    }
+    for (rrnum = 0; rrnum < ns_msg_count(nsh, ns_s_an); rrnum++) {
+        if (ns_parserr(&nsh, ns_s_an, rrnum, &rr)) {
+            fprintf(stderr, "ns_parserr: %s\n", strerror(errno));
+        }
 
-    size = ns_rr_rdlen(rr);
-    memcpy(buf, ns_rr_rdata(rr), size);
-    p = buf;
-    p += 6;
-    while (*p > 0) {
-        t = *p;
-        *p = '.';
-        p += t+1;
+        if (ns_rr_type(rr) == T_SRV) {
+            char buf[NS_MAXDNAME];
+            ns_name_uncompress(ns_msg_base(nsh),
+                               ns_msg_end(nsh),
+                               ns_rr_rdata(rr)+6,
+                               buf,
+                               sizeof(buf));
+            strcpy(target, buf);
+        }
     }
-    p = buf + 7;
-    strcpy(target, p); 
-    return 0;
 }
