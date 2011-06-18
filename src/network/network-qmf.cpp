@@ -92,7 +92,6 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
                  gpointer user_data)
 {
     if (event.getType() != qmf::AGENT_METHOD) {
-        session.methodSuccess(event);
         return TRUE;
     }
 
