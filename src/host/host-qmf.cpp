@@ -17,6 +17,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Host QMF Agent
+ */
+
 #ifndef WIN32
 #include "config.h"
 #endif
@@ -35,19 +40,43 @@ extern "C" {
 
 class HostAgent : public MatahariAgent
 {
-private:
-    qmf::org::matahariproject::PackageDefinition _package;
 public:
-    int heartbeat();
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                             gpointer user_data);
+
+    /**
+     * Send a heartbeat and reset the timer.
+     *
+     * This function should be called a single time after the HostAgent
+     * is created.  From then on it will automatically reschedule itself
+     * to be called.
+     *
+     * \param[in] data a pointer to the HostAgent
+     *
+     * \retval FALSE always
+     */
+    static gboolean heartbeat_timer(gpointer data);
+
+private:
+    /**
+     * Send HostAgent heartbeat.
+     *
+     * This function gets scheduled to be called periodically in
+     * heartbeat_timer().
+     *
+     * \return the number of milliseconds until the next time heartbeat()
+     *         should be called.
+     */
+    int heartbeat();
+
+    qmf::org::matahariproject::PackageDefinition _package;
 };
 
-static gboolean
-heartbeat_timer(gpointer data)
+gboolean
+HostAgent::heartbeat_timer(gpointer data)
 {
-    HostAgent *agent = (HostAgent *)data;
+    HostAgent *agent = (HostAgent *) data;
     g_timeout_add(agent->heartbeat(), heartbeat_timer, data);
     return FALSE;
 }
@@ -58,7 +87,7 @@ main(int argc, char **argv)
     HostAgent *agent = new HostAgent();
     int rc = agent->init(argc, argv, "host");
     if (rc == 0) {
-        heartbeat_timer(agent);
+        HostAgent::heartbeat_timer(agent);
         agent->run();
     }
 
