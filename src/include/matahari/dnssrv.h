@@ -25,8 +25,6 @@
 #ifndef __MH_DNSSRV_H__
 #define __MH_DNSSRV_H__
 
-#define MAX_NAME_LEN 1024
-
-extern int mh_srv_lookup(const char *query, char *target);
+extern void mh_srv_lookup(const char *query, char *target);
 
 #endif /* __MH_DNSSRV_H__ */

@@ -29,6 +29,9 @@
 #include <cxxtest/TestSuite.h>
 
 extern "C" {
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>
 #include "mh_test_utilities.h"
 #include "matahari/dnssrv.h"
 };
@@ -42,16 +45,14 @@ class MhHsaSuite : public CxxTest::TestSuite
 
      void testSrvLookup(void)
      {
-         int ret;
-         char target[MAX_NAME_LEN];
+         char target[NS_MAXDNAME];
          const char *host = "_matahari._tcp.matahariproject.org";
 
-         if ((ret = mh_srv_lookup(host, target)) == 0) {
-             infomsg << "SRV record: " << target;
-             TS_TRACE(infomsg.str());
-             TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
-                                         target)) >= 0);
-         }
+         mh_srv_lookup(host, target);
+         infomsg << target;
+         TS_TRACE(infomsg.str());
+         TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
+                                     target)) >= 0);
      }
 };
 
