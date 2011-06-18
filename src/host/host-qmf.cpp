@@ -71,6 +71,13 @@ private:
     int heartbeat();
 
     qmf::org::matahariproject::PackageDefinition _package;
+
+    /**
+     * Default update interval for HostAgent heartbeat.
+     *
+     * This value is in seconds.
+     */
+    static const uint32_t DEFAULT_UPDATE_INTERVAL = 5;
 };
 
 gboolean
@@ -125,7 +132,7 @@ HostAgent::setup(qmf::AgentSession session)
     _package.configure(session);
     _instance = qmf::Data(_package.data_Host);
 
-    _instance.setProperty("update_interval", 5);
+    _instance.setProperty("update_interval", DEFAULT_UPDATE_INTERVAL);
     _instance.setProperty("uuid", mh_host_get_uuid());
     _instance.setProperty("hostname", mh_host_get_hostname());
     _instance.setProperty("os", mh_host_get_operating_system());
