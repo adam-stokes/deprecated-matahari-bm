@@ -254,3 +254,9 @@ host_get_cpu_details(void)
 
     sigar_cpu_info_list_destroy(host_init.sigar, &cpus);
 }
+
+int
+mh_host_identify(void)
+{
+    return host_os_identify();
+}

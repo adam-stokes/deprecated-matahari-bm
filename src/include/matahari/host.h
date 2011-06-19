@@ -46,7 +46,15 @@ extern int mh_host_get_cpu_count(void);
 extern int mh_host_get_cpu_number_of_cores(void);
 extern int mh_host_get_cpu_wordsize(void);
 
-extern void mh_host_identify(const unsigned int iterations);
+/**
+ * Identify a host.
+ *
+ * Trigger the system beep to help identify a host.
+ *
+ * \retval 0 success
+ * \retval non-zero failure
+ */
+extern int mh_host_identify(void);
 
 extern void mh_host_reboot(void);
 extern void mh_host_shutdown(void);

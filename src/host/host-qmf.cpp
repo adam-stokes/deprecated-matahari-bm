@@ -115,6 +115,8 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         mh_host_shutdown();
     } else if (methodName == "reboot") {
         mh_host_reboot();
+    } else if (methodName == "identify") {
+        mh_host_identify();
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

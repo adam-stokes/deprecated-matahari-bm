@@ -79,3 +79,17 @@ host_os_shutdown(void)
     ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE,
                   SHTDN_REASON_FLAG_PLANNED);
 }
+
+int
+host_os_identify(void)
+{
+    static const long DURATION = 1000; /* 1 second */
+    static const long FREQ = 440; /* 440 Hz */
+
+    /*
+     * Reference for Windows Beep():
+     *     http://msdn.microsoft.com/en-us/library/ms679277%28v=vs.85%29.aspx
+     */
+
+    return Beep(FREQ, DURATION) ? 0 : -1;
+}
