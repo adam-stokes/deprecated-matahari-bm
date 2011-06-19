@@ -23,8 +23,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sigar.h>
-
 #include "matahari/mh_dbus_common.h"
 
 /* Network methods */
@@ -47,10 +45,13 @@ static enum status
 interface_status(const char *iface)
 {
     uint64_t flags = 0;
+
     mh_network_status(iface, &flags);
 
-    if (flags & SIGAR_IFF_UP)
+    if (flags & MH_NETWORK_IF_UP) {
         return RUNNING;
+    }
+
     return INACTIVE; /* Inactive */
 }
 
@@ -62,7 +63,6 @@ Network_list(Matahari *matahari, DBusGMethodInvocation *context)
     GError* error = NULL;
     GList *interface_list;
     GList *plist;
-    sigar_net_interface_config_t *ifconfig;
     char **list;
     int i = 0;
 
@@ -81,14 +81,14 @@ Network_list(Matahari *matahari, DBusGMethodInvocation *context)
     for (plist = g_list_first(interface_list);
          plist;
          plist = g_list_next(plist)) {
-        ifconfig = (sigar_net_interface_config_t *)plist->data;
-        list[i++] = strdup(ifconfig->name);
+        struct mh_network_interface *iface = plist->data;
+        list[i++] = strdup(mh_network_interface_get_name(iface));
     }
     list[i] = NULL; // Sentinel
 
     dbus_g_method_return(context, list);
     g_strfreev(list);
-    g_list_free(interface_list);
+    g_list_free_full(interface_list, mh_network_interface_destroy);
     return TRUE;
 }
 
@@ -152,14 +152,18 @@ gboolean
 Network_get_ip_address(Matahari *matahari, const char *iface,
                        DBusGMethodInvocation *context)
 {
+    char buf[64];
     GError* error = NULL;
+
     if (!check_authorization(NETWORK_BUS_NAME ".get_ip_address", &error,
                              context)) {
         dbus_g_method_return_error(context, error);
         return FALSE;
     }
 
-    dbus_g_method_return(context, g_strdup(mh_network_get_ip_address(iface)));
+    dbus_g_method_return(context,
+            g_strdup(mh_network_get_ip_address(iface, buf, sizeof(buf))));
+
     return TRUE;
 }
 
@@ -168,13 +172,17 @@ Network_get_mac_address(Matahari *matahari, const char *iface,
                         DBusGMethodInvocation *context)
 {
     GError* error = NULL;
+    char buf[32];
+
     if (!check_authorization(NETWORK_BUS_NAME ".get_mac_address", &error,
                              context)) {
         dbus_g_method_return_error(context, error);
         return FALSE;
     }
 
-    dbus_g_method_return(context, g_strdup(mh_network_get_mac_address(iface)));
+    dbus_g_method_return(context,
+            g_strdup(mh_network_get_mac_address(iface, buf, sizeof(buf))));
+
     return TRUE;
 }
 

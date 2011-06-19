@@ -34,8 +34,6 @@ extern "C" {
 #include "matahari/logging.h"
 #include "matahari/network.h"
 #include "matahari/host.h"
-#include <sigar.h>
-#include <sigar_format.h>
 };
 
 class NetAgent : public MatahariAgent
@@ -63,14 +61,17 @@ static int
 interface_status(const char *iface)
 {
     uint64_t flags = 0;
-    if (iface == NULL)
+
+    if (iface == NULL) {
         return 3;
+    }
 
     mh_network_status(iface, &flags);
 
-    if (flags & SIGAR_IFF_UP) {
+    if (flags & MH_NETWORK_IF_UP) {
         return 0;
     }
+
     return 1; /* Inactive */
 }
 
@@ -102,14 +103,15 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         GList *interface_list = NULL;
 
         _qtype::Variant::List s_list;
-        sigar_net_interface_config_t *ifconfig = NULL;
 
         interface_list = mh_network_get_interfaces();
         for (plist = g_list_first(interface_list); plist;
              plist = g_list_next(plist)) {
-            ifconfig = (sigar_net_interface_config_t *)plist->data;
-            s_list.push_back(ifconfig->name);
+            struct mh_network_interface *iface =
+                        static_cast<struct mh_network_interface *>(plist->data);
+            s_list.push_back(mh_network_interface_get_name(iface));
         }
+        g_list_free_full(interface_list, mh_network_interface_destroy);
         event.addReturnArgument("iface_map", s_list);
     } else if (methodName == "start") {
         int rc = interface_status(
@@ -134,11 +136,15 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         event.addReturnArgument("status", interface_status(
                 event.getArguments()["iface"].asString().c_str()));
     } else if (methodName == "get_ip_address") {
+        char buf[64];
         event.addReturnArgument("ip", mh_network_get_ip_address(
-                event.getArguments()["iface"].asString().c_str()));
+                event.getArguments()["iface"].asString().c_str(),
+                buf, sizeof(buf)));
     } else if (methodName == "get_mac_address") {
+        char buf[32];
         event.addReturnArgument("mac", mh_network_get_mac_address(
-                event.getArguments()["iface"].asString().c_str()));
+                event.getArguments()["iface"].asString().c_str(),
+                buf, sizeof(buf)));
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;
