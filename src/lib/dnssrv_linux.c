@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 #include <netinet/in.h>
 #include <arpa/nameser.h>
@@ -27,8 +28,17 @@
 
 #include "matahari/dnssrv.h"
 
+/**
+ * Domain lookup providing a Matahari broker
+ *
+ * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
+ * \param[in] set buffer to hold domain retrieved
+ *
+ * \return 0 or greater for successful match
+ */
+
 int
-mh_srv_lookup(const char *query, char *target)
+mh_srv_lookup(const char *query, char *target, size_t len)
 {
     union {
         HEADER hdr;
@@ -55,7 +65,7 @@ mh_srv_lookup(const char *query, char *target)
         }
 
         if (ns_rr_type(rr) == T_SRV) {
-            char buf[NS_MAXDNAME];
+            char buf[len];
             /* Only care about domain name from rdata
              * First 6 elements in rdata are broken up
              * contain dns information such as type, class
@@ -65,8 +75,10 @@ mh_srv_lookup(const char *query, char *target)
                                ns_msg_end(nsh),
                                ns_rr_rdata(rr)+6,
                                buf,
-                               sizeof(buf));
-            strcpy(target, buf);
+                               NS_MAXDNAME);
+            strncpy(target, buf, len - 1);
+            target[len - 1] = '\0';
+            return 0;
         }
     }
     return 0;

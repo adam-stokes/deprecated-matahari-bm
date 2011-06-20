@@ -49,7 +49,7 @@ class MhHsaSuite : public CxxTest::TestSuite
          const char *host = "_matahari._tcp.matahariproject.org";
          int ret = 0;
 
-         ret = mh_srv_lookup(host, target);
+         ret = mh_srv_lookup(host, target, NS_MAXDNAME);
          TS_ASSERT(ret == 0);
          TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
                                      target)) >= 0);
