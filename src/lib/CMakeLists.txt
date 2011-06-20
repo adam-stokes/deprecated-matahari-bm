@@ -35,6 +35,9 @@ else(WIN32)
     foreach (lib ${LIBS})
 	install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
     endforeach (lib ${LIBS})
+    # libresolv
+    add_library(mcommon_resolv SHARED dnssrv_linux.c)
+    target_link_libraries(mcommon mcommon_resolv resolv)
 endif(WIN32)
 
 if(WITH-QMF)
