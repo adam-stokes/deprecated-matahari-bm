@@ -43,6 +43,7 @@ int use_stderr = 0;
 
 extern "C" {
 #include "matahari/logging.h"
+#include "matahari/dnssrv.h"
 }
 
 using namespace qpid::management;
@@ -351,7 +352,22 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         protocol = "tcp";
     }
 
-    if(servername == NULL) {
+    /*
+     * Based on servername do a SRV lookup for best possible
+     * server providing this service.
+     */
+    if (servername) {
+#ifdef HAVE_RESOLV_A
+        int ret;
+        char query[NS_MAXDNAME];
+        char target[NS_MAXDNAME];
+        g_snprintf(query, sizeof(query), "_matahari._tcp.%s", servername); 
+        ret = mh_srv_lookup(query, target, sizeof(target));
+        if (ret == 0) {
+            servername = strdup(target);
+        } 
+#endif
+    } else {
         servername = strdup(MATAHARI_BROKER);
     }
 
