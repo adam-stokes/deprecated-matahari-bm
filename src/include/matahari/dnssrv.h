@@ -25,6 +25,6 @@
 #ifndef __MH_DNSSRV_H__
 #define __MH_DNSSRV_H__
 
-extern void mh_srv_lookup(const char *query, char *target);
+extern int mh_srv_lookup(const char *query, char *target);
 
 #endif /* __MH_DNSSRV_H__ */

@@ -27,7 +27,7 @@
 
 #include "matahari/dnssrv.h"
 
-void
+int
 mh_srv_lookup(const char *query, char *target)
 {
     union {
@@ -45,13 +45,13 @@ mh_srv_lookup(const char *query, char *target)
                      sizeof(answer));
     if (size > 0) {
         if (ns_initparse(answer.buf, size, &nsh) < 0) {
-            fprintf(stderr, "ns_initparse: %s\n", strerror(errno));
+            goto fail;
         }
     }
 
     for (rrnum = 0; rrnum < ns_msg_count(nsh, ns_s_an); rrnum++) {
         if (ns_parserr(&nsh, ns_s_an, rrnum, &rr)) {
-            fprintf(stderr, "ns_parserr: %s\n", strerror(errno));
+            goto fail;
         }
 
         if (ns_rr_type(rr) == T_SRV) {
@@ -69,4 +69,7 @@ mh_srv_lookup(const char *query, char *target)
             strcpy(target, buf);
         }
     }
+    return 0;
+fail:
+    return -1;
 }
