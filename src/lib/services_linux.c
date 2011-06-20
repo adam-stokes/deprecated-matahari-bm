@@ -434,7 +434,9 @@ services_os_get_directory_list(const char *root, gboolean files)
             }
         }
 
-        list = g_list_append(list, namelist[lpc]->d_name);
+        list = g_list_append(list, strdup(namelist[lpc]->d_name));
+
+        free(namelist[lpc]);
     }
 
     free(namelist);

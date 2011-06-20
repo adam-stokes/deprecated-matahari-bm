@@ -64,7 +64,7 @@ Services_list(Matahari *matahari, DBusGMethodInvocation *context)
 
     dbus_g_method_return(context, list);
     g_strfreev(list);
-    g_list_free(services);
+    g_list_free_full(services, free);
     return TRUE;
 }
 

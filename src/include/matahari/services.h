@@ -136,11 +136,49 @@ typedef struct svc_action_s
 
 } svc_action_t;
 
-extern GList *get_directory_list(const char *root, gboolean files);
+/**
+ * Get a list of files or directories in a given path
+ *
+ * \param[in] root full path to a directory to read
+ * \param[in] files true to get a list of files, false for a list of directories
+ *
+ * \return a list of what was found.  The list items are gchar *.  This list _must_
+ *         be destroyed using g_list_free_full(list, free).
+ */
+extern GList *
+get_directory_list(const char *root, gboolean files);
 
-extern GList *services_list(void);
-extern GList *resources_list_providers(const char *standard);
-extern GList *resources_list_agents(const char *standard, const char *provider);
+/**
+ * Get a list of services
+ *
+ * \return a list of services.  The list items are gchar *.  This list _must_
+ *         be destroyed using g_list_free_full(list, free).
+ */
+extern GList *
+services_list(void);
+
+/**
+ * Get a list of providers
+ *
+ * \param[in] the standard for providers to check for (such as "ocf")
+ *
+ * \return a list of providers.  The list items are gchar *.  This list _must_
+ *         be destroyed using g_list_free_full(list, free).
+ */
+extern GList *
+resources_list_providers(const char *standard);
+
+/**
+ * Get a list of resource agents
+ *
+ * \param[in] the standard for research agents to check for
+ *            (such as "ocf", "lsb", or "windows")
+ *
+ * \return a list of resource agents.  The list items are gchar *.  This list _must_
+ *         be destroyed using g_list_free_full(list, free).
+ */
+extern GList *
+resources_list_agents(const char *standard, const char *provider);
 
 extern svc_action_t *services_action_create(
     const char *name, const char *action, int interval /* ms */, int timeout /* ms */);
