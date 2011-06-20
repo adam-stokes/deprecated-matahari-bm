@@ -61,23 +61,23 @@ svc_action_t *resources_action_create(
     asprintf(&op->id, "%s_%s_%d", name, action, interval);
 
     if(strcmp(standard, "ocf") == 0) {
-	op->provider = strdup(provider);
-	op->params = params;
+        op->provider = strdup(provider);
+        op->params = params;
 
-	asprintf(&op->opaque->exec, "%s/resource.d/%s/%s",
-		 OCF_ROOT, provider, agent);
-	op->opaque->args[0] = strdup(op->opaque->exec);
-	op->opaque->args[1] = strdup(action);
+        asprintf(&op->opaque->exec, "%s/resource.d/%s/%s",
+                 OCF_ROOT, provider, agent);
+        op->opaque->args[0] = strdup(op->opaque->exec);
+        op->opaque->args[1] = strdup(action);
 
     } else if(strcmp(standard, "lsb") == 0 || strcmp(standard, "windows") == 0) {
-	services_os_set_exec(op);
+        services_os_set_exec(op);
 
     } else {
-	mh_err("Unknown resource standard: %s", standard);
-	services_action_free(op);
-	op = NULL;
+        mh_err("Unknown resource standard: %s", standard);
+        services_action_free(op);
+        op = NULL;
     }
-    
+
     return op;
 }
 
@@ -186,9 +186,9 @@ GList *
 resources_list_providers(const char *standard)
 {
     if(strcmp(standard, "ocf") == 0) {
-	return resources_os_list_ocf_providers();
+        return resources_os_list_ocf_providers();
     }
-    
+
     return NULL;
 }
 
@@ -196,12 +196,12 @@ GList *
 resources_list_agents(const char *standard, const char *provider)
 {
     if(strcmp(standard, "ocf") == 0) {
-	return resources_os_list_ocf_agents(provider);
+        return resources_os_list_ocf_agents(provider);
 
     } else if(strcmp(standard, "lsb") == 0
-	      || strcmp(standard, "windows") == 0) {
-	return services_os_list();
+              || strcmp(standard, "windows") == 0) {
+        return services_os_list();
     }
-    
+
     return NULL;
 }

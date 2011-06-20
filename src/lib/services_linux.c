@@ -191,13 +191,13 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
             mh_warn("%s:%d - timed out after %dms", op->id, op->pid,
                     op->timeout);
             op->status = LRM_OP_TIMEOUT;
-	    op->rc = OCF_TIMEOUT;
+            op->rc = OCF_TIMEOUT;
 
         } else {
             mh_warn("%s:%d - terminated with signal %d", op->id, op->pid,
                     signo);
             op->status = LRM_OP_ERROR;
-	    op->rc = OCF_SIGNAL;
+            op->rc = OCF_SIGNAL;
         }
 
     } else {
