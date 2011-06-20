@@ -359,9 +359,9 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     if (servername) {
 #ifdef HAVE_RESOLV_A
         int ret;
-        char query[MAX_NAME_LEN];
-        char target[MAX_NAME_LEN];
-        g_snprintf(query, MAX_NAME_LEN - 1, "_matahari._tcp.%s", servername); 
+        char query[NS_MAXDNAME];
+        char target[NS_MAXDNAME];
+        g_snprintf(query, NS_MAXDNAME, "_matahari._tcp.%s", servername); 
         ret = mh_srv_lookup(query, target);
         if (ret == 0) {
             servername = strdup(target);
