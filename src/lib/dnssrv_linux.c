@@ -33,6 +33,7 @@
  *
  * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
  * \param[in] set buffer to hold domain retrieved
+ * \param[in] set buffer length 
  *
  * \return 0 or greater for successful match
  */
@@ -65,7 +66,7 @@ mh_srv_lookup(const char *query, char *target, size_t len)
         }
 
         if (ns_rr_type(rr) == T_SRV) {
-            char buf[len];
+            char buf[NS_MAXDNAME];
             /* Only care about domain name from rdata
              * First 6 elements in rdata are broken up
              * contain dns information such as type, class
