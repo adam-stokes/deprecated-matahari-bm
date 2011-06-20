@@ -16,95 +16,73 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <string.h>
+#include <errno.h>
+#include <glib.h>
+#include <stdlib.h>
+#include <sys/types.h>
+
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
-#include <glib.h>
 
-#include "dnssrv_private.h"
+#include "matahari/dnssrv.h"
 
-struct srv_reply **srv_lookup(char *service,
-			      char *protocol,
-			      char *domain)
-{
-    struct srv_reply **replies = NULL;
-#ifdef HAVE_RESOLV_A
-    struct srv_reply *reply = NULL;
-    char name[MAX_NAME_LEN];
-    unsigned char querybuf[MAX_NAME_LEN];
-    const unsigned char *buf;
-    ns_msg nsh;
-    ns_rr rr;
-    int, i, n, len, size;
-
-    g_snprintf(name, sizeof(name), "_%s._%s.%s", service, protocol, domain);
-    if((size = res_query(name, C_IN, T_SRV, querybuf, sizeof(querybuf))) < 0) {
-        return NULL;
-    }
-
-    if(ns_initparse(querybuf, size, &nsh) != 0) {
-        reutnr NULL;
-    }
-
-    n = 0;
-    while(ns_parserr(&nsh, ns_s_an, n, &rr) == 0) {
-        size = ns_rr_rdlen(rr);
-        buf = ns_rr_rdata(rr);
-        
-        len = 0;
-        for(i=6; i < size && buf[i]; i+= buf[i] + 1) {
-            len += buf[i] + 1;
-        }
-
-        if(i > size) {
-            break;
-        }
-
-        reply = g_malloc(sizeof(struct srv_reply) + len);
-        memcpy(reply->name, buf+7, len);
-
-        for(i=buf[6]; i < len && buf[7+i]; i += buf[7+i] + 1) {
-            reply->name[i] = '.';
-        }
-
-        if(i > len) {
-            g_free(reply);
-            break;
-        }
-
-        reply->prio = (buf[0] << 8) | buf[1];
-        reply->weight = (buf[2] << 8) | buf[3];
-        reply->port = (buf[4] << 8) | buf[5];
-        n++;
-        replies = g_renew(struct srv_reply *, replies, n+1);
-        replies[n-1] = reply;
-    }
-    if(replies) {
-        replies[n] = NULL;
-    }
-#endif
-    return replies;
-}
-
-void srv_free(struct srv_reply **srv)
-{
-    int i;
-    if(srv == NULL) {
-        return;
-    }
-
-    for(i = 0; srv[i]; i++) {
-        g_free(srv[i]);
-    }
-    g_free(srv);
-}
-    
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * indent-tabs-mode: nil
- * End:
- * vim: et
+/**
+ * Domain lookup providing a Matahari broker
+ *
+ * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
+ * \param[in] set buffer to hold domain retrieved
+ * \param[in] set buffer length 
+ *
+ * \return 0 or greater for successful match
  */
 
+int
+mh_srv_lookup(const char *query, char *target, size_t len)
+{
+    union {
+        HEADER hdr;
+        unsigned char buf[NS_PACKETSZ];
+    } answer;
+    ns_msg nsh;
+    ns_rr rr;
+    int size, rrnum;
+
+    size = res_query(query,
+                     C_IN, 
+                     T_SRV,
+                     (u_char *)&answer,
+                     sizeof(answer));
+    if (size > 0) {
+        if (ns_initparse(answer.buf, size, &nsh) < 0) {
+            goto fail;
+        }
+    }
+
+    for (rrnum = 0; rrnum < ns_msg_count(nsh, ns_s_an); rrnum++) {
+        if (ns_parserr(&nsh, ns_s_an, rrnum, &rr)) {
+            goto fail;
+        }
+
+        if (ns_rr_type(rr) == T_SRV) {
+            char buf[NS_MAXDNAME];
+            /* Only care about domain name from rdata
+             * First 6 elements in rdata are broken up
+             * contain dns information such as type, class
+             * ttl, rdlength.
+             */
+            ns_name_uncompress(ns_msg_base(nsh),
+                               ns_msg_end(nsh),
+                               ns_rr_rdata(rr)+6,
+                               buf,
+                               NS_MAXDNAME);
+            strncpy(target, buf, len - 1);
+            target[len - 1] = '\0';
+            return 0;
+        }
+    }
+    return 0;
+fail:
+    return -1;
+}
