@@ -234,7 +234,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
         }
     }
 
-    if (op->interval && op->opaque->cancel == FALSE) {
+    if (op->interval) {
         recurring = 1;
         op->opaque->repeat_timer = g_timeout_add(op->interval,
                                                  recurring_action_timer,

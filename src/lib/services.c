@@ -126,7 +126,6 @@ services_action_cancel(const char *name, const char *action, int interval)
         return FALSE;
     }
 
-    op->opaque->cancel = TRUE;
     mh_debug("Removing %s", op->id);
     if (op->opaque->repeat_timer) {
         g_source_remove(op->opaque->repeat_timer);
