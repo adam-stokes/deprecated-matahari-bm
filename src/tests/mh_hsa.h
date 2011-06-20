@@ -50,7 +50,7 @@ class MhHsaSuite : public CxxTest::TestSuite
          int ret = 0;
 
          ret = mh_srv_lookup(host, target);
-         TS_ASSERT(ret < 0);
+         TS_ASSERT(ret == 0);
          TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
                                      target)) >= 0);
      }
