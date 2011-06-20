@@ -354,6 +354,7 @@ mh_hostname(void)
         sigar_open(&sigar);
         sigar_net_info_get(sigar, &netinfo);
         hostname = strdup(netinfo.host_name);
+        sigar_close(sigar);
     }
 
     if (hostname != NULL && strcmp(hostname, "localhost") == 0) {
