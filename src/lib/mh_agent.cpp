@@ -241,6 +241,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 matahari_options[lpc].callback(
                     matahari_options[lpc].code, matahari_options[lpc].long_name,
                     value, matahari_options[lpc].userdata);
+                free(value);
+                value = NULL;
             }
             free(name_ws);
         }
