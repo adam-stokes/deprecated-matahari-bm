@@ -181,6 +181,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     char *next = NULL;
     char *offset = NULL;
     svc_action_t *op = p->privatedata;
+    int recurring = 0;
 
     p->privatedata = NULL;
     op->status = LRM_OP_DONE;
@@ -234,20 +235,23 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     }
 
     if (op->interval && op->opaque->cancel == FALSE) {
+        recurring = 1;
         op->opaque->repeat_timer = g_timeout_add(op->interval,
                                                  recurring_action_timer,
                                                  (void *) op);
     }
 
     op->pid = 0;
-    if (op->opaque->callback) {
-        /* Callback might call cancel which would result in the message
-         * being free'd
-         * Do not access 'op' after this line
-         */
-        op->opaque->callback(op);
 
-    } else if (op->opaque->repeat_timer == 0) {
+    if (op->opaque->callback) {
+        op->opaque->callback(op);
+    }
+
+    if (!recurring) {
+        /*
+         * If this is a recurring action, do not free explicitly.
+         * It will get freed whenever the action gets cancelled.
+         */
         services_action_free(op);
     }
 }
