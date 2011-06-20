@@ -28,16 +28,6 @@
 
 #include "matahari/dnssrv.h"
 
-/**
- * Domain lookup providing a Matahari broker
- *
- * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
- * \param[in] set buffer to hold domain retrieved
- * \param[in] set buffer length 
- *
- * \return 0 or greater for successful match
- */
-
 int
 mh_srv_lookup(const char *query, char *target, size_t len)
 {
