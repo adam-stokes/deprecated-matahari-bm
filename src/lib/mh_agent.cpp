@@ -76,16 +76,16 @@ RegistryRead(
     long lSuccess = RegOpenKey(hHive, szKeyPath, &hKey);
 
     if (lSuccess != ERROR_SUCCESS) {
-        mh_debug("Could not open %ls key from the registry: %ld", 
-		 szKeyPath, lSuccess);
+        mh_debug("Could not open %ls key from the registry: %ld",
+                 szKeyPath, lSuccess);
         return -1;
     }
 
     lSuccess = RegQueryValueEx(hKey, szValue, NULL, NULL, (LPBYTE) szData,
                                &nSize);
     if (lSuccess != ERROR_SUCCESS) {
-        mh_debug("Could not read '%ls[%ls]' from the registry: %ld", 
-		 szKeyPath, szValue, lSuccess);
+        mh_debug("Could not read '%ls[%ls]' from the registry: %ld",
+                 szKeyPath, szValue, lSuccess);
         return -1;
     }
     mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue,
@@ -119,36 +119,36 @@ mh_qpid_disconnect(gpointer user_data)
 }
 
 
-typedef struct mh_opt_s 
+typedef struct mh_opt_s
 {
-	int	    code;
-	int	    has_arg;
-	const char *long_name;
-	const char *description;
-	void	   *userdata;
-	int	  (*callback)(int code, const char *name, const char *arg, void *userdata);
+        int            code;
+        int            has_arg;
+        const char *long_name;
+        const char *description;
+        void           *userdata;
+        int          (*callback)(int code, const char *name, const char *arg, void *userdata);
 
 } mh_option;
 
 
 static mh_option matahari_options[MAX_CHAR];
 
-static int 
+static int
 connection_option(int code, const char *name, const char *arg, void *userdata)
 {
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
 
     if(strcmp(name, "service") == 0) {
-	options->insert(std::pair<std::string, qpid::types::Variant>("sasl-service", arg));
-	options->insert(std::pair<std::string, qpid::types::Variant>("sasl-mechanism", "GSSAPI"));
-	
+        options->insert(std::pair<std::string, qpid::types::Variant>("sasl-service", arg));
+        options->insert(std::pair<std::string, qpid::types::Variant>("sasl-mechanism", "GSSAPI"));
+
     } else if(strcmp(name, "reconnect") == 0) {
-	if(arg && strcmp(arg, "no") == 0) {
-	    options->insert(std::pair<std::string, qpid::types::Variant>("reconnect", false));
-	}
-	
+        if(arg && strcmp(arg, "no") == 0) {
+            options->insert(std::pair<std::string, qpid::types::Variant>("reconnect", false));
+        }
+
     } else {
-	options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
+        options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
     }
     return 0;
 }
@@ -158,7 +158,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     int lpc = 0;
     printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
     printf("\nCommon options:\n");
-    printf("\t-h | --help	      print this help message.\n");
+    printf("\t-h | --help             print this help message.\n");
     printf("\t-b | --broker value     specify broker host name..\n");
     printf("\t-p | --port value       specify broker port.\n");
     printf("\t-u | --username value   username to use for authentication purproses.\n");
@@ -173,17 +173,17 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 
     printf("\nCustom options:\n");
     for(lpc = 0; lpc < MAX_CHAR; lpc++) {
-	if(matahari_options[lpc].callback
-	    && matahari_options[lpc].callback != connection_option) {
-	    printf("\t-%c | --%s\t %s\n", matahari_options[lpc].code,
-		   matahari_options[lpc].long_name, matahari_options[lpc].description);
-	}
+        if(matahari_options[lpc].callback
+            && matahari_options[lpc].callback != connection_option) {
+            printf("\t-%c | --%s\t %s\n", matahari_options[lpc].code,
+                   matahari_options[lpc].long_name, matahari_options[lpc].description);
+        }
     }
     return 0;
 }
 
 string
-mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options) 
+mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options)
 {
     std::stringstream url;
 
@@ -200,11 +200,11 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     options["reconnect"] = true;
 
     /* Force local-only handling */
-    mh_add_option('b', required_argument, "broker",		    NULL, NULL, NULL);
-    mh_add_option('p', required_argument, "port",		    NULL, NULL, NULL);
+    mh_add_option('b', required_argument, "broker",                    NULL, NULL, NULL);
+    mh_add_option('p', required_argument, "port",                    NULL, NULL, NULL);
 #ifdef MH_SSL
-    mh_add_option('N', required_argument, "ssl-cert-name",	    NULL, NULL, NULL);
-    mh_add_option('C', required_argument, "ssl-cert-db",	    NULL, NULL, NULL);
+    mh_add_option('N', required_argument, "ssl-cert-name",            NULL, NULL, NULL);
+    mh_add_option('C', required_argument, "ssl-cert-db",            NULL, NULL, NULL);
     mh_add_option('f', required_argument, "ssl-cert-password-file", NULL, NULL, NULL);
 #endif
 
@@ -217,33 +217,33 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     char *value = NULL;
 
     if (RegistryRead(HKEY_LOCAL_MACHINE,
-		     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-		     L"broker", &value) == 0) {
-	free(servername);
-	servername = value;
-	value = NULL;
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     L"broker", &value) == 0) {
+        free(servername);
+        servername = value;
+        value = NULL;
     }
 
     if (RegistryRead(HKEY_LOCAL_MACHINE,
-		     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-		     L"port", &value) == 0) {
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     L"port", &value) == 0) {
         serverport = atoi(value);
         free(value);
         value = NULL;
     }
 
     for (lpc = 0; lpc < MAX_CHAR; lpc++) {
-	if (matahari_options[lpc].callback) {
-	    wchar_t *name_ws = char2wide(matahari_options[lpc].long_name);
-	    if (RegistryRead (HKEY_LOCAL_MACHINE,
-			     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-			     name_ws, &value) == 0) {
-		matahari_options[lpc].callback(
-		    matahari_options[lpc].code, matahari_options[lpc].long_name,
-		    value, matahari_options[lpc].userdata);
-	    }
-	    free(name_ws);
-	}
+        if (matahari_options[lpc].callback) {
+            wchar_t *name_ws = char2wide(matahari_options[lpc].long_name);
+            if (RegistryRead (HKEY_LOCAL_MACHINE,
+                             L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                             name_ws, &value) == 0) {
+                matahari_options[lpc].callback(
+                    matahari_options[lpc].code, matahari_options[lpc].long_name,
+                    value, matahari_options[lpc].userdata);
+            }
+            free(name_ws);
+        }
     }
 
 #else
@@ -259,74 +259,74 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 
     opt_string[0] = 0;
     for(lpc = 0; lpc < MAX_CHAR; lpc++) {
-	if(matahari_options[lpc].code) {
-	    long_opts = (struct option *)realloc(long_opts, (2 + num_options) * sizeof(struct option));
-	    long_opts[num_options].name = matahari_options[lpc].long_name;
-	    long_opts[num_options].has_arg = matahari_options[lpc].has_arg;
-	    long_opts[num_options].flag = NULL;
-	    long_opts[num_options].val = matahari_options[lpc].code;
+        if(matahari_options[lpc].code) {
+            long_opts = (struct option *)realloc(long_opts, (2 + num_options) * sizeof(struct option));
+            long_opts[num_options].name = matahari_options[lpc].long_name;
+            long_opts[num_options].has_arg = matahari_options[lpc].has_arg;
+            long_opts[num_options].flag = NULL;
+            long_opts[num_options].val = matahari_options[lpc].code;
 
-	    num_options++;
+            num_options++;
 
-	    long_opts[num_options].name = 0;
-	    long_opts[num_options].has_arg = 0;
-	    long_opts[num_options].flag = 0;
-	    long_opts[num_options].val = 0;
+            long_opts[num_options].name = 0;
+            long_opts[num_options].has_arg = 0;
+            long_opts[num_options].flag = 0;
+            long_opts[num_options].val = 0;
 
-	    opt_string[opt_string_len++] = matahari_options[lpc].code;
-	    if(matahari_options[lpc].has_arg == required_argument) {
-		opt_string[opt_string_len++] = ':'; 
-	    }
-	    opt_string[opt_string_len] = 0;
-	}
+            opt_string[opt_string_len++] = matahari_options[lpc].code;
+            if(matahari_options[lpc].has_arg == required_argument) {
+                opt_string[opt_string_len++] = ':';
+            }
+            opt_string[opt_string_len] = 0;
+        }
     }
-    
+
     while ((arg = getopt_long(argc, argv, opt_string, long_opts, &idx)) != -1) {
         switch (arg) {
-	    case 'h':
-		print_help('h', NULL, NULL, (void*)proc_name);
-		exit(0);
-		break;
-	    case 'v':
-		mh_log_level++;
-		mh_enable_stderr(1);
-		break;
-	    case 'p':
-		serverport = atoi(optarg);
-		break;
-	    case 'b':
-		servername = strdup(optarg);
-		break;
-	    case 'N':
+            case 'h':
+                print_help('h', NULL, NULL, (void*)proc_name);
+                exit(0);
+                break;
+            case 'v':
+                mh_log_level++;
+                mh_enable_stderr(1);
+                break;
+            case 'p':
+                serverport = atoi(optarg);
+                break;
+            case 'b':
+                servername = strdup(optarg);
+                break;
+            case 'N':
                 ssl_cert_name = optarg;
-		break;
-	    case 'C':
-		ssl_cert_db = optarg;
-		setenv("QPID_SSL_CERT_DB", optarg, 1);
-		if (!g_file_test(ssl_cert_db, G_FILE_TEST_IS_DIR)) {
-		    fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
-		    exit(1);
-		}
-		break;
-	    case 'f':
-		ssl_cert_password_file = optarg;
+                break;
+            case 'C':
+                ssl_cert_db = optarg;
+                setenv("QPID_SSL_CERT_DB", optarg, 1);
+                if (!g_file_test(ssl_cert_db, G_FILE_TEST_IS_DIR)) {
+                    fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
+                    exit(1);
+                }
+                break;
+            case 'f':
+                ssl_cert_password_file = optarg;
                 setenv("QPID_SSL_CERT_PASSWORD_FILE", optarg, 1);
-		if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
-		    fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
-		    exit(1);
-		}
-		break;
-	    default:
-		if(arg > 0 && arg < MAX_CHAR && matahari_options[arg].callback) {
-		    matahari_options[arg].callback(
-			matahari_options[arg].code, matahari_options[arg].long_name, 
-			optarg, matahari_options[arg].userdata);
+                if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
+                    fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
+                    exit(1);
+                }
+                break;
+            default:
+                if(arg > 0 && arg < MAX_CHAR && matahari_options[arg].callback) {
+                    matahari_options[arg].callback(
+                        matahari_options[arg].code, matahari_options[arg].long_name,
+                        optarg, matahari_options[arg].userdata);
 
-		} else {
-		    print_help(arg, NULL, NULL, (void*)proc_name);
-		    exit(1);
-		}
-		break;
+                } else {
+                    print_help(arg, NULL, NULL, (void*)proc_name);
+                    exit(1);
+                }
+                break;
         }
     }
     free(long_opts);
@@ -341,8 +341,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         qpid::sys::ssl::initNSS(ssl_options, true);
 
     } else if (ssl_cert_name || ssl_cert_db || ssl_cert_password_file) {
-	fprintf(stderr, "To enable SSL, you must supply a cert name, db and password file. See --help.\n");
-	exit(1);
+        fprintf(stderr, "To enable SSL, you must supply a cert name, db and password file. See --help.\n");
+        exit(1);
     }
 #endif
 
@@ -378,21 +378,21 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 }
 
 int
-mh_add_option(int code, int has_arg, const char *name, const char *description, 
-	      void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata))
+mh_add_option(int code, int has_arg, const char *name, const char *description,
+              void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata))
 {
     if(code > 0 && code < MAX_CHAR) {
-	if(matahari_options[code].code != 0) {
-	    mh_err("Replacing '-%c|--%s' with '-%c|--%s'", 
-		   matahari_options[code].code, matahari_options[code].long_name, code, name);
-	}
-	matahari_options[code].code = code;
-	matahari_options[code].has_arg = has_arg;
-	matahari_options[code].long_name = name;
-	matahari_options[code].description = description;
-	matahari_options[code].userdata = userdata;
-	matahari_options[code].callback = callback;
-	return 0;
+        if(matahari_options[code].code != 0) {
+            mh_err("Replacing '-%c|--%s' with '-%c|--%s'",
+                   matahari_options[code].code, matahari_options[code].long_name, code, name);
+        }
+        matahari_options[code].code = code;
+        matahari_options[code].has_arg = has_arg;
+        matahari_options[code].long_name = name;
+        matahari_options[code].description = description;
+        matahari_options[code].userdata = userdata;
+        matahari_options[code].callback = callback;
+        return 0;
     }
     return -1;
 }
@@ -401,8 +401,8 @@ static int should_daemonize(int code, const char *name, const char *arg, void *u
 {
 #ifndef WIN32
     if (daemon(0, 0) < 0) {
-	fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
-	exit(1);
+        fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
+        exit(1);
     }
 #endif
     return 0;
@@ -419,7 +419,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
 
     string url = mh_parse_options(proc_name, argc, argv, options);
-    
+
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);
 
@@ -441,8 +441,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     /* Do any setup required by our agent */
     if (this->setup(_agent_session) < 0) {
-        mh_err("Failed to set up broker connection to %s for %s\n", 
-	       url.c_str(), proc_name);
+        mh_err("Failed to set up broker connection to %s for %s\n",
+               url.c_str(), proc_name);
         res = -1;
         goto return_cleanup;
     }
