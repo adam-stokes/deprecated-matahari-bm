@@ -3,10 +3,10 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Matahari.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter id="chap-Matahari-Getting_Started">
+<chapter id="Matahari-Getting_Started">
   <title>Getting Started</title>
   <para>Getting Started with Matahari development</para>
-  <section id="sect-Matahari-Getting_Started-Installation">
+  <section>
     <title>Setting up the environment</title>
     <section>
       <title>Install required packages</title>
