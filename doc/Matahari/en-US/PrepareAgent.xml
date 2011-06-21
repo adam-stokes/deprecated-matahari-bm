@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Matahari.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="chap-Matahari-Prepare_Agent">
+  <title>Preparing an Agent</title>
+  <section>
+    <title>Creating the API</title>
+    <para>
+    All public API routines are kept within matahari/src/include/matahari
+    </para>
+    <section>
+      <title>Create the routines that will be publicly accessible</title>
+      <para>
+       Need good apis. 
+      </para>
+    </section>
+    <section>
+      <title>The schema definition</title>
+      <para>
+        A schema describes the structure of management data. Each agent provides a 
+        schema that describes its management model including the object classes, 
+        methods, events, etc. that it provides. In the current QMF distribution, the 
+        agent's schema is codified in an XML document. In the near future, there will 
+        also be ways to programatically create QMF schemata.
+        <footnote><para>Taken from https://cwiki.apache.org/qpid/qpid-management-framework.html\#QpidManagementFramework-Schema</para></footnote>
+      </para>
+    </section>
+  </section>
+
+</chapter>
+
