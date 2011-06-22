@@ -396,6 +396,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with qmf}
 %{_includedir}/matahari/mh_agent.h
+%{_includedir}/matahari/mainloop.h
 %{_datadir}/cmake/Modules/FindQPID.cmake
 %endif
 
