@@ -8,6 +8,8 @@
 	<xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="GettingStarted.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="PrepareAgent.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="CreateAgent.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="TestingAgent.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<index />
 </book>

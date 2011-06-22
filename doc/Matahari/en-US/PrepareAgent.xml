@@ -4,60 +4,74 @@
 %BOOK_ENTITIES;
 ]>
 <chapter id="Matahari-Prepare_Agent">
-  <title>Preparing an Agent</title>
+  <title>Preparing the Agent</title>
   <section>
-    <title>Creating the API</title>
+    <title>Directory Structure</title>
     <para>
-    When creating the Agent and its relevant API knowing the directory structure
-    will speed up comprehending how all parts fit together.
-    <orderedlist>
-    <listitem>
-      <para>
-      All public API routines are kept within <application>matahari/src/include/matahari</application>.
-      </para>
-    </listitem>
-    <listitem>
-      <para>
-      Each agent is self contained within their own directory. For example, if the agent is named
-      <application>Test</application> then the directory would be <application>matahari/src/test</application>
-      </para>
-    </listitem>
-    <listitem>
-      <para>
-      Within each agent directory will contain the code for Agent initialization and defining
-      the QMF schemata.
-      </para>
-    </listitem>
-    </orderedlist>
+      Below is a diagram of how the directory should look with an agent named
+      <application>test</application>.
+<programlisting language="Bash">
+<![CDATA[
+matahari/
+|
+|--src/
+      |--include/
+                |--matahari/
+                          |--test.h                # agent library
+      |--lib/
+            |--test.c                              # agent library
+      |--test/
+             |--test-dbus.c                        # dbus agent
+             |--test-qmf.cpp                       # qmf agent
+             |--schema.xml                         # qmf schema definition
+             |--CMakeLists.txt                     # build instructions
+             |--org.matahariproject.Test.conf      # dbus xml configuration
+             |--org.matahariproject.Test.policy    # policykit xml configuration
+             |--org.matahariproject.Test.service   # dbus service configuration
+]]>
+</programlisting>
     </para>
-    <section>
-      <title>Create the routines that will be publicly accessible</title>
+  </section>
+  <section>
+    <title>Define the API</title>
       <para>
-       Need good apis. 
-      </para>
-    </section>
-    <section>
-      <title>The schema definition</title>
-      <para>
-        A schema describes the structure of management data. Each agent provides a 
-        schema that describes its management model including the object classes, 
-        methods, events, etc. that it provides. In the current QMF distribution, the 
-        agent's schema is codified in an XML document. In the near future, there will 
-        also be ways to programatically create QMF schemata.
-        <footnote><para><ulink url="https://cwiki.apache.org/qpid/qpid-management-framework.html\#QpidManagementFramework-Schema">Borrowed from Apache QPID Wiki</ulink></para></footnote>
-
-      </para>
-      <para>
-        Creating a <application>schema.xml</application> file requires the use of property and method attributes to describe
-        the api.
-      </para>
+      This library's routine is pretty self explanatory and it what is used as our agent's
+      api.
+<programlisting language="C">
+int 
+mh_plus(int x, int y)
+{
+    return x + y;
+}
+</programlisting>
       <note>
         <para>
-        All agents now contain their own <application>schema.xml</application> file
-        which is found within the agents source level directory.
+          All Matahari related public api's are prefixed with <application>mh_</application>
         </para>
       </note>
+      </para>
+  </section>
+  <section>
+    <title>The schema definition</title>
+    <para>
+      A schema describes the structure of management data. Each agent provides a 
+      schema that describes its management model including the object classes, 
+      methods, events, etc. that it provides. In the current QMF distribution, the 
+      agent's schema is codified in an XML document. In the near future, there will 
+      also be ways to programatically create QMF schemata.
+      <footnote><para><ulink url="https://cwiki.apache.org/qpid/qpid-management-framework.html\#QpidManagementFramework-Schema">Borrowed from Apache QPID Wiki</ulink></para></footnote>
+    </para>
+    <para>
+      Creating a <application>schema.xml</application> file requires the use of property and method attributes to describe
+      the api.
+    </para>
+    <note>
       <para>
+      All agents now contain their own <application>schema.xml</application> file
+      which is found within the agents source level directory.
+      </para>
+    </note>
+    <para>
 <programlisting language="XML">
 <![CDATA[
 <schema package="org.matahariproject">
@@ -146,6 +160,5 @@ install(FILES org.matahariproject.Test.service DESTINATION share/dbus-1/system-s
 </programlisting>
 </para>
     </section>
-  </section>
 </chapter>
 
