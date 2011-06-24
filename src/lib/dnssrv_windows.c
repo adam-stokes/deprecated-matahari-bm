@@ -1,4 +1,4 @@
-/* dnssrv.h - Copyright (c) 2011 Red Hat, Inc.
+/* dnssrv_windows.c - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -16,27 +16,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define MAX_NAME_LEN 1024
+#include "matahari/dnssrv.h"
 
-struct srv_reply
-{
-    int prio;
-    int weight;
-    int port;
-    char name[];
-};
-
-struct srv_reply **srv_lookup(char *service,
-                              char *protocol,
-                              char *domain);
-
-void srv_free(struct srv_reply **srv);
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * indent-tabs-mode: nil
- * End:
- * vim: et
+/**
+ * Domain lookup providing a Matahari broker
+ *
+ * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
+ * \param[in] set buffer to hold domain retrieved
+ * \param[in] set buffer length 
+ *
+ * \return 0 or greater for successful match
  */
+
+int
+mh_srv_lookup(const char *query, char *target, size_t len)
+{
+    return -1;
+}
