@@ -134,7 +134,7 @@ add_subdirectory(lib)
 add_subdirectory(host)
 add_subdirectory(network)
 add_subdirectory(service)
-add_subdirectory(config)
+add_subdirectory(postboot)
 add_subdirectory(tests)
 
 ### Installation

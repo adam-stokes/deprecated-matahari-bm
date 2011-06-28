@@ -1,7 +1,7 @@
 <schema package="org.matahariproject">
 
     <!-- Config API -->
-    <class name="Config">
+    <class name="Postboot">
         <property name="uuid"          type="sstr" access="RO" desc="Host UUID" />
         <property name="hostname"      type="sstr" access="RO" desc="Hostname" index="y"/>
         <property name="is_configured" type="uint32" access="RO" desc="Check if agent is configured." />
