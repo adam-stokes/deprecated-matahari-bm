@@ -18,9 +18,9 @@ if(WITH-QMF)
     if(NOT WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
     	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
-    	# Override BASE for matahari-config-console
+    	# Override BASE for matahari-postboot-console
     	unset(BASE)
-    	set(BASE "config-console")
+    	set(BASE "postboot-console")
     	configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
     	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
     endif(NOT WIN32)

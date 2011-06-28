@@ -1,5 +1,5 @@
-%global specversion 83
-%global upstream_version 71e5881
+%global specversion 89
+%global upstream_version 808cbbc
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -128,14 +128,14 @@ Requires:	%{name}-agent-lib = %{version}-%{release}
 %description service
 QMF agent for viewing and controlling system services
 
-%package config
+%package postboot
 License:	GPLv2+
 Summary:	QMF agent for post boot configuration services.
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
 
-%description config
+%description postboot
 QMF agent/console for providing post boot capabilities.
 
 %package devel
@@ -234,24 +234,24 @@ if [ "$1" -ge "1" ]; then
     /sbin/service matahari-service condrestart >/dev/null 2>&1 || :
 fi
 
-#== Config
+#== Postboot
 
-%post config
-/sbin/service matahari-config condrestart
-/sbin/service matahari-config-console condrestart
+%post postboot
+/sbin/service matahari-postboot condrestart
+/sbin/service matahari-postboot-console condrestart
 
-%preun config
+%preun postboot
 if [ $1 = 0 ]; then
-   /sbin/service matahari-config-console stop >/dev/null 2>&1 || :
-   /sbin/service matahari-config stop >/dev/null 2>&1 || :
-   chkconfig --del matahari-config-console
-   chkconfig --del matahari-config
+   /sbin/service matahari-postboot-console stop >/dev/null 2>&1 || :
+   /sbin/service matahari-postboot stop >/dev/null 2>&1 || :
+   chkconfig --del matahari-postboot-console
+   chkconfig --del matahari-postboot
 fi
 
-%postun config
+%postun postboot
 if [ "$1" -ge "1" ]; then
-    /sbin/service matahari-config-console condrestart >/dev/null 2>&1 || :
-    /sbin/service matahari-config condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-postboot-console condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-postboot condrestart >/dev/null 2>&1 || :
 fi
 
 #== Broker
@@ -299,7 +299,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_libdir}/libmhost.so.*
 %{_libdir}/libmnetwork.so.*
 %{_libdir}/libmservice.so.*
-%{_libdir}/libmconfig.so.*
+%{_libdir}/libmpostboot.so.*
 %doc AUTHORS COPYING
 
 %files network
@@ -342,15 +342,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
 %endif
 
-%files config
+%files postboot
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
 %if %{with qmf}
-%attr(755, root, root) %{_initddir}/matahari-config
-%attr(755, root, root) %{_initddir}/matahari-config-console
-%attr(755, root, root) %{_sbindir}/matahari-qmf-configd
-%attr(755, root, root) %{_sbindir}/matahari-qmf-config-consoled
+%attr(755, root, root) %{_initddir}/matahari-postboot
+%attr(755, root, root) %{_initddir}/matahari-postboot-console
+%attr(755, root, root) %{_sbindir}/matahari-qmf-postbootd
+%attr(755, root, root) %{_sbindir}/matahari-qmf-postboot-consoled
 %endif
 
 %if %{with qmf}
