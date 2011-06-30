@@ -59,9 +59,10 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
     void testGetNetworkIP(void)
     {
         const char *ip = NULL;
+        char buf[64];
         for(std::vector<char *>::iterator it = iface_names.begin(); 
             it != iface_names.end(); ++it) {
-          ip = mh_network_get_ip_address(*it);
+          ip = mh_network_get_ip_address(*it, buf, sizeof(buf));
           infomsg << "Verify IP address format: " << ip;
           TS_TRACE(infomsg.str());
           TS_ASSERT((mh_test_is_match("^\\d+\\.\\d+\\.\\d+\\.\\d+",
@@ -73,9 +74,10 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
     void testGetNetworkMAC(void)
     {
         const char *mac = NULL;
+        char buf[64];
         for(std::vector<char *>::iterator it = iface_names.begin(); 
             it != iface_names.end(); ++it) {
-            mac = mh_network_get_mac_address(*it);
+            mac = mh_network_get_mac_address(*it, buf, sizeof(buf));
             infomsg << "Verify MAC address format: " << mac;
             TS_TRACE(infomsg.str());
             TS_ASSERT((mh_test_is_match("^([0-9a-fA-F]{2}([:-]|$)){6}$",
