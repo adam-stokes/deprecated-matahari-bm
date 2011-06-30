@@ -6,9 +6,9 @@ include_directories(${pcre_INCLUDE_DIRS})
 # See http://sourceware.org/autobook/autobook/autobook_91.html for
 # how to set the library version appropriately 
 
-add_library (mcommon SHARED utilities.c mainloop.c)
+add_library (mcommon SHARED utilities.c mainloop.c dnssrv_${VARIANT}.c)
 set_target_properties(mcommon PROPERTIES SOVERSION 1.0.0)
-target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES})
+target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES} resolv)
 
 add_library (mhost SHARED host.c host_${VARIANT}.c)
 set_target_properties(mhost PROPERTIES SOVERSION 1.0.0)
@@ -31,15 +31,10 @@ if(WIN32)
         target_link_libraries(${lib} wsock32)
 	install(TARGETS ${lib} DESTINATION sbin)
     endforeach (lib ${LIBS})
-    add_library(mcommon_resolv SHARED dnssrv_${VARIANT}.c)
-    target_link_libraries(mcommon mcommon_resolv)
 else(WIN32)
     foreach (lib ${LIBS})
 	install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
     endforeach (lib ${LIBS})
-    # libresolv
-    add_library(mcommon_resolv SHARED dnssrv_${VARIANT}.c)
-    target_link_libraries(mcommon mcommon_resolv resolv)
 endif(WIN32)
 
 if(WITH-QMF)
