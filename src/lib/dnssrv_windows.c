@@ -18,6 +18,15 @@
 
 #include "matahari/dnssrv.h"
 
+#include <windows.h>
+#include <winsock.h>
+#include <windns.h>
+
+// mingw doesn't include these
+#ifndef DNS_TYPE_SRV
+# define DNS_TYPE_SRV 33
+#endif
+
 /**
  * Domain lookup providing a Matahari broker
  *
@@ -31,5 +40,24 @@
 int
 mh_srv_lookup(const char *query, char *target, size_t len)
 {
-    return -1;
+    PDNS_RECORD rr, record;
+    
+    if (DnsQuery(query, DNS_TYPE_SRV, 
+                DNS_QUERY_STANDARD, NULL, 
+                &rr, NULL) == ERROR_SUCCESS) {
+
+        record = rr;
+        do {
+            if (record->wType == DNS_TYPE_SRV) {
+                // change pointer to widestring to char
+                // record->Data.SRV.pNameTarget
+            }
+            record = record->pNext;
+        }
+        while (rr != NULL);
+        DnsRecordListFree(rr, DnsFreeRecordList);
+        return 0;
+    } else {
+        return -1;
+    }
 }
