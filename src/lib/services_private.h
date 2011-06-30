@@ -2,7 +2,6 @@ struct svc_action_private_s
 {
     char *exec;
     char *args[4];
-    gboolean cancel;
 
     guint repeat_timer;
     void (*callback)(svc_action_t *op);

@@ -172,7 +172,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 #endif
 
     printf("\nCustom options:\n");
-    for(lpc = 0; lpc < MAX_CHAR; lpc++) {
+    for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if(matahari_options[lpc].callback
             && matahari_options[lpc].callback != connection_option) {
             printf("\t-%c | --%s\t %s\n", matahari_options[lpc].code,
@@ -232,7 +232,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         value = NULL;
     }
 
-    for (lpc = 0; lpc < MAX_CHAR; lpc++) {
+    for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if (matahari_options[lpc].callback) {
             wchar_t *name_ws = char2wide(matahari_options[lpc].long_name);
             if (RegistryRead (HKEY_LOCAL_MACHINE,
@@ -241,6 +241,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 matahari_options[lpc].callback(
                     matahari_options[lpc].code, matahari_options[lpc].long_name,
                     value, matahari_options[lpc].userdata);
+                free(value);
+                value = NULL;
             }
             free(name_ws);
         }
@@ -250,7 +252,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     int idx = 0;
     int num_options = 0;
     int opt_string_len = 0;
-    char opt_string[2*MAX_CHAR];
+    char opt_string[2 * DIMOF(matahari_options)];
     struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
 
     /* Force more local-only processing */
@@ -258,7 +260,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     mh_add_option('v', no_argument, "verbose", NULL, NULL, NULL);
 
     opt_string[0] = 0;
-    for(lpc = 0; lpc < MAX_CHAR; lpc++) {
+    for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if(matahari_options[lpc].code) {
             long_opts = (struct option *)realloc(long_opts, (2 + num_options) * sizeof(struct option));
             long_opts[num_options].name = matahari_options[lpc].long_name;
@@ -317,7 +319,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 }
                 break;
             default:
-                if(arg > 0 && arg < MAX_CHAR && matahari_options[arg].callback) {
+                if(arg > 0 && arg < DIMOF(matahari_options) && matahari_options[arg].callback) {
                     matahari_options[arg].callback(
                         matahari_options[arg].code, matahari_options[arg].long_name,
                         optarg, matahari_options[arg].userdata);
@@ -381,7 +383,7 @@ int
 mh_add_option(int code, int has_arg, const char *name, const char *description,
               void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata))
 {
-    if(code > 0 && code < MAX_CHAR) {
+    if(code > 0 && code < DIMOF(matahari_options)) {
         if(matahari_options[code].code != 0) {
             mh_err("Replacing '-%c|--%s' with '-%c|--%s'",
                    matahari_options[code].code, matahari_options[code].long_name, code, name);

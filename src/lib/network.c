@@ -29,6 +29,36 @@
 
 MH_TRACE_INIT_DATA(mh_network);
 
+struct mh_network_interface {
+    sigar_net_interface_config_t ifconfig;
+};
+
+const char *
+mh_network_interface_get_name(const struct mh_network_interface *iface)
+{
+    return iface->ifconfig.name;
+}
+
+uint64_t
+mh_network_interface_get_flags(const struct mh_network_interface *iface)
+{
+    uint64_t flags = 0;
+
+    if (iface->ifconfig.flags & SIGAR_IFF_UP) {
+        flags = MH_NETWORK_IF_UP;
+    } else {
+        flags = MH_NETWORK_IF_DOWN;
+    }
+
+    return flags;
+}
+
+void
+mh_network_interface_destroy(gpointer data)
+{
+    g_free(data);
+}
+
 static GList *
 query_interface_table(void)
 {
@@ -37,30 +67,42 @@ query_interface_table(void)
     GList *interfaces = NULL;
     sigar_t* sigar;
     sigar_net_interface_list_t iflist;
-    sigar_net_interface_config_t *ifconfig;
 
     sigar_open(&sigar);
+
     status = sigar_net_interface_list_get(sigar, &iflist);
-    if (status == SIGAR_OK) {
-        for (lpc = 0; lpc < iflist.number; lpc++) {
-            ifconfig = g_new0(sigar_net_interface_config_t, 1);
-            status = sigar_net_interface_config_get(sigar, iflist.data[lpc],
-                                                    ifconfig);
-            if (status == SIGAR_OK)
-                interfaces = g_list_prepend(interfaces, ifconfig);
-        }
-        sigar_net_interface_list_destroy(sigar, &iflist);
+    if (status != SIGAR_OK) {
+        goto return_cleanup;
     }
+
+    for (lpc = 0; lpc < iflist.number; lpc++) {
+        struct mh_network_interface *iface;
+
+        iface = g_malloc0(sizeof(*iface));
+
+        status = sigar_net_interface_config_get(sigar, iflist.data[lpc],
+                                                &iface->ifconfig);
+
+        if (status != SIGAR_OK) {
+            g_free(iface);
+            continue;
+        }
+
+        interfaces = g_list_prepend(interfaces, iface);
+    }
+
+    sigar_net_interface_list_destroy(sigar, &iflist);
+
+return_cleanup:
     sigar_close(sigar);
+
     return interfaces;
 }
 
 GList *
 mh_network_get_interfaces(void)
 {
-    GList *list = NULL;
-    list = query_interface_table();
-    return list;
+    return query_interface_table();
 }
 
 void
@@ -82,64 +124,76 @@ mh_network_restart(const char *iface)
     network_os_start(iface);
 }
 
-void
+int
 mh_network_status(const char *iface, uint64_t *flags)
 {
     GList *list = NULL;
     GList *plist;
-    sigar_net_interface_config_t *ifconfig;
+    int res = 1;
 
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
-        ifconfig = (sigar_net_interface_config_t *)plist->data;
-        if ((g_str_equal(ifconfig->name, iface)) == TRUE) {
-            *flags = ifconfig->flags;
+        struct mh_network_interface *mh_iface = plist->data;
+
+        if ((g_str_equal(mh_network_interface_get_name(mh_iface), iface)) == TRUE) {
+            *flags = mh_network_interface_get_flags(mh_iface);
+            res = 0;
         }
     }
+    g_list_free_full(list, mh_network_interface_destroy);
+
+    return res;
 }
 
 const char *
-mh_network_get_ip_address(const char *iface)
+mh_network_get_ip_address(const char *iface, char *buf, size_t len)
 {
     GList *list = NULL;
     GList *plist;
-    sigar_net_interface_config_t *ifconfig;
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
-    char *paddr_str;
 
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
-        ifconfig = (sigar_net_interface_config_t *)plist->data;
-        if ((g_str_equal(ifconfig->name, iface)) == TRUE) {
-            sigar_net_address_to_string(NULL, &ifconfig->address, addr_str);
-            paddr_str = g_strdup(addr_str);
-            return paddr_str;
+        struct mh_network_interface *iface = plist->data;
+
+        if ((g_str_equal(mh_network_interface_get_name(iface), iface)) == TRUE) {
+            sigar_net_address_to_string(NULL, &iface->ifconfig.address, addr_str);
+            strncpy(buf, addr_str, len - 1);
+            buf[len - 1] = '\0';
+            break;
         }
     }
-    return NULL;
+    g_list_free_full(list, mh_network_interface_destroy);
+
+    return buf;
 }
 
 const char *
-mh_network_get_mac_address(const char *iface)
+mh_network_get_mac_address(const char *iface, char *buf, size_t len)
 {
     GList *list = NULL;
     GList *plist;
-    sigar_net_interface_config_t *ifconfig;
-    char *mac;
+
+    if (len) {
+        *buf = '\0';
+    }
 
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
-        ifconfig = (sigar_net_interface_config_t *)plist->data;
-        if ((g_str_equal(ifconfig->name, iface)) == TRUE) {
-            mac = g_strdup_printf("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",
-                                  ifconfig->hwaddr.addr.mac[0],
-                                  ifconfig->hwaddr.addr.mac[1],
-                                  ifconfig->hwaddr.addr.mac[2],
-                                  ifconfig->hwaddr.addr.mac[3],
-                                  ifconfig->hwaddr.addr.mac[4],
-                                  ifconfig->hwaddr.addr.mac[5]);
-            return mac;
+        struct mh_network_interface *iface = plist->data;
+
+        if ((g_str_equal(mh_network_interface_get_name(iface), iface)) == TRUE) {
+            snprintf(buf, len, "%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",
+                           iface->ifconfig.hwaddr.addr.mac[0],
+                           iface->ifconfig.hwaddr.addr.mac[1],
+                           iface->ifconfig.hwaddr.addr.mac[2],
+                           iface->ifconfig.hwaddr.addr.mac[3],
+                           iface->ifconfig.hwaddr.addr.mac[4],
+                           iface->ifconfig.hwaddr.addr.mac[5]);
+            break;
         }
     }
-    return NULL;
+    g_list_free_full(list, mh_network_interface_destroy);
+
+    return buf;
 }

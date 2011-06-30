@@ -398,6 +398,16 @@ child_timeout_callback(gpointer p)
     return FALSE;
 }
 
+static void
+mainloop_child_destroy(gpointer data)
+{
+    mainloop_child_t *p = data;
+
+    free(p->desc);
+
+    g_free(p);
+}
+
 /* Create/Log a new tracked process
  * To track a process group, use -pid
  */
@@ -410,7 +420,7 @@ mainloop_add_child(pid_t pid, int timeout, const char *desc, void * privatedata,
 
     if (mainloop_process_table == NULL) {
         mainloop_process_table = g_hash_table_new_full(
-            g_direct_hash, g_direct_equal, NULL, NULL/*TODO: Add destructor */);
+            g_direct_hash, g_direct_equal, NULL, mainloop_child_destroy);
     }
 
     p->pid = pid;

@@ -23,11 +23,14 @@
 #include <unistd.h>
 #include <limits.h>
 #include <string.h>
+#include <fcntl.h>
 #include <sys/reboot.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
+#include <sys/ioctl.h>
 
 #include <linux/reboot.h>
+#include <linux/kd.h>
 
 #include <pcre.h>
 
@@ -132,4 +135,28 @@ void
 host_os_shutdown(void)
 {
     reboot(LINUX_REBOOT_CMD_HALT);
+}
+
+int
+host_os_identify(void)
+{
+    static const long DURATION = 1000; /* 1 second */
+    static const long FREQ = 440; /* 440 Hz */
+
+    int fd = open("/dev/tty", O_NOCTTY);
+    int res;
+
+    if (fd == -1) {
+        return -1;
+    }
+
+    /*
+     * Reference info on KDMKTONE:
+     *     http://tldp.org/LDP/lpg/node83.html
+     */
+    res = ioctl(fd, KDMKTONE, (DURATION << 32) + (1190000 / FREQ));
+
+    close(fd);
+
+    return res;
 }

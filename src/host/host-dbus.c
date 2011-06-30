@@ -53,9 +53,7 @@ Host_identify(Matahari* matahari, DBusGMethodInvocation *context)
         dbus_g_method_return_error(context, error);
         return FALSE;
     }
-    // TODO: Implement when implemented in backend
-    error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
-                        "Action identify is not implemented yet!");
+    mh_host_identify();
     dbus_g_method_return(context, TRUE);
     return TRUE;
 }

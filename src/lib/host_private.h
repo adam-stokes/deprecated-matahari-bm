@@ -40,4 +40,13 @@ host_os_reboot(void);
 extern void
 host_os_shutdown(void);
 
+/**
+ * Platform specific implementation of a system beep.
+ *
+ * \retval 0 success
+ * \retval non-zero failure
+ */
+extern int
+host_os_identify(void);
+
 #endif /* __MH_HOST_PRIVATE_H__ */

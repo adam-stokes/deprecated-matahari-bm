@@ -41,6 +41,7 @@ check_include_files (sys/ioctl.h HAVE_SYS_IOCTL_H)
 check_include_files (resolv.h HAVE_RESOLV_H)
 include (CheckFunctionExists)
 check_function_exists (asprintf HAVE_ASPRINTF)
+check_function_exists (time HAVE_TIME)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h)
 

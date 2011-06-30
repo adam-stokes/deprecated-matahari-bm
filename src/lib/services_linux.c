@@ -181,6 +181,7 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
     char *next = NULL;
     char *offset = NULL;
     svc_action_t *op = p->privatedata;
+    int recurring = 0;
 
     p->privatedata = NULL;
     op->status = LRM_OP_DONE;
@@ -191,13 +192,13 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
             mh_warn("%s:%d - timed out after %dms", op->id, op->pid,
                     op->timeout);
             op->status = LRM_OP_TIMEOUT;
-	    op->rc = OCF_TIMEOUT;
+            op->rc = OCF_TIMEOUT;
 
         } else {
             mh_warn("%s:%d - terminated with signal %d", op->id, op->pid,
                     signo);
             op->status = LRM_OP_ERROR;
-	    op->rc = OCF_SIGNAL;
+            op->rc = OCF_SIGNAL;
         }
 
     } else {
@@ -233,21 +234,24 @@ operation_finished(mainloop_child_t *p, int status, int signo, int exitcode)
         }
     }
 
-    if (op->interval && op->opaque->cancel == FALSE) {
+    if (op->interval) {
+        recurring = 1;
         op->opaque->repeat_timer = g_timeout_add(op->interval,
                                                  recurring_action_timer,
                                                  (void *) op);
     }
 
     op->pid = 0;
-    if (op->opaque->callback) {
-        /* Callback might call cancel which would result in the message
-         * being free'd
-         * Do not access 'op' after this line
-         */
-        op->opaque->callback(op);
 
-    } else if (op->opaque->repeat_timer == 0) {
+    if (op->opaque->callback) {
+        op->opaque->callback(op);
+    }
+
+    if (!recurring) {
+        /*
+         * If this is a recurring action, do not free explicitly.
+         * It will get freed whenever the action gets cancelled.
+         */
         services_action_free(op);
     }
 }
@@ -434,7 +438,9 @@ services_os_get_directory_list(const char *root, gboolean files)
             }
         }
 
-        list = g_list_append(list, namelist[lpc]->d_name);
+        list = g_list_append(list, strdup(namelist[lpc]->d_name));
+
+        free(namelist[lpc]);
     }
 
     free(namelist);

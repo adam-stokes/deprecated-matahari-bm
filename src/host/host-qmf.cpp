@@ -17,6 +17,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Host QMF Agent
+ */
+
 #ifndef WIN32
 #include "config.h"
 #endif
@@ -35,19 +40,50 @@ extern "C" {
 
 class HostAgent : public MatahariAgent
 {
-private:
-    qmf::org::matahariproject::PackageDefinition _package;
 public:
-    int heartbeat();
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                             gpointer user_data);
+
+    /**
+     * Send a heartbeat and reset the timer.
+     *
+     * This function should be called a single time after the HostAgent
+     * is created.  From then on it will automatically reschedule itself
+     * to be called.
+     *
+     * \param[in] data a pointer to the HostAgent
+     *
+     * \retval FALSE always
+     */
+    static gboolean heartbeat_timer(gpointer data);
+
+private:
+    /**
+     * Send HostAgent heartbeat.
+     *
+     * This function gets scheduled to be called periodically in
+     * heartbeat_timer().
+     *
+     * \return the number of milliseconds until the next time heartbeat()
+     *         should be called.
+     */
+    int heartbeat();
+
+    qmf::org::matahariproject::PackageDefinition _package;
+
+    /**
+     * Default update interval for HostAgent heartbeat.
+     *
+     * This value is in seconds.
+     */
+    static const uint32_t DEFAULT_UPDATE_INTERVAL = 5;
 };
 
-static gboolean
-heartbeat_timer(gpointer data)
+gboolean
+HostAgent::heartbeat_timer(gpointer data)
 {
-    HostAgent *agent = (HostAgent *)data;
+    HostAgent *agent = (HostAgent *) data;
     g_timeout_add(agent->heartbeat(), heartbeat_timer, data);
     return FALSE;
 }
@@ -58,7 +94,7 @@ main(int argc, char **argv)
     HostAgent *agent = new HostAgent();
     int rc = agent->init(argc, argv, "host");
     if (rc == 0) {
-        heartbeat_timer(agent);
+        HostAgent::heartbeat_timer(agent);
         agent->run();
     }
 
@@ -70,7 +106,6 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
                   gpointer user_data)
 {
     if (event.getType() != qmf::AGENT_METHOD) {
-        session.methodSuccess(event);
         return TRUE;
     }
 
@@ -80,6 +115,8 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         mh_host_shutdown();
     } else if (methodName == "reboot") {
         mh_host_reboot();
+    } else if (methodName == "identify") {
+        mh_host_identify();
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;
@@ -97,7 +134,7 @@ HostAgent::setup(qmf::AgentSession session)
     _package.configure(session);
     _instance = qmf::Data(_package.data_Host);
 
-    _instance.setProperty("update_interval", 5);
+    _instance.setProperty("update_interval", DEFAULT_UPDATE_INTERVAL);
     _instance.setProperty("uuid", mh_host_get_uuid());
     _instance.setProperty("hostname", mh_host_get_hostname());
     _instance.setProperty("os", mh_host_get_operating_system());
@@ -131,7 +168,7 @@ HostAgent::heartbeat()
         return 5 * 60 * 1000;
     }
 
-#ifndef MSVC
+#ifdef HAVE_TIME
     timestamp = ::time(NULL);
 #endif
 

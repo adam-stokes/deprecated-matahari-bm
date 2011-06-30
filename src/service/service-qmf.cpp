@@ -176,11 +176,11 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
     uint64_t timestamp = 0L;
     qmf::Data event;
 
-#ifndef MSVC
+#ifdef HAVE_TIME
     timestamp = ::time(NULL);
 #endif
 
-    if (service) {
+    if (service == SRV_SERVICES) {
         // event = qmf::Data(_package.event_service_op);
         return;
     } else {
@@ -289,6 +289,8 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
             s_list.push_back((const char *) gIter->data);
         }
 
+        g_list_free_full(services, free);
+
         event.addReturnArgument("agents", s_list);
 
     } else if (methodName == "enable" || methodName == "disable") {
@@ -340,6 +342,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
         for (gIter = providers; gIter != NULL; gIter = gIter->next) {
             p_list.push_back((const char *) gIter->data);
         }
+        g_list_free_full(providers, free);
+
         event.addReturnArgument("providers", p_list);
 
     } else if (methodName == "list") {
@@ -360,6 +364,8 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
         for (gIter = agents; gIter != NULL; gIter = gIter->next) {
             t_list.push_back((const char *) gIter->data);
         }
+        g_list_free_full(agents, free);
+
         event.addReturnArgument("agents", t_list);
 
     } else if (methodName == "invoke") {
