@@ -296,6 +296,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files lib
 %defattr(644, root, root, 755)
 %{_libdir}/libmcommon.so.*
+%{_libdir}/libmcommon_resolv.so.*
 %{_libdir}/libmhost.so.*
 %{_libdir}/libmnetwork.so.*
 %{_libdir}/libmservice.so.*
