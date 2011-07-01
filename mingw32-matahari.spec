@@ -52,7 +52,6 @@ MinGW cross-compiled Windows application.
 %build
 PATH=%{_mingw32_bindir}:$PATH
 
-ls -al /usr/i686-pc-mingw32/sys-root/mingw/lib/pkgconfig
 %{_mingw32_cmake} --debug-output -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=on
 make VERBOSE=1 %{?_smp_mflags}
 
