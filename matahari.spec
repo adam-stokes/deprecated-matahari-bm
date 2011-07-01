@@ -30,7 +30,7 @@ BuildRequires:	cmake
 BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
 BuildRequires:	pcre-devel
-BuildRequires:	glib2-devel
+BuildRequires:	glib2-devel >= 2.28
 BuildRequires:	sigar-devel
 
 %if %{with qmf}

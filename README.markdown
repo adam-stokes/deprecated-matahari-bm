@@ -11,7 +11,7 @@
 Matahari has build dependencies on the following packages:
 
 1. pcre-devel
-2. glib2-devel
+2. glib2-devel (version 2.28 at least)
 3. qmf
 4. qmf-devel
 5. qpid-cpp-client
@@ -21,10 +21,10 @@ Matahari has build dependencies on the following packages:
 9. sigar
 10. sigar-devel
 
-These packages may be available in your distribution.  In Fedora 14, they can
+These packages may be available in your distribution.  In Fedora 15, they can
 be installed via the yum command.
 
-*Step 2* - Build Mataharhi
+*Step 2* - Build Matahari
 
     user% make
     user% cd linux.build
@@ -43,7 +43,7 @@ On your Fedora box first:
 
     yum install mingw32-matahari
 
-    copy the /usr/share/matahari*/*iso to Windows machine.( or burn iso )
+    copy the /usr/share/matahari*/*iso to Windows machine (or burn iso).
     load iso/cd; run setup
 
 Please see: https://fedorahosted.org/matahari/
