@@ -14,7 +14,7 @@ if(WITH-QMF)
 
     if(NOT WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
-    	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
+        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
     endif(NOT WIN32)
 
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
