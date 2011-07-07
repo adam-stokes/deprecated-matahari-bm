@@ -118,6 +118,12 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.sysconf.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
 
+  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker DESTINATION ${initdir})
+
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf DESTINATION ${sysconfdir}/sysconfig RENAME matahari)
+
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf DESTINATION ${sysconfdir}/sysconfig RENAME matahari-broker)
+
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION ${sysconfdir})
 
 endif(WIN32)

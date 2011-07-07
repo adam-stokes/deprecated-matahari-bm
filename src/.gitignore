@@ -1,1 +1,9 @@
-CMakeFiles
+# Note that directives from the root .gitignore file will be inherited
+*.o
+config.h
+include/matahari.h
+qmf
+matahari-*
+*-dbus-glue.h
+*-dbus-properties.h
+org.matahariproject.*.xml
