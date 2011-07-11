@@ -24,7 +24,7 @@ Matahari has build dependencies on the following packages:
 These packages may be available in your distribution.  In Fedora 14, they can
 be installed via the yum command.
 
-*Step 2* - Build Mataharhi
+*Step 2* - Build Matahari
 
     user% make
     user% cd linux.build
