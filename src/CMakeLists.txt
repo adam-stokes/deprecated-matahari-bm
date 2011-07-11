@@ -42,8 +42,6 @@ check_include_files (resolv.h HAVE_RESOLV_H)
 include (CheckFunctionExists)
 check_function_exists (asprintf HAVE_ASPRINTF)
 check_function_exists (time HAVE_TIME)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h)
 
 if(NOT PKG_CONFIG_FOUND)
    message("pkg-config not found")
@@ -80,6 +78,8 @@ if(NOT glib_FOUND)
    message(FATAL_ERROR "Glib2 header/library not found.")
 endif(NOT glib_FOUND)
 include_directories(${glib_INCLUDE_DIRS})
+SET(CMAKE_REQUIRED_LIBRARIES ${glib_LIBRARIES})
+check_function_exists (g_list_free_full HAVE_G_LIST_FREE_FULL)
 
 # Include QMF and DBus generation macros
 include(MatahariMacros)
@@ -156,3 +156,7 @@ if(WITH-DBUS)
     install(FILES include/matahari/mh_dbus_common.h DESTINATION include/matahari)
     install(FILES include/matahari/mh_gobject_class.h DESTINATION include/matahari)
 endif(WITH-DBUS)
+
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/matahari.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h)
+
