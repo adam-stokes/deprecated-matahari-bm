@@ -86,7 +86,8 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     if (methodName == "configure") {
         int rc = mh_is_configured();
         if(rc == 0) {
-            mh_configure(event.getArguments()["uri"].asString().c_str());
+            mh_configure(event.getArguments()["uri"].asString().c_str(),
+                         event.getArguments()["type"]);
         }
         event.addReturnArgument("configured", rc);
     } else {

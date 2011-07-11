@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <glib.h>
 #include "matahari/logging.h"
 #include "matahari/postboot.h"
@@ -42,9 +43,27 @@ uint32_t mh_is_configured()
     return config_file_exist;
 }
 
-void mh_configure(const char *uri)
+static int puppet(const char *uri) {
+    int ret;
+    char cmd[PATH_MAX + 1];
+
+    if (uri) {
+        // Call puppet manifest locally
+        sprintf(cmd, "puppet %s", uri);
+        ret = system(cmd);
+    } else {
+        ret = system("puppetd --onetime --no-daemonize --logdest syslog");
+    }
+    return ret;
+}
+
+void mh_configure(const char *uri, int type)
 {
-    if(!g_file_set_contents(filename, uri, -1, NULL)) {
-        mh_log(LOG_DEBUG, "Unable to create file.");
+    switch(type) {
+        case PUPPET:
+            puppet(uri);
+            break;
+        default:
+            break;
     }
 }

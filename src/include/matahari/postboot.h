@@ -28,7 +28,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+enum type {
+    PUPPET
+};
+
 extern uint32_t mh_is_configured();
-extern void mh_configure(const char *uri);
+extern void mh_configure(const char *uri, int type);
 
 #endif // __MH_CONFIG_H__

@@ -26,7 +26,7 @@ class MhApiPostbootSuite : public CxxTest::TestSuite
     void testIsConfigured(void)
     {
         const char *uri = "http://matahariproject.org/testing.xml";
-        mh_configure(uri);
+        mh_configure(uri, PUPPET);
         TS_ASSERT((mh_is_configured()) == 1);
     }
 };

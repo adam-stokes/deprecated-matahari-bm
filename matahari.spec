@@ -1,5 +1,5 @@
-%global specversion 89
-%global upstream_version 808cbbc
+%global specversion 91
+%global upstream_version 02996f5
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -296,7 +296,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files lib
 %defattr(644, root, root, 755)
 %{_libdir}/libmcommon.so.*
-%{_libdir}/libmcommon_resolv.so.*
 %{_libdir}/libmhost.so.*
 %{_libdir}/libmnetwork.so.*
 %{_libdir}/libmservice.so.*

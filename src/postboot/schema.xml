@@ -10,6 +10,7 @@
         
         <method name="configure"         desc="Send configure method">
           <arg name="uri"                dir="I" type="sstr" />
+          <arg name="type"               dir="I" type="uint32" />
           <arg name="configured"         dir="O" type="uint32" />
         </method>
     </class>

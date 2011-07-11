@@ -27,6 +27,10 @@
 # define DNS_TYPE_SRV 33
 #endif
 
+#ifndef NS_MAXDNAME
+# define NS_MAXDNAME 1025
+#endif
+
 /**
  * Domain lookup providing a Matahari broker
  *
@@ -41,20 +45,24 @@ int
 mh_srv_lookup(const char *query, char *target, size_t len)
 {
     PDNS_RECORD rr, record;
-    
-    if (DnsQuery(query, DNS_TYPE_SRV, 
+    WCHAR query_wstr[len];
+
+   
+    MultiByteToWideChar(CP_UTF8, 0, query, len, query_wstr, len); 
+    if (DnsQuery(query_wstr, DNS_TYPE_SRV, 
                 DNS_QUERY_STANDARD, NULL, 
                 &rr, NULL) == ERROR_SUCCESS) {
 
         record = rr;
         do {
             if (record->wType == DNS_TYPE_SRV) {
-                // change pointer to widestring to char
-                // record->Data.SRV.pNameTarget
+                WideCharToMultiByte(CP_UTF8, 0, query_wstr, len, target, len, NULL, NULL);
+                if (len > 0) {
+                    target[len - 1] = '\0';
+                }
             }
             record = record->pNext;
-        }
-        while (rr != NULL);
+        } while (rr != NULL);
         DnsRecordListFree(rr, DnsFreeRecordList);
         return 0;
     } else {
