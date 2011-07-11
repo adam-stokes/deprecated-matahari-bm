@@ -3,3 +3,4 @@
 #cmakedefine HAVE_ASPRINTF 1
 #cmakedefine HAVE_RESOLV_H 1
 #cmakedefine HAVE_TIME 1
+#cmakedefine HAVE_G_LIST_FREE_FULL 1

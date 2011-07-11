@@ -46,13 +46,16 @@ class MhHsaSuite : public CxxTest::TestSuite
      void testSrvLookup(void)
      {
          char target[NS_MAXDNAME];
-         const char *host = "_matahari._tcp.matahariproject.org";
+         const char *host = "_matahari._tcp.russellbryant.net";
+         //const char *host = "_matahari._tcp.matahariproject.org";
          int ret = 0;
 
          ret = mh_srv_lookup(host, target, NS_MAXDNAME);
          TS_ASSERT(ret == 0);
-         TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
+         TS_ASSERT((mh_test_is_match("^justtesting\\.russellbryant\\.net$",
                                      target)) >= 0);
+         //TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
+         //                            target)) >= 0);
      }
 };
 

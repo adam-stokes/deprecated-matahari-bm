@@ -29,13 +29,13 @@ be installed via the yum command.
     user% make
     user% cd linux.build
     user% make
-    user# make install
+    root# make install
 
 ### Installing on Fedora 14 or later
 
 Matahari is pre-packaged for Fedora 14 and later.
 
-    user# yum install matahari
+    root# yum install matahari
 
 ### Windows instructions
 

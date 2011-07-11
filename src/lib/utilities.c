@@ -452,3 +452,12 @@ asprintf(char **ret, const char *fmt, ...)
     return len;
 }
 #endif /* HAVE_ASPRINTF */
+
+#ifndef HAVE_G_LIST_FREE_FULL
+void
+g_list_free_full (GList *list, GDestroyNotify free_func)
+{
+    g_list_foreach (list, (GFunc) free_func, NULL);
+    g_list_free (list);
+}
+#endif /* HAVE_G_LIST_FREE_FULL */

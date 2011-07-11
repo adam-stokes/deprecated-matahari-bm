@@ -51,6 +51,16 @@ extern wchar_t *char2wide(const char *str);
 extern int asprintf(char **ret, const char *fmt, ...);
 #endif
 
+#ifndef HAVE_G_LIST_FREE_FULL
+/**
+ * Custom implementation of g_list_free_full()
+ *
+ * This version of g_list_free_full() is only used when the build system
+ * doesn't find g_list_free_full() on the system.
+ */
+extern void g_list_free_full(GList *list, GDestroyNotify free_func);
+#endif
+
 #define DIMOF(a)    ((int) (sizeof(a) / sizeof(0[a])))
 
 #ifndef __GNUC__
