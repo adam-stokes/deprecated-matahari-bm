@@ -26,44 +26,50 @@
 #include <stdlib.h>
 #include <glib.h>
 #include "matahari/logging.h"
+#include "matahari/utilities.h"
 #include "matahari/postboot.h"
 
 
 MH_TRACE_INIT_DATA(mh_postboot);
 
-static const char *filename = "/var/lib/matahari/.mh_configured";
-
-uint32_t mh_is_configured()
-{
-    int config_file_exist = 0;
-    
-    if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
-        config_file_exist = 1;
-    }
-    return config_file_exist;
-}
 
 static int puppet(const char *uri) {
     int ret;
-    char cmd[PATH_MAX + 1];
+    char *cmd = NULL;
 
-    if (uri) {
-        // Call puppet manifest locally
-        sprintf(cmd, "puppet %s", uri);
-        ret = system(cmd);
-    } else {
-        ret = system("puppetd --onetime --no-daemonize --logdest syslog");
-    }
+    // Call puppet manifest locally
+    cmd = asprintf("puppet %s", uri);
+    ret = system(cmd);
+    free(cmd);
     return ret;
+}
+
+void mh_unconfigure()
+{
+    if(g_file_test(mh_filename, G_FILE_TEST_EXISTS)) {
+        g_remove(mh_filename);
+    }
 }
 
 void mh_configure(const char *uri, int type)
 {
+    int ret;
+    char *buf = NULL;
+
     switch(type) {
         case PUPPET:
-            puppet(uri);
+            ret = puppet(uri);
+            if(ret == 0) {
+                buf = strdup("Puppet configured.");
+                if(!g_file_set_contents(mh_filename, buf, -1, NULL)) {
+                    free(buf);
+                    goto fail;
+                }
+            }
             break;
         default:
             break;
     }
+fail:
+    mh_unconfigure();
 }

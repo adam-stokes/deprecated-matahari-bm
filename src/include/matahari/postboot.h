@@ -32,6 +32,8 @@ enum type {
     PUPPET
 };
 
+extern const char *mh_filename = "/var/lib/matahari/.mh_configured";
+
 extern uint32_t mh_is_configured();
 extern void mh_configure(const char *uri, int type);
 

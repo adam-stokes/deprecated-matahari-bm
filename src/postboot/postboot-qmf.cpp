@@ -68,7 +68,11 @@ ConfigAgent::setup(qmf::AgentSession session)
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
-    _instance.setProperty("is_configured", mh_is_configured());
+    if(g_file_test(mh_filename, G_FILE_TEST_EXISTS)) {
+        _instance.setProperty("is_configured", 1);
+    } else {
+        _instance.setProperty("is_configured", 0);
+    }
 
     _agent_session.addData(_instance, "postboot");
     return 0;
@@ -77,6 +81,8 @@ ConfigAgent::setup(qmf::AgentSession session)
 gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
+    uint32_t configured = _instance.getProperty("is_configured").asInt32();
+
     if (event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
@@ -84,10 +90,9 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     const std::string& methodName(event.getMethodName());
 
     if (methodName == "configure") {
-        int rc = mh_is_configured();
-        if(rc == 0) {
+        if(configured != 1) {
             mh_configure(event.getArguments()["uri"].asString().c_str(),
-                         event.getArguments()["type"]);
+                         event.getArguments()["type"].asInt32());
         }
         event.addReturnArgument("configured", rc);
     } else {
