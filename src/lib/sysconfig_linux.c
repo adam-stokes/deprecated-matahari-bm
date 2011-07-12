@@ -25,23 +25,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <curl/curl.h>
 #include "matahari/logging.h"
-#include "matahari/utilities.h"
 #include "matahari/sysconfig.h"
+#include "matahari/utilities.h"
 
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
+struct OutFile {
+    const char *filename;
+    FILE *stream;
+};
 
-static int puppet(const char *uri) {
-    int ret;
-    char *cmd = NULL;
-
-    // Call puppet manifest locally
-    cmd = asprintf("puppet %s", uri);
-    ret = system(cmd);
-    free(cmd);
-    return ret;
+static size_t local_fwrite(void *buffer, size_t size,
+                           size_t nmemb, void *stream) {
+    struct OutFile *out = (struct OutFile *)stream;
+    if(out && !out->stream) {
+        out->stream = fopen(out->filename, "wb");
+        if(!out->stream) {
+            return -1;
+        }
+    }
+    return fwrite(buffer, size, nmemb, out->stream);
 }
 
 void mh_unconfigure()
@@ -53,23 +59,27 @@ void mh_unconfigure()
 
 void mh_configure(const char *uri, int type)
 {
-    int ret;
-    char *buf = NULL;
+    CURL *curl;
+    CURLcode res;
+    struct OutFile outfile={
+        "myconfig.pp",
+        NULL
+    };
 
-    switch(type) {
-        case PUPPET:
-            ret = puppet(uri);
-            if(ret == 0) {
-                buf = strdup("Puppet configured.");
-                if(!g_file_set_contents(mh_filename, buf, -1, NULL)) {
-                    free(buf);
-                    goto fail;
-                }
-            }
-            break;
-        default:
-            break;
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, uri);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCZTION, local_fwrite);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outfile);
+        res = curl_easy_perform(curl);
+
+        if(CURLE_OK != res) {
+            fprintf(stderr, "Failed %d\n", res);
+        }
     }
-fail:
-    mh_unconfigure();
+    if(outfile.stream) {
+        fclose(outfile.stream);
+    }
+    curl_global_cleanup();
 }
