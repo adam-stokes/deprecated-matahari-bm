@@ -31,7 +31,7 @@ extern "C" {
 #include <string.h>
 #include <glib.h>
 #include <glib/gprintf.h>
-#include "matahari/postboot.h"
+#include "matahari/sysconfig.h"
 #include "matahari/logging.h"
 #include "matahari/network.h"
 #include "matahari/host.h"
@@ -64,7 +64,7 @@ int
 ConfigAgent::setup(qmf::AgentSession session)
 {
     _package.configure(session);
-    _instance = qmf::Data(_package.data_Postboot);
+    _instance = qmf::Data(_package.data_sysconfig);
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
@@ -74,7 +74,7 @@ ConfigAgent::setup(qmf::AgentSession session)
         _instance.setProperty("is_configured", 0);
     }
 
-    _agent_session.addData(_instance, "postboot");
+    _agent_session.addData(_instance, "sysconfig");
     return 0;
 }
 

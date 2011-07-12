@@ -1,4 +1,4 @@
-/* postboot.c - Copyright (C) 2011 Red Hat, Inc.
+/* sysconfig.c - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -27,10 +27,10 @@
 #include <glib.h>
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
-#include "matahari/postboot.h"
+#include "matahari/sysconfig.h"
 
 
-MH_TRACE_INIT_DATA(mh_postboot);
+MH_TRACE_INIT_DATA(mh_sysconfig);
 
 
 static int puppet(const char *uri) {

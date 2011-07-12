@@ -12,14 +12,14 @@
 #include <cxxtest/TestSuite.h>
 
 extern "C" {
-#include "matahari/postboot.h"
+#include "matahari/sysconfig.h"
 #include <glib.h>
 #include "mh_test_utilities.h"
 };
 
 using namespace std;
 
-class MhApiPostbootSuite : public CxxTest::TestSuite
+class MhApisysconfigSuite : public CxxTest::TestSuite
 {
  public:
 

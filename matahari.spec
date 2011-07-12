@@ -128,14 +128,14 @@ Requires:	%{name}-agent-lib = %{version}-%{release}
 %description service
 QMF agent for viewing and controlling system services
 
-%package postboot
+%package sysconfig
 License:	GPLv2+
 Summary:	QMF agent for post boot configuration services.
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
 
-%description postboot
+%description sysconfig
 QMF agent/console for providing post boot capabilities.
 
 %package devel
@@ -234,24 +234,24 @@ if [ "$1" -ge "1" ]; then
     /sbin/service matahari-service condrestart >/dev/null 2>&1 || :
 fi
 
-#== Postboot
+#== sysconfig
 
-%post postboot
-/sbin/service matahari-postboot condrestart
-/sbin/service matahari-postboot-console condrestart
+%post sysconfig
+/sbin/service matahari-sysconfig condrestart
+/sbin/service matahari-sysconfig-console condrestart
 
-%preun postboot
+%preun sysconfig
 if [ $1 = 0 ]; then
-   /sbin/service matahari-postboot-console stop >/dev/null 2>&1 || :
-   /sbin/service matahari-postboot stop >/dev/null 2>&1 || :
-   chkconfig --del matahari-postboot-console
-   chkconfig --del matahari-postboot
+   /sbin/service matahari-sysconfig-console stop >/dev/null 2>&1 || :
+   /sbin/service matahari-sysconfig stop >/dev/null 2>&1 || :
+   chkconfig --del matahari-sysconfig-console
+   chkconfig --del matahari-sysconfig
 fi
 
-%postun postboot
+%postun sysconfig
 if [ "$1" -ge "1" ]; then
-    /sbin/service matahari-postboot-console condrestart >/dev/null 2>&1 || :
-    /sbin/service matahari-postboot condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-sysconfig-console condrestart >/dev/null 2>&1 || :
+    /sbin/service matahari-sysconfig condrestart >/dev/null 2>&1 || :
 fi
 
 #== Broker
@@ -299,7 +299,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_libdir}/libmhost.so.*
 %{_libdir}/libmnetwork.so.*
 %{_libdir}/libmservice.so.*
-%{_libdir}/libmpostboot.so.*
+%{_libdir}/libmsysconfig.so.*
 %doc AUTHORS COPYING
 
 %files network
@@ -342,15 +342,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
 %endif
 
-%files postboot
+%files sysconfig
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
 %if %{with qmf}
-%attr(755, root, root) %{_initddir}/matahari-postboot
-%attr(755, root, root) %{_initddir}/matahari-postboot-console
-%attr(755, root, root) %{_sbindir}/matahari-qmf-postbootd
-%attr(755, root, root) %{_sbindir}/matahari-qmf-postboot-consoled
+%attr(755, root, root) %{_initddir}/matahari-sysconfig
+%attr(755, root, root) %{_initddir}/matahari-sysconfig-console
+%attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
+%attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
 %endif
 
 %if %{with qmf}
