@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <glib.h>
 #include <curl/curl.h>
 #include "matahari/logging.h"
@@ -57,12 +58,17 @@ void mh_unconfigure()
     }
 }
 
-void mh_configure(const char *uri, int type)
+static int puppet_run(const char *data)
+{
+    return 0;
+}
+
+void mh_configure_uri(const char *uri, int type)
 {
     CURL *curl;
     CURLcode res;
     struct OutFile outfile={
-        "myconfig.pp",
+        basename(uri),
         NULL
     };
 
@@ -82,4 +88,12 @@ void mh_configure(const char *uri, int type)
         fclose(outfile.stream);
     }
     curl_global_cleanup();
+}
+
+void mh_configure_blob(const char *blob, int type)
+{
+    struct OutFile outfile={
+        "mh_blob_conf",
+        NULL
+    };
 }

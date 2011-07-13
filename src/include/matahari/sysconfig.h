@@ -28,8 +28,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+// CONFIGURATION TYPES
+#DEFINE PUPPET   1
+#DEFINE CFENGINE 2
+#DEFINE REGISTRY 3
+
 const char *mh_filename = "/var/lib/matahari/.mh_configured";
 
-extern void mh_configure(const char *uri, int type);
+extern void mh_configure_uri(const char *uri, int type);
+extern void mh_configure_blob(const char *blob, int type);
 
 #endif // __MH_CONFIG_H__
