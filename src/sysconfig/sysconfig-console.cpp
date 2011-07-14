@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
     ConsoleSession session(connection, sessionOptions);
     // Only filter connecting agents under matahariproject.org vendor and Config product
-    session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'Config']]]");
+    session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'Sysconfig']]]");
     session.open();
     
     Agent agent;

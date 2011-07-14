@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <glib.h>
 #include <curl/curl.h>
 #include "matahari/logging.h"
@@ -34,71 +33,68 @@
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
-struct OutFile {
-    const char *filename;
-    FILE *stream;
-};
-
-static size_t local_fwrite(void *buffer, size_t size,
-                           size_t nmemb, void *stream) {
-    struct OutFile *out = (struct OutFile *)stream;
-    if(out && !out->stream) {
-        out->stream = fopen(out->filename, "wb");
-        if(!out->stream) {
-            return -1;
-        }
-    }
-    return fwrite(buffer, size, nmemb, out->stream);
-}
-
-static int puppet_run(const char *file)
-{
-    char *cmd;
-    int ret;
-    
-    asprintf(cmd, "puppet %s", file);
-    ret = system(cmd);
-    
-    return ret;
-}
-
-static int open_fd_out() {
-    char fname[PATH_MAX] = "/tmp/matahari.sysconfig.XXXXXX";
-    return mkstemp(fname);
-}
-
-void mh_configure_uri(const char *uri, int type)
+static int
+download(const char *uri, FILE *fp)
 {
     CURL *curl;
     CURLcode res;
-    struct OutFile outfile={
-        basename(uri),
-        NULL
-    };
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
     if(curl) {
         curl_easy_setopt(curl, CURLOPT_URL, uri);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, local_fwrite);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outfile);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
         res = curl_easy_perform(curl);
 
         if(CURLE_OK != res) {
-            fprintf(stderr, "Failed %d\n", res);
+            return -1;
         }
     }
-    if(outfile.stream) {
-        fclose(outfile.stream);
-    }
     curl_global_cleanup();
+    return 0;
 }
 
-void mh_configure_blob(const char *blob, int type)
+void
+mh_run_puppet(const char *data, int flags, int scheme)
 {
-    int fd = open_fd_out();
-    size_t count;
+    int rc;
+    char *filename = NULL, *cmd = NULL;
+    int fd;
+    FILE *fp;
     
-    count = fwrite(blob, 1, strlen(blob), fd);
-    fclose(fd);
+    switch(scheme) {
+        case REMOTE:
+            filename = strdup("puppet_conf_XXXXXX");
+            fd = mkstemp(filename);
+            fp = fdopen(fd, "w+b");
+            rc = download(data, fp);
+            fclose(fp);
+            break;
+        case LOCAL:
+            filename = strdup(data);
+            break;
+        case BLOB:
+            filename = strdup("puppet_conf_blob");
+            g_file_set_contents(filename, data, strlen(data), NULL);
+            break;
+        default:
+            break;
+    }
+    
+    asprintf(cmd, "puppet %s", filename);
+    rc = system(cmd);
+    free(filename);
+    free(cmd);
+}
+
+void
+mh_run_augeas(const char *data, int flags, int scheme)
+{
+    fprintf(stderr, "not implemented\n");    
+}
+
+void
+mh_query_augeas(const char *query, const char *data, int flags, int scheme)
+{
+    fprintf(stderr, "no implemeneted\n");
 }

@@ -25,15 +25,14 @@
 #ifndef __MH_CONFIG_H__
 #define __MH_CONFIG_H__
 
-#include <stdint.h>
-#include <stdlib.h>
+// Supported SCHEME types
+#define REMOTE      1
+#define LOCAL       2
+#define BLOB        3
 
-// CONFIGURATION TYPES
-#define PUPPET   1
-#define CFENGINE 2
-#define REGISTRY 3
-
-extern void mh_configure_uri(const char *uri, int type);
-extern void mh_configure_blob(const char *blob, int type);
+extern void mh_run_puppet(const char *data, int flags, int scheme);
+extern void mh_run_augeas(const char *data, int flags, int scheme);
+extern void mh_query_augeas(const char *query, const char *data,
+                            int flags, int scheme);
 
 #endif // __MH_CONFIG_H__

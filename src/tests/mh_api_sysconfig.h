@@ -25,9 +25,9 @@ class MhApisysconfigSuite : public CxxTest::TestSuite
 
     void testIsConfigured(void)
     {
-        const char *uri = "http://matahariproject.org/testing.xml";
-        mh_configure(uri, PUPPET);
-        TS_ASSERT((mh_is_configured()) == 1);
+        const char *uri = "http://matahariproject.org/atom.xml";
+        // TS_ASSERT((mh_run_puppet(uri, 0, REMOTE)) == 0);
+        mh_run_puppet(uri, 0, REMOTE);
     }
 };
 

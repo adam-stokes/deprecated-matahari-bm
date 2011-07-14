@@ -8,9 +8,10 @@
         
         <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
         
-        <method name="configure"         desc="Send configure method">
+        <method name="run_puppet"         desc="Send configure uri method">
           <arg name="uri"                dir="I" type="sstr" />
-          <arg name="type"               dir="I" type="uint32" />
+          <arg name="flags"               dir="I" type="uint32" />
+          <arg name="scheme"             dir="I" type="uint32" />
           <arg name="configured"         dir="O" type="uint32" />
         </method>
     </class>
