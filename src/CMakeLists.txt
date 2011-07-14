@@ -98,14 +98,6 @@ if(NOT WIN32)
     endif(CURL STREQUAL "CURL-NOTFOUND")
 endif(NOT WIN32)
 
-# dmidecode
-if(NOT WIN32)
-    find_program(DMIDECODE dmidecode)
-    if(DMIDECODE STREQUAL "DMIDECODE-NOTFOUND")
-        message(WARNING "dmidecode not found.  This command is needed to get the hardware UUID in the host agent.")
-    endif(DMIDECODE STREQUAL "DMIDECODE-NOTFOUND")
-endif(NOT WIN32)
-
 # Include QMF and DBus generation macros
 include(MatahariMacros)
 
