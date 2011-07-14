@@ -51,16 +51,20 @@ static size_t local_fwrite(void *buffer, size_t size,
     return fwrite(buffer, size, nmemb, out->stream);
 }
 
-void mh_unconfigure()
+static int puppet_run(const char *file)
 {
-    if(g_file_test(mh_filename, G_FILE_TEST_EXISTS)) {
-        g_remove(mh_filename);
-    }
+    char *cmd;
+    int ret;
+    
+    asprintf(cmd, "puppet %s", file);
+    ret = system(cmd);
+    
+    return ret;
 }
 
-static int puppet_run(const char *data)
-{
-    return 0;
+static int open_fd_out() {
+    char fname[PATH_MAX] = "/tmp/matahari.sysconfig.XXXXXX";
+    return mkstemp(fname);
 }
 
 void mh_configure_uri(const char *uri, int type)
@@ -76,7 +80,7 @@ void mh_configure_uri(const char *uri, int type)
     curl = curl_easy_init();
     if(curl) {
         curl_easy_setopt(curl, CURLOPT_URL, uri);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCZTION, local_fwrite);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, local_fwrite);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outfile);
         res = curl_easy_perform(curl);
 
@@ -92,8 +96,9 @@ void mh_configure_uri(const char *uri, int type)
 
 void mh_configure_blob(const char *blob, int type)
 {
-    struct OutFile outfile={
-        "mh_blob_conf",
-        NULL
-    };
+    int fd = open_fd_out();
+    size_t count;
+    
+    count = fwrite(blob, 1, strlen(blob), fd);
+    fclose(fd);
 }

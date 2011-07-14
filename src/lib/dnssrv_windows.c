@@ -53,6 +53,7 @@ mh_srv_lookup(const char *query, char *target, size_t len)
                 DNS_QUERY_STANDARD, NULL, 
                 &rr, NULL) == ERROR_SUCCESS) {
 
+
         record = rr;
         do {
             if (record->wType == DNS_TYPE_SRV) {

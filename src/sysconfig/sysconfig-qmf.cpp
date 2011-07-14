@@ -68,11 +68,7 @@ ConfigAgent::setup(qmf::AgentSession session)
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
-    if(g_file_test(mh_filename, G_FILE_TEST_EXISTS)) {
-        _instance.setProperty("is_configured", 1);
-    } else {
-        _instance.setProperty("is_configured", 0);
-    }
+    _instance.setProperty("is_configured", 0);
 
     _agent_session.addData(_instance, "sysconfig");
     return 0;
@@ -89,12 +85,17 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
 
     const std::string& methodName(event.getMethodName());
 
-    if (methodName == "configure") {
+    if (methodName == "configure_uri") {
         if(configured != 1) {
-            mh_configure(event.getArguments()["uri"].asString().c_str(),
+            mh_configure_uri(event.getArguments()["uri"].asString().c_str(),
                          event.getArguments()["type"].asInt32());
         }
         event.addReturnArgument("configured", rc);
+    } else if (methodName == "configure_blob") {
+        if(configured != 1) {
+            mh_configure_blob(event.getArguments()["blob"].asString().c_str(),
+                              event.getArguments()["type"].asInt32());
+        }
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;
