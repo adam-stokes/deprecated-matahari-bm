@@ -63,6 +63,7 @@ mh_sysconfig_run(const char *uri, int flags, int scheme, struct conf *cf) {
 			cf->uri = strdup(uri);
 			cf->scheme = scheme;
 			rc = mh_sysconfig_run_puppet(cf);
+			free(cf->uri);
 			break;
 		default:
 			rc = -1;
@@ -80,6 +81,7 @@ mh_sysconfig_run_string(const char *data, int flags, int scheme, struct conf *cf
 			cf->data = strdup(data);
 			cf->scheme = scheme;
 			rc = mh_sysconfig_run_puppet(cf);
+			free(cf->data);
 			break;
 		default:
 			rc = -1;
@@ -98,6 +100,8 @@ mh_sysconfig_query(const char *query, const char *data, int flags, int scheme, s
 		cf->data = strdup(data);
 		cf->scheme = scheme;
 		rc = mh_sysconfig_run_augeas(cf);
+		free(cf->query);
+		free(cf->data);
 		break;
 	default:
 		rc = -1;
