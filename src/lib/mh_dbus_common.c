@@ -56,6 +56,13 @@ check_authorization(const gchar *action, GError** error,
     }
     err = NULL;
     subject = polkit_system_bus_name_new(dbus_g_method_get_sender(context));
+#ifndef HAVE_PK_GET_SYNC
+    authority = polkit_authority_get();
+    if(!authority) {
+        g_printerr("Error in obtaining authority\n");
+        return FALSE;
+    }
+#else
     authority = polkit_authority_get_sync(NULL, &err);
     if (err != NULL) {
         g_printerr("Error in obtaining authority: %s\n", err->message);
@@ -64,7 +71,7 @@ check_authorization(const gchar *action, GError** error,
         g_error_free(err);
         return FALSE;
     }
-
+#endif
     result = polkit_authority_check_authorization_sync(authority, subject,
             action, NULL,
             POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION, NULL,
