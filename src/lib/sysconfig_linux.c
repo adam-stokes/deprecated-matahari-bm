@@ -54,47 +54,97 @@ download(const char *uri, FILE *fp)
     return 0;
 }
 
-void
-mh_run_puppet(const char *data, int flags, int scheme)
+int
+mh_sysconfig_run(const char *uri, int flags, int scheme, struct conf *cf) {
+	int rc = 0;
+
+	switch(scheme) {
+		case PUPPET:
+			cf->uri = strdup(uri);
+			cf->scheme = scheme;
+			rc = mh_sysconfig_run_puppet(cf);
+			break;
+		default:
+			rc = -1;
+			break;
+	}
+	return rc;
+}
+
+int
+mh_sysconfig_run_string(const char *data, int flags, int scheme, struct conf *cf) {
+	int rc = 0;
+
+	switch(scheme) {
+		case PUPPET:
+			cf->data = strdup(data);
+			cf->scheme = scheme;
+			rc = mh_sysconfig_run_puppet(cf);
+			break;
+		default:
+			rc = -1;
+			break;
+	}
+	return rc;
+}
+
+int
+mh_sysconfig_query(const char *query, const char *data, int flags, int scheme, struct conf *cf) {
+	int rc = 0;
+
+	switch(scheme) {
+	case AUGEAS:
+		cf->query = strdup(query);
+		cf->data = strdup(data);
+		cf->scheme = scheme;
+		rc = mh_sysconfig_run_augeas(cf);
+		break;
+	default:
+		rc = -1;
+		break;
+	}
+	return rc;
+}
+
+
+int
+mh_sysconfig_run_puppet(struct conf *cf)
 {
-    int rc;
+    int rc = 0;
     char *filename = NULL, *cmd = NULL;
     int fd;
     FILE *fp;
     
-    switch(scheme) {
-        case REMOTE:
-            filename = strdup("puppet_conf_XXXXXX");
-            fd = mkstemp(filename);
-            fp = fdopen(fd, "w+b");
-            rc = download(data, fp);
-            fclose(fp);
-            break;
-        case LOCAL:
-            filename = strdup(data);
-            break;
-        case BLOB:
-            filename = strdup("puppet_conf_blob");
-            g_file_set_contents(filename, data, strlen(data), NULL);
-            break;
-        default:
-            break;
+    if(cf->uri != NULL) {
+		filename = strdup("puppet_conf_XXXXXX");
+		fd = mkstemp(filename);
+		fp = fdopen(fd, "w+b");
+		rc = download(cf->uri, fp);
+		fclose(fp);
+    } else if(cf->data != NULL) {
+		filename = strdup("puppet_conf_blob");
+		g_file_set_contents(filename, cf->data, strlen(cf->data), NULL);
+    } else {
+    	return -1;
     }
     
     asprintf(cmd, "puppet %s", filename);
     rc = system(cmd);
     free(filename);
     free(cmd);
+    return rc;
 }
 
-void
-mh_run_augeas(const char *data, int flags, int scheme)
+int
+mh_sysconfig_run_augeas(struct conf *cf)
 {
-    fprintf(stderr, "not implemented\n");    
+    fprintf(stderr, "not implemented\n");
+    return 0;
 }
 
-void
-mh_query_augeas(const char *query, const char *data, int flags, int scheme)
+int
+mh_sysconfig_query_augeas(struct conf *cf)
 {
-    fprintf(stderr, "no implemeneted\n");
+    fprintf(stderr, "not implemented\n");
+    return 0;
 }

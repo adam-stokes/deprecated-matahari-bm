@@ -53,7 +53,7 @@ int
 main(int argc, char **argv)
 {
     ConfigAgent agent;
-    int rc = agent.init(argc, argv, "Config");
+    int rc = agent.init(argc, argv, "Sysconfig");
     if (rc == 0) {
         agent.run();
     }
@@ -68,16 +68,30 @@ ConfigAgent::setup(qmf::AgentSession session)
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
-    _instance.setProperty("is_configured", 0);
+    _instance.setProperty("is_postboot_configured", 0);
 
     _agent_session.addData(_instance, "sysconfig");
     return 0;
 }
 
+static int
+is_configured(const char *key, int flags) {
+	int rc = 0;
+
+	if(flags == FORCE) {
+		return rc;
+	}
+
+	return rc;
+}
+
 gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    uint32_t configured = _instance.getProperty("is_configured").asInt32();
+    int rc = 0;
+    int flags;
+    struct conf *cf = NULL;
+
 
     if (event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
@@ -85,13 +99,38 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
 
     const std::string& methodName(event.getMethodName());
 
-    if (methodName == "run_puppet") {
-        if(configured != 1) {
-            mh_run_puppet(event.getArguments()["uri"].asString().c_str(),
-                          event.getArguments()["flags"].asInt32(),
-                          event.getArguments()["scheme"].asInt32());
+    if (methodName == "run") {
+    	flags = event.getArguments()["flags"].asInt32();
+        if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+            rc = mh_sysconfig_run(event.getArguments()["uri"].asString().c_str(),
+            		flags,
+            		event.getArguments()["scheme"].asInt32(),
+            		cf);
         }
-        event.addReturnArgument("configured", 0);
+        event.addReturnArgument("configured", rc);
+    } else if (methodName == "run_string") {
+    	flags = event.getArguments()["flags"].asInt32();
+    	if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+    		rc = mh_sysconfig_run_string(event.getArguments()["data"].asString().c_str(),
+    			flags,
+    			event.getArguments()["scheme"].asInt32(),
+    			cf);
+    	}
+    	event.addReturnArgument("configured", rc);
+    } else if (methodName == "query") {
+    	flags = event.getArguments()["flags"].asInt32();
+    	if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+    		rc = mh_sysconfig_query(event.getArguments()["query"].asString().c_str(),
+    				event.getArguments()["data"].asString().c_str(),
+    				event.getArguments()["scheme"].asInt32(),
+    				flags,
+    				cf);
+    	}
+    	event.addReturnArgument("configured", rc);
+    } else if (methodName == "is_configured") {
+    	rc = is_configured(event.getArguments()["key"].asString().c_str(), 0);
+    	_instance.setProperty("is_postboot_configured", rc);
+    	event.addReturnArgument("configured", rc);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

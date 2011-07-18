@@ -22,17 +22,33 @@
  * \ingroup coreapi
  */
 
-#ifndef __MH_CONFIG_H__
-#define __MH_CONFIG_H__
+#ifndef __MH_SYSCONFIG_H__
+#define __MH_SYSCONFIG_H__
+
+struct conf {
+	int scheme;
+	int flags;
+	char *uri;
+	char *data;
+	char *query;
+	const char *key;
+};
 
 // Supported SCHEME types
-#define REMOTE      1
-#define LOCAL       2
-#define BLOB        3
+#define PUPPET      1
+#define AUGEAS		2
 
-extern void mh_run_puppet(const char *data, int flags, int scheme);
-extern void mh_run_augeas(const char *data, int flags, int scheme);
-extern void mh_query_augeas(const char *query, const char *data,
-                            int flags, int scheme);
+// Supported FLAGS
+#define FORCE		1
 
-#endif // __MH_CONFIG_H__
+extern int mh_sysconfig_run(const char *uri, int flags, int scheme, struct conf *cf);
+extern int mh_sysconfig_run_string(const char *string, int flags, int scheme, struct conf *cf);
+extern int mh_sysconfig_query(const char *query, const char *data,
+                               int flags, int scheme, struct conf *cf);
+
+// scheme specific
+extern int mh_sysconfig_run_puppet(struct conf *cf);
+extern int mh_sysconfig_run_augeas(struct conf *cf);
+extern int mh_sysconfig_query_augeas(struct conf *cf);
+
+#endif // __MH_SYSCONFIG_H__
