@@ -20,8 +20,8 @@ else(WIN32)
 endif(WIN32)
 option(WITH-QMF "Build the QMF daemon" ON)
 
-set(CMAKE_C_FLAGS "-Wall")
-set(CMAKE_CXX_FLAGS "-Wall")
+set(CMAKE_C_FLAGS "-Wall -Wshadow")
+set(CMAKE_CXX_FLAGS "-Wall -Wshadow")
 
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
