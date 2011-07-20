@@ -410,6 +410,11 @@ static int should_daemonize(int code, const char *name, const char *arg, void *u
     return 0;
 }
 
+MatahariAgent::~MatahariAgent()
+{
+
+}
+
 int
 MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {

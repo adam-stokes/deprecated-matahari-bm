@@ -81,7 +81,7 @@ class MatahariAgent
 {
 public:
     MatahariAgent() {};
-    ~MatahariAgent() {};
+    virtual ~MatahariAgent();
 
     virtual int setup(qmf::AgentSession session) { return 0; };
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
