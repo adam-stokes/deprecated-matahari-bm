@@ -115,6 +115,9 @@ else(WITH-DBUS STREQUAL "ON")
     endif(NOT polkit_FOUND)
 endif(WITH-DBUS STREQUAL "ON")
 
+SET(CMAKE_REQUIRED_LIBRARIES ${polkit_LIBRARIES})
+check_function_exists (polkit_authority_get_sync HAVE_PK_GET_SYNC)
+
 ## qpid
 if(WITH-QMF)
     # Defines

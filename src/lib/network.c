@@ -154,10 +154,10 @@ mh_network_get_ip_address(const char *iface, char *buf, size_t len)
 
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
-        struct mh_network_interface *iface = plist->data;
+        struct mh_network_interface *mh_iface = plist->data;
 
-        if ((g_str_equal(mh_network_interface_get_name(iface), iface)) == TRUE) {
-            sigar_net_address_to_string(NULL, &iface->ifconfig.address, addr_str);
+        if ((g_str_equal(mh_network_interface_get_name(mh_iface), iface)) == TRUE) {
+            sigar_net_address_to_string(NULL, &mh_iface->ifconfig.address, addr_str);
             strncpy(buf, addr_str, len - 1);
             buf[len - 1] = '\0';
             break;
@@ -180,16 +180,16 @@ mh_network_get_mac_address(const char *iface, char *buf, size_t len)
 
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
-        struct mh_network_interface *iface = plist->data;
+        struct mh_network_interface *mh_iface = plist->data;
 
-        if ((g_str_equal(mh_network_interface_get_name(iface), iface)) == TRUE) {
+        if ((g_str_equal(mh_network_interface_get_name(mh_iface), iface)) == TRUE) {
             snprintf(buf, len, "%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",
-                           iface->ifconfig.hwaddr.addr.mac[0],
-                           iface->ifconfig.hwaddr.addr.mac[1],
-                           iface->ifconfig.hwaddr.addr.mac[2],
-                           iface->ifconfig.hwaddr.addr.mac[3],
-                           iface->ifconfig.hwaddr.addr.mac[4],
-                           iface->ifconfig.hwaddr.addr.mac[5]);
+                           mh_iface->ifconfig.hwaddr.addr.mac[0],
+                           mh_iface->ifconfig.hwaddr.addr.mac[1],
+                           mh_iface->ifconfig.hwaddr.addr.mac[2],
+                           mh_iface->ifconfig.hwaddr.addr.mac[3],
+                           mh_iface->ifconfig.hwaddr.addr.mac[4],
+                           mh_iface->ifconfig.hwaddr.addr.mac[5]);
             break;
         }
     }
