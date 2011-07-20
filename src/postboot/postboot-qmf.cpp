@@ -71,7 +71,7 @@ ConfigAgent::setup(qmf::AgentSession session)
     _instance.setProperty("uuid", mh_uuid());
     _instance.setProperty("is_configured", mh_is_configured());
 
-    _agent_session.addData(_instance, "postboot");
+    session.addData(_instance, "postboot");
     return 0;
 }
 

@@ -202,7 +202,7 @@ HostAgent::heartbeat()
     qmf::Data event = qmf::Data(_package.event_heartbeat);
     event.setProperty("timestamp", timestamp);
     event.setProperty("sequence", _heartbeat_sequence);
-    _agent_session.raiseEvent(event);
+    getSession().raiseEvent(event);
 
     return interval * 1000;
 }

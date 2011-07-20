@@ -207,7 +207,7 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
         event.setProperty("userdata", userdata);
     }
 
-    _agent_session.raiseEvent(event);
+    getSession().raiseEvent(event);
 }
 
 int

@@ -77,10 +77,12 @@ extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,
 
 extern gboolean mainloop_destroy_qmf(mainloop_qmf_t *source);
 
+struct MatahariAgentImpl;
+
 class MatahariAgent
 {
 public:
-    MatahariAgent() {};
+    MatahariAgent();
     virtual ~MatahariAgent();
 
     virtual int setup(qmf::AgentSession session) { return 0; };
@@ -90,11 +92,14 @@ public:
     void run();
 
 protected:
-    GMainLoop *mainloop;
-    mainloop_qmf_t *qpid_source;
+    qmf::AgentSession& getSession(void);
 
-    qmf::AgentSession _agent_session;
-    qpid::messaging::Connection _amqp_connection;
+private:
+    // Disallow default copy constructor/assignment
+    MatahariAgent(const MatahariAgent&);
+    MatahariAgent& operator=(const MatahariAgent&);
+
+    MatahariAgentImpl *_impl;
 };
 
 #endif // __MATAHARI_DAEMON_H
