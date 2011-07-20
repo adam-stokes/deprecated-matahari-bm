@@ -47,6 +47,10 @@ int required_argument = 1;
 
 #define MH_NOT_IMPLEMENTED "Not implemented"
 
+#ifndef NS_MAXDNAME
+# define NS_MAXDNAME 1025
+#endif
+
 using namespace qpid::management;
 using namespace std;
 

@@ -19,16 +19,17 @@ extern "C" {
 
 using namespace std;
 
-class MhApisysconfigSuite : public CxxTest::TestSuite
+class MhApiSysconfigSuite : public CxxTest::TestSuite
 {
  public:
 
     void testIsConfigured(void)
     {
-        const char *uri = "http://matahariproject.org/atom.xml";
-        struct conf *cf = NULL;
-
-        TS_ASSERT((mh_sysconfig_run(uri, PUPPET, 0, cf)) != -1);
+        conf_t cf = {};
+        cf.uri = "http://matahariproject.org/atom.xml";
+        cf.flags = 0;
+        cf.scheme = "puppet";
+        TS_ASSERT((mh_sysconfig_run_uri(cf.uri, cf.flags, cf.scheme)) != -1);
     }
 };
 

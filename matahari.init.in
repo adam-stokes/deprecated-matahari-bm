@@ -30,6 +30,10 @@ test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
 
 start() {
     echo -n $"Starting the $SERVICE daemon: "
+    if [ ! -v $MATAHARI_BROKER ]; then
+    	MATAHARI_BROKER="127.0.0.1"
+    	MATAHARI_PORT=49000
+	fi
     daemon $PROCESS --broker $MATAHARI_BROKER --port $MATAHARI_PORT $MATAHARI_AGENT_ARGS --daemon
     RETVAL=$?
     echo

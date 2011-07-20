@@ -27,16 +27,12 @@
 # define DNS_TYPE_SRV 33
 #endif
 
-#ifndef NS_MAXDNAME
-# define NS_MAXDNAME 1025
-#endif
-
 /**
  * Domain lookup providing a Matahari broker
  *
  * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
  * \param[in] set buffer to hold domain retrieved
- * \param[in] set buffer length 
+ * \param[in] set buffer length
  *
  * \return 0 or greater for successful match
  */
@@ -47,10 +43,10 @@ mh_srv_lookup(const char *query, char *target, size_t len)
     PDNS_RECORD rr, record;
     WCHAR query_wstr[len];
 
-   
-    MultiByteToWideChar(CP_UTF8, 0, query, len, query_wstr, len); 
-    if (DnsQuery(query_wstr, DNS_TYPE_SRV, 
-                DNS_QUERY_STANDARD, NULL, 
+
+    MultiByteToWideChar(CP_UTF8, 0, query, len, query_wstr, len);
+    if (DnsQuery(query_wstr, DNS_TYPE_SRV,
+                DNS_QUERY_STANDARD, NULL,
                 &rr, NULL) == ERROR_SUCCESS) {
 
 

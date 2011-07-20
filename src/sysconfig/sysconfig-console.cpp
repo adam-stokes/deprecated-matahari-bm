@@ -30,8 +30,15 @@
 #include <qmf/Query.h>
 #include <qpid/types/Variant.h>
 
+#include <matahari/mh_agent.h>
+
 #include <string>
 #include <iostream>
+#include <sstream>
+
+extern "C" {
+#include "matahari/logging.h"
+}
 
 using namespace std;
 using namespace qmf;
@@ -40,38 +47,48 @@ using qpid::messaging::Duration;
 
 int main(int argc, char** argv)
 {
-    string brokerUrl("amqp:tcp:127.0.0.1:49000");
-    qpid::types::Variant::Map connectionOptions;
-    qpid::types::Variant::Map dataProperties;
+    qpid::types::Variant::Map options;
+    qpid::types::Variant::Map callOptions;
     string sessionOptions;
-    
-    connectionOptions["reconnect"] = true;
-    
-    dataProperties["uri"] = argv[1] ? argv[1] : "http://localhost/config/uuid";
+    ConsoleEvent event;
+    Agent agent;
 
-    qpid::messaging::Connection connection(brokerUrl, connectionOptions);
+    mh_log_init("sysconfig-console", LOG_TRACE, TRUE);
+
+    mh_add_option('U', required_argument, "uri", "URI of configuration", &options, NULL);
+
+    string url = mh_parse_options("sysconfig-console", argc, argv, options);
+
+    callOptions["uri"] = options["uri"];
+
+    mh_log_init("sysconfig-console", mh_log_level, mh_log_level > LOG_INFO);
+
+    qpid::messaging::Connection connection(url, options);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);
     // Only filter connecting agents under matahariproject.org vendor and Config product
     session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'Sysconfig']]]");
     session.open();
-    
-    Agent agent;
+
+    while(session.getAgentCount() == 0) {
+        g_usleep(1000);
+    }
+
     while (true) {
-        ConsoleEvent event;
         if(session.nextEvent(event)) {
             switch(event.getType()) {
                 case CONSOLE_AGENT_ADD:
                     {
                         agent = event.getAgent();
                         DataAddr agent_event_addr("config", agent.getName(), 0);
-                        ConsoleEvent result(agent.callMethod("configure", 
-                                                              dataProperties,
+                        ConsoleEvent result(agent.callMethod("configure",
+                                                              callOptions,
                                                               agent_event_addr));
                     }
                     break;
-                default: {}
+                default:
+                    break;
             }
         }
     }

@@ -16,6 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Sysconfig QMF Agent
+ */
+
 #ifndef WIN32
 #include "config.h"
 #endif
@@ -76,13 +81,13 @@ ConfigAgent::setup(qmf::AgentSession session)
 
 static int
 is_configured(const char *key, int flags) {
-	int rc = 0;
+  int rc = 0;
 
-	if(flags == FORCE) {
-		return rc;
-	}
+  if(flags & SYSCONFIG_FLAG_FORCE) {
+    return rc;
+  }
 
-	return rc;
+  return rc;
 }
 
 gboolean
@@ -90,7 +95,6 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
 {
     int rc = 0;
     int flags;
-    struct conf *cf = NULL;
 
 
     if (event.getType() != qmf::AGENT_METHOD) {
@@ -99,38 +103,35 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
 
     const std::string& methodName(event.getMethodName());
 
-    if (methodName == "run") {
-    	flags = event.getArguments()["flags"].asInt32();
+    if (methodName == "run_uri") {
+      flags = event.getArguments()["flags"].asInt32();
         if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
-            rc = mh_sysconfig_run(event.getArguments()["uri"].asString().c_str(),
-            		flags,
-            		event.getArguments()["scheme"].asInt32(),
-            		cf);
+            rc = mh_sysconfig_run_uri(event.getArguments()["uri"].asString().c_str(),
+                flags,
+                event.getArguments()["scheme"].asString().c_str());
         }
         event.addReturnArgument("configured", rc);
     } else if (methodName == "run_string") {
-    	flags = event.getArguments()["flags"].asInt32();
-    	if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
-    		rc = mh_sysconfig_run_string(event.getArguments()["data"].asString().c_str(),
-    			flags,
-    			event.getArguments()["scheme"].asInt32(),
-    			cf);
-    	}
-    	event.addReturnArgument("configured", rc);
+      flags = event.getArguments()["flags"].asInt32();
+      if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+        rc = mh_sysconfig_run_string(event.getArguments()["data"].asString().c_str(),
+          flags,
+          event.getArguments()["scheme"].asString().c_str());
+      }
+      event.addReturnArgument("configured", rc);
     } else if (methodName == "query") {
-    	flags = event.getArguments()["flags"].asInt32();
-    	if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
-    		rc = mh_sysconfig_query(event.getArguments()["query"].asString().c_str(),
-    				event.getArguments()["data"].asString().c_str(),
-    				event.getArguments()["scheme"].asInt32(),
-    				flags,
-    				cf);
-    	}
-    	event.addReturnArgument("configured", rc);
+      flags = event.getArguments()["flags"].asInt32();
+      if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+        rc = mh_sysconfig_query(event.getArguments()["query"].asString().c_str(),
+            event.getArguments()["data"].asString().c_str(),
+            flags,
+            event.getArguments()["scheme"].asString().c_str());
+      }
+      event.addReturnArgument("configured", rc);
     } else if (methodName == "is_configured") {
-    	rc = is_configured(event.getArguments()["key"].asString().c_str(), 0);
-    	_instance.setProperty("is_postboot_configured", rc);
-    	event.addReturnArgument("configured", rc);
+      rc = is_configured(event.getArguments()["key"].asString().c_str(), 0);
+      _instance.setProperty("is_postboot_configured", rc);
+      event.addReturnArgument("configured", rc);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

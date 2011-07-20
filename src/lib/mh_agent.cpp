@@ -188,7 +188,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     std::stringstream url;
 
     int arg;
-    int serverport  = MATAHARI_PORT;
+    int serverport = MATAHARI_PORT;
     char *servername = NULL;
 
     const char *protocol = NULL;
@@ -354,23 +354,16 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         protocol = "tcp";
     }
 
-    /*
-     * Based on servername do a SRV lookup for best possible
-     * server providing this service.
-     */
-    if (servername) {
-#ifdef HAVE_RESOLV_A
+    if(g_strcmp0(servername, "localhost") != 0 ||
+            g_strcmp0(servername, "127.0.0.1") != 0) {
         int ret;
         char query[NS_MAXDNAME];
         char target[NS_MAXDNAME];
-        g_snprintf(query, sizeof(query), "_matahari._tcp.%s", servername); 
+        g_snprintf(query, sizeof(query), "_matahari._tcp.%s", servername);
         ret = mh_srv_lookup(query, target, sizeof(target));
         if (ret == 0) {
             servername = strdup(target);
-        } 
-#endif
-    } else {
-        servername = strdup(MATAHARI_BROKER);
+        }
     }
 
     url << "amqp:" << protocol << ":" << servername << ":" << serverport ;

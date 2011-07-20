@@ -1,4 +1,4 @@
-/* sysconfig.c - Copyright (C) 2011 Red Hat, Inc.
+/* sysconfig_linux.c - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -33,6 +33,8 @@
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
+static conf_t cf = {};
+
 static int
 download(const char *uri, FILE *fp)
 {
@@ -41,12 +43,12 @@ download(const char *uri, FILE *fp)
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
-    if(curl) {
+    if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, uri);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
         res = curl_easy_perform(curl);
 
-        if(CURLE_OK != res) {
+        if (CURLE_OK != res) {
             return -1;
         }
     }
@@ -55,99 +57,100 @@ download(const char *uri, FILE *fp)
 }
 
 int
-mh_sysconfig_run(const char *uri, int flags, int scheme, struct conf *cf) {
+mh_sysconfig_run_uri(const char *uri, int flags, const char *scheme) {
 	int rc = 0;
 
-	switch(scheme) {
-		case PUPPET:
-			cf->uri = strdup(uri);
-			cf->scheme = scheme;
-			rc = mh_sysconfig_run_puppet(cf);
-			free(cf->uri);
-			break;
-		default:
-			rc = -1;
-			break;
+	if (g_strcmp0(scheme, "puppet") == 0) {
+        cf.uri = uri;
+        cf.scheme = scheme;
+        rc = mh_sysconfig_run_puppet(&cf);
+	} else {
+        rc = -1;
 	}
 	return rc;
 }
 
 int
-mh_sysconfig_run_string(const char *data, int flags, int scheme, struct conf *cf) {
+mh_sysconfig_run_string(const char *data, int flags, const char *scheme) {
 	int rc = 0;
 
-	switch(scheme) {
-		case PUPPET:
-			cf->data = strdup(data);
-			cf->scheme = scheme;
-			rc = mh_sysconfig_run_puppet(cf);
-			free(cf->data);
-			break;
-		default:
-			rc = -1;
-			break;
+	if (g_strcmp0(scheme, "puppet") == 0) {
+        cf.data = data;
+        cf.scheme = scheme;
+        rc = mh_sysconfig_run_puppet(&cf);
+	} else {
+	    rc = -1;
 	}
 	return rc;
 }
 
 int
-mh_sysconfig_query(const char *query, const char *data, int flags, int scheme, struct conf *cf) {
+mh_sysconfig_query(const char *query, const char *data, int flags, const char *scheme) {
 	int rc = 0;
 
-	switch(scheme) {
-	case AUGEAS:
-		cf->query = strdup(query);
-		cf->data = strdup(data);
-		cf->scheme = scheme;
-		rc = mh_sysconfig_run_augeas(cf);
-		free(cf->query);
-		free(cf->data);
-		break;
-	default:
+	if (g_strcmp0(scheme, "augeas") == 0) {
+		cf.query = query;
+		cf.data = data;
+		cf.scheme = scheme;
+		rc = mh_sysconfig_run_augeas(&cf);
+	} else {
 		rc = -1;
-		break;
 	}
 	return rc;
 }
 
 
 int
-mh_sysconfig_run_puppet(struct conf *cf)
+mh_sysconfig_run_puppet(conf_t *cf)
 {
-    int rc = 0;
-    char *filename = NULL, *cmd = NULL;
+    gboolean ret;
+    GError *error;
+    char *filename = NULL;
+    gchar cmd[PATH_MAX];
     int fd;
     FILE *fp;
-    
-    if(cf->uri != NULL) {
+
+    if (cf->uri != NULL) {
 		filename = strdup("puppet_conf_XXXXXX");
 		fd = mkstemp(filename);
 		fp = fdopen(fd, "w+b");
-		rc = download(cf->uri, fp);
+		if ((download(cf->uri, fp)) != 0) {
+		    fclose(fp);
+		    return -1;
+		}
 		fclose(fp);
-    } else if(cf->data != NULL) {
+    } else if (cf->data != NULL) {
 		filename = strdup("puppet_conf_blob");
 		g_file_set_contents(filename, cf->data, strlen(cf->data), NULL);
     } else {
     	return -1;
     }
-    
-    asprintf(cmd, "puppet %s", filename);
-    rc = system(cmd);
+
+    g_snprintf(cmd, sizeof(cmd), "puppet %s", filename);
+    fprintf(stderr, "%s", cmd);
+    ret = g_spawn_async(NULL, (gchar **)cmd, NULL, G_SPAWN_SEARCH_PATH,
+            NULL, NULL, NULL, &error);
+    fprintf(stderr, "bool: %d", ret);
+    if (ret == FALSE) {
+        g_error_free(error);
+        free(filename);
+        return -1;
+    }
+
     free(filename);
-    free(cmd);
-    return rc;
+
+    return 0;
 }
 
 int
-mh_sysconfig_run_augeas(struct conf *cf)
+mh_sysconfig_run_augeas(conf_t *cf)
 {
     fprintf(stderr, "not implemented\n");
     return 0;
 }
 
 int
-mh_sysconfig_query_augeas(struct conf *cf)
+mh_sysconfig_query_augeas(conf_t *cf)
 {
     fprintf(stderr, "not implemented\n");
     return 0;
