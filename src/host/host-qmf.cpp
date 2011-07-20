@@ -27,7 +27,7 @@
 #endif
 
 #include <set>
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 #include <qmf/Data.h>
 #include "qmf/org/matahariproject/QmfPackage.h"
 

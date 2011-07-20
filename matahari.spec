@@ -391,17 +391,24 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %{_libdir}/libm*.so
 %{_includedir}/matahari.h
+%{_includedir}/matahari/logging.h
+%{_includedir}/matahari/utilities.h
+%{_includedir}/matahari/dnssrv.h
+%{_includedir}/matahari/host.h
+%{_includedir}/matahari/network.h
+%{_includedir}/matahari/postboot.h
+%{_includedir}/matahari/services.h
 %{_datadir}/cmake/Modules/FindMatahari.cmake
 
 %if %{with qmf}
-%{_includedir}/matahari/mh_agent.h
+%{_includedir}/matahari/agent.h
 %{_includedir}/matahari/mainloop.h
 %{_datadir}/cmake/Modules/FindQPID.cmake
 %endif
 
 %if %{with dbus}
-%{_includedir}/matahari/mh_dbus_common.h
-%{_includedir}/matahari/mh_gobject_class.h
+%{_includedir}/matahari/dbus_common.h
+%{_includedir}/matahari/gobject_class.h
 %{_datadir}/cmake/Modules/MatahariMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
 %{_datadir}/matahari/dbus-to-c.xsl

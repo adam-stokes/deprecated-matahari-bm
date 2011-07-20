@@ -20,7 +20,7 @@
 #include "config.h"
 #endif
 
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 #include "qmf/org/matahariproject/QmfPackage.h"
 

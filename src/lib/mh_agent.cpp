@@ -39,7 +39,7 @@ int use_stderr = 0;
 #include <qpid/client/ConnectionSettings.h>
 // #include <qpid/sys/ssl/util.h>
 #include <qmf/DataAddr.h>
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 extern "C" {
 #include "matahari/logging.h"

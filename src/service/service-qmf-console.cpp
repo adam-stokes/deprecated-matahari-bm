@@ -28,7 +28,7 @@
 #include <qmf/Query.h>
 #include <qpid/types/Variant.h>
 
-#include <matahari/mh_agent.h>
+#include <matahari/agent.h>
 
 #include <string>
 #include <iostream>

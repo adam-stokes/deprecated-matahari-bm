@@ -28,7 +28,7 @@ extern "C" {
 #include <string>
 #include <qpid/management/Manageable.h>
 #include <qpid/agent/ManagementAgent.h>
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 #include "qmf/org/matahariproject/QmfPackage.h"
 
