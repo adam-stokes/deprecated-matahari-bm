@@ -43,6 +43,7 @@ class ConfigAgent : public MatahariAgent
 {
 private:
     qmf::org::matahariproject::PackageDefinition _package;
+    qmf::Data _instance;
 public:
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,

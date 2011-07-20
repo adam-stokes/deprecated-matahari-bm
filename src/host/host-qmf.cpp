@@ -71,6 +71,7 @@ private:
     int heartbeat();
 
     qmf::org::matahariproject::PackageDefinition _package;
+    qmf::Data _instance;
 
     /**
      * Default update interval for HostAgent heartbeat.

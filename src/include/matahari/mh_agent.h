@@ -93,7 +93,6 @@ protected:
     GMainLoop *mainloop;
     mainloop_qmf_t *qpid_source;
 
-    qmf::Data _instance;
     qmf::AgentSession _agent_session;
     qpid::messaging::Connection _amqp_connection;
 };
