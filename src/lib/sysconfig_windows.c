@@ -24,19 +24,22 @@
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme) {
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme)
+{
 
     return 0;
 }
 
 int
-mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
+mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme)
+{
 
     return 0;
 }
 
 const char *
-mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme) {
-
-    return NULL;
+mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
+{
+    const char *data = NULL;
+    return data;
 }
