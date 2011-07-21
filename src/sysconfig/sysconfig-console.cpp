@@ -38,6 +38,7 @@
 
 extern "C" {
 #include "matahari/logging.h"
+#include "matahari/sysconfig.h"
 }
 
 using namespace std;
@@ -57,13 +58,13 @@ int main(int argc, char **argv)
 
     mh_add_option('U', required_argument, "uri", "URI of configuration", &options, NULL);
 
-    qpid::types::Variant::Map url = mh_parse_options("sysconfig-console", argc, argv, options);
+    qpid::types::Variant::Map urlMap = mh_parse_options("sysconfig-console", argc, argv, options);
 
     callOptions["uri"] = options["uri"];
 
     mh_log_init("sysconfig-console", mh_log_level, mh_log_level > LOG_INFO);
 
-    qpid::messaging::Connection connection(url["uri"], options);
+    qpid::messaging::Connection connection(urlMap["uri"], options);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);
@@ -82,7 +83,7 @@ int main(int argc, char **argv)
                     {
                         agent = event.getAgent();
                         DataAddr agent_event_addr("config", agent.getName(), 0);
-                        ConsoleEvent result(agent.callMethod("configure",
+                        ConsoleEvent result(agent.callMethod("run_uri",
                                                               callOptions,
                                                               agent_event_addr));
                     }

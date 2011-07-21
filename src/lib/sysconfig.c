@@ -64,6 +64,7 @@ set_key(const char *key)
             }
             contents_appended = g_strconcat(contents, "\n", key, NULL);
             g_file_set_contents(configured_fn, contents_appended, -1, NULL);
+            g_strfreev(keys_array);
         } else {
             mh_err("Unable to write to keys file");
             return FALSE;
