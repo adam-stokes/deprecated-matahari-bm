@@ -57,13 +57,13 @@ int main(int argc, char **argv)
 
     mh_add_option('U', required_argument, "uri", "URI of configuration", &options, NULL);
 
-    string url = mh_parse_options("sysconfig-console", argc, argv, options);
+    qpid::types::Variant::Map url = mh_parse_options("sysconfig-console", argc, argv, options);
 
     callOptions["uri"] = options["uri"];
 
     mh_log_init("sysconfig-console", mh_log_level, mh_log_level > LOG_INFO);
 
-    qpid::messaging::Connection connection(url, options);
+    qpid::messaging::Connection connection(url["uri"], options);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);

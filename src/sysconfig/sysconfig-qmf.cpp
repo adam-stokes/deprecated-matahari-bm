@@ -142,9 +142,9 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
       flags = event.getArguments()["flags"].asInt32();
       if((is_configured(flags)) == 0) {
         rc = mh_sysconfig_query(event.getArguments()["query"].asString().c_str(),
-            event.getArguments()["data"].asString().c_str(),
             flags,
-            event.getArguments()["scheme"].asString().c_str());
+            event.getArguments()["scheme"].asString().c_str(),
+            event.getArguments()["data"].asString().c_str());
       }
       event.addReturnArgument("configured", rc);
     } else if (methodName == "is_configured") {

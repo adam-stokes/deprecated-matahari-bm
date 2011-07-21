@@ -36,7 +36,8 @@ mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
 }
 
 int
-mh_sysconfig_query(const char *query, const char *data, uint32_t flags, const char *scheme) {
+mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme,
+        const char *data) {
 
     return 0;
 }

@@ -31,6 +31,6 @@
 
 extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme);
 extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme);
-extern int mh_sysconfig_query(const char *query, const char *data,
-                               uint32_t flags, const char *scheme);
+extern int mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme,
+        const char *data);
 #endif // __MH_SYSCONFIG_H__

@@ -113,7 +113,8 @@ mh_sysconfig_query_augeas(const char *query, const char *data)
 }
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme) {
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme)
+{
 	int rc = 0;
 
 	if (strcasecmp(scheme, "puppet") == 0) {
@@ -125,7 +126,8 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme) {
 }
 
 int
-mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
+mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme)
+{
 	int rc = 0;
 
 	if (strcasecmp(scheme, "puppet") == 0) {
@@ -137,7 +139,9 @@ mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
 }
 
 int
-mh_sysconfig_query(const char *query, const char *data, uint32_t flags, const char *scheme) {
+mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme,
+        const char *data)
+{
 	int rc = 0;
 
 	if (strcasecmp(scheme, "augeas") == 0) {
