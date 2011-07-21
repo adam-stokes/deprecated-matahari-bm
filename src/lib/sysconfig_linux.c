@@ -105,15 +105,17 @@ mh_sysconfig_run_augeas(const char *query, const char *data)
     return 0;
 }
 
-static int
-mh_sysconfig_query_augeas(const char *query, const char *data)
+static const char *
+mh_sysconfig_query_augeas(const char *query)
 {
+    const char *data = NULL;
     mh_warn("not implemented\n");
-    return 0;
+    return data;
 }
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme) {
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme)
+{
 	int rc = 0;
 
 	if (strcasecmp(scheme, "puppet") == 0) {
@@ -125,7 +127,8 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme) {
 }
 
 int
-mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
+mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme)
+{
 	int rc = 0;
 
 	if (strcasecmp(scheme, "puppet") == 0) {
@@ -136,14 +139,14 @@ mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
 	return rc;
 }
 
-int
-mh_sysconfig_query(const char *query, const char *data, uint32_t flags, const char *scheme) {
-	int rc = 0;
+const char *
+mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
+{
+	const char *data = NULL;
 
 	if (strcasecmp(scheme, "augeas") == 0) {
-		rc = mh_sysconfig_run_augeas(query, data);
-	} else {
-		rc = -1;
+	    data = mh_sysconfig_query_augeas(query);
 	}
-	return rc;
+
+	return data;
 }

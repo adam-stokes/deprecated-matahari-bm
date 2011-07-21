@@ -1,4 +1,4 @@
-/* 
+/*
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -43,14 +43,14 @@ using namespace qmf;
 using qpid::types::Variant;
 using qpid::messaging::Duration;
 
-static int 
+static int
 resource_arg(int code, const char *name, const char *arg, void *userdata)
 {
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
     if(options->count(name) > 0) {
 	options->erase(name);
     }
-    
+
     cout << name << "=" << arg << endl;
     if(strcmp(name, "timeout") == 0 || strcmp(name, "interval") == 0) {
 	uint32_t number = 1000 * atoi(arg);
@@ -96,12 +96,12 @@ int main(int argc, char** argv)
 
     mh_add_option('o', required_argument, "option", "Option to pass to the resource script (Resources API only)", NULL, NULL);
 
-    string url = mh_parse_options("service-console", argc, argv, options);
+    qpid::types::Variant::Map url = mh_parse_options("service-console", argc, argv, options);
 
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init("service-console", mh_log_level, mh_log_level > LOG_INFO);
-    
-    qpid::messaging::Connection connection(url, options);
+
+    qpid::messaging::Connection connection(url["uri"], options);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);
@@ -118,8 +118,8 @@ int main(int argc, char** argv)
 	/* Restrict further, to a single host */
 	filter << ", [eq, hostname, [quote, " << options["host-dns"] << "]]";
     }
-    
-    filter << "]"; 
+
+    filter << "]";
 
     /* Only interested in agents under matahariproject.org vendor
      * Set before opening the session to avoid unwanted events
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
 		callOptions.erase("host-uuid");
 	    }
 	}
-	
+
 	while(session.getAgentCount() == 0) {
 	    g_usleep(1000);
 	}
@@ -176,16 +176,16 @@ int main(int argc, char** argv)
 		for ( ; llpc < event.getDataCount(); llpc++) {
 		    cout << "Error data: " << event.getData(llpc).getProperties() << endl;
 		}
-		
+
 	    } else {
 		cout << event.getArguments() << endl;
 	    }
-	    
+
 //	    event = agent.query("{class: Resources}");
 //	    cout << event.getAgent().getName() << endl;
-	}	
+	}
     }
-    
+
     while (options.count("action") == 0) {
 	if(session.nextEvent(event)) {
 	    switch(event.getType()) {
@@ -193,17 +193,17 @@ int main(int argc, char** argv)
 		    // if(event.getAgent().getProduct() == "service") {  <-- implied by our filter
 		    {
 			cout << "Agent " << event.getAgent().getName() << " on " << event.getAgent().getAttribute("hostname") << " is now available supporting the following agents:";
-		    
+
 			/* The rest is mostly to show we can */
 			agent = event.getAgent();
 			DataAddr agent_data(options["api"], agent.getName(), 0);
 			// event = agent.callMethod("list", callOptions, agent_data);
-			
+
 			if (options["api"] == "Resources") {
 			    callOptions["standard"] = options["standard"];
 			    callOptions["provider"] = options["provider"];
 			}
-			
+
 			event = agent.callMethod("list", callOptions, agent_data);
 			if(event.getType() != CONSOLE_METHOD_RESPONSE) {
 			    uint32_t llpc = 0;
@@ -211,7 +211,7 @@ int main(int argc, char** argv)
 			    for ( ; llpc < event.getDataCount(); llpc++) {
 				cout << "Error data: " << event.getData(llpc).getProperties() << endl;
 			    }
-			    
+
 			} else {
 			    int count = 0;
 			    qpid::types::Variant::Map output = event.getArguments();
@@ -232,7 +232,7 @@ int main(int argc, char** argv)
 		case CONSOLE_AGENT_DEL:
 		    cout << "Agent " << event.getAgent().getName() << " is no longer available" << endl;
 		    break;
-		    
+
 		case CONSOLE_EVENT:
 		    {
 			uint32_t llpc = 0;

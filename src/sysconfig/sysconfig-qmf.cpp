@@ -46,7 +46,7 @@ extern "C" {
 #include <sigar_format.h>
 };
 
-static const char *configured_fn = "/var/lib/matahari/.is_configured";
+static const char configured_fn[] = "/var/lib/matahari/.is_configured";
 
 class ConfigAgent : public MatahariAgent
 {
@@ -93,7 +93,7 @@ set_configured() {
 static int
 is_configured(uint32_t flags) {
 
-  if(flags & SYSCONFIG_FLAG_FORCE) {
+  if(flags & MH_SYSCONFIG_FLAG_FORCE) {
     return 0;
   }
 
@@ -109,44 +109,44 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     int rc = 0;
     uint32_t flags;
 
-
+    const std::string& methodName(event.getMethodName());
     if (event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
 
-    const std::string& methodName(event.getMethodName());
+    qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "run_uri") {
-      flags = event.getArguments()["flags"].asInt32();
+      flags = args["flags"].asUint32();
         if((is_configured(flags)) == 0) {
-            rc = mh_sysconfig_run_uri(event.getArguments()["uri"].asString().c_str(),
+            rc = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
                 flags,
-                event.getArguments()["scheme"].asString().c_str());
+                args["scheme"].asString().c_str());
             if (rc == 0) {
                 set_configured();
             }
         }
         event.addReturnArgument("configured", rc);
     } else if (methodName == "run_string") {
-      flags = event.getArguments()["flags"].asInt32();
+      flags = args["flags"].asUint32();
       if((is_configured(flags)) == 0) {
-        rc = mh_sysconfig_run_string(event.getArguments()["data"].asString().c_str(),
+        rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
           flags,
-          event.getArguments()["scheme"].asString().c_str());
+          args["scheme"].asString().c_str());
         if (rc == 0) {
             set_configured();
         }
       }
       event.addReturnArgument("configured", rc);
     } else if (methodName == "query") {
-      flags = event.getArguments()["flags"].asInt32();
+      flags = args["flags"].asUint32();
+      const char *data = NULL;
       if((is_configured(flags)) == 0) {
-        rc = mh_sysconfig_query(event.getArguments()["query"].asString().c_str(),
-            event.getArguments()["data"].asString().c_str(),
+            data = mh_sysconfig_query(args["query"].asString().c_str(),
             flags,
-            event.getArguments()["scheme"].asString().c_str());
+            args["scheme"].asString().c_str());
       }
-      event.addReturnArgument("configured", rc);
+      event.addReturnArgument("Query", data);
     } else if (methodName == "is_configured") {
       rc = is_configured(0);
       _instance.setProperty("is_postboot_configured", rc);
