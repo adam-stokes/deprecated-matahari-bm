@@ -114,7 +114,8 @@ mh_sysconfig_query_augeas(const char *query)
 }
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme)
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
+        const char *key)
 {
 	int rc = 0;
 
@@ -127,7 +128,8 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme)
 }
 
 int
-mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme)
+mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme,
+        const char *key)
 {
 	int rc = 0;
 

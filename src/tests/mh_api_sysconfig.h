@@ -25,9 +25,12 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
 
     void testIsConfigured(void)
     {
-        const char *uri = "http://matahariproject.org/atom.xml";
+        const char *uri = "http://matahariproject.org/atom.xml"; // Test if download succeeds
         uint32_t flags = 0;
-        TS_ASSERT((mh_sysconfig_run_uri(uri, flags, "puppet")) != -1);
+        const char key[] = "org.matahariproject.firstboot"; // Unimportant key defined
+        TS_ASSERT((mh_is_configured(flags,key)) == TRUE);
+        TS_ASSERT((mh_set_configured(key)) == TRUE);
+        TS_ASSERT((mh_sysconfig_run_uri(uri, flags, "puppet", key)) != -1);
     }
 };
 

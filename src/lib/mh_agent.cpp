@@ -195,8 +195,6 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     std::stringstream url;
     qpid::types::Variant::Map urlMap;
 
-    int arg;
-
     const char *ssl_cert_db = NULL;
     const char *ssl_cert_name = NULL;
     const char *ssl_cert_password_file = NULL;
@@ -224,15 +222,14 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     if (RegistryRead(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
                      L"broker", &value) == 0) {
-        free(servername);
-        servername = value;
+        urlMap["servername"] = value;
         value = NULL;
     }
 
     if (RegistryRead(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
                      L"port", &value) == 0) {
-        serverport = atoi(value);
+        urlMap["serverport"] = atoi(value);
         free(value);
         value = NULL;
     }
@@ -260,7 +257,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     char opt_string[2 * DIMOF(matahari_options)];
     struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
     struct addrinfo hints, *res;
-    int rc;
+    int rc, arg;
 
     /* Force more local-only processing */
     mh_add_option('h', no_argument, "help", NULL, NULL, NULL);

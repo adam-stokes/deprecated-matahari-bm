@@ -26,6 +26,7 @@
 #define __MH_SYSCONFIG_H__
 
 #include <stdint.h>
+#include <glib.h>
 /*! Supported FLAGS */
 #define MH_SYSCONFIG_FLAG_FORCE    (1 << 0)
 
@@ -35,10 +36,13 @@
  * \param[in] uri the url of configuration item
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
+ * \param[in] key configuration key for keeping track of existing
+ *            configuration runs
  *
  * \return 0 for success -1 for fail
  */
-extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme);
+extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
+        const char *key);
 
 /**
  * Process a text blob
@@ -46,10 +50,13 @@ extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *sch
  * \param[in] string the text blob to process, accepts a range of data from XML to Puppet classes
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
+ * \param[in] key configuration key for keeping track of existing
+ *            configuration runs
  *
  * \return 0 for success -1 for fail
  */
-extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme);
+extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
+        const char *key);
 
 /**
  * Query against a configuration object on the system
@@ -57,11 +64,29 @@ extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const cha
  * \param[in] query the query command used
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
- * \param[out] data the data found from query parameter
  *
  * \return data the result found from query
  */
 extern const char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
+
+/**
+ * Set system as configured
+ *
+ * \param[in] key config item to define
+ *
+ * \return TRUE if applying key to config succeeds
+ */
+extern gboolean
+mh_set_configured(const char *key);
+
+/**
+ * Test if system has been configured
+ *
+ * \param[in] flags allow a force reconfiguration
+ * \param[in] key config item to test if used
+ */
+extern gboolean
+mh_is_configured(uint32_t flags, const char *key);
 
 #endif // __MH_SYSCONFIG_H__
