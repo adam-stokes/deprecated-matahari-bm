@@ -25,11 +25,9 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
 
     void testIsConfigured(void)
     {
-        conf_t cf = {};
-        cf.uri = "http://matahariproject.org/atom.xml";
-        cf.flags = 0;
-        cf.scheme = "puppet";
-        TS_ASSERT((mh_sysconfig_run_uri(cf.uri, cf.flags, cf.scheme)) != -1);
+        const char *uri = "http://matahariproject.org/atom.xml";
+        uint32_t flags = 0;
+        TS_ASSERT((mh_sysconfig_run_uri(uri, flags, "puppet")) != -1);
     }
 };
 

@@ -45,7 +45,7 @@ using namespace qmf;
 using qpid::types::Variant;
 using qpid::messaging::Duration;
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     qpid::types::Variant::Map options;
     qpid::types::Variant::Map callOptions;

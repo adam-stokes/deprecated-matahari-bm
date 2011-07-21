@@ -25,27 +25,12 @@
 #ifndef __MH_SYSCONFIG_H__
 #define __MH_SYSCONFIG_H__
 
-typedef struct conf_s {
-	int flags;
-	const char *uri;
-	const char *data;
-	const char *query;
-	const char *key;
-	const char *scheme;
-} conf_t;
-
-
+#include <stdint.h>
 // Supported FLAGS
 #define SYSCONFIG_FLAG_FORCE    (1 << 0)
 
-extern int mh_sysconfig_run_uri(const char *uri, int flags, const char *scheme);
-extern int mh_sysconfig_run_string(const char *string, int flags, const char *scheme);
+extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme);
+extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme);
 extern int mh_sysconfig_query(const char *query, const char *data,
-                               int flags, const char *scheme);
-
-// scheme specific
-extern int mh_sysconfig_run_puppet(conf_t *cf);
-extern int mh_sysconfig_run_augeas(conf_t *cf);
-extern int mh_sysconfig_query_augeas(conf_t *cf);
-
+                               uint32_t flags, const char *scheme);
 #endif // __MH_SYSCONFIG_H__

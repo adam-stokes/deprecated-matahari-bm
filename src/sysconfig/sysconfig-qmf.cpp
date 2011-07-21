@@ -34,7 +34,9 @@
 extern "C" {
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <glib/gprintf.h>
 #include "matahari/sysconfig.h"
 #include "matahari/logging.h"
@@ -43,6 +45,8 @@ extern "C" {
 #include <sigar.h>
 #include <sigar_format.h>
 };
+
+static const char *configured_fn = "/var/lib/matahari/.is_configured";
 
 class ConfigAgent : public MatahariAgent
 {
@@ -79,22 +83,31 @@ ConfigAgent::setup(qmf::AgentSession session)
     return 0;
 }
 
+static void
+set_configured() {
+    if(!g_file_test(configured_fn, G_FILE_TEST_EXISTS)) {
+        g_creat(configured_fn, S_IRWXU);
+    }
+}
+
 static int
-is_configured(const char *key, int flags) {
-  int rc = 0;
+is_configured(uint32_t flags) {
 
   if(flags & SYSCONFIG_FLAG_FORCE) {
-    return rc;
+    return 0;
   }
 
-  return rc;
+  if(g_file_test(configured_fn, G_FILE_TEST_EXISTS)) {
+      return 1;
+  }
+  return 0;
 }
 
 gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
     int rc = 0;
-    int flags;
+    uint32_t flags;
 
 
     if (event.getType() != qmf::AGENT_METHOD) {
@@ -105,23 +118,29 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
 
     if (methodName == "run_uri") {
       flags = event.getArguments()["flags"].asInt32();
-        if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+        if((is_configured(flags)) == 0) {
             rc = mh_sysconfig_run_uri(event.getArguments()["uri"].asString().c_str(),
                 flags,
                 event.getArguments()["scheme"].asString().c_str());
+            if (rc == 0) {
+                set_configured();
+            }
         }
         event.addReturnArgument("configured", rc);
     } else if (methodName == "run_string") {
       flags = event.getArguments()["flags"].asInt32();
-      if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+      if((is_configured(flags)) == 0) {
         rc = mh_sysconfig_run_string(event.getArguments()["data"].asString().c_str(),
           flags,
           event.getArguments()["scheme"].asString().c_str());
+        if (rc == 0) {
+            set_configured();
+        }
       }
       event.addReturnArgument("configured", rc);
     } else if (methodName == "query") {
       flags = event.getArguments()["flags"].asInt32();
-      if((is_configured(_instance.getProperty("uuid").asString().c_str(), flags)) == 0) {
+      if((is_configured(flags)) == 0) {
         rc = mh_sysconfig_query(event.getArguments()["query"].asString().c_str(),
             event.getArguments()["data"].asString().c_str(),
             flags,
@@ -129,7 +148,7 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
       }
       event.addReturnArgument("configured", rc);
     } else if (methodName == "is_configured") {
-      rc = is_configured(event.getArguments()["key"].asString().c_str(), 0);
+      rc = is_configured(0);
       _instance.setProperty("is_postboot_configured", rc);
       event.addReturnArgument("configured", rc);
     } else {

@@ -15,3 +15,28 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <glib.h>
+
+#include "matahari/logging.h"
+#include "matahari/sysconfig.h"
+
+MH_TRACE_INIT_DATA(mh_sysconfig);
+
+int
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme) {
+
+    return 0;
+}
+
+int
+mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme) {
+
+    return 0;
+}
+
+int
+mh_sysconfig_query(const char *query, const char *data, uint32_t flags, const char *scheme) {
+
+    return 0;
+}
