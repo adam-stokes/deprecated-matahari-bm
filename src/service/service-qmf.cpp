@@ -298,7 +298,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
             args["name"].asString().c_str(), methodName.c_str(), 0,
             default_timeout_ms);
 
-        action_async(SRV_SERVICES, session, event, op, false);
+        action_async(SRV_SERVICES, session, event, op, true);
         return TRUE;
 
     } else if (methodName == "start"
