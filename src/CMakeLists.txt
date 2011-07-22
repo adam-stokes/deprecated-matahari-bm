@@ -67,7 +67,7 @@ if(NOT pcre_FOUND)
 endif(NOT pcre_FOUND)
 
 # uuid
-pkg_check_modules(uuid REQUIRED uuid)
+pkg_check_modules(uuid uuid)
 
 # Sigar
 find_library(SIGAR sigar)
