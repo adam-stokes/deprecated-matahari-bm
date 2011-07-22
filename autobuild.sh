@@ -74,9 +74,6 @@ fi
 
 $results
 
-# Disable windows until qpid is functional somewhere (again)
-exit 0
-
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
 
