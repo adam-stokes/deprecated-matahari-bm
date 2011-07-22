@@ -8,7 +8,11 @@ include_directories(${pcre_INCLUDE_DIRS})
 
 add_library (mcommon SHARED utilities.c mainloop.c dnssrv_${VARIANT}.c)
 set_target_properties(mcommon PROPERTIES SOVERSION 1.0.0)
-target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES} resolv)
+target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES})
+
+if(HAVE_RESOLV_H) 
+    target_link_libraries(mcommon resolv)
+endif(HAVE_RESOLV_H) 
 
 add_library (mhost SHARED host.c host_${VARIANT}.c)
 set_target_properties(mhost PROPERTIES SOVERSION 1.0.0)
