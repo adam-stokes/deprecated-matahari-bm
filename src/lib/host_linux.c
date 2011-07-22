@@ -33,6 +33,7 @@
 #include <linux/kd.h>
 
 #include <pcre.h>
+#include <uuid/uuid.h>
 
 #include "matahari/logging.h"
 #include "matahari/host.h"
@@ -160,3 +161,46 @@ host_os_identify(void)
 
     return res;
 }
+
+const char *host_os_machine_uuid(void)
+{
+    return "not-implemented";
+}
+
+const char *host_os_uuid(const char *lifetime)
+{
+    static char *agent_uuid = NULL;
+
+    if(lifetime == NULL || strcmp("Immutable", lifetime) == 0) {
+	return mh_uuid();
+
+    } else if(strcmp("Hardware", lifetime) == 0) {
+	return host_os_machine_uuid();
+
+    } else if(strcmp("Reboot", lifetime) == 0) {
+	return mh_read_file("/var/lib/dbus/machine-id");
+
+    } else if(strcmp("Agent", lifetime) == 0) {
+	if(agent_uuid == NULL) {
+	    uuid_t buffer;
+	    uuid_generate(buffer);
+
+	    agent_uuid = malloc(38);
+	    uuid_unparse(buffer, agent_uuid);
+	}
+	return agent_uuid;
+
+    } else if(strcmp("Custom", lifetime) == 0) {
+	return mh_read_file("/etc/custom-machine-id");
+    }
+    return "invalid-lifetime";
+}
+
+int host_os_uuid_set(const char *lifetime, const char *uuid)
+{
+    if(lifetime && strcmp("Custom", lifetime) == 0) {
+	return mh_write_file("/etc/custom-machine-id", uuid);
+    }
+    return -1;
+}
+

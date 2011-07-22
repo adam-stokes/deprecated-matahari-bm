@@ -93,3 +93,19 @@ host_os_identify(void)
 
     return Beep(FREQ, DURATION) ? 0 : -1;
 }
+
+const char *host_os_uuid(const char *lifetime)
+{
+    if(lifetime && strcmp("Custom", lifetime) == 0) {
+	return mh_read_file("custom-machine-id");
+    }
+    return "not-implemented";
+}
+
+int host_os_uuid_set(const char *lifetime, const char *uuid)
+{
+    if(lifetime && strcmp("Custom", lifetime) == 0) {
+	return mh_write_file("custom-machine-id", uuid);
+    }
+    return -1;
+}

@@ -111,6 +111,7 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
     }
 
     const std::string& methodName(event.getMethodName());
+    qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "shutdown") {
         mh_host_shutdown();
@@ -118,6 +119,36 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         mh_host_reboot();
     } else if (methodName == "identify") {
         mh_host_identify();
+    } else if (methodName == "set_uuid") {
+	const char *uuid = NULL;
+	const char *lifetime = NULL;
+
+        if(args.count("lifetime") > 0) {
+            lifetime = args["lifetime"].asString().c_str();
+        }
+
+        if(args.count("uuid") > 0) {
+            uuid = args["uuid"].asString().c_str();
+	    mh_host_set_uuid(lifetime, uuid);
+
+        } else {
+	    session.raiseException(event, "No UUID supplied");
+	    goto bail;
+	}
+
+    } else if (methodName == "get_uuid") {
+	const char *uuid = NULL;
+	const char *lifetime = NULL;
+
+        if(args.count("lifetime") > 0) {
+            lifetime = args["lifetime"].asString().c_str();
+        }
+
+	uuid = mh_host_get_uuid(lifetime);
+	if(uuid) {
+	    event.addReturnArgument("uuid", uuid);
+	}
+
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;
@@ -132,11 +163,16 @@ bail:
 int
 HostAgent::setup(qmf::AgentSession session)
 {
+    const char *custom_uuid = mh_host_get_uuid("Custom");
     _package.configure(session);
     _instance = qmf::Data(_package.data_Host);
 
     _instance.setProperty("update_interval", DEFAULT_UPDATE_INTERVAL);
-    _instance.setProperty("uuid", mh_host_get_uuid());
+    _instance.setProperty("uuid", mh_host_get_uuid("Immutable"));
+    if(custom_uuid) {
+	_instance.setProperty("custom_uuid", custom_uuid);
+    }
+
     _instance.setProperty("hostname", mh_host_get_hostname());
     _instance.setProperty("os", mh_host_get_operating_system());
     _instance.setProperty("wordsize", mh_host_get_cpu_wordsize());

@@ -49,4 +49,8 @@ host_os_shutdown(void);
 extern int
 host_os_identify(void);
 
+extern const char *host_os_uuid(const char *lifetime);
+
+extern int host_os_uuid_set(const char *lifetime, const char *uuid);
+
 #endif /* __MH_HOST_PRIVATE_H__ */

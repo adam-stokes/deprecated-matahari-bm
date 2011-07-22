@@ -66,6 +66,9 @@ if(NOT pcre_FOUND)
    message(FATAL_ERROR "PCRE header/library not found.")
 endif(NOT pcre_FOUND)
 
+# uuid
+pkg_check_modules(uuid REQUIRED uuid)
+
 # Sigar
 find_library(SIGAR sigar)
 if(SIGAR-NOTFOUND)

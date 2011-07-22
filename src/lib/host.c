@@ -77,12 +77,6 @@ init(void)
 }
 
 const char *
-mh_host_get_uuid(void)
-{
-    return mh_uuid();
-}
-
-const char *
 mh_host_get_hostname(void)
 {
     return mh_hostname();
@@ -259,4 +253,19 @@ int
 mh_host_identify(void)
 {
     return host_os_identify();
+}
+
+const char *
+mh_host_get_uuid(const char *lifetime)
+{
+    if(lifetime == NULL || strcmp("Immutable", lifetime) == 0) {
+	return mh_uuid();
+    }
+    return host_os_uuid(lifetime);
+}
+
+int
+mh_host_set_uuid(const char *lifetime, const char *uuid)
+{
+    return host_os_uuid_set(lifetime, uuid);
 }
