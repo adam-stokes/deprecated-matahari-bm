@@ -88,25 +88,27 @@ gboolean
 Host_get_uuid(Matahari* matahari, const char *lifetime, DBusGMethodInvocation *context)
 {
     GError* error = NULL;
+    const char *uuid = NULL;
     if (!check_authorization(HOST_BUS_NAME ".get_uuid", &error, context)) {
         dbus_g_method_return_error(context, error);
         return FALSE;
     }
-    mh_host_get_uuid(lifetime);
-    dbus_g_method_return(context, TRUE);
+    uuid = mh_host_get_uuid(lifetime);
+    dbus_g_method_return(context, uuid);
     return TRUE;
 }
 
 gboolean
 Host_set_uuid(Matahari* matahari, const char *lifetime, const char *uuid, DBusGMethodInvocation *context)
 {
+    int rc = 0;
     GError* error = NULL;
     if (!check_authorization(HOST_BUS_NAME ".set_uuid", &error, context)) {
         dbus_g_method_return_error(context, error);
         return FALSE;
     }
-    mh_host_set_uuid(lifetime, uuid);
-    dbus_g_method_return(context, TRUE);
+    rc = mh_host_set_uuid(lifetime, uuid);
+    dbus_g_method_return(context, rc);
     return TRUE;
 }
 

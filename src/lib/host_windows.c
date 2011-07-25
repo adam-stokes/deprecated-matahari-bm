@@ -94,18 +94,39 @@ host_os_identify(void)
     return Beep(FREQ, DURATION) ? 0 : -1;
 }
 
-const char *host_os_uuid(const char *lifetime)
+char *host_os_machine_uuid(void)
 {
-    if(lifetime && strcmp("Custom", lifetime) == 0) {
-	return mh_read_file("custom-machine-id");
-    }
+    return strdup("not-implemented");
+}
+
+char *host_os_custom_uuid(void)
+{    
+    return mh_file_first_line("custom-machine-id");
+}
+
+char *host_os_reboot_uuid(void)
+{
+    return strdup("not-implemented");
+}
+
+const char *host_os_agent_uuid(void)
+{
     return "not-implemented";
 }
 
-int host_os_uuid_set(const char *lifetime, const char *uuid)
+int host_os_set_custom_uuid(const char *uuid)
 {
-    if(lifetime && strcmp("Custom", lifetime) == 0) {
-	return mh_write_file("custom-machine-id", uuid);
+    int rc = 0;
+    GError* error = NULL;
+    
+    if(g_file_set_contents("custom-machine-id", uuid, strlen(uuid?uuid:""), &error) == FALSE) {
+	mh_info("%s", error->message);
+	rc = error->code;
     }
-    return -1;
+    
+    if(error) {
+	g_error_free(error);	
+    }
+
+    return rc;
 }

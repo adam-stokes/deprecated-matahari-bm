@@ -64,6 +64,7 @@
    <method name="set_uuid"  desc="Set a UUID with the specified lifetime" >
      <arg name="lifetime"   dir="I"  type="sstr" />
      <arg name="uuid"       dir="I"  type="sstr" />
+     <arg name="rc"         dir="O"  type="int32" />
    </method>
 
  </class>

@@ -33,8 +33,7 @@
 
 extern const char *mh_uuid(void);
 extern const char *mh_hostname(void);
-extern int  mh_write_file(const char *filename, const char *text);
-extern char *mh_read_file(const char *filename);
+extern char *mh_file_first_line(const char *file);
 extern void mh_abort(const char *file, const char *function, int line,
                      const char *assert_condition, int do_core, int do_fork);
 

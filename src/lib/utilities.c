@@ -366,63 +366,33 @@ mh_hostname(void)
     return hostname;
 }
 
-char *mh_read_file(const char *filename)
+char *mh_file_first_line(const char *file) 
 {
+    GError* error = NULL;
     char *buffer = NULL;
-#ifdef __linux__
-    int chunk = 512, data_length = 0, read_chars = 0;
-    FILE *input = fopen(filename, "r");
-    if (input) {
-	do {
-	    buffer = realloc(buffer, chunk + data_length + 1);
-	    read_chars = fread(buffer + data_length, 1, chunk, input);
-	    data_length += read_chars;
-	} while (read_chars > 0);
-    }
-    if (data_length == 0) {
-	mh_warn("Could not read from %s", filename);
 
-    } else {
+    if(g_file_get_contents(file, &buffer, NULL, &error) == FALSE) {
+	buffer = strdup(error->message);
+	g_error_free(error);
+    }
+	    
+    if (buffer) {
+	/* Truncate after at most one line */
+#ifdef __linux__
 	char *tmp = strchrnul(buffer, '\n');
-	*tmp = '\0';
-    }
-    if (input) {
-	fclose(input);
-    }
+	if(tmp) {
+	    *tmp = '\0';
+	}
 #else
-    buffer = strdup("windows-not-implemented");
+	int len = 0, lpc = 0;
+	for(len = strlen(buffer); lpc < len; lpc++) {
+	    if(buffer[lpc] == '\n') {
+		buffer[lpc] = '\0';
+	    }
+	}
 #endif
-
+    }
     return buffer;
-}
-
-int mh_write_file(const char *filename, const char *text)
-{
-    int rc = -1;
-#ifdef __linux__
-    int offset = 0, chunk = 512, data_length = text?strlen(text):0, write_chars = 0;
-    FILE *output = fopen(filename, "w");
-    if (output) {
-	do {
-	    write_chars = fwrite(text + offset, 1, chunk, output);
-	    offset += data_length;
-
-	} while (write_chars > 0 && offset < data_length);
-    }
-
-    if (offset <= 0) {
-	mh_warn("Could not write to '%s'", filename);
-
-    } else if (offset != data_length) {
-	mh_warn("Output to '%s' was truncated", filename);
-    } else {
-	rc = 0;
-    }
-    if (output) {
-	fclose(output);
-    }
-#endif
-    return rc;
 }
 
 const char *
@@ -436,7 +406,7 @@ mh_uuid(void)
 #endif
 
     if (filename != NULL && uuid == NULL) {
-	uuid = mh_read_file(filename);
+	uuid = mh_file_first_line(filename);
     }
 
     if (uuid == NULL) {

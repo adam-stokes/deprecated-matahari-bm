@@ -128,8 +128,10 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         }
 
         if(args.count("uuid") > 0) {
+	    int rc = 0;
             uuid = args["uuid"].asString().c_str();
-	    mh_host_set_uuid(lifetime, uuid);
+	    rc = mh_host_set_uuid(lifetime, uuid);
+	    event.addReturnArgument("rc", rc);
 
         } else {
 	    session.raiseException(event, "No UUID supplied");
