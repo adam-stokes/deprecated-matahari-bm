@@ -64,9 +64,10 @@ class MhApiHostSuite : public CxxTest::TestSuite
 
     void testUuid(void)
     {
-        infomsg << "Verify " << mh_host_get_uuid() << " exists";
+        const char *lifetime = NULL;
+        infomsg << "Verify " << mh_host_get_uuid(lifetime) << " exists";
         TS_TRACE(infomsg.str());
-        TS_ASSERT((mh_test_is_match("^[0-9a-zA-Z]+$", mh_host_get_uuid())) >= 0);
+        TS_ASSERT((mh_test_is_match("^[0-9a-zA-Z]+$", mh_host_get_uuid(lifetime))) >= 0);
         infomsg.str("");
     }
 
