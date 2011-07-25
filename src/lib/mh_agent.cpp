@@ -316,7 +316,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 memset(&hints, 0, sizeof(struct addrinfo));
                 hints.ai_family = AF_UNSPEC;
                 if ((rc = getaddrinfo(urlMap["servername"].asString().c_str(), NULL, &hints, &res)) != 0) {
-                    urlMap["servername"] = string("127.0.0.1");
+                    urlMap["servername"] = string("localhost");
                 }
 #endif
                 break;
@@ -453,7 +453,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
     try {
         _impl->_amqp_connection.open();
-    } catch (const std::exception& e) {
+    } catch (const std::exception& err) {
         while (!_impl->_amqp_connection.isOpen()) {
             mh_info("Trying DNS SRV");
             std::stringstream url;
@@ -470,14 +470,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
                 try {
                     _impl->_amqp_connection.open();
-                } catch (const std::exception& e) {
+                } catch (const std::exception& err2) {
                     mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
                     url << urlMap["servername"] << ":" << urlMap["serverport"];
                     urlMap["uri"] = url;
                     _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
                     try {
                         _impl->_amqp_connection.open();
-                    } catch (const std::exception& e) {
+                    } catch (const std::exception& err3) {
                         g_usleep(G_USEC_PER_SEC);
                     }
                 }

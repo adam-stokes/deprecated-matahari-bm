@@ -62,7 +62,7 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     gboolean ret;
     GError *error;
     char filename[PATH_MAX + 1];
-    gchar cmd[PATH_MAX];
+    gchar *cmd[2];
     int fd;
     FILE *fp;
 
@@ -89,10 +89,10 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     	return -1;
     }
 
-    g_snprintf(cmd, sizeof(cmd), "puppet %s", filename);
-    ret = g_spawn_async(NULL, (gchar **)cmd, NULL, G_SPAWN_SEARCH_PATH,
+    cmd[0] = "puppet";
+    cmd[1] = filename;
+    ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
             NULL, NULL, NULL, &error);
-    fprintf(stderr, "bool: %d", ret);
     if (ret == FALSE) {
         g_error_free(error);
         return -1;
