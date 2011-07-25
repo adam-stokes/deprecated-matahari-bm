@@ -25,25 +25,14 @@
 #include "config.h"
 #endif
 
+#include <qpid/agent/ManagementAgent.h>
+#include "qmf/org/matahariproject/QmfPackage.h"
 #include "matahari/agent.h"
 
-#include "qmf/org/matahariproject/QmfPackage.h"
-
-#include <qpid/agent/ManagementAgent.h>
-
 extern "C" {
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <glib.h>
-#include <glib/gstdio.h>
-#include <glib/gprintf.h>
-#include "matahari/sysconfig.h"
 #include "matahari/logging.h"
-#include "matahari/network.h"
 #include "matahari/host.h"
-#include <sigar.h>
-#include <sigar_format.h>
+#include "matahari/sysconfig.h"
 };
 
 class ConfigAgent : public MatahariAgent
@@ -86,7 +75,6 @@ gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
     int rc = 0;
-    uint32_t flags;
 
     const std::string& methodName(event.getMethodName());
     if (event.getType() != qmf::AGENT_METHOD) {
@@ -96,40 +84,33 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "run_uri") {
-        flags = args["flags"].asUint32();
-        if((mh_sysconfig_is_configured(args["key"].asString().c_str())) == 0) {
-            rc = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
-                flags,
-                args["scheme"].asString().c_str(),
-                args["key"].asString().c_str());
-            if (rc == 0) {
-                mh_sysconfig_set_configured(args["key"].asString().c_str());
-            }
-        }
-        event.addReturnArgument("configured", rc);
-    } else if (methodName == "run_string") {
-        flags = args["flags"].asUint32();
-        if((mh_sysconfig_is_configured(args["key"].asString().c_str())) == 0) {
-          rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
-            flags,
+        rc = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
+            args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
-          if (rc == 0) {
-              mh_sysconfig_set_configured(args["key"].asString().c_str());
-          }
+        if (rc == 0) {
+            mh_sysconfig_set_configured(args["key"].asString().c_str());
         }
-        event.addReturnArgument("configured", rc);
+        event.addReturnArgument("status", rc);
+    } else if (methodName == "run_string") {
+        rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
+            args["flags"].asUint32(),
+            args["scheme"].asString().c_str(),
+            args["key"].asString().c_str());
+        if (rc == 0) {
+            mh_sysconfig_set_configured(args["key"].asString().c_str());
+        }
+        event.addReturnArgument("status", rc);
     } else if (methodName == "query") {
-        flags = args["flags"].asUint32();
         const char *data = NULL;
         data = mh_sysconfig_query(args["query"].asString().c_str(),
-                                  flags,
+                                  args["flags"].asUint32(),
                                   args["scheme"].asString().c_str());
         event.addReturnArgument("query", data);
     } else if (methodName == "is_configured") {
         rc = mh_sysconfig_is_configured(args["key"].asString().c_str());
         _instance.setProperty("is_postboot_configured", rc);
-        event.addReturnArgument("configured", rc);
+        event.addReturnArgument("status", rc);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

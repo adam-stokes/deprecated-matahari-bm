@@ -42,8 +42,8 @@
  * \retval 0 for success
  * \retval-1 for failure
  */
-extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
-        const char *key);
+extern int 
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key);
 
 /**
  * Process a text blob
@@ -57,7 +57,8 @@ extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *sch
  * \retval 0 for success
  * \retval-1 for failure
   */
-extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
+extern int
+mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
         const char *key);
 
 /**

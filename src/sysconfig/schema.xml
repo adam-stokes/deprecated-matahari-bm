@@ -8,28 +8,32 @@
 
         <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
 
-       	<method name="run_uri"             desc="Send configure uri method">
+        <method name="run_uri"             desc="Send configure uri method">
           <arg name="uri"                  dir="I" type="sstr" />
+          <arg name="flags"                dir="I" type="uint32" />
           <arg name="scheme"               dir="I" type="sstr" />
           <arg name="key"                  dir="I" type="sstr" />
-          <arg name="flags"                dir="I" type="uint32" />
+          <arg name="status"         dir="O"  type="uint32" />
         </method>
 
         <method name="run_string"          desc="Send configure text method">
           <arg name="text"                 dir="I" type="sstr" />
+          <arg name="flags"                dir="I" type="uint32" />
           <arg name="scheme"               dir="I" type="sstr" />
           <arg name="key"                  dir="I" type="sstr" />
-          <arg name="flags"                dir="I" type="uint32" />
+          <arg name="status"         dir="O"  type="uint32" />
         </method>
 
         <method name="query"               desc="Perform query lookup">
           <arg name="text"                 dir="I" type="sstr" />
-          <arg name="scheme"               dir="I" type="sstr" />
           <arg name="flags"                dir="I" type="uint32" />
+          <arg name="scheme"               dir="I" type="sstr" />
+          <arg name="data"         dir="O"  type="sstr" />
         </method>
 
         <method name="is_configured"       desc="Check if system is configured">
           <arg name="key"                  dir="I" type="sstr" />
+          <arg name="status"               dir="O" type="uint32" />
         </method>
     </class>
 </schema>

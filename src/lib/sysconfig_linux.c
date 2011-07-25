@@ -60,37 +60,39 @@ static int
 sysconfig_os_run_puppet(const char *uri, const char *data)
 {
     gboolean ret;
-    GError *error;
+    GError *error = NULL;
     char filename[PATH_MAX + 1];
-    gchar *cmd[2];
+    gchar *cmd[3];
     int fd;
     FILE *fp;
 
     if (uri != NULL) {
-		strncpy(filename, "puppet_conf_XXXXXX", sizeof(filename) -1);
-		fd = mkstemp(filename);
-		if (fd < 0) {
-		    return -1;
-		}
-		fp = fdopen(fd, "w+b");
-		if (fp == NULL) {
-		    fclose(fp);
-		    return -1;
-		}
-		if ((sysconfig_os_download(uri, fp)) != 0) {
-		    fclose(fp);
-		    return -1;
-		}
-		fclose(fp);
+        strncpy(filename, "puppet_conf_XXXXXX", sizeof(filename) -1);
+        fd = mkstemp(filename);
+        if (fd < 0) {
+            return -1;
+        }
+        fp = fdopen(fd, "w+b");
+        if (fp == NULL) {
+            fclose(fp);
+            return -1;
+        }
+        if ((sysconfig_os_download(uri, fp)) != 0) {
+            fclose(fp);
+            return -1;
+        }
+        fclose(fp);
     } else if (data != NULL) {
-		strncpy(filename,"puppet_conf_blob", sizeof(filename) -1);
-		g_file_set_contents(filename, data, strlen(data), NULL);
+        strncpy(filename,"puppet_conf_blob", sizeof(filename) -1);
+        g_file_set_contents(filename, data, strlen(data), NULL);
     } else {
-    	return -1;
+        return -1;
     }
 
     cmd[0] = "puppet";
     cmd[1] = filename;
+    cmd[2] = NULL;
+    mh_info("Running %s %s", cmd[0], cmd[1]);
     ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
             NULL, NULL, NULL, &error);
     if (ret == FALSE) {
@@ -119,23 +121,23 @@ int
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key)
 {
-	int rc = 0;
+    int rc = 0;
 
-	if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
+    if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
             rc = sysconfig_os_run_puppet(uri, NULL);
         } else {
             rc = -1;
         }
-	}
-	return rc;
+    }
+    return rc;
 }
 
 int
 sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
         const char *key)
 {
-	int rc = 0;
+    int rc = 0;
 
     if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
@@ -144,17 +146,17 @@ sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
             rc = -1;
         }
     }
-	return rc;
+    return rc;
 }
 
 const char *
 sysconfig_os_query(const char *query, uint32_t flags, const char *scheme)
 {
-	const char *data = NULL;
+    const char *data = NULL;
 
-	if (strcasecmp(scheme, "augeas") == 0) {
-	    data = sysconfig_os_query_augeas(query);
-	}
+    if (strcasecmp(scheme, "augeas") == 0) {
+        data = sysconfig_os_query_augeas(query);
+    }
 
-	return data;
+    return data;
 }

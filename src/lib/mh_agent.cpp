@@ -376,10 +376,13 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     }
 
     if(urlMap["servername"].asString().empty()) {
-        urlMap["servername"] = string("127.0.0.1");
+        urlMap["servername"] = string("localhost");
+    }
+    if(urlMap["serverport"].asString().empty()) {
+        urlMap["serverport"] = string("49000");
     }
     url << "amqp:" << urlMap["protocol"] << ":" << urlMap["servername"] << ":" << urlMap["serverport"] ;
-    urlMap["uri"] = url;
+    urlMap["uri"] = url.str();
 
     return urlMap;
 }
@@ -448,7 +451,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
-    mh_info("Connecting %s to Qpid broker at %s", proc_name, urlMap["servername"].asString().c_str());
+    mh_info("Connecting %s to Qpid broker at %s", proc_name, urlMap["uri"].asString().c_str());
 
     _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
     try {
@@ -465,7 +468,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
             ret = mh_srv_lookup(query, target, sizeof(target));
             if (ret == 0) {
                 url << target << ":" << urlMap["serverport"];
-                urlMap["uri"] = url;
+                urlMap["uri"] = url.str();
             }
                 _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
                 try {
@@ -473,7 +476,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 } catch (const std::exception& err2) {
                     mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
                     url << urlMap["servername"] << ":" << urlMap["serverport"];
-                    urlMap["uri"] = url;
+                    urlMap["uri"] = url.str();
                     _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
                     try {
                         _impl->_amqp_connection.open();
