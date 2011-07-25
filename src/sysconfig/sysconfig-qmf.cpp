@@ -95,41 +95,40 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "run_uri") {
-      flags = args["flags"].asUint32();
-        if((mh_is_configured(flags,args["key"].asString().c_str())) == 0) {
+        flags = args["flags"].asUint32();
+        if((mh_sysconfig_is_configured(args["key"].asString().c_str())) == 0) {
             rc = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
                 flags,
                 args["scheme"].asString().c_str(),
                 args["key"].asString().c_str());
             if (rc == 0) {
-                mh_set_configured(args["key"].asString().c_str());
+                mh_sysconfig_set_configured(args["key"].asString().c_str());
             }
         }
         event.addReturnArgument("configured", rc);
     } else if (methodName == "run_string") {
-      flags = args["flags"].asUint32();
-      if((mh_is_configured(flags, args["key"].asString().c_str())) == 0) {
-        rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
-          flags,
-          args["scheme"].asString().c_str(),
-          args["key"].asString().c_str());
-        if (rc == 0) {
-            mh_set_configured(args["key"].asString().c_str());
+        flags = args["flags"].asUint32();
+        if((mh_sysconfig_is_configured(args["key"].asString().c_str())) == 0) {
+          rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
+            flags,
+            args["scheme"].asString().c_str(),
+            args["key"].asString().c_str());
+          if (rc == 0) {
+              mh_sysconfig_set_configured(args["key"].asString().c_str());
+          }
         }
-      }
-      event.addReturnArgument("configured", rc);
+        event.addReturnArgument("configured", rc);
     } else if (methodName == "query") {
-      flags = args["flags"].asUint32();
-      const char *data = NULL;
-      data = mh_sysconfig_query(args["query"].asString().c_str(),
-                                flags,
-                                args["scheme"].asString().c_str());
-      event.addReturnArgument("query", data);
+        flags = args["flags"].asUint32();
+        const char *data = NULL;
+        data = mh_sysconfig_query(args["query"].asString().c_str(),
+                                  flags,
+                                  args["scheme"].asString().c_str());
+        event.addReturnArgument("query", data);
     } else if (methodName == "is_configured") {
-      flags = args["flags"].asUint32();
-      rc = mh_is_configured(flags, args["key"].asString().c_str());
-      _instance.setProperty("is_postboot_configured", rc);
-      event.addReturnArgument("configured", rc);
+        rc = mh_sysconfig_is_configured(args["key"].asString().c_str());
+        _instance.setProperty("is_postboot_configured", rc);
+        event.addReturnArgument("configured", rc);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

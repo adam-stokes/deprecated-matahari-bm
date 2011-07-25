@@ -20,11 +20,12 @@
 
 #include "matahari/logging.h"
 #include "matahari/sysconfig.h"
+#include "sysconfig_private.h"
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
+sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key)
 {
 
@@ -32,7 +33,7 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
 }
 
 int
-mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme,
+sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
         const char *key)
 {
 
@@ -40,7 +41,7 @@ mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme,
 }
 
 const char *
-mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
+sysconfig_os_query(const char *query, uint32_t flags, const char *scheme)
 {
     const char *data = NULL;
     return data;

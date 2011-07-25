@@ -17,6 +17,8 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <glib.h>
@@ -26,49 +28,26 @@
 #include "matahari/logging.h"
 #include "matahari/sysconfig.h"
 #include "matahari/utilities.h"
+#include "sysconfig_private.h"
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
-static const char configured_fn[] = "/var/lib/matahari/.is_configured";
-
-static char **
-string_to_array(const char *contents)
-{
-    char **keys = NULL;
-    keys = g_strsplit(contents, "\n", 0);
-    return keys;
-}
+#ifdef WIN32
+static const char keys_dir[] = "c:\\";
+#else
+static const char keys_dir[] = "/var/lib/matahari/";
+#endif
 
 static gboolean
 set_key(const char *key)
 {
-    char *contents = NULL;
-    char *contents_appended = NULL;
-    char **keys_array = NULL;
-    size_t length;
+    char key_file[PATH_MAX];
+    const char contents[] = "1";
 
-    if (!g_file_test(configured_fn, G_FILE_TEST_EXISTS)) {
-        if (!g_file_set_contents(configured_fn, key, -1, NULL)) {
-            mh_err("Could not read file %s", configured_fn);
-            return FALSE;
-        }
-    } else {
-        if (g_file_get_contents(configured_fn, &contents, &length, NULL)) {
-            int i = 0;
-            keys_array = string_to_array(contents);
-            while (keys_array[i] != NULL) {
-                if ((strcasecmp(key, keys_array[i])) == 0) {
-                    return TRUE;
-                }
-                i++;
-            }
-            contents_appended = g_strconcat(contents, "\n", key, NULL);
-            g_file_set_contents(configured_fn, contents_appended, -1, NULL);
-            g_strfreev(keys_array);
-        } else {
-            mh_err("Unable to write to keys file");
-            return FALSE;
-        }
+    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
+    if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
+        mh_err("Could not set file %s", key_file);
+        return FALSE;
     }
     return TRUE;
 }
@@ -76,27 +55,22 @@ set_key(const char *key)
 static gboolean
 get_key(const char *key)
 {
+    char key_file[PATH_MAX];
+    char *contents;
     size_t length;
-    int i = 0;
-    char *contents = NULL;
-    char **keys_array = NULL;
-    if (g_file_test(configured_fn, G_FILE_TEST_EXISTS)) {
-        g_file_get_contents(configured_fn, &contents, &length, NULL);
-        keys_array = string_to_array(contents);
-        while (keys_array[i] != NULL) {
-            if ((strcasecmp(key, keys_array[i])) == 0) {
-                g_strfreev(keys_array);
-                return TRUE;
-            }
-            i++;
+
+    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
+    if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
+        g_file_get_contents(key_file, &contents, &length, NULL);
+        if ((strcmp(contents, "1")) == 0) {
+            return TRUE;
         }
     }
-    g_strfreev(keys_array);
     return FALSE;
 }
 
 gboolean
-mh_set_configured(const char *key)
+mh_sysconfig_set_configured(const char *key)
 {
     if (!set_key(key)) {
         return FALSE;
@@ -105,15 +79,27 @@ mh_set_configured(const char *key)
 }
 
 gboolean
-mh_is_configured(uint32_t flags, const char *key)
+mh_sysconfig_is_configured(const char *key)
 {
-    if (flags & MH_SYSCONFIG_FLAG_FORCE) {
-        return FALSE;
-    }
-
     if (!get_key(key)) {
         return FALSE;
     }
     return TRUE;
 }
 
+int
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
+        const char *key) {
+    return sysconfig_os_run_uri(uri, flags, scheme, key);
+}
+
+int
+mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
+        const char *key) {
+    return sysconfig_os_run_string(string, flags, scheme, key);
+}
+
+const char *
+mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme) {
+    return sysconfig_os_query(query, flags, scheme);
+}

@@ -39,7 +39,8 @@
  * \param[in] key configuration key for keeping track of existing
  *            configuration runs
  *
- * \return 0 for success -1 for fail
+ * \retval 0 for success
+ * \retval-1 for failure
  */
 extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key);
@@ -53,8 +54,9 @@ extern int mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *sch
  * \param[in] key configuration key for keeping track of existing
  *            configuration runs
  *
- * \return 0 for success -1 for fail
- */
+ * \retval 0 for success
+ * \retval-1 for failure
+  */
 extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
         const char *key);
 
@@ -65,7 +67,8 @@ extern int mh_sysconfig_run_string(const char *string, uint32_t flags, const cha
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
  *
- * \return data the result found from query
+ * \retval 0 for success
+ * \retval-1 for failure
  */
 extern const char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
@@ -78,15 +81,17 @@ mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
  * \return TRUE if applying key to config succeeds
  */
 extern gboolean
-mh_set_configured(const char *key);
+mh_sysconfig_set_configured(const char *key);
 
 /**
  * Test if system has been configured
  *
  * \param[in] flags allow a force reconfiguration
  * \param[in] key config item to test if used
+ *
+ * \return TRUE if system is configured
  */
 extern gboolean
-mh_is_configured(uint32_t flags, const char *key);
+mh_sysconfig_is_configured(const char *key);
 
 #endif // __MH_SYSCONFIG_H__

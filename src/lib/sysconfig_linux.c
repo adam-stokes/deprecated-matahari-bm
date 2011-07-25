@@ -29,12 +29,13 @@
 #include "matahari/logging.h"
 #include "matahari/sysconfig.h"
 #include "matahari/utilities.h"
+#include "sysconfig_private.h"
 
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 static int
-download(const char *uri, FILE *fp)
+sysconfig_os_download(const char *uri, FILE *fp)
 {
     CURL *curl;
     CURLcode res;
@@ -56,7 +57,7 @@ download(const char *uri, FILE *fp)
 
 
 static int
-mh_sysconfig_run_puppet(const char *uri, const char *data)
+sysconfig_os_run_puppet(const char *uri, const char *data)
 {
     gboolean ret;
     GError *error;
@@ -73,9 +74,10 @@ mh_sysconfig_run_puppet(const char *uri, const char *data)
 		}
 		fp = fdopen(fd, "w+b");
 		if (fp == NULL) {
+		    fclose(fp);
 		    return -1;
 		}
-		if ((download(uri, fp)) != 0) {
+		if ((sysconfig_os_download(uri, fp)) != 0) {
 		    fclose(fp);
 		    return -1;
 		}
@@ -99,14 +101,14 @@ mh_sysconfig_run_puppet(const char *uri, const char *data)
 }
 
 static int
-mh_sysconfig_run_augeas(const char *query, const char *data)
+sysconfig_os_run_augeas(const char *query, const char *data)
 {
     mh_warn("not implemented\n");
     return 0;
 }
 
 static const char *
-mh_sysconfig_query_augeas(const char *query)
+sysconfig_os_query_augeas(const char *query)
 {
     const char *data = NULL;
     mh_warn("not implemented\n");
@@ -114,40 +116,44 @@ mh_sysconfig_query_augeas(const char *query)
 }
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
+sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key)
 {
 	int rc = 0;
 
-	if (strcasecmp(scheme, "puppet") == 0) {
-        rc = mh_sysconfig_run_puppet(uri, NULL);
-	} else {
-        rc = -1;
+	if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
+        if (strcasecmp(scheme, "puppet") == 0) {
+            rc = sysconfig_os_run_puppet(uri, NULL);
+        } else {
+            rc = -1;
+        }
 	}
 	return rc;
 }
 
 int
-mh_sysconfig_run_string(const char *data, uint32_t flags, const char *scheme,
+sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
         const char *key)
 {
 	int rc = 0;
 
-	if (strcasecmp(scheme, "puppet") == 0) {
-        rc = mh_sysconfig_run_puppet(NULL, data);
-	} else {
-	    rc = -1;
-	}
+    if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
+        if (strcasecmp(scheme, "puppet") == 0) {
+            rc = sysconfig_os_run_puppet(NULL, data);
+        } else {
+            rc = -1;
+        }
+    }
 	return rc;
 }
 
 const char *
-mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
+sysconfig_os_query(const char *query, uint32_t flags, const char *scheme)
 {
 	const char *data = NULL;
 
 	if (strcasecmp(scheme, "augeas") == 0) {
-	    data = mh_sysconfig_query_augeas(query);
+	    data = sysconfig_os_query_augeas(query);
 	}
 
 	return data;
