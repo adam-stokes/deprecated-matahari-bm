@@ -20,7 +20,7 @@
 #include "config.h"
 #endif
 
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 #include "qmf/org/matahariproject/QmfPackage.h"
 
@@ -40,6 +40,7 @@ class NetAgent : public MatahariAgent
 {
 private:
     qmf::org::matahariproject::PackageDefinition _package;
+    qmf::Data _instance;
 public:
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
@@ -84,7 +85,7 @@ NetAgent::setup(qmf::AgentSession session)
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
 
-    _agent_session.addData(_instance);
+    session.addData(_instance);
     return 0;
 }
 

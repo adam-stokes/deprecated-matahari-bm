@@ -366,40 +366,51 @@ mh_hostname(void)
     return hostname;
 }
 
+char *mh_file_first_line(const char *file) 
+{
+    GError* error = NULL;
+    char *buffer = NULL;
+
+    if(g_file_get_contents(file, &buffer, NULL, &error) == FALSE) {
+	buffer = strdup(error->message);
+	g_error_free(error);
+    }
+	    
+    if (buffer) {
+	/* Truncate after at most one line */
+#ifdef __linux__
+	char *tmp = strchrnul(buffer, '\n');
+	if(tmp) {
+	    *tmp = '\0';
+	}
+#else
+	int len = 0, lpc = 0;
+	for(len = strlen(buffer); lpc < len; lpc++) {
+	    if(buffer[lpc] == '\n') {
+		buffer[lpc] = '\0';
+	    }
+	}
+#endif
+    }
+    return buffer;
+}
+
 const char *
 mh_uuid(void)
 {
     static char *uuid = NULL;
+    const char *filename = NULL;
+
+#ifdef __linux__
+    filename = "/etc/machine-id";
+#endif
+
+    if (filename != NULL && uuid == NULL) {
+	uuid = mh_file_first_line(filename);
+    }
 
     if (uuid == NULL) {
-#ifdef __linux__
-        char *buffer = NULL;
-        int chunk = 512, data_length = 0, read_chars = 0;
-        const char *uuid_file = "/var/lib/dbus/machine-id";
-        FILE *input = fopen(uuid_file, "r");
-        if (input) {
-            do {
-                buffer = realloc(buffer, chunk + data_length + 1);
-                read_chars = fread(buffer + data_length, 1, chunk, input);
-                data_length += read_chars;
-            } while (read_chars > 0);
-        }
-        if (data_length == 0) {
-            mh_warn("Could not read from %s", uuid_file);
-            uuid = strdup("unknown");
-
-        } else {
-            char *tmp = strchrnul(buffer, '\n');
-            *tmp = '\0';
-            uuid = strdup(buffer);
-        }
-        if (input) {
-            fclose(input);
-        }
-        free(buffer);
-#else
-        uuid = strdup("unknown");
-#endif
+	uuid = strdup("not-implemented");
     }
 
     mh_trace("Got uuid: %s", uuid);

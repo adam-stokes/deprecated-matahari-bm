@@ -20,8 +20,8 @@ else(WIN32)
 endif(WIN32)
 option(WITH-QMF "Build the QMF daemon" ON)
 
-set(CMAKE_C_FLAGS "-Wall")
-set(CMAKE_CXX_FLAGS "-Wall")
+set(CMAKE_C_FLAGS "-Wall -Wshadow")
+set(CMAKE_CXX_FLAGS "-Wall -Wshadow")
 
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
@@ -65,6 +65,9 @@ endif(NOT pcre_FOUND)
 if(NOT pcre_FOUND)
    message(FATAL_ERROR "PCRE header/library not found.")
 endif(NOT pcre_FOUND)
+
+# uuid
+pkg_check_modules(uuid uuid)
 
 # Sigar
 find_library(SIGAR sigar)
@@ -144,20 +147,27 @@ add_subdirectory(tests)
 ### Installation
 install(FILES ${SCHEMAS} DESTINATION share/matahari)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/matahari.h DESTINATION include)
+install(FILES include/matahari/logging.h DESTINATION include/matahari)
+install(FILES include/matahari/utilities.h DESTINATION include/matahari)
+install(FILES include/matahari/dnssrv.h DESTINATION include/matahari)
+install(FILES include/matahari/host.h DESTINATION include/matahari)
+install(FILES include/matahari/network.h DESTINATION include/matahari)
+install(FILES include/matahari/postboot.h DESTINATION include/matahari)
+install(FILES include/matahari/services.h DESTINATION include/matahari)
 install(FILES cmake/modules/FindMatahari.cmake DESTINATION share/cmake/Modules)
 install(FILES cmake/modules/MatahariMacros.cmake DESTINATION share/cmake/Modules)
 
 if(WITH-QMF)
     install(FILES cmake/modules/FindQPID.cmake DESTINATION share/cmake/Modules)
-    install(FILES include/matahari/mh_agent.h DESTINATION include/matahari)
+    install(FILES include/matahari/agent.h DESTINATION include/matahari)
     install(FILES include/matahari/mainloop.h DESTINATION include/matahari)
 endif(WITH-QMF)
 
 if(WITH-DBUS)
     install(FILES schema-to-dbus.xsl DESTINATION share/matahari)
     install(FILES dbus-to-c.xsl DESTINATION share/matahari)
-    install(FILES include/matahari/mh_dbus_common.h DESTINATION include/matahari)
-    install(FILES include/matahari/mh_gobject_class.h DESTINATION include/matahari)
+    install(FILES include/matahari/dbus_common.h DESTINATION include/matahari)
+    install(FILES include/matahari/gobject_class.h DESTINATION include/matahari)
 endif(WITH-DBUS)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)

@@ -29,7 +29,9 @@
 #include <stdlib.h>
 #include <sigar.h>
 
-extern const char *mh_host_get_uuid(void);
+
+extern const char *mh_host_get_uuid(const char *lifetime);
+extern int mh_host_set_uuid(const char *lifetime, const char *uuid);
 extern const char *mh_host_get_hostname(void);
 extern const char *mh_host_get_operating_system(void);
 

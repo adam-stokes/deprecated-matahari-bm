@@ -39,7 +39,7 @@ int use_stderr = 0;
 #include <qpid/client/ConnectionSettings.h>
 // #include <qpid/sys/ssl/util.h>
 #include <qmf/DataAddr.h>
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 extern "C" {
 #include <sys/types.h>
@@ -56,6 +56,16 @@ extern "C" {
 using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
+
+
+struct MatahariAgentImpl {
+    GMainLoop *_mainloop;
+    mainloop_qmf_t *_qpid_source;
+
+    qmf::AgentSession _agent_session;
+    qpid::messaging::Connection _amqp_connection;
+};
+
 
 int print_help(int code, const char *name, const char *arg, void *userdata);
 
@@ -405,6 +415,21 @@ static int should_daemonize(int code, const char *name, const char *arg, void *u
     return 0;
 }
 
+MatahariAgent::MatahariAgent(): _impl(new MatahariAgentImpl())
+{
+
+}
+
+MatahariAgent::~MatahariAgent()
+{
+    delete _impl;
+}
+
+qmf::AgentSession& MatahariAgent::getSession(void)
+{
+    return _impl->_agent_session;
+}
+
 int
 MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {
@@ -425,11 +450,11 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     mh_info("Connecting %s to Qpid broker at %s", proc_name, urlMap["servername"].asString().c_str());
 
-    _amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
     try {
-    _amqp_connection.open();
+        _impl->_amqp_connection.open();
     } catch (const std::exception& e) {
-        while (!_amqp_connection.isOpen()) {
+        while (!_impl->_amqp_connection.isOpen()) {
             mh_info("Trying DNS SRV");
             std::stringstream url;
             url << "amqp:tcp:";
@@ -442,16 +467,16 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                 url << target << ":" << urlMap["serverport"];
                 urlMap["uri"] = url;
             }
-                _amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
                 try {
-                _amqp_connection.open();
+                    _impl->_amqp_connection.open();
                 } catch (const std::exception& e) {
                     mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
                     url << urlMap["servername"] << ":" << urlMap["serverport"];
                     urlMap["uri"] = url;
-                    _amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+                    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
                     try {
-                    _amqp_connection.open();
+                        _impl->_amqp_connection.open();
                     } catch (const std::exception& e) {
                         g_usleep(G_USEC_PER_SEC);
                     }
@@ -459,26 +484,26 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         }
     }
 
-    _agent_session = qmf::AgentSession(_amqp_connection);
-    _agent_session.setVendor("matahariproject.org");
-    _agent_session.setProduct(proc_name);
-    _agent_session.setAttribute("uuid", mh_uuid());
-    _agent_session.setAttribute("hostname", mh_hostname());
+    _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection);
+    _impl->_agent_session.setVendor("matahariproject.org");
+    _impl->_agent_session.setProduct(proc_name);
+    _impl->_agent_session.setAttribute("uuid", mh_uuid());
+    _impl->_agent_session.setAttribute("hostname", mh_hostname());
 
-    _agent_session.open();
+    _impl->_agent_session.open();
 
     /* Do any setup required by our agent */
-    if (this->setup(_agent_session) < 0) {
+    if (this->setup(_impl->_agent_session) < 0) {
         mh_err("Failed to set up broker connection to %s for %s\n",
                urlMap["servername"].asString().c_str(), proc_name);
         res = -1;
         goto return_cleanup;
     }
 
-    this->mainloop = g_main_new(FALSE);
-    this->qpid_source = mainloop_add_qmf(G_PRIORITY_HIGH, _agent_session,
-                                         mh_qpid_callback, mh_qpid_disconnect,
-                                         this);
+    _impl->_mainloop = g_main_new(FALSE);
+    _impl->_qpid_source = mainloop_add_qmf(G_PRIORITY_HIGH, _impl->_agent_session,
+                                           mh_qpid_callback, mh_qpid_disconnect,
+                                           this);
 
 return_cleanup:
     return res;
@@ -488,7 +513,7 @@ void
 MatahariAgent::run()
 {
     mh_trace("Starting agent mainloop");
-    g_main_run(this->mainloop);
+    g_main_run(_impl->_mainloop);
 }
 
 static gboolean

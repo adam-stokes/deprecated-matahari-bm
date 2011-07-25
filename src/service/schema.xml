@@ -2,7 +2,6 @@
 
  <eventArguments>
 
-   <!-- Common -->
    <arg name="timestamp"      type="absTime" />
    <arg name="sequence"       type="uint32"  />
 
@@ -40,9 +39,11 @@
    </method>
    <method name="enable"        desc="Configure a system service to start at boot">
      <arg name="name"           dir="I"  type="sstr" />
+     <arg name="rc"             dir="O"  type="uint32" />
    </method>
    <method name="disable"       desc="Configure a system service _not_ to start at boot">
      <arg name="name"           dir="I"  type="sstr" />
+     <arg name="rc"             dir="O"  type="uint32" />
    </method>
    <method name="start"         desc="Start a system service">
      <arg name="name"           dir="I"  type="sstr" />
@@ -122,31 +123,6 @@
      <arg name="name"           dir="I"  type="sstr"   />
      <arg name="rc"             dir="I"  type="uint32" />
    </method>
-   <!-- Something functions we can add later if necessary
-   <method name="list_variants" desc="List known implementations of a given resource type">
-     <arg name="agent"           dir="I"  type="sstr" />
-     <arg name="standard"       dir="I"  type="sstr" />
-     <arg name="providers"      dir="O"  type="list" />
-   </method>
-   <method name="last"          desc="Retrieve the last action for a resource">
-     <arg name="name"           dir="I"  type="sstr"   />
-     <arg name="standard"       dir="O"  type="sstr"   />
-     <arg name="provider"       dir="O"  type="sstr"   />
-     <arg name="agent"          dir="O"  type="sstr"   />
-     <arg name="action"         dir="O"  type="sstr"   />
-     <arg name="interval"       dir="O"  type="uint32" />
-     <arg name="parameters"     dir="O"  type="map"    />
-     <arg name="timeout"        dir="O"  type="uint32" />
-     <arg name="expected-rc"    dir="O"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-     <arg name="sequence"       dir="O"  type="uint32" />
-     <arg name="userdata"       dir="O"  type="sstr"   />
-   </method>
-   <method name="history"       desc="Retrieve all recorded actions for a resource">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="operations"     dir="O"  type="list" />
-   </method>
-   -->
  </class>
 
 </schema>

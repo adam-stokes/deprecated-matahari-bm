@@ -77,12 +77,6 @@ init(void)
 }
 
 const char *
-mh_host_get_uuid(void)
-{
-    return mh_uuid();
-}
-
-const char *
 mh_host_get_hostname(void)
 {
     return mh_hostname();
@@ -96,11 +90,11 @@ mh_host_get_operating_system(void)
     init();
 
     if (operating_system == NULL) {
-        sigar_sys_info_t sysinfo;
+        sigar_sys_info_t sys_info;
 
-        sigar_sys_info_get(host_init.sigar, &sysinfo);
-        operating_system = g_strdup_printf("%s (%s)", sysinfo.vendor_name,
-                                           sysinfo.version);
+        sigar_sys_info_get(host_init.sigar, &sys_info);
+        operating_system = g_strdup_printf("%s (%s)", sys_info.vendor_name,
+                                           sys_info.version);
     }
 
     return operating_system;
@@ -120,10 +114,10 @@ mh_host_get_architecture(void)
     init();
 
     if (arch == NULL) {
-        sigar_sys_info_t sysinfo;
+        sigar_sys_info_t sys_info;
 
-        sigar_sys_info_get(host_init.sigar, &sysinfo);
-        arch = g_strdup(sysinfo.arch);
+        sigar_sys_info_get(host_init.sigar, &sys_info);
+        arch = g_strdup(sys_info.arch);
     }
 
     return arch;
@@ -198,12 +192,12 @@ uint64_t
 mh_host_get_mem_free(void)
 {
     sigar_mem_t mem;
-    uint64_t free;
+    uint64_t free_mem;
     init();
 
     sigar_mem_get(host_init.sigar, &mem);
-    free = mem.free / 1024;
-    return free;
+    free_mem = mem.free / 1024;
+    return free_mem;
 }
 
 uint64_t
@@ -222,12 +216,12 @@ uint64_t
 mh_host_get_swap_free(void)
 {
     sigar_swap_t swap;
-    uint64_t free;
+    uint64_t free_mem;
     init();
 
     sigar_swap_get(host_init.sigar, &swap);
-    free = swap.free / 1024;
-    return free;
+    free_mem = swap.free / 1024;
+    return free_mem;
 }
 
 static void
@@ -259,4 +253,57 @@ int
 mh_host_identify(void)
 {
     return host_os_identify();
+}
+
+const char *
+mh_host_get_uuid(const char *lifetime)
+{
+    static const char *immutable_uuid = NULL;
+    static const char *hardware_uuid = NULL;
+    static const char *reboot_uuid = NULL;
+    static const char *agent_uuid = NULL;
+    static const char *custom_uuid = NULL;
+
+    if(lifetime == NULL || strcmp("Filesystem", lifetime) == 0) {
+	if(immutable_uuid == NULL) {
+	    immutable_uuid = mh_uuid();
+	}
+	return immutable_uuid;
+
+    } else if(strcmp("Hardware", lifetime) == 0) {
+	if(hardware_uuid == NULL) {
+	    hardware_uuid = host_os_machine_uuid();
+	}
+	return hardware_uuid; 
+
+    } else if(strcmp("Reboot", lifetime) == 0) {
+
+	if(reboot_uuid == NULL) {
+	    reboot_uuid = host_os_reboot_uuid();
+	}
+	return reboot_uuid;
+
+    } else if(strcmp("Agent", lifetime) == 0) {
+	if(agent_uuid == NULL) {
+	    agent_uuid = host_os_agent_uuid();
+	}
+	return agent_uuid;
+
+    } else if(strcmp("Custom", lifetime) == 0) {
+	if(custom_uuid == NULL) {
+	    custom_uuid = host_os_custom_uuid();
+	}
+	return custom_uuid;
+    }
+    
+    return "invalid-lifetime";
+}
+
+int
+mh_host_set_uuid(const char *lifetime, const char *uuid)
+{
+    if(lifetime && strcmp("Custom", lifetime) == 0) {
+	return host_os_set_custom_uuid(uuid);
+    }
+    return G_FILE_ERROR_NOSYS;
 }

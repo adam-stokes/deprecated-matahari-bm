@@ -18,6 +18,9 @@
 # pidfile: @localstatedir@/run/matahari-@BASE@.pid
 #
 
+# Turn off automatic systemd redirects
+SYSTEMCTL_SKIP_REDIRECT=1
+
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 

@@ -10,9 +10,13 @@ add_library (mcommon SHARED utilities.c mainloop.c dnssrv_${VARIANT}.c)
 set_target_properties(mcommon PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mcommon ${SIGAR} ${glib_LIBRARIES})
 
+if(HAVE_RESOLV_H)
+    target_link_libraries(mcommon resolv)
+endif(HAVE_RESOLV_H)
+
 add_library (mhost SHARED host.c host_${VARIANT}.c)
 set_target_properties(mhost PROPERTIES SOVERSION 1.0.0)
-target_link_libraries(mhost ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
+target_link_libraries(mhost ${uuid_LIBRARIES} ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
 add_library (mnetwork SHARED network.c  network_${VARIANT}.c)
 set_target_properties(mnetwork PROPERTIES SOVERSION 1.0.0)

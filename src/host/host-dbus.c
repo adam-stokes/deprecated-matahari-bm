@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "matahari/mh_dbus_common.h"
+#include "matahari/dbus_common.h"
 
 /* Host methods */
 #include "matahari/host.h"
@@ -84,6 +84,34 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
     return TRUE;
 }
 
+gboolean
+Host_get_uuid(Matahari* matahari, const char *lifetime, DBusGMethodInvocation *context)
+{
+    GError* error = NULL;
+    const char *uuid = NULL;
+    if (!check_authorization(HOST_BUS_NAME ".get_uuid", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
+    uuid = mh_host_get_uuid(lifetime);
+    dbus_g_method_return(context, uuid);
+    return TRUE;
+}
+
+gboolean
+Host_set_uuid(Matahari* matahari, const char *lifetime, const char *uuid, DBusGMethodInvocation *context)
+{
+    int rc = 0;
+    GError* error = NULL;
+    if (!check_authorization(HOST_BUS_NAME ".set_uuid", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
+    rc = mh_host_set_uuid(lifetime, uuid);
+    dbus_g_method_return(context, rc);
+    return TRUE;
+}
+
 /* Generated dbus stuff for host
  * MUST be after declaration of user defined functions.
  */
@@ -115,7 +143,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
 
     switch (property_id) {
     case PROP_UUID:
-        g_value_set_string (value, mh_host_get_uuid());
+        g_value_set_string (value, mh_host_get_uuid(NULL));
         break;
     case PROP_HOSTNAME:
         g_value_set_string (value, mh_host_get_hostname());

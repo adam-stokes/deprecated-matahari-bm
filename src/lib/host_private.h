@@ -49,4 +49,11 @@ host_os_shutdown(void);
 extern int
 host_os_identify(void);
 
+extern char *host_os_machine_uuid(void);
+extern char *host_os_custom_uuid(void);
+extern char *host_os_reboot_uuid(void);
+extern const char *host_os_agent_uuid(void);
+
+extern int host_os_set_custom_uuid(const char *uuid);
+
 #endif /* __MH_HOST_PRIVATE_H__ */

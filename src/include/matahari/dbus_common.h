@@ -27,7 +27,7 @@
 #include <dbus/dbus-glib.h>
 
 /* GObject class definition */
-#include "mh_gobject_class.h"
+#include "matahari/gobject_class.h"
 
 /* Private struct in Matahari class */
 #define MATAHARI_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \

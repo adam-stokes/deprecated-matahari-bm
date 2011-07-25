@@ -25,7 +25,7 @@
 #include "config.h"
 #endif
 
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 #include "qmf/org/matahariproject/QmfPackage.h"
 
@@ -50,6 +50,7 @@ class ConfigAgent : public MatahariAgent
 {
 private:
     qmf::org::matahariproject::PackageDefinition _package;
+    qmf::Data _instance;
 public:
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
@@ -77,7 +78,7 @@ ConfigAgent::setup(qmf::AgentSession session)
     _instance.setProperty("uuid", mh_uuid());
     _instance.setProperty("is_postboot_configured", 0);
 
-    _agent_session.addData(_instance, "sysconfig");
+    session.addData(_instance, "sysconfig");
     return 0;
 }
 

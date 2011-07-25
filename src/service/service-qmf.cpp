@@ -28,7 +28,7 @@ extern "C" {
 #include <string>
 #include <qpid/management/Manageable.h>
 #include <qpid/agent/ManagementAgent.h>
-#include "matahari/mh_agent.h"
+#include "matahari/agent.h"
 
 #include "qmf/org/matahariproject/QmfPackage.h"
 
@@ -207,7 +207,7 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
         event.setProperty("userdata", userdata);
     }
 
-    _agent_session.raiseEvent(event);
+    getSession().raiseEvent(event);
 }
 
 int
@@ -298,7 +298,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
             args["name"].asString().c_str(), methodName.c_str(), 0,
             default_timeout_ms);
 
-        action_async(SRV_SERVICES, session, event, op, false);
+        action_async(SRV_SERVICES, session, event, op, true);
         return TRUE;
 
     } else if (methodName == "start"

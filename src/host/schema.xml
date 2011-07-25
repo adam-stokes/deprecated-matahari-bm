@@ -10,10 +10,10 @@
 
 <!-- Host API -->
  <class name="Host">
-   <!-- properties -->
-   <property name="uuid"             type="sstr"   access="RO" desc="Host UUID" index="y" />
+   <!-- Properties -->
    <property name="hostname"         type="sstr"   access="RO" desc="Hostname" index="y" />
-   <property name="hardware_uuid"    type="sstr"   access="RO" desc="Host Hardware UUID"  />
+   <property name="uuid"             type="sstr"   access="RO" desc="Filesystem Host UUID" index="y" />
+   <property name="custom_uuid"      type="sstr"   access="RO" desc="Custom Host UUID" index="y" />
 
    <property name="os"               type="sstr"   access="RO" desc="The installed operating system." />
    <property name="arch"             type="sstr"   access="RO" desc="The host's architecture" />
@@ -29,7 +29,7 @@
 
    <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
 
-   <!-- statistics -->
+   <!-- Statistics -->
    <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
    <statistic name="sequence"        type="uint32"  desc="The heartbeat sequence number." />
 
@@ -39,10 +39,34 @@
    <statistic name="load"	        type="map"  desc="The one/five/fifteen minute load average" />
    <statistic name="process_statistics" type="map"  desc="Number of processes in each possible state" />
 
-   <!-- APIs -->
-   <method name="identify"                desc="Tells the host to beep its pc speaker." />
-   <method name="shutdown"                desc="Shutdown node" />
-   <method name="reboot"                  desc="Reboot node" />
+   <!-- Methods -->
+   <method name="identify"  desc="Tell the host to beep its pc speaker." />
+   <method name="shutdown"  desc="Shutdown node" />
+   <method name="reboot"    desc="Reboot node" />
+   <!--
+	  | Valid UUID lifetimes:
+	  |	Filesystem	- Automatically configured by the system during installation and never reset.
+	  |			  May be pre-populated.
+	  |	Hardware	- UUID supplied by or generated from the underlying hardware
+	  |	Reboot		- Automatically (re)configured by the system whenever it boots
+	  |	Agent		- Automatically (re)configured by the agent whenever it starts
+	  |	Custom		- Manually configured by the admin/user. 
+	  |			  May be pre-populated.
+   -->
+   <method name="get_uuid"  desc="Obtain a UUID with the specified lifetime from the machine" >
+     <arg name="lifetime"   dir="I"  type="sstr" />
+     <arg name="uuid"       dir="O"  type="sstr" />
+   </method>
+   <!--
+	  |  The only valid lifetime for 'set_uuid' is 'Custom'
+	  |  Later implementations may support re-generating the 'Hardware' uuid
+   -->
+   <method name="set_uuid"  desc="Set a UUID with the specified lifetime" >
+     <arg name="lifetime"   dir="I"  type="sstr" />
+     <arg name="uuid"       dir="I"  type="sstr" />
+     <arg name="rc"         dir="O"  type="int32" />
+   </method>
+
  </class>
 
  <event name="heartbeat" args="timestamp,sequence" />
