@@ -12,7 +12,7 @@
  <class name="Host">
    <!-- Properties -->
    <property name="hostname"         type="sstr"   access="RO" desc="Hostname" index="y" />
-   <property name="uuid"             type="sstr"   access="RO" desc="Immutable Host UUID" index="y" />
+   <property name="uuid"             type="sstr"   access="RO" desc="Filesystem Host UUID" index="y" />
    <property name="custom_uuid"      type="sstr"   access="RO" desc="Custom Host UUID" index="y" />
 
    <property name="os"               type="sstr"   access="RO" desc="The installed operating system." />
@@ -45,9 +45,9 @@
    <method name="reboot"    desc="Reboot node" />
    <!--
 	  | Valid UUID lifetimes:
-	  |	Immutable	- Automatically configured by the system once if not found and never reset.
+	  |	Filesystem	- Automatically configured by the system during installation and never reset.
 	  |			  May be pre-populated.
-	  |	Hardware	- Automatically (re)configured by the system whenever the underlying hardware changes
+	  |	Hardware	- UUID supplied by or generated from the underlying hardware
 	  |	Reboot		- Automatically (re)configured by the system whenever it boots
 	  |	Agent		- Automatically (re)configured by the agent whenever it starts
 	  |	Custom		- Manually configured by the admin/user. 

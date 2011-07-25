@@ -264,7 +264,7 @@ mh_host_get_uuid(const char *lifetime)
     static const char *agent_uuid = NULL;
     static const char *custom_uuid = NULL;
 
-    if(lifetime == NULL || strcmp("Immutable", lifetime) == 0) {
+    if(lifetime == NULL || strcmp("Filesystem", lifetime) == 0) {
 	if(immutable_uuid == NULL) {
 	    immutable_uuid = mh_uuid();
 	}

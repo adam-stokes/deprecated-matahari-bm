@@ -170,7 +170,7 @@ HostAgent::setup(qmf::AgentSession session)
     _instance = qmf::Data(_package.data_Host);
 
     _instance.setProperty("update_interval", DEFAULT_UPDATE_INTERVAL);
-    _instance.setProperty("uuid", mh_host_get_uuid("Immutable"));
+    _instance.setProperty("uuid", mh_host_get_uuid("Filesystem"));
     if(custom_uuid) {
 	_instance.setProperty("custom_uuid", custom_uuid);
     }
