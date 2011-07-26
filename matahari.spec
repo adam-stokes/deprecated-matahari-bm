@@ -5,8 +5,12 @@
 %global alphatag %{upstream_version}.git
 %global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
+# Messaging buses
 %bcond_without dbus
 %bcond_without qmf
+
+# Systemd init scripts
+%bcond_without systemd
 
 Name:		matahari
 Version:	0.4.1
@@ -33,6 +37,10 @@ BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:  cxxtest
+
+%if %{with systemd}
+BuildRequires:	systemd-units
+%endif
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
@@ -307,6 +315,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
+%if %{with systemd}
+%{_unitdir}/matahari-network.service
+%endif
+
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-network
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
@@ -320,6 +332,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
+%if %{with systemd}
+%{_unitdir}/matahari-host.service
+%endif
+
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-host
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
@@ -332,6 +348,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files service
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
+
+%if %{with systemd}
+%{_unitdir}/matahari-service.service
+%endif
 
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-service

@@ -399,15 +399,16 @@ const char *
 mh_uuid(void)
 {
     static char *uuid = NULL;
-    const char *filename = NULL;
 
 #ifdef __linux__
-    filename = "/etc/machine-id";
-#endif
-
-    if (filename != NULL && uuid == NULL) {
-	uuid = mh_file_first_line(filename);
+    if (uuid == NULL) {
+	uuid = mh_file_first_line("/etc/machine-id");
     }
+    if (uuid == NULL) {
+	/* For pre-systemd machines */
+	uuid = mh_file_first_line("/var/lib/dbus/machine-id");
+    }
+#endif
 
     if (uuid == NULL) {
 	uuid = strdup("not-implemented");

@@ -48,6 +48,12 @@ if(NOT PKG_CONFIG_FOUND)
 endif(NOT PKG_CONFIG_FOUND)
 
 ## Modules
+# systemd
+pkg_check_modules(systemd systemd)
+if(systemd_FOUND)
+    set(systemdunitdir "/lib/systemd/system")
+endif(systemd_FOUND)
+
 # pcre
 pkg_check_modules(pcre REQUIRED libpcre)
 if(NOT pcre_FOUND)

@@ -18,6 +18,12 @@ if(WITH-QMF)
     endif(NOT WIN32)
 
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
+
+    if(systemd_FOUND)
+        configure_file(${CMAKE_SOURCE_DIR}/matahari.service.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service)
+        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service DESTINATION ${systemdunitdir})
+    endif(systemd_FOUND)
+    
 endif(WITH-QMF)
 
 
