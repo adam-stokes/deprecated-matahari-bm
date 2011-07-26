@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <windows.h>
 #include <glib.h>
 
 #include "matahari/logging.h"
@@ -24,11 +25,31 @@
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
+static int
+sysconfig_os_run_regedit(const char *registry_file)
+{
+    gchar *cmd[4];
+    gboolean ret;
+    GError *error = NULL;
+
+    cmd[0] = "REGEDIT";
+    cmd[1] = "/S";
+    cmd[2] = registry_file;
+    cmd[3] = NULL;
+
+    ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
+            NULL, NULL, NULL, &error);
+    if (ret == FALSE) {
+        g_error_free(error);
+        return -1;
+    }
+    return 0;
+}
+
 int
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key)
 {
-
     return 0;
 }
 
@@ -36,7 +57,12 @@ int
 sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
         const char *key)
 {
-
+    char *filename[PATH_MAX];
+    g_snprintf(filename, sizeof(filename), "%s.REG", key);
+    if (strcasecmp(scheme, "registry") == 0 ) {
+            g_file_set_contents(filename, data, strlen(data), NULL);
+            return sysconfig_os_run_regedit(filename);
+    }
     return 0;
 }
 

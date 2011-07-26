@@ -42,7 +42,7 @@ static gboolean
 set_key(const char *key)
 {
     char key_file[PATH_MAX];
-    const char contents[] = "1";
+    const char contents[] = "ok";
 
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
     if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
@@ -62,7 +62,7 @@ get_key(const char *key)
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
     if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
         g_file_get_contents(key_file, &contents, &length, NULL);
-        if ((strcmp(contents, "1")) == 0) {
+        if ((strcmp(contents, "ok")) == 0) {
         	free(contents);
             return TRUE;
         }
