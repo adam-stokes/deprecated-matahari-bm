@@ -1,0 +1,20 @@
+[Unit]
+Description=Matahari agent providing a @BASE@-related API using the AMQP protocol.
+After=syslog.target network.target
+Requires=syslog.target network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+KillMode=main
+NotifyAccess=main
+SysVStartPriority=99
+GuessMainPID=forking
+
+EnvironmentFile=@sysconfdir@/sysconfig/matahari
+ExecStart=matahari-qmf-@BASE@d
+
+# Restart options include: no, on-success, on-failure, on-abort or always
+Restart=on-failure
