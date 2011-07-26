@@ -26,7 +26,7 @@
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 static int
-sysconfig_os_run_regedit(const char *registry_file)
+sysconfig_os_run_regedit(char *registry_file)
 {
     gchar *cmd[4];
     gboolean ret;
@@ -57,7 +57,7 @@ int
 sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
         const char *key)
 {
-    char *filename[PATH_MAX];
+    char filename[PATH_MAX];
     g_snprintf(filename, sizeof(filename), "%s\\%s.REG", g_getenv("TEMP"), key);
     if (strcasecmp(scheme, "registry") == 0 ) {
             g_file_set_contents(filename, data, strlen(data), NULL);
