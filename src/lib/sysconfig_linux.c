@@ -18,12 +18,13 @@
 
 #ifndef WIN32
 #include "config.h"
-#include <stddef.h>
 #endif
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <unistd.h>
 #include <glib.h>
 #include <curl/curl.h>
 #include "matahari/logging.h"
@@ -50,6 +51,7 @@ sysconfig_os_download(const char *uri, FILE *fp)
         if (CURLE_OK != res) {
             return -1;
         }
+        curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
     return 0;
@@ -61,20 +63,20 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
 {
     gboolean ret;
     GError *error = NULL;
-    char filename[PATH_MAX + 1];
     gchar *cmd[3];
+    char *filename = NULL;
     int fd;
     FILE *fp;
 
     if (uri != NULL) {
-        strncpy(filename, "puppet_conf_XXXXXX", sizeof(filename) -1);
+    	snprintf(filename, PATH_MAX, "%s", "puppet_conf_XXXXXX");
         fd = mkstemp(filename);
         if (fd < 0) {
             return -1;
         }
         fp = fdopen(fd, "w+b");
         if (fp == NULL) {
-            fclose(fp);
+        	close(fd);
             return -1;
         }
         if ((sysconfig_os_download(uri, fp)) != 0) {
@@ -83,7 +85,7 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
         }
         fclose(fp);
     } else if (data != NULL) {
-        strncpy(filename,"puppet_conf_blob", sizeof(filename) -1);
+        snprintf(filename, PATH_MAX, "%s", "puppet_conf_blob");
         g_file_set_contents(filename, data, strlen(data), NULL);
     } else {
         return -1;

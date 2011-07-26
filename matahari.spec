@@ -32,6 +32,7 @@ BuildRequires:	gcc-c++
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
+BuildRequires:  cxxtest
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
@@ -109,14 +110,14 @@ QMF agent for viewing and controlling remote hosts
 
 %package network
 License:	GPLv2+
-Summary:	QMF agent for network devices  
+Summary:	QMF agent for network devices
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
 Obsoletes:	matahari-net < %{version}-%{release}
 
 %description network
-QMF agent for viewing and controlling network devices  
+QMF agent for viewing and controlling network devices
 
 %package service
 License:	GPLv2+

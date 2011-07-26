@@ -453,6 +453,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     mh_info("Connecting %s to Qpid broker at %s", proc_name, urlMap["uri"].asString().c_str());
 
+    // TODO: Write routine to clean the below up for testing connections and building uris
     _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
     try {
         _impl->_amqp_connection.open();
@@ -460,11 +461,12 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         while (!_impl->_amqp_connection.isOpen()) {
             mh_info("Trying DNS SRV");
             std::stringstream url;
-            url << "amqp:tcp:";
+            url << "amqp:" << urlMap["protocol"] << ":";
             int ret;
             char query[NS_MAXDNAME];
             char target[NS_MAXDNAME];
-            g_snprintf(query, sizeof(query), "_matahari._tcp.%s", urlMap["servername"].asString().c_str());
+            g_snprintf(query, sizeof(query), "_matahari._tcp.%s",
+            			urlMap["servername"].asString().c_str());
             ret = mh_srv_lookup(query, target, sizeof(target));
             if (ret == 0) {
                 url << target << ":" << urlMap["serverport"];
@@ -475,6 +477,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                     _impl->_amqp_connection.open();
                 } catch (const std::exception& err2) {
                     mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
+                    url << "amqp:" << urlMap["protocol"] << ":";
                     url << urlMap["servername"] << ":" << urlMap["serverport"];
                     urlMap["uri"] = url.str();
                     _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);

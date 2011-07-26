@@ -63,6 +63,7 @@ get_key(const char *key)
     if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
         g_file_get_contents(key_file, &contents, &length, NULL);
         if ((strcmp(contents, "1")) == 0) {
+        	free(contents);
             return TRUE;
         }
     }
