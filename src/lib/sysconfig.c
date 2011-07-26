@@ -61,11 +61,13 @@ get_key(const char *key)
 
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
     if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
-        g_file_get_contents(key_file, &contents, &length, NULL);
-        if ((strcmp(contents, "ok")) == 0) {
-        	free(contents);
-            return TRUE;
+        if(g_file_get_contents(key_file, &contents, &length, NULL)) {
+            if (strcmp(contents, "ok") == 0) {
+                free(contents);
+                return TRUE;
+            }
         }
+        free(contents);
     }
     return FALSE;
 }

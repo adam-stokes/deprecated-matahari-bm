@@ -42,7 +42,7 @@
  * \retval 0 for success
  * \retval-1 for failure
  */
-extern int 
+extern int
 mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key);
 
 /**
@@ -68,8 +68,7 @@ mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
  *
- * \retval 0 for success
- * \retval-1 for failure
+ * \return DATA of returned query result
  */
 extern const char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);

@@ -69,14 +69,14 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     FILE *fp;
 
     if (uri != NULL) {
-    	snprintf(filename, PATH_MAX, "%s", "puppet_conf_XXXXXX");
+        snprintf(filename, PATH_MAX, "%s", "puppet_conf_XXXXXX");
         fd = mkstemp(filename);
         if (fd < 0) {
             return -1;
         }
         fp = fdopen(fd, "w+b");
         if (fp == NULL) {
-        	close(fd);
+            close(fd);
             return -1;
         }
         if ((sysconfig_os_download(uri, fp)) != 0) {

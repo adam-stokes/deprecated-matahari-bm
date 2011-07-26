@@ -13,7 +13,7 @@
           <arg name="flags"                dir="I" type="uint32" />
           <arg name="scheme"               dir="I" type="sstr" />
           <arg name="key"                  dir="I" type="sstr" />
-          <arg name="status"               dir="O"  type="uint32" />
+          <arg name="status"               dir="O"  type="sstr" />
         </method>
 
         <method name="run_string"          desc="Send configure text method">
@@ -21,7 +21,7 @@
           <arg name="flags"                dir="I" type="uint32" />
           <arg name="scheme"               dir="I" type="sstr" />
           <arg name="key"                  dir="I" type="sstr" />
-          <arg name="status"               dir="O"  type="uint32" />
+          <arg name="status"               dir="O"  type="sstr" />
         </method>
 
         <method name="query"               desc="Perform query lookup">
