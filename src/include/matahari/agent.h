@@ -1,7 +1,6 @@
 /* mh_agent.cpp - Copyright (C) 2010 Red Hat, Inc.
  * Written by Andrew Beekhof <andrew@beekhof.net>
  *
- *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
@@ -47,6 +46,9 @@ int required_argument = 1;
 
 #define MH_NOT_IMPLEMENTED "Not implemented"
 
+#ifndef NS_MAXDNAME
+# define NS_MAXDNAME 1025
+#endif
 using namespace qpid::management;
 using namespace std;
 
@@ -67,7 +69,7 @@ extern int mh_add_option(
     int code, int has_arg, const char *name, const char *description,
     void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata));
 
-extern string mh_parse_options(
+extern qpid::types::Variant::Map mh_parse_options(
     const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options);
 
 extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,

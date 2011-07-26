@@ -1,4 +1,4 @@
-/* 
+/*
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -43,7 +43,7 @@ using namespace qmf;
 using qpid::types::Variant;
 using qpid::messaging::Duration;
 
-static int 
+static int
 resource_arg(int code, const char *name, const char *arg, void *userdata)
 {
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
@@ -96,12 +96,11 @@ int main(int argc, char** argv)
 
     mh_add_option('o', required_argument, "option", "Option to pass to the resource script (Resources API only)", NULL, NULL);
 
-    string url = mh_parse_options("service-console", argc, argv, options);
+    qpid::types::Variant::Map url = mh_parse_options("service-console", argc, argv, options);
 
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init("service-console", mh_log_level, mh_log_level > LOG_INFO);
-    
-    qpid::messaging::Connection connection(url, options);
+    qpid::messaging::Connection connection(url["uri"], options);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);
@@ -118,8 +117,7 @@ int main(int argc, char** argv)
 	/* Restrict further, to a single host */
 	filter << ", [eq, hostname, [quote, " << options["host-dns"] << "]]";
     }
-    
-    filter << "]"; 
+    filter << "]";
 
     /* Only interested in agents under matahariproject.org vendor
      * Set before opening the session to avoid unwanted events

@@ -42,8 +42,13 @@ int use_stderr = 0;
 #include "matahari/agent.h"
 
 extern "C" {
+#include <sys/types.h>
 #include "matahari/logging.h"
 #include "matahari/dnssrv.h"
+#ifndef WIN32
+#include <sys/socket.h>
+#include <netdb.h>
+#endif
 }
 
 using namespace qpid::management;
@@ -192,22 +197,18 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     return 0;
 }
 
-string
+qpid::types::Variant::Map
 mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options)
 {
     std::stringstream url;
+    qpid::types::Variant::Map urlMap;
 
-    int arg;
-    int serverport  = MATAHARI_PORT;
-    char *servername = NULL;
-
-    const char *protocol = NULL;
     const char *ssl_cert_db = NULL;
     const char *ssl_cert_name = NULL;
     const char *ssl_cert_password_file = NULL;
     int lpc = 0;
 
-    options["reconnect"] = true;
+    options["reconnect"] = false;
 
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                    NULL, NULL, NULL);
@@ -229,15 +230,14 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     if (RegistryRead(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
                      L"broker", &value) == 0) {
-        free(servername);
-        servername = value;
+        urlMap["servername"] = value;
         value = NULL;
     }
 
     if (RegistryRead(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
                      L"port", &value) == 0) {
-        serverport = atoi(value);
+        urlMap["serverport"] = atoi(value);
         free(value);
         value = NULL;
     }
@@ -264,6 +264,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     int opt_string_len = 0;
     char opt_string[2 * DIMOF(matahari_options)];
     struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
+    struct addrinfo hints, *res;
+    int rc, arg;
 
     /* Force more local-only processing */
     mh_add_option('h', no_argument, "help", NULL, NULL, NULL);
@@ -304,10 +306,17 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 mh_enable_stderr(1);
                 break;
             case 'p':
-                serverport = atoi(optarg);
+                urlMap["serverport"] = optarg;
                 break;
             case 'b':
-                servername = strdup(optarg);
+                urlMap["servername"] = optarg;
+#ifndef WIN32
+                memset(&hints, 0, sizeof(struct addrinfo));
+                hints.ai_family = AF_UNSPEC;
+                if ((rc = getaddrinfo(urlMap["servername"].asString().c_str(), NULL, &hints, &res)) != 0) {
+                    urlMap["servername"] = string("localhost");
+                }
+#endif
                 break;
             case 'N':
                 ssl_cert_name = optarg;
@@ -359,34 +368,21 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 #endif
 
     if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
-        protocol = "ssl";
+        urlMap["protocol"] = "ssl";
     } else {
-        protocol = "tcp";
+        urlMap["protocol"] = "tcp";
     }
 
-    /*
-     * Based on servername do a SRV lookup for best possible
-     * server providing this service.
-     */
-    if (servername) {
-#ifdef HAVE_RESOLV_A
-        int ret;
-        char query[NS_MAXDNAME];
-        char target[NS_MAXDNAME];
-        g_snprintf(query, sizeof(query), "_matahari._tcp.%s", servername); 
-        ret = mh_srv_lookup(query, target, sizeof(target));
-        if (ret == 0) {
-            servername = strdup(target);
-        } 
-#endif
-    } else {
-        servername = strdup(MATAHARI_BROKER);
+    if(urlMap["servername"].asString().empty()) {
+        urlMap["servername"] = string("localhost");
     }
+    if(urlMap["serverport"].asString().empty()) {
+        urlMap["serverport"] = string("49000");
+    }
+    url << "amqp:" << urlMap["protocol"] << ":" << urlMap["servername"] << ":" << urlMap["serverport"] ;
+    urlMap["uri"] = url.str();
 
-    url << "amqp:" << protocol << ":" << servername << ":" << serverport ;
-
-    free(servername);
-    return url.str();
+    return urlMap;
 }
 
 int
@@ -445,9 +441,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     mh_log_init(proc_name, LOG_INFO, TRUE);
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
 
-    string url = mh_parse_options(proc_name, argc, argv, options);
-
-    cout << options << endl;
+    qpid::types::Variant::Map urlMap = mh_parse_options(proc_name, argc, argv, options);
 
 
     /* Re-initialize logging now that we've completed option processing */
@@ -456,10 +450,44 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
-    mh_info("Connecting %s to Qpid broker at %s", proc_name, url.c_str());
+    mh_info("Connecting %s to Qpid broker at %s", proc_name, urlMap["uri"].asString().c_str());
 
-    _impl->_amqp_connection = qpid::messaging::Connection(url, options);
-    _impl->_amqp_connection.open();
+    // TODO: Write routine to clean the below up for testing connections and building uris
+    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+    try {
+        _impl->_amqp_connection.open();
+    } catch (const std::exception& err) {
+        while (!_impl->_amqp_connection.isOpen()) {
+            mh_info("Trying DNS SRV");
+            std::stringstream url;
+            url << "amqp:" << urlMap["protocol"] << ":";
+            int ret;
+            char query[NS_MAXDNAME];
+            char target[NS_MAXDNAME];
+            g_snprintf(query, sizeof(query), "_matahari._tcp.%s",
+            			urlMap["servername"].asString().c_str());
+            ret = mh_srv_lookup(query, target, sizeof(target));
+            if (ret == 0) {
+                url << target << ":" << urlMap["serverport"];
+                urlMap["uri"] = url.str();
+            }
+                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+                try {
+                    _impl->_amqp_connection.open();
+                } catch (const std::exception& err2) {
+                    mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
+                    url << "amqp:" << urlMap["protocol"] << ":";
+                    url << urlMap["servername"] << ":" << urlMap["serverport"];
+                    urlMap["uri"] = url.str();
+                    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+                    try {
+                        _impl->_amqp_connection.open();
+                    } catch (const std::exception& err3) {
+                        g_usleep(G_USEC_PER_SEC);
+                    }
+                }
+        }
+    }
 
     _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection);
     _impl->_agent_session.setVendor("matahariproject.org");
@@ -472,7 +500,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     /* Do any setup required by our agent */
     if (this->setup(_impl->_agent_session) < 0) {
         mh_err("Failed to set up broker connection to %s for %s\n",
-               url.c_str(), proc_name);
+               urlMap["servername"].asString().c_str(), proc_name);
         res = -1;
         goto return_cleanup;
     }
