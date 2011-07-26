@@ -1,4 +1,4 @@
-set(BASE "postboot")
+set(BASE "sysconfig")
 set(BASE_LIB "m${BASE}")
 set(QMF_AGENT "matahari-qmf-${BASE}d")
 set(QMF_CONSOLE "matahari-qmf-${BASE}-consoled")
@@ -18,9 +18,9 @@ if(WITH-QMF)
     if(NOT WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
         install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
-    	# Override BASE for matahari-postboot-console
+    	# Override BASE for matahari-sysconfig-console
     	unset(BASE)
-    	set(BASE "postboot-console")
+    	set(BASE "sysconfig-console")
     	configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
     	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
     endif(NOT WIN32)

@@ -1,0 +1,39 @@
+<schema package="org.matahariproject">
+
+    <!-- Config API -->
+    <class name="Sysconfig">
+        <property name="uuid"                   type="sstr" access="RO" desc="Host UUID" />
+        <property name="hostname"               type="sstr" access="RO" desc="Hostname" index="y"/>
+        <property name="is_postboot_configured" type="uint32" access="RO" desc="Check if agent is configured." />
+
+        <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
+
+        <method name="run_uri"             desc="Send configure uri method">
+          <arg name="uri"                  dir="I" type="sstr" />
+          <arg name="flags"                dir="I" type="uint32" />
+          <arg name="scheme"               dir="I" type="sstr" />
+          <arg name="key"                  dir="I" type="sstr" />
+          <arg name="status"               dir="O"  type="sstr" />
+        </method>
+
+        <method name="run_string"          desc="Send configure text method">
+          <arg name="text"                 dir="I" type="sstr" />
+          <arg name="flags"                dir="I" type="uint32" />
+          <arg name="scheme"               dir="I" type="sstr" />
+          <arg name="key"                  dir="I" type="sstr" />
+          <arg name="status"               dir="O"  type="sstr" />
+        </method>
+
+        <method name="query"               desc="Perform query lookup">
+          <arg name="text"                 dir="I" type="sstr" />
+          <arg name="flags"                dir="I" type="uint32" />
+          <arg name="scheme"               dir="I" type="sstr" />
+          <arg name="data"                 dir="O"  type="sstr" />
+        </method>
+
+        <method name="is_configured"       desc="Check if system is configured">
+          <arg name="key"                  dir="I" type="sstr" />
+          <arg name="status"               dir="O" type="sstr" />
+        </method>
+    </class>
+</schema>

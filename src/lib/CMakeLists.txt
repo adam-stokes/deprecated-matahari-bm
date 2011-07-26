@@ -1,10 +1,10 @@
 # Library
 
-set(LIBS mcommon mhost mnetwork mservice mpostboot)
+set(LIBS mcommon mhost mnetwork mservice msysconfig)
 include_directories(${pcre_INCLUDE_DIRS})
 
 # See http://sourceware.org/autobook/autobook/autobook_91.html for
-# how to set the library version appropriately 
+# how to set the library version appropriately
 
 add_library (mcommon SHARED utilities.c mainloop.c dnssrv_${VARIANT}.c)
 set_target_properties(mcommon PROPERTIES SOVERSION 1.0.0)
@@ -26,9 +26,9 @@ add_library (mservice SHARED services.c services_${VARIANT}.c)
 set_target_properties(mservice PROPERTIES SOVERSION 1.0.0)
 target_link_libraries(mservice ${pcre_LIBRARIES} mcommon ${SIGAR} ${glib_LIBRARIES})
 
-add_library (mpostboot SHARED postboot.c)
-set_target_properties(mpostboot PROPERTIES SOVERSION 1.0.0)
-target_link_libraries(mpostboot ${pcre_LIBRARIES} mcommon ${glib_LIBRARIES})
+add_library (msysconfig SHARED sysconfig.c sysconfig_${VARIANT}.c)
+set_target_properties(msysconfig PROPERTIES SOVERSION 1.0.0)
+target_link_libraries(msysconfig ${pcre_LIBRARIES} mcommon ${glib_LIBRARIES})
 
 if(WIN32)
     foreach (lib ${LIBS})
@@ -37,7 +37,8 @@ if(WIN32)
     endforeach (lib ${LIBS})
 else(WIN32)
     foreach (lib ${LIBS})
-	install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
+	target_link_libraries(${lib} curl)
+        install(TARGETS ${lib} DESTINATION lib${LIB_SUFFIX})
     endforeach (lib ${LIBS})
 endif(WIN32)
 

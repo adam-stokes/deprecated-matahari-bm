@@ -1,4 +1,4 @@
-/* config-qmf.cpp - Copyright (C) 2011 Red Hat, Inc.
+/* sysconfig-qmf.cpp - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -16,27 +16,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+/**
+ * \file
+ * \brief Sysconfig QMF Agent
+ */
+
 #ifndef WIN32
 #include "config.h"
 #endif
 
+#include <qpid/agent/ManagementAgent.h>
+#include "qmf/org/matahariproject/QmfPackage.h"
 #include "matahari/agent.h"
 
-#include "qmf/org/matahariproject/QmfPackage.h"
-
-#include <qpid/agent/ManagementAgent.h>
-
 extern "C" {
-#include <stdlib.h>
-#include <string.h>
-#include <glib.h>
-#include <glib/gprintf.h>
-#include "matahari/postboot.h"
 #include "matahari/logging.h"
-#include "matahari/network.h"
 #include "matahari/host.h"
-#include <sigar.h>
-#include <sigar_format.h>
+#include "matahari/sysconfig.h"
 };
 
 class ConfigAgent : public MatahariAgent
@@ -54,7 +50,7 @@ int
 main(int argc, char **argv)
 {
     ConfigAgent agent;
-    int rc = agent.init(argc, argv, "Config");
+    int rc = agent.init(argc, argv, "Sysconfig");
     if (rc == 0) {
         agent.run();
     }
@@ -65,31 +61,56 @@ int
 ConfigAgent::setup(qmf::AgentSession session)
 {
     _package.configure(session);
-    _instance = qmf::Data(_package.data_Postboot);
+    _instance = qmf::Data(_package.data_Sysconfig);
 
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
-    _instance.setProperty("is_configured", mh_is_configured());
+    _instance.setProperty("is_postboot_configured", 0);
 
-    session.addData(_instance, "postboot");
+    session.addData(_instance, "sysconfig");
     return 0;
 }
 
 gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
+    int rc = 0;
+
+    const std::string& methodName(event.getMethodName());
     if (event.getType() != qmf::AGENT_METHOD) {
         return TRUE;
     }
 
-    const std::string& methodName(event.getMethodName());
+    qpid::types::Variant::Map& args = event.getArguments();
 
-    if (methodName == "configure") {
-        int rc = mh_is_configured();
-        if(rc == 0) {
-            mh_configure(event.getArguments()["uri"].asString().c_str());
+    if (methodName == "run_uri") {
+        rc = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
+            args["flags"].asUint32(),
+            args["scheme"].asString().c_str(),
+            args["key"].asString().c_str());
+        if (rc == 0) {
+            mh_sysconfig_set_configured(args["key"].asString().c_str());
         }
-        event.addReturnArgument("configured", rc);
+        event.addReturnArgument("status", rc);
+    } else if (methodName == "run_string") {
+        rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
+            args["flags"].asUint32(),
+            args["scheme"].asString().c_str(),
+            args["key"].asString().c_str());
+        if (rc == 0) {
+            mh_sysconfig_set_configured(args["key"].asString().c_str());
+        }
+        event.addReturnArgument("status", rc);
+    } else if (methodName == "query") {
+        const char *data = NULL;
+        data = mh_sysconfig_query(args["query"].asString().c_str(),
+                                  args["flags"].asUint32(),
+                                  args["scheme"].asString().c_str());
+        event.addReturnArgument("query", data);
+    } else if (methodName == "is_configured") {
+        rc = mh_sysconfig_is_configured(args["key"].asString().c_str());
+        _instance.setProperty("is_postboot_configured", rc);
+        event.addReturnArgument("status", rc ? "ok" : "no");
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;

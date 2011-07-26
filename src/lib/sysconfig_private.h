@@ -1,4 +1,4 @@
-/* postboot.c - Copyright (C) 2011 Red Hat, Inc.
+/* sysconfig_private.h - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -16,35 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef WIN32
-#include "config.h"
-#include <stddef.h>
-#endif
+#ifndef __MH_SYSCONFIG_PRIVATE_H_
+#define __MH_SYSCONFIG_PRIVATE_H_
 
-#include <stdint.h>
-#include <stdio.h>
-#include <glib.h>
-#include "matahari/logging.h"
-#include "matahari/postboot.h"
+extern int
+sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
+        const char *key);
 
+extern int
+sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
+        const char *key);
 
-MH_TRACE_INIT_DATA(mh_postboot);
+extern const char *
+sysconfig_os_query(const char *query, uint32_t flags, const char *scheme);
 
-static const char *filename = "/var/lib/matahari/.mh_configured";
-
-uint32_t mh_is_configured()
-{
-    int config_file_exist = 0;
-    
-    if(g_file_test(filename, G_FILE_TEST_EXISTS)) {
-        config_file_exist = 1;
-    }
-    return config_file_exist;
-}
-
-void mh_configure(const char *uri)
-{
-    if(!g_file_set_contents(filename, uri, -1, NULL)) {
-        mh_log(LOG_DEBUG, "Unable to create file.");
-    }
-}
+#endif /* __MH_SYSCONFIG_PRIVATE_H_ */
