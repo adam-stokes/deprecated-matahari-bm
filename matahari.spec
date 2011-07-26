@@ -1,5 +1,5 @@
-%global specversion 97
-%global upstream_version 14e0841
+%global specversion 100
+%global upstream_version a242762
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -13,7 +13,7 @@
 %bcond_without systemd
 
 Name:		matahari
-Version:	0.4.1
+Version:	0.4.2
 Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Linux guests
 

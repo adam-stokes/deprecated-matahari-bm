@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 15
-%global upstream_version 6fd4f18
+%global specversion 16
+%global upstream_version a242762
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
