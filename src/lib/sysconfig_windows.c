@@ -58,7 +58,7 @@ sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
         const char *key)
 {
     char *filename[PATH_MAX];
-    g_snprintf(filename, sizeof(filename), "%s.REG", key);
+    g_snprintf(filename, sizeof(filename), "%s\\%s.REG", g_getenv("TEMP"), key);
     if (strcasecmp(scheme, "registry") == 0 ) {
             g_file_set_contents(filename, data, strlen(data), NULL);
             return sysconfig_os_run_regedit(filename);
