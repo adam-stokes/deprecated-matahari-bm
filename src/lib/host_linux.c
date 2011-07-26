@@ -174,7 +174,29 @@ char *host_os_custom_uuid(void)
 
 char *host_os_reboot_uuid(void)
 {
-    return mh_file_first_line("/var/lib/dbus/machine-id");
+    /* Relies on /var/run being erased at boot-time as is common on most modern distros */
+    const char *file = "/var/run/matahari-reboot-id";
+    char *uuid = mh_file_first_line(file);
+
+    if(uuid == NULL) {
+	uuid_t buffer;
+	GError* error = NULL;
+
+	uuid = malloc(38);
+	uuid_generate(buffer);	
+	uuid_unparse(buffer, uuid);
+
+	if(g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
+	    mh_info("%s", error->message);
+	    uuid = error->message;
+	}
+	
+	if(error) {
+	    g_error_free(error);	
+	}
+    }
+    
+    return uuid;
 }
 
 const char *host_os_agent_uuid(void)
