@@ -133,6 +133,33 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
+struct MatahariAgentImpl *
+mh_qmf_connect(qpid::types::Variant::Map &urlMap, qpid::types::Variant::Map &options,
+        struct MatahariAgentImpl *_impl)
+{
+    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+    try {
+        _impl->_amqp_connection.open();
+    } catch (const std::exception& err) {
+        while (!_impl->_amqp_connection.isOpen()) {
+            mh_info("Trying DNS SRV");
+            _impl->_amqp_connection = qpid::messaging::Connection(urlMap["dnssrv"], options);
+            try {
+                _impl->_amqp_connection.open();
+            } catch (const std::exception& err2) {
+                mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
+                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+                try {
+                    _impl->_amqp_connection.open();
+                } catch (const std::exception& err3) {
+                    g_usleep(G_USEC_PER_SEC);
+                }
+            }
+        }
+    }
+
+    return _impl;
+}
 
 typedef struct mh_opt_s
 {
@@ -266,6 +293,9 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
     struct addrinfo hints, *res;
     int rc, arg;
+    char query[NS_MAXDNAME];
+    char target[NS_MAXDNAME];
+
 
     /* Force more local-only processing */
     mh_add_option('h', no_argument, "help", NULL, NULL, NULL);
@@ -382,6 +412,16 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     url << "amqp:" << urlMap["protocol"] << ":" << urlMap["servername"] << ":" << urlMap["serverport"] ;
     urlMap["uri"] = url.str();
 
+    // Go ahead and verify if this is a DNS SRV record
+    g_snprintf(query, sizeof(query), "_matahari._tcp.%s",
+                        urlMap["servername"].asString().c_str());
+    rc = mh_srv_lookup(query, target, sizeof(target));
+    if (rc == 0) {
+        std::stringstream dnsuri;
+        url << target << ":" << urlMap["serverport"];
+        urlMap["dnssrv"] = dnsuri.str();
+    }
+
     return urlMap;
 }
 
@@ -451,43 +491,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     mh_info("Connecting %s to Qpid broker at %s", proc_name, urlMap["uri"].asString().c_str());
 
-    // TODO: Write routine to clean the below up for testing connections and building uris
-    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
-    try {
-        _impl->_amqp_connection.open();
-    } catch (const std::exception& err) {
-        while (!_impl->_amqp_connection.isOpen()) {
-            mh_info("Trying DNS SRV");
-            std::stringstream url;
-            url << "amqp:" << urlMap["protocol"] << ":";
-            int ret;
-            char query[NS_MAXDNAME];
-            char target[NS_MAXDNAME];
-            g_snprintf(query, sizeof(query), "_matahari._tcp.%s",
-            			urlMap["servername"].asString().c_str());
-            ret = mh_srv_lookup(query, target, sizeof(target));
-            if (ret == 0) {
-                url << target << ":" << urlMap["serverport"];
-                urlMap["uri"] = url.str();
-            }
-                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
-                try {
-                    _impl->_amqp_connection.open();
-                } catch (const std::exception& err2) {
-                    mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
-                    url << "amqp:" << urlMap["protocol"] << ":";
-                    url << urlMap["servername"] << ":" << urlMap["serverport"];
-                    urlMap["uri"] = url.str();
-                    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
-                    try {
-                        _impl->_amqp_connection.open();
-                    } catch (const std::exception& err3) {
-                        g_usleep(G_USEC_PER_SEC);
-                    }
-                }
-        }
-    }
-
+    mh_qmf_connect(urlMap, options, _impl);
     _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection);
     _impl->_agent_session.setVendor("matahariproject.org");
     _impl->_agent_session.setProduct(proc_name);

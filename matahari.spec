@@ -9,8 +9,11 @@
 %bcond_without dbus
 %bcond_without qmf
 
-# Systemd init scripts - disable on RHEL6
+# Systemd init scripts
+%bcond_without systemd
+%if 0%{?rhel} <= 6
 %bcond_with systemd
+%endif
 
 Name:		matahari
 Version:	0.4.2
