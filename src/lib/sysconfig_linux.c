@@ -64,12 +64,12 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     gboolean ret;
     GError *error = NULL;
     gchar *cmd[3];
-    char *filename = NULL;
+    char filename[PATH_MAX]
     int fd;
     FILE *fp;
 
     if (uri != NULL) {
-        snprintf(filename, PATH_MAX, "%s", "puppet_conf_XXXXXX");
+        snprintf(filename, sizeof(filename), "%s", "puppet_conf_XXXXXX");
         fd = mkstemp(filename);
         if (fd < 0) {
             return -1;
@@ -85,7 +85,7 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
         }
         fclose(fp);
     } else if (data != NULL) {
-        snprintf(filename, PATH_MAX, "%s", "puppet_conf_blob");
+        snprintf(filename, sizeof(filename), "%s", "puppet_conf_blob");
         g_file_set_contents(filename, data, strlen(data), NULL);
     } else {
         return -1;
