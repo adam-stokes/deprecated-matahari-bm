@@ -1,5 +1,5 @@
-%global specversion 91
-%global upstream_version 02996f5
+%global specversion 101
+%global upstream_version cb3faf4
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -9,11 +9,11 @@
 %bcond_without dbus
 %bcond_without qmf
 
-# Systemd init scripts
-%bcond_without systemd
+# Systemd init scripts - disable on RHEL6
+%bcond_with systemd
 
 Name:		matahari
-Version:	0.4.1
+Version:	0.4.2
 Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Linux guests
 
@@ -36,7 +36,8 @@ BuildRequires:	gcc-c++
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
-BuildRequires:  cxxtest
+BuildRequires:	libcurl-devel
+#BuildRequires:	cxxtest
 
 %if %{with systemd}
 BuildRequires:	systemd-units
@@ -417,7 +418,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_includedir}/matahari/dnssrv.h
 %{_includedir}/matahari/host.h
 %{_includedir}/matahari/network.h
-%{_includedir}/matahari/postboot.h
+%{_includedir}/matahari/sysconfig.h
 %{_includedir}/matahari/services.h
 %{_datadir}/cmake/Modules/FindMatahari.cmake
 

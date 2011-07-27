@@ -64,7 +64,7 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     gboolean ret;
     GError *error = NULL;
     gchar *cmd[3];
-    char filename[PATH_MAX]
+    char filename[PATH_MAX];
     int fd;
     FILE *fp;
 

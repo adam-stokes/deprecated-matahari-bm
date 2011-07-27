@@ -2,8 +2,8 @@
 %global __objdump %{_mingw32_objdump}
 
 
-%global specversion 15
-%global upstream_version 6fd4f18
+%global specversion 17
+%global upstream_version cb3faf4
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -11,7 +11,7 @@
 %global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
 Name:		mingw32-matahari
-Version:	0.4.0
+Version:	0.4.2
 Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Windows guests
 

@@ -43,10 +43,8 @@ int use_stderr = 0;
 
 extern "C" {
 #include <sys/types.h>
-
 #include "matahari/logging.h"
 #include "matahari/dnssrv.h"
-
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netdb.h>
