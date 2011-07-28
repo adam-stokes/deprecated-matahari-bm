@@ -11,3 +11,11 @@ fi
 
 QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf --port $MATAHARI_PORT"
 
+# Federated Broker configuration
+#   Takes the following formats:
+#       <fqdn>:<port>
+#     DNS SRV record format "_matahari-broker._tcp" is REQUIRED
+#       _matahari-broker._tcp.<fqdn>
+#
+# A mixture of the above is acceptable.
+# FEDERATED_BROKERS=("broker1.example.com:49000" "_matahari-broker._tcp.example.com")
