@@ -133,7 +133,7 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
-struct MatahariAgentImpl *
+static struct MatahariAgentImpl *
 mh_qmf_connect(qpid::types::Variant::Map &urlMap, qpid::types::Variant::Map &options,
         struct MatahariAgentImpl *_impl)
 {
