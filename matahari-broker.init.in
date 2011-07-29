@@ -56,38 +56,40 @@ RETVAL=0
 
 # Enable broker federation
 federate() {
-    for (( i=0; i<$1; i++ ));
+    unset array
+    declare -a array
+    for name in $@
     do
-        case ${FEDERATED_BROKERS[$i]} in
+        case $name in
             *_matahari-broker._tcp*)
-                RESP=`dig SRV ${FEDERATED_BROKERS[$i]} +short| awk '{print $4":"$3}'|sed 's/\.:/:/'`
-                array[${#array[*]}]=$RESP
+                RESP=`dig SRV $name +short| awk '{print $4":"$3}'|sed 's/\.:/:/'`
+                array+=$RESP
                 ;;
             *)
-                array[${#array[*]}]="${FEDERATED_BROKERS[$i]}"
+                array+=$name
                 ;;
         esac
     done
 
-    for (( i=0; i<${#array[@]}; i++ ));
+    for $name in ${array[@]}
     do
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add ${array[$i]} \
+       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
             localhost:$MATAHARI_PORT amq.direct &> /dev/null
 
        /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add localhost:$MATAHARI_PORT \
-            ${array[$i]} amq.direct &> /dev/null
+            $name amq.direct &> /dev/null
 
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add ${array[$i]} \
+       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
             localhost:$MATAHARI_PORT qmf.default.direct &> /dev/null
 
        /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add localhost:$MATAHARI_PORT \
-            ${array[$i]} qmf.default.direct &> /dev/null
+            $name qmf.default.direct &> /dev/null
 
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add ${array[$i]} \
+       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
             localhost:$MATAHARI_PORT qmf.default.topic &> /dev/null
 
        /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add localhost:$MATAHARI_PORT \
-            ${array[$i]} qmf.default.topic &> /dev/null
+            $name qmf.default.topic &> /dev/null
     done
 }
 
@@ -105,9 +107,8 @@ start() {
 	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check --pid-dir @localstatedir@/run/matahari $QPIDD_OPTIONS > $pidfile"
 	fi
 
-    broker_len=${#FEDERATED_BROKERS[@]}
-    if [ $broker_len -gt 0 ]; then
-        federate $broker_len
+    if [ ${#FEDERATED_BROKERS[@]} -gt 0 ]; then
+        federate ${FEDERATED_BROKERS[@]}
         RETVAL=0
     fi
 
