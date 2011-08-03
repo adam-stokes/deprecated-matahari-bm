@@ -10,7 +10,21 @@
       <allow_active>yes</allow_active>
     </defaults>
   </action>
+  <action id="org.matahariproject.Host.custom_uuid">
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
   <action id="org.matahariproject.Host.hostname">
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Host.hardware_uuid">
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -144,6 +158,20 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Host.reboot">
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Host.get_uuid">
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Host.set_uuid">
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>

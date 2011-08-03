@@ -3,6 +3,13 @@
 <policyconfig>
   <vendor>Matahari</vendor>
   <vendor_url>https://fedorahosted.org/matahari/</vendor_url>
+  <action id="org.matahariproject.Services.uuid">
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
   <action id="org.matahariproject.Services.hostname">
     <defaults>
       <allow_any>no</allow_any>
