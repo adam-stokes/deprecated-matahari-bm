@@ -10,5 +10,3 @@ yumrepo {
     gpgkey => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch",
     require => File["/etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch"]
 }
-
-

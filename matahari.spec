@@ -40,7 +40,6 @@ BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
-#BuildRequires:	cxxtest
 
 %if %{with systemd}
 BuildRequires:	systemd-units
@@ -165,6 +164,16 @@ Requires:	glib2-devel
 %description devel
 Headers and shared libraries for developing Matahari agents.
 
+%package console
+License:	GPLv2+
+Summary:	QMF console for monitoring various agents
+Group:		Applications/System
+Requires:	%{name}-lib = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
+
+%description console
+QMF console for monitoring various agents
+
 %prep
 %setup -q -n matahari-matahari-%{upstream_version}
 
@@ -251,19 +260,15 @@ fi
 
 %post sysconfig
 /sbin/service matahari-sysconfig condrestart
-/sbin/service matahari-sysconfig-console condrestart
 
 %preun sysconfig
 if [ $1 = 0 ]; then
-   /sbin/service matahari-sysconfig-console stop >/dev/null 2>&1 || :
    /sbin/service matahari-sysconfig stop >/dev/null 2>&1 || :
-   chkconfig --del matahari-sysconfig-console
    chkconfig --del matahari-sysconfig
 fi
 
 %postun sysconfig
 if [ "$1" -ge "1" ]; then
-    /sbin/service matahari-sysconfig-console condrestart >/dev/null 2>&1 || :
     /sbin/service matahari-sysconfig condrestart >/dev/null 2>&1 || :
 fi
 
@@ -373,8 +378,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig
-%attr(755, root, root) %{_initddir}/matahari-sysconfig-console
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
+%endif
+
+%files console
+%defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+
+%if %{with qmf}
+%attr(755, root, root) %{_initddir}/matahari-sysconfig-console
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
 %endif
 
