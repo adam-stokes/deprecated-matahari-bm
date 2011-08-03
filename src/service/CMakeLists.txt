@@ -38,6 +38,9 @@ if(WITH-DBUS)
     # Create src/dbus directory and generate DBus XML definition files into it
     generate_dbus_interface(${CMAKE_CURRENT_SOURCE_DIR}/schema.xml)
 
+    # Check if all properties|statistics|methods have PolicyKit action defined
+    check_policies_for_schema(${CMAKE_CURRENT_SOURCE_DIR}/schema.xml)
+
     # Must be included to find matahari-API-dbus-properties.h
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
