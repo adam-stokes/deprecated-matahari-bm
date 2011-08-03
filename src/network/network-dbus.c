@@ -204,8 +204,11 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
                       GParamSpec *pspec)
 {
     switch (property_id) {
-    case PROP_HOSTNAME:
+    case PROP_NETWORK_HOSTNAME:
         g_value_set_string (value, mh_hostname());
+        break;
+    case PROP_NETWORK_UUID:
+        g_value_set_string (value, mh_uuid());
         break;
     default:
         /* We don't have any other property... */

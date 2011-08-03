@@ -20,9 +20,9 @@
      properties.
 -->
 
-<xsl:template match="/node/interface">
+<xsl:template match="/">
     <!-- Do not generate anything for interface Properies -->
-    <xsl:if test="@name!='org.freedesktop.DBus.Properties'">
+    <xsl:if test="/node/interface/@name != 'org.freedesktop.DBus.Properties'">
         <!-- Create enum of the properties -->
         <xsl:call-template name="enum" />
         <!-- Define Property struct and create array of it with properties
@@ -43,8 +43,8 @@
     PROP_0,
     </xsl:text>
     <!-- Iterate through all properties -->
-    <xsl:for-each select="property">
-        <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />,
+    <xsl:for-each select="/node/interface/property">
+        <xsl:value-of select="translate(concat('PROP_', ../annotation/@value, '_', @name), $smallcase, $uppercase)" />,
     </xsl:for-each>
     <xsl:text>};&#10;</xsl:text>
 </xsl:template>
@@ -53,10 +53,10 @@
     <!-- Create the array of Property structs -->
     <xsl:text>Property properties[] = {&#10;</xsl:text>
     <!-- Iterate through all properties -->
-    <xsl:for-each select="property">
+    <xsl:for-each select="/node/interface/property">
         <xsl:text>    { </xsl:text>
         <!-- Enum of the item -->
-        <xsl:value-of select="concat('PROP_', translate(@name, $smallcase, $uppercase))" />
+        <xsl:value-of select="translate(concat('PROP_', ../annotation/@value, '_', @name), $smallcase, $uppercase)" />
         <xsl:text>, "</xsl:text>
 
         <!-- Name of the item -->
