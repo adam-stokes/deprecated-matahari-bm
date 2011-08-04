@@ -4,6 +4,7 @@
   <vendor>Matahari</vendor>
   <vendor_url>https://fedorahosted.org/matahari/</vendor_url>
   <action id="org.matahariproject.Network.uuid">
+    <message>Authentication required to allow Matahari to access UUID</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -11,6 +12,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.hostname">
+    <message>Authentication required to allow Matahari to access hostname</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -18,6 +20,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.list">
+    <message>Authentication required to allow Matahari to list network interfaces</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -25,6 +28,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.start">
+    <message>Authentication required to allow Matahari to start network interface</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -32,6 +36,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.stop">
+    <message>Authentication required to allow Matahari to stop network interface</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -39,6 +44,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.status">
+    <message>Authentication required to allow Matahari to read status of network interface</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -46,6 +52,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.get_ip_address">
+    <message>Authentication required to allow Matahari to obtain IP address of network interface</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -53,6 +60,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Network.get_mac_address">
+    <message>Authentication required to allow Matahari to obtain MAC address of network interface</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
