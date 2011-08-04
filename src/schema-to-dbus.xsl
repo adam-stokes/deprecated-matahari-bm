@@ -66,9 +66,18 @@
                             </xsl:if>
                             <annotation name="org.freedesktop.DBus.GLib.Async" value="" />
                             <xsl:for-each select="arg">
+                                <!-- DBus doesn't support in-out arguments, so two separate
+                                arguments will be created, one for IN, second for OUT -->
                                 <arg>
                                 <xsl:attribute name="name">
-                                    <xsl:value-of select="@name" />
+                                    <xsl:choose>
+                                        <xsl:when test="@dir='IO'">
+                                            <xsl:value-of select="concat(@name, '_in')" />
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <xsl:value-of select="@name" />
+                                        </xsl:otherwise>
+                                    </xsl:choose>
                                 </xsl:attribute>
 
                                 <!-- Tranform data types -->
@@ -78,6 +87,19 @@
                                 <xsl:call-template name="dir" />
 
                                 </arg>
+
+                                <!-- Add output argument if direction is IO -->
+                                <xsl:if test="@dir='IO'">
+                                    <arg>
+                                        <xsl:attribute name="name">
+                                            <xsl:value-of select="concat(@name, '_out')" />
+                                        </xsl:attribute>
+
+                                        <xsl:call-template name="type" />
+
+                                        <xsl:attribute name="direction">out</xsl:attribute>
+                                    </arg>
+                                </xsl:if>
                             </xsl:for-each>
                         </method>
                     </xsl:for-each>
@@ -198,12 +220,12 @@
 
 <xsl:template name="dir">
     <xsl:choose>
-        <xsl:when test="@dir='I'">
-            <xsl:attribute name="direction">in</xsl:attribute>
-        </xsl:when>
         <xsl:when test="@dir='O'">
             <xsl:attribute name="direction">out</xsl:attribute>
         </xsl:when>
+        <xsl:otherwise>
+            <xsl:attribute name="direction">in</xsl:attribute>
+        </xsl:otherwise>
     </xsl:choose>
 </xsl:template>
 
