@@ -476,6 +476,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
                     _impl->_amqp_connection.open();
                 } catch (const std::exception& err2) {
                     mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
+                    url.str("");
                     url << "amqp:" << urlMap["protocol"] << ":";
                     url << urlMap["servername"] << ":" << urlMap["serverport"];
                     urlMap["uri"] = url.str();
