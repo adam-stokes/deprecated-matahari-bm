@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+  <vendor>Matahari</vendor>
+  <vendor_url>https://fedorahosted.org/matahari/</vendor_url>
+  <action id="org.matahariproject.Resources.uuid">
+    <message>Authentication required to allow Matahari to access UUID</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.hostname">
+    <message>Authentication required to allow Matahari to access hostname</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.list_standards">
+    <message>Authentication required to allow Matahari to list resource standards</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.list_providers">
+    <message>Authentication required to allow Matahari to list resource providers</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.list">
+    <message>Authentication required to allow Matahari to list resources</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.describe">
+    <message>Authentication required to allow Matahari to obtain resource describtion</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.invoke">
+    <message>Authentication required to allow Matahari to perform custom action on resource</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.cancel">
+    <message>Authentication required to allow Matahari to cancel action on resource</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+  <action id="org.matahariproject.Resources.fail">
+    <message>Authentication required to allow Matahari to obtain indication of failed resource</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+</policyconfig>
