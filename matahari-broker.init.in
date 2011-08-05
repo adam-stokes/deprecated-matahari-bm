@@ -65,9 +65,11 @@ federate() {
                 RESP=`dig SRV $name +short| awk '{print $4":"$3}'|sed 's/\.:/:/'`
                 array+=$RESP
                 ;;
-            *)
+            *:[[:digit:]]*)
                 array+=$name
                 ;;
+            *)
+                echo -n $"Invalid broker: $name"
         esac
     done
 
@@ -107,10 +109,7 @@ start() {
 	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check --pid-dir @localstatedir@/run/matahari $QPIDD_OPTIONS > $pidfile"
 	fi
 
-    if [ ${#FEDERATED_BROKERS[@]} -gt 0 ]; then
-        federate ${FEDERATED_BROKERS[@]}
-        RETVAL=0
-    fi
+    federate ${FEDERATED_BROKERS[@]}
 
 	return $RETVAL
 }

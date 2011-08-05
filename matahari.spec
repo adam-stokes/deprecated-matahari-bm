@@ -1,5 +1,5 @@
-%global specversion 101
-%global upstream_version cb3faf4
+%global specversion 102
+%global upstream_version ba6de25
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -11,9 +11,6 @@
 
 # Systemd init scripts
 %bcond_without systemd
-%if 0%{?rhel} <= 6
-%bcond_with systemd
-%endif
 
 Name:		matahari
 Version:	0.4.2
@@ -40,6 +37,7 @@ BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
+BuildRequires:  cxxtest
 
 %if %{with systemd}
 BuildRequires:	systemd-units
@@ -164,14 +162,14 @@ Requires:	glib2-devel
 %description devel
 Headers and shared libraries for developing Matahari agents.
 
-%package console
+%package consoles
 License:	GPLv2+
 Summary:	QMF console for monitoring various agents
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
 
-%description console
+%description consoles
 QMF console for monitoring various agents
 
 %prep
@@ -381,7 +379,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
 %endif
 
-%files console
+%files consoles
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 

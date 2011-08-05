@@ -142,22 +142,23 @@ mh_qmf_connect(qpid::types::Variant::Map &urlMap, qpid::types::Variant::Map &opt
         _impl->_amqp_connection.open();
     } catch (const std::exception& err) {
         while (!_impl->_amqp_connection.isOpen()) {
-            mh_info("Trying DNS SRV");
-            _impl->_amqp_connection = qpid::messaging::Connection(urlMap["dnssrv"], options);
-            try {
-                _impl->_amqp_connection.open();
-            } catch (const std::exception& err2) {
-                mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
-                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+            if (!urlMap["dnssrv"].asString().empty()) {
+                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["dnssrv"], options);
                 try {
                     _impl->_amqp_connection.open();
-                } catch (const std::exception& err3) {
-                    g_usleep(G_USEC_PER_SEC);
+                } catch (const std::exception& err2) {
+                    mh_err("Failed to connect to broker: %s", urlMap["dnssrv"].asString().c_str());
                 }
+            }
+            mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
+            _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
+            try {
+                _impl->_amqp_connection.open();
+            } catch (const std::exception& err3) {
+                g_usleep(G_USEC_PER_SEC);
             }
         }
     }
-
     return _impl;
 }
 
@@ -418,7 +419,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     rc = mh_srv_lookup(query, target, sizeof(target));
     if (rc == 0) {
         std::stringstream dnsuri;
-        url << target << ":" << urlMap["serverport"];
+        dnsuri << target << ":" << urlMap["serverport"];
         urlMap["dnssrv"] = dnsuri.str();
     }
 
