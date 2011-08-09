@@ -96,13 +96,12 @@ int main(int argc, char** argv)
 
     mh_add_option('o', required_argument, "option", "Option to pass to the resource script (Resources API only)", NULL, NULL);
 
-    qpid::types::Variant::Map url = mh_parse_options("service-console", argc, argv, options);
+    qpid::types::Variant::Map amqpOptions = mh_parse_options("service-console", argc, argv, options);
 
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init("service-console", mh_log_level, mh_log_level > LOG_INFO);
-    qpid::messaging::Connection connection(url["uri"], options);
-    connection.open();
 
+    qpid::messaging::Connection connection = mh_connect(options, amqpOptions, TRUE);
     ConsoleSession session(connection, sessionOptions);
     std::stringstream filter;
 

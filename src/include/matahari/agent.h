@@ -72,6 +72,9 @@ extern int mh_add_option(
 extern qpid::types::Variant::Map mh_parse_options(
     const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options);
 
+extern qpid::messaging::Connection mh_connect(
+	qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_options, int retry);
+
 extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,
         gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event,
                              gpointer userdata),
