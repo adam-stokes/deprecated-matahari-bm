@@ -369,6 +369,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 		    mh_err("Broker '%s' is not resolvable - ignoring", optarg);
 		}
                 break;
+#ifdef MH_SSL
             case 'N':
                 ssl_cert_name = optarg;
                 break;
@@ -388,6 +389,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                     exit(1);
                 }
                 break;
+#endif
             default:
                 if(arg > 0 && arg < DIMOF(matahari_options) && matahari_options[arg].callback) {
                     matahari_options[arg].callback(
