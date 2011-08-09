@@ -206,7 +206,10 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
 
     if(mh_options.count("servername") == 0) {
 	/* Is ssl valid here as a protocol?  udp? */
-	target = mh_os_dnssrv_lookup("_matahari._tcp");
+	std::stringstream fqdn;
+	fqdn << "_matahari._tcp." << mh_domainname();
+	target = mh_os_dnssrv_lookup(fqdn.str().c_str());
+
 	if(target) {
 	    mh_info("DNS SRV record resolved to: %s", target);
 	}

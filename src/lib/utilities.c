@@ -344,6 +344,28 @@ mh_log_fn(int priority, const char * fmt, ...)
 }
 
 const char *
+mh_domainname(void)
+{
+    static char *domainname = NULL;
+
+    if (domainname == NULL) {
+        sigar_t *sigar;
+        sigar_net_info_t netinfo;
+        sigar_open(&sigar);
+        sigar_net_info_get(sigar, &netinfo);
+        domainname = strdup(netinfo.domain_name);
+        sigar_close(sigar);
+    }
+
+    if (domainname == NULL) {
+	return "";
+    }
+
+    mh_trace("Got domainname: %s", domainname);
+    return domainname;
+}
+
+const char *
 mh_hostname(void)
 {
     static char *hostname = NULL;
