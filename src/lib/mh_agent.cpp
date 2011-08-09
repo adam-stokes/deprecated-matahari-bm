@@ -207,13 +207,16 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     if(mh_options.count("servername") == 0) {
 	/* Is ssl valid here as a protocol?  udp? */
 	target = mh_os_dnssrv_lookup("_matahari._tcp");
+	if(target) {
+	    mh_info("DNS SRV record resolved to: %s", target);
+	}
     }
     
     while (true) {
 	std::stringstream url;
 	if(mh_options.count("servername") > 0) {
 	    url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
-	} else if(target != NULL && (retries++ % 2) == 1) {
+	} else if(target != NULL && (retries % 2) == 1) {
 	    /* Try DNS */
 	    url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
 	} else {
@@ -221,6 +224,7 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
 	    url << "amqp:" << mh_options["protocol"] << ":localhost:" << mh_options["serverport"] ;
 	}	
 	
+	retries++;
 	qpid::messaging::Connection amqp = qpid::messaging::Connection(url.str(), amqp_options);
 	if(retries < 5) {
 	    mh_info("Trying: %s", url.str().c_str());
