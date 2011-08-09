@@ -401,18 +401,21 @@ mh_uuid(void)
     static char *uuid = NULL;
 
 #ifdef __linux__
-    if (uuid == NULL) {
+    if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
 	uuid = mh_file_first_line("/etc/machine-id");
     }
-    if (uuid == NULL) {
+    if (uuid == NULL && g_file_test("/var/lib/dbus//machine-id", G_FILE_TEST_EXISTS)) {
 	/* For pre-systemd machines */
 	uuid = mh_file_first_line("/var/lib/dbus/machine-id");
     }
-#endif
-
+    if (uuid == NULL) {
+	return "not-available";
+    }
+#else
     if (uuid == NULL) {
 	uuid = strdup("not-implemented");
     }
+#endif
 
     mh_trace("Got uuid: %s", uuid);
     return uuid;
