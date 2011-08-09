@@ -205,10 +205,8 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     char *target = NULL;
 
     if(mh_options.count("servername") == 0) {
-	target = (char*)malloc(NS_MAXDNAME);
-
 	/* Is ssl valid here as a protocol?  udp? */
-	mh_srv_lookup("_matahari._tcp", target, NS_MAXDNAME);
+	target = mh_os_dnssrv_lookup("_matahari._tcp");
     }
     
     while (true) {

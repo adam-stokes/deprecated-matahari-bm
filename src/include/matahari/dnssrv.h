@@ -31,12 +31,10 @@
  * Domain lookup providing a Matahari broker
  *
  * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
- * \param[in] set buffer to hold domain retrieved
- * \param[in] set buffer length
  *
- * \return 0 or greater for successful match
+ * \return buffer to hold domain retrieved
  */
-extern int
-mh_srv_lookup(const char *query, char *target, size_t len);
+extern char *mh_os_dnssrv_lookup(const char *query);
+
 
 #endif /* __MH_DNSSRV_H__ */
