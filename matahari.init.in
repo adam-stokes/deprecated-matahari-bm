@@ -33,7 +33,17 @@ test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
 
 start() {
     echo -n $"Starting the $SERVICE daemon: "
-    daemon $PROCESS --broker $MATAHARI_BROKER --port $MATAHARI_PORT $MATAHARI_AGENT_ARGS --daemon
+    if [ ! -z "$MATAHARI_BROKER" ]; then
+	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS --broker $MATAHARI_BROKER"
+    fi
+    if [ ! -z "$MATAHARI_PORT" ]; then
+	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS --port $MATAHARI_PORT"
+    fi
+    if [ ! -z "$@BASE@_AGENT_ARGS" ]; then
+	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS $@BASE@_AGENT_ARGS"
+    fi
+
+    daemon $PROCESS $MATAHARI_AGENT_ARGS --daemon
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$SERVICE
