@@ -371,6 +371,10 @@ char *mh_file_first_line(const char *file)
     GError* error = NULL;
     char *buffer = NULL;
 
+    if(!g_file_test(file, G_FILE_TEST_EXISTS)) {
+	return NULL;
+    }
+    
     if(g_file_get_contents(file, &buffer, NULL, &error) == FALSE) {
 	buffer = strdup(error->message);
 	g_error_free(error);
@@ -404,20 +408,15 @@ mh_uuid(void)
     if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
 	uuid = mh_file_first_line("/etc/machine-id");
     }
-    if (uuid == NULL && g_file_test("/var/lib/dbus//machine-id", G_FILE_TEST_EXISTS)) {
+    if (uuid == NULL && g_file_test("/var/lib/dbus/machine-id", G_FILE_TEST_EXISTS)) {
 	/* For pre-systemd machines */
 	uuid = mh_file_first_line("/var/lib/dbus/machine-id");
     }
-    if (uuid == NULL) {
-	return "not-available";
-    }
-#else
-    if (uuid == NULL) {
-	uuid = strdup("not-implemented");
-    }
 #endif
 
-    mh_trace("Got uuid: %s", uuid);
+    if(uuid) {
+	mh_trace("Got uuid: %s", uuid);
+    }
     return uuid;
 }
 
