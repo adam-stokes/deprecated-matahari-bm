@@ -1,3 +1,14 @@
+# Connect to a broker on the named host
+# If this is not defined, agents will attempt to connect to localhost 
+#  and/or the contents of a _matahari._tcp SRV record if it exists
+#MATAHARI_BROKER=@MATAHARI_BROKER@
+
+# Connect to a broker on a non-standard port
+#MATAHARI_PORT=@MATAHARI_PORT@
+
+# Other options that all agents should observe
 MATAHARI_AGENT_ARGS="--reconnect=yes"
-MATAHARI_BROKER=@MATAHARI_BROKER@
-MATAHARI_PORT=@MATAHARI_PORT@
+
+# Per agent options
+# host_AGENT_ARGS=...
+# network_AGENT_ARGS=...
