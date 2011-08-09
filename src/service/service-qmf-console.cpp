@@ -85,10 +85,10 @@ int main(int argc, char** argv)
     mh_add_option('H', required_argument, "host-dns", "Host DNS name", &options, resource_arg);
     mh_add_option('U', required_argument, "host-uuid", "Host UUID", &options, resource_arg);
 
-    mh_add_option('N', required_argument, "name", "Name of a resource", &options, resource_arg);
-    mh_add_option('S', required_argument, "standard", "lsb|ocf|windows (Resources API only)", &options, resource_arg);
-    mh_add_option('P', required_argument, "provider", " (Resources API only)", &options, resource_arg);
-    mh_add_option('T', required_argument, "agent", " (Resources API only)", &options, resource_arg);
+    mh_add_option('n', required_argument, "name", "Name of a resource", &options, resource_arg);
+    mh_add_option('s', required_argument, "standard", "lsb|ocf|windows (Resources API only)", &options, resource_arg);
+    mh_add_option('S', required_argument, "provider", " (Resources API only)", &options, resource_arg);
+    mh_add_option('a', required_argument, "agent", " (Resources API only)", &options, resource_arg);
 
     mh_add_option('a', required_argument, "action", "Action to perform", &options, resource_arg);
     mh_add_option('i', required_argument, "interval", "(Resources API only)", &options, resource_arg);
@@ -151,6 +151,7 @@ int main(int argc, char** argv)
 		callOptions.erase("reconnect");
 		callOptions.erase("host-dns");
 		callOptions.erase("host-uuid");
+		callOptions.erase("protocol");
 	    }
 	}
 	
