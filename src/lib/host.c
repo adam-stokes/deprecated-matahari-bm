@@ -258,6 +258,7 @@ mh_host_identify(void)
 const char *
 mh_host_get_uuid(const char *lifetime)
 {
+    const char *uuid = NULL;
     static const char *immutable_uuid = NULL;
     static const char *hardware_uuid = NULL;
     static const char *reboot_uuid = NULL;
@@ -268,36 +269,43 @@ mh_host_get_uuid(const char *lifetime)
 	if(immutable_uuid == NULL) {
 	    immutable_uuid = mh_uuid();
 	}
-	return immutable_uuid;
+	uuid = immutable_uuid;
 
     } else if(strcmp("Hardware", lifetime) == 0) {
 	if(hardware_uuid == NULL) {
 	    hardware_uuid = host_os_machine_uuid();
 	}
-	return hardware_uuid; 
+	uuid = hardware_uuid; 
 
     } else if(strcmp("Reboot", lifetime) == 0) {
 
 	if(reboot_uuid == NULL) {
 	    reboot_uuid = host_os_reboot_uuid();
 	}
-	return reboot_uuid;
+	uuid = reboot_uuid;
 
     } else if(strcmp("Agent", lifetime) == 0) {
 	if(agent_uuid == NULL) {
 	    agent_uuid = host_os_agent_uuid();
 	}
-	return agent_uuid;
+	uuid = agent_uuid;
 
     } else if(strcmp("Custom", lifetime) == 0) {
 	if(custom_uuid == NULL) {
 	    custom_uuid = host_os_custom_uuid();
 	}
-	return custom_uuid;
+	uuid = custom_uuid;
+
+    } else {
+	uuid = "invalid-lifetime";
     }
-    
-    return "invalid-lifetime";
+
+    if(uuid == NULL) {
+	uuid = "not-available";
+    }
+    return uuid;
 }
+
 
 int
 mh_host_set_uuid(const char *lifetime, const char *uuid)

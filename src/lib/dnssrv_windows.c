@@ -21,6 +21,7 @@
 #include <windows.h>
 #include <winsock.h>
 #include <windns.h>
+#include <ws2tcpip.h>
 
 // mingw doesn't include these
 #ifndef DNS_TYPE_SRV
@@ -37,10 +38,11 @@
  * \return 0 or greater for successful match
  */
 
-int
-mh_srv_lookup(const char *query, char *target, size_t len)
+char *
+mh_os_dnssrv_lookup(const char *query)
 {
     PDNS_RECORD rr, record;
+    int len = strlen(query);
     WCHAR query_wstr[len];
 
 
@@ -49,20 +51,17 @@ mh_srv_lookup(const char *query, char *target, size_t len)
                 DNS_QUERY_STANDARD, NULL,
                 &rr, NULL) == ERROR_SUCCESS) {
 
-
-        record = rr;
-        do {
+        for(record = rr; record != NULL; record = record->pNext) {
             if (record->wType == DNS_TYPE_SRV) {
-                WideCharToMultiByte(CP_UTF8, 0, query_wstr, len, target, len, NULL, NULL);
-                if (len > 0) {
-                    target[len - 1] = '\0';
-                }
+		char *buffer = malloc(NI_MAXHOST);
+
+		/* record->Data.Srv.wPort */
+		len = 1 + wcslen(record->Data.Srv.pNameTarget);
+                WideCharToMultiByte(CP_UTF8, 0, record->Data.Srv.pNameTarget, len, buffer, NI_MAXHOST, NULL, NULL);
             }
-            record = record->pNext;
-        } while (rr != NULL);
-        DnsRecordListFree(rr, DnsFreeRecordList);
-        return 0;
-    } else {
-        return -1;
+	}
+	DnsRecordListFree(rr, DnsFreeRecordList);
     }
+
+    return NULL;
 }

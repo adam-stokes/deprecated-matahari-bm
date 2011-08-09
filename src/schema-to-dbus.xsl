@@ -16,10 +16,10 @@
     <xsl:variable name="package">
         <xsl:value-of select="schema/@package" />
     </xsl:variable>
-    <xsl:for-each select="schema/class">
-        <xsl:variable name="filename" select="concat('org.matahariproject.', @name,'.xml')" />
-        <exsl:document method="xml" indent="yes" version="1.0" encoding="utf-8" href="{$filename}">
-            <node>
+    <xsl:variable name="filename" select="concat($package, '.', schema/class/@name,'.xml')" />
+    <exsl:document method="xml" indent="yes" version="1.0" encoding="utf-8" href="{$filename}">
+        <node>
+            <xsl:for-each select="schema/class">
                 <interface>
                     <xsl:attribute name="name">
                         <xsl:value-of select="concat($package, '.', @name)" />
@@ -66,9 +66,18 @@
                             </xsl:if>
                             <annotation name="org.freedesktop.DBus.GLib.Async" value="" />
                             <xsl:for-each select="arg">
+                                <!-- DBus doesn't support in-out arguments, so two separate
+                                arguments will be created, one for IN, second for OUT -->
                                 <arg>
                                 <xsl:attribute name="name">
-                                    <xsl:value-of select="@name" />
+                                    <xsl:choose>
+                                        <xsl:when test="@dir='IO'">
+                                            <xsl:value-of select="concat(@name, '_in')" />
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <xsl:value-of select="@name" />
+                                        </xsl:otherwise>
+                                    </xsl:choose>
                                 </xsl:attribute>
 
                                 <!-- Tranform data types -->
@@ -78,29 +87,42 @@
                                 <xsl:call-template name="dir" />
 
                                 </arg>
+
+                                <!-- Add output argument if direction is IO -->
+                                <xsl:if test="@dir='IO'">
+                                    <arg>
+                                        <xsl:attribute name="name">
+                                            <xsl:value-of select="concat(@name, '_out')" />
+                                        </xsl:attribute>
+
+                                        <xsl:call-template name="type" />
+
+                                        <xsl:attribute name="direction">out</xsl:attribute>
+                                    </arg>
+                                </xsl:if>
                             </xsl:for-each>
                         </method>
                     </xsl:for-each>
                 </interface>
-                <!-- Get and set function will be used for accessing parameters.
-                     It enables to obtain authorization via Polkit -->
-                <interface name="org.freedesktop.DBus.Properties">
-                    <method name="Get">
-                        <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-                        <arg name="interface" direction="in" type="s"/>
-                        <arg name="property" direction="in" type="s"/>
-                        <arg name="value" direction="out" type="v"/>
-                    </method>
-                    <method name="Set">
-                        <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-                        <arg name="interface" direction="in" type="s"/>
-                        <arg name="property" direction="in" type="s"/>
-                        <arg name="value" direction="in" type="v"/>
-                    </method>
-                </interface>
-            </node>
-        </exsl:document>
-    </xsl:for-each>
+            </xsl:for-each>
+            <!-- Get and set function will be used for accessing parameters.
+                    It enables to obtain authorization via Polkit -->
+            <interface name="org.freedesktop.DBus.Properties">
+                <method name="Get">
+                    <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+                    <arg name="interface" direction="in" type="s"/>
+                    <arg name="property" direction="in" type="s"/>
+                    <arg name="value" direction="out" type="v"/>
+                </method>
+                <method name="Set">
+                    <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+                    <arg name="interface" direction="in" type="s"/>
+                    <arg name="property" direction="in" type="s"/>
+                    <arg name="value" direction="in" type="v"/>
+                </method>
+            </interface>
+        </node>
+    </exsl:document>
 </xsl:template>
 
 <xsl:template name="type">
@@ -198,12 +220,12 @@
 
 <xsl:template name="dir">
     <xsl:choose>
-        <xsl:when test="@dir='I'">
-            <xsl:attribute name="direction">in</xsl:attribute>
-        </xsl:when>
         <xsl:when test="@dir='O'">
             <xsl:attribute name="direction">out</xsl:attribute>
         </xsl:when>
+        <xsl:otherwise>
+            <xsl:attribute name="direction">in</xsl:attribute>
+        </xsl:otherwise>
     </xsl:choose>
 </xsl:template>
 

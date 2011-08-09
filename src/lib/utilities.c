@@ -344,6 +344,28 @@ mh_log_fn(int priority, const char * fmt, ...)
 }
 
 const char *
+mh_domainname(void)
+{
+    static char *domainname = NULL;
+
+    if (domainname == NULL) {
+        sigar_t *sigar;
+        sigar_net_info_t netinfo;
+        sigar_open(&sigar);
+        sigar_net_info_get(sigar, &netinfo);
+        domainname = strdup(netinfo.domain_name);
+        sigar_close(sigar);
+    }
+
+    if (domainname == NULL) {
+	return "";
+    }
+
+    mh_trace("Got domainname: %s", domainname);
+    return domainname;
+}
+
+const char *
 mh_hostname(void)
 {
     static char *hostname = NULL;
@@ -371,6 +393,10 @@ char *mh_file_first_line(const char *file)
     GError* error = NULL;
     char *buffer = NULL;
 
+    if(!g_file_test(file, G_FILE_TEST_EXISTS)) {
+	return NULL;
+    }
+    
     if(g_file_get_contents(file, &buffer, NULL, &error) == FALSE) {
 	buffer = strdup(error->message);
 	g_error_free(error);
@@ -401,20 +427,18 @@ mh_uuid(void)
     static char *uuid = NULL;
 
 #ifdef __linux__
-    if (uuid == NULL) {
+    if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
 	uuid = mh_file_first_line("/etc/machine-id");
     }
-    if (uuid == NULL) {
+    if (uuid == NULL && g_file_test("/var/lib/dbus/machine-id", G_FILE_TEST_EXISTS)) {
 	/* For pre-systemd machines */
 	uuid = mh_file_first_line("/var/lib/dbus/machine-id");
     }
 #endif
 
-    if (uuid == NULL) {
-	uuid = strdup("not-implemented");
+    if(uuid) {
+	mh_trace("Got uuid: %s", uuid);
     }
-
-    mh_trace("Got uuid: %s", uuid);
     return uuid;
 }
 

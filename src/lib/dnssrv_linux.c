@@ -28,8 +28,8 @@
 
 #include "matahari/dnssrv.h"
 
-int
-mh_srv_lookup(const char *query, char *target, size_t len)
+char *
+mh_os_dnssrv_lookup(const char *query)
 {
     union {
         HEADER hdr;
@@ -46,17 +46,19 @@ mh_srv_lookup(const char *query, char *target, size_t len)
                      sizeof(answer));
     if (size > 0) {
         if (ns_initparse(answer.buf, size, &nsh) < 0) {
-            goto fail;
+            return NULL;
         }
     }
 
     for (rrnum = 0; rrnum < ns_msg_count(nsh, ns_s_an); rrnum++) {
         if (ns_parserr(&nsh, ns_s_an, rrnum, &rr)) {
-            goto fail;
+            return NULL;
         }
 
         if (ns_rr_type(rr) == T_SRV) {
-            char buf[NS_MAXDNAME];
+	    char *buffer = malloc(NS_MAXDNAME);
+	    memset(buffer, 0, NS_MAXDNAME);
+	    
             /* Only care about domain name from rdata
              * First 6 elements in rdata are broken up
              * contain dns information such as type, class
@@ -65,14 +67,11 @@ mh_srv_lookup(const char *query, char *target, size_t len)
             ns_name_uncompress(ns_msg_base(nsh),
                                ns_msg_end(nsh),
                                ns_rr_rdata(rr)+6,
-                               buf,
+                               buffer,
                                NS_MAXDNAME);
-            strncpy(target, buf, len - 1);
-            target[len - 1] = '\0';
-            return 0;
+            return buffer;
         }
     }
-    return 0;
-fail:
-    return -1;
+
+    return NULL;
 }

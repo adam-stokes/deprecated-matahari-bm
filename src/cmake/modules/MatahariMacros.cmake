@@ -82,3 +82,20 @@ macro(generate_qmf_schemas SCHEMAS SCHEMA_SOURCES)
         message(STATUS "No need to generate QMFv2 classes from: ${SCHEMAS}")
     endif (regen_schema)
 endmacro(generate_qmf_schemas)
+
+
+# This macro takes schema XML file and check if there are PolicyKit action
+# for each property/statistic/method in .policy file in current directory.
+# Name of the file must be (Package from schema).(Class from schema).policy
+macro(check_policies_for_schema SCHEMA)
+    find_file(XSLTPROC xsltproc)
+    find_file(CHECK_POLICY check-policy.xsl
+              ${CMAKE_CURRENT_SOURCE_DIR}/..
+              /usr/share/matahari)
+    execute_process(COMMAND ${XSLTPROC} --path . --novalid ${CHECK_POLICY} ${SCHEMA}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    ERROR_VARIABLE OUTPUT)
+    if (NOT ${OUTPUT} EQUAL "")
+        message(AUTHOR_WARNING "Policy file is missing some actions:\n" ${OUTPUT})
+    endif (NOT ${OUTPUT} EQUAL "")
+endmacro(check_policies_for_schema)

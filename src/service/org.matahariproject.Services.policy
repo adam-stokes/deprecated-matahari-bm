@@ -3,7 +3,16 @@
 <policyconfig>
   <vendor>Matahari</vendor>
   <vendor_url>https://fedorahosted.org/matahari/</vendor_url>
+  <action id="org.matahariproject.Services.uuid">
+    <message>Authentication required to allow Matahari to access UUID</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
   <action id="org.matahariproject.Services.hostname">
+    <message>Authentication required to allow Matahari to access hostname</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -11,6 +20,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.list">
+    <message>Authentication required to allow Matahari to list system services</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -18,6 +28,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.enable">
+    <message>Authentication required to allow Matahari to enable a system service</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -25,6 +36,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.disable">
+    <message>Authentication required to allow Matahari to disable a system service</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -32,6 +44,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.start">
+    <message>Authentication required to allow Matahari to start a system service</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -39,6 +52,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.stop">
+    <message>Authentication required to allow Matahari to stop a system service</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -46,20 +60,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.status">
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
-    </defaults>
-  </action>
-  <action id="org.matahariproject.Services.cancel">
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
-    </defaults>
-  </action>
-  <action id="org.matahariproject.Services.fail">
+    <message>Authentication required to allow Matahari to check status of a system service</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -67,6 +68,7 @@
     </defaults>
   </action>
   <action id="org.matahariproject.Services.describe">
+    <message>Authentication required to allow Matahari to obtain description of a system service</message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>

@@ -122,7 +122,7 @@ matahari_set_property(GObject *object, guint property_id, const GValue *value,
                       GParamSpec *pspec)
 {
     switch (property_id) {
-    case PROP_UPDATE_INTERVAL:
+    case PROP_HOST_UPDATE_INTERVAL:
         priv.update_interval = g_value_get_uint (value);
         break;
     default:
@@ -142,55 +142,55 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
     GValue value_value = {0, };
 
     switch (property_id) {
-    case PROP_UUID:
+    case PROP_HOST_UUID:
         g_value_set_string (value, mh_host_get_uuid(NULL));
         break;
-    case PROP_HOSTNAME:
+    case PROP_HOST_HOSTNAME:
         g_value_set_string (value, mh_host_get_hostname());
         break;
-    case PROP_OS:
+    case PROP_HOST_OS:
         g_value_set_string (value, mh_host_get_operating_system());
         break;
-    case PROP_ARCH:
+    case PROP_HOST_ARCH:
         g_value_set_string (value, mh_host_get_architecture());
         break;
-    case PROP_WORDSIZE:
+    case PROP_HOST_WORDSIZE:
         g_value_set_uint (value, mh_host_get_cpu_wordsize());
         break;
-    case PROP_MEMORY:
+    case PROP_HOST_MEMORY:
         g_value_set_uint64 (value, mh_host_get_memory());
         break;
-    case PROP_SWAP:
+    case PROP_HOST_SWAP:
         g_value_set_uint64 (value, mh_host_get_swap());
         break;
-    case PROP_CPU_COUNT:
+    case PROP_HOST_CPU_COUNT:
         g_value_set_uint (value, mh_host_get_cpu_count());
         break;
-    case PROP_CPU_CORES:
+    case PROP_HOST_CPU_CORES:
         g_value_set_uint (value, mh_host_get_cpu_number_of_cores());
         break;
-    case PROP_CPU_MODEL:
+    case PROP_HOST_CPU_MODEL:
         g_value_set_string (value, mh_host_get_cpu_model());
         break;
-    case PROP_CPU_FLAGS:
+    case PROP_HOST_CPU_FLAGS:
         g_value_set_string (value, mh_host_get_cpu_flags());
         break;
-    case PROP_UPDATE_INTERVAL:
+    case PROP_HOST_UPDATE_INTERVAL:
         g_value_set_uint (value, priv.update_interval);
         break;
-    case PROP_LAST_UPDATED:
+    case PROP_HOST_LAST_UPDATED:
         // Not used in DBus module
         break;
-    case PROP_SEQUENCE:
+    case PROP_HOST_SEQUENCE:
         // Not used in DBus module
         break;
-    case PROP_FREE_MEM:
+    case PROP_HOST_FREE_MEM:
         g_value_set_uint64 (value, mh_host_get_mem_free());
         break;
-    case PROP_FREE_SWAP:
+    case PROP_HOST_FREE_SWAP:
         g_value_set_uint64 (value, mh_host_get_swap_free());
         break;
-    case PROP_LOAD:
+    case PROP_HOST_LOAD:
         // 1/5/15 minute load average - map
         mh_host_get_load_averages(&avg);
 
@@ -207,7 +207,7 @@ matahari_get_property(GObject *object, guint property_id, GValue *value,
         dict_add(dict, "15", &value_value);
         dict_free(dict);
         break;
-    case PROP_PROCESS_STATISTICS:
+    case PROP_HOST_PROCESS_STATISTICS:
         // Process statistics is type map string -> int
         mh_host_get_processes(&procs);
 
@@ -244,10 +244,10 @@ GType
 matahari_dict_type(int prop)
 {
     switch (prop) {
-    case PROP_LOAD:
+    case PROP_HOST_LOAD:
         return G_TYPE_DOUBLE;
         break;
-    case PROP_PROCESS_STATISTICS:
+    case PROP_HOST_PROCESS_STATISTICS:
         return G_TYPE_INT;
         break;
     default:
