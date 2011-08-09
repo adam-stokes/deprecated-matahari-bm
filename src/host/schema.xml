@@ -5,6 +5,8 @@
    <!-- Common -->
    <arg name="timestamp" type="absTime" />
    <arg name="sequence"  type="uint32" />
+   <arg name="hostname"  type="sstr"/>
+   <arg name="uuid"      type="sstr"/>
 
  </eventArguments>
 

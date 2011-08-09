@@ -239,7 +239,9 @@ HostAgent::heartbeat()
 
     qmf::Data event = qmf::Data(_package.event_heartbeat);
     event.setProperty("timestamp", timestamp);
-    event.setProperty("sequence", _heartbeat_sequence);
+    event.setProperty("sequence",  _heartbeat_sequence);
+    event.setProperty("hostname",  mh_host_get_hostname());
+    event.setProperty("uuid",      mh_host_get_uuid("Filesystem"));
     getSession().raiseEvent(event);
 
     return interval * 1000;
