@@ -358,7 +358,7 @@ mh_domainname(void)
     }
 
     if (domainname == NULL) {
-	return "";
+        return "";
     }
 
     mh_trace("Got domainname: %s", domainname);

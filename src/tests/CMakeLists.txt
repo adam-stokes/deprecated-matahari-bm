@@ -1,6 +1,8 @@
 set(CXXTEST_USE_PYTHON TRUE)
 find_package(CxxTest)
 if(CXXTEST_FOUND)
+   add_definitions(-DCXXTEST_HAVE_EH)
+   add_definitions(-DCXXTEST_ABORT_TEST_ON_FAIL)
    include_directories(${CXXTEST_INCLUDE_DIR})
    ENABLE_TESTING()
    CXXTEST_ADD_TEST(mh_api_network_unittest network_unittest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/mh_api_network.h)

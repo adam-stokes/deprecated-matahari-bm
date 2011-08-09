@@ -1,5 +1,5 @@
 /*
- * mh_hs.h: dns srv high availability test 
+ * mh_hsa_windows.h: dns srv high availability test 
  *
  * Copyright (C) 2011 Red Hat Inc.
  *
@@ -33,6 +33,7 @@ extern "C" {
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include "mh_test_utilities.h"
+#include "matahari/utilities.h"
 #include "matahari/dnssrv.h"
 };
 
@@ -45,12 +46,12 @@ class MhHsaSuite : public CxxTest::TestSuite
 
      void testSrvLookup(void)
      {
-         char target[NI_MAXHOST];
-         const char *host = "_matahari._tcp.matahariproject.org";
-         int ret = 0;
+         char *target = NULL;
 
-         ret = mh_srv_lookup(host, target, NI_MAXHOST);
-         TS_ASSERT(ret == 0);
+         fqdn << "_matahari._tcp." << mh_domainname();
+         TS_ASSERT(fqdn.str().empty());
+         target = mh_os_dnssrv_lookup(fqdn.str().c_str());
+         TS_ASSERT(target == NULL);
          TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
                                      target)) >= 0);
      }
