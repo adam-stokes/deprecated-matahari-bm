@@ -418,6 +418,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
 %{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
 %{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
+%{_datadir}/matahari/check-policy.xsl
+%{_datadir}/polkit-1/actions/org.matahariproject.Resources.policy
 %endif
 
 %files devel
