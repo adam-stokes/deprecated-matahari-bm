@@ -89,18 +89,18 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
         if (rc == 0) {
-            mh_sysconfig_set_configured(args["key"].asString().c_str());
+            rc = mh_sysconfig_set_configured(args["key"].asString().c_str());
         }
-        event.addReturnArgument("status", rc);
+        event.addReturnArgument("status", rc ? "ok" : "no");
     } else if (methodName == "run_string") {
         rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
         if (rc == 0) {
-            mh_sysconfig_set_configured(args["key"].asString().c_str());
+            rc = mh_sysconfig_set_configured(args["key"].asString().c_str());
         }
-        event.addReturnArgument("status", rc);
+        event.addReturnArgument("status", rc ? "ok" : "no");
     } else if (methodName == "query") {
         const char *data = NULL;
         data = mh_sysconfig_query(args["query"].asString().c_str(),

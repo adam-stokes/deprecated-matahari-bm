@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     mh_log_init("sysconfig-console", LOG_TRACE, TRUE);
 
     mh_add_option('U', required_argument, "uri", "URI of configuration", &options, NULL);
-    mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
+    mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, mh_should_daemonize);
 
     qpid::types::Variant::Map amqp_options = mh_parse_options("sysconfig-console", argc, argv, options);
 
