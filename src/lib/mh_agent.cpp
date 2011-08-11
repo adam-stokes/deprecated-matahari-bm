@@ -205,13 +205,15 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     char *target = NULL;
 
     if(mh_options.count("servername") == 0) {
-	/* Is ssl valid here as a protocol?  udp? */
+	/* Is _ssl valid here as a protocol?  _udp? */
 	std::stringstream fqdn;
 	fqdn << "_matahari._tcp." << mh_domainname();
 	target = mh_os_dnssrv_lookup(fqdn.str().c_str());
 
 	if(target) {
-	    mh_info("DNS SRV record resolved to: %s", target);
+	    mh_info("SRV record resolved to: %s", target);
+	} else {
+	    mh_info("Could not resolve SRV record for %s", fqdn.str().c_str());
 	}
     }
     
@@ -489,16 +491,18 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {
     qpid::types::Variant::Map options;
     int res = 0;
+    std::stringstream logname;
+    logname << "matahari-" << proc_name;
 
     /* Set up basic logging */
-    mh_log_init(proc_name, LOG_INFO, TRUE);
+    mh_log_init(proc_name, mh_log_level, FALSE);
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
 
     qpid::types::Variant::Map amqp_options = mh_parse_options(proc_name, argc, argv, options);
 
 
     /* Re-initialize logging now that we've completed option processing */
-    mh_log_init(proc_name, mh_log_level, mh_log_level > LOG_INFO);
+    mh_log_init(strdup(logname.str().c_str()), mh_log_level, mh_log_level > LOG_INFO);
 
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
