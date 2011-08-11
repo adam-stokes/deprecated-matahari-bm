@@ -265,7 +265,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     const char *ssl_cert_password_file = NULL;
     int lpc = 0;
 
-    amqp_options["reconnect"] = false;
+    amqp_options["reconnect"] = true;
 
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                 NULL, NULL, NULL);
