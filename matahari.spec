@@ -1,5 +1,5 @@
-%global specversion 102
-%global upstream_version ba6de25
+%global specversion 110
+%global upstream_version 3fc12c7
 
 # Keep around for when/if required
 %global alphatag %{upstream_version}.git
@@ -172,6 +172,16 @@ Requires:	%{name}-agent-lib = %{version}-%{release}
 %description consoles
 QMF console for monitoring various agents
 
+%package selinux
+Summary:        SElinux support for Matahari
+Requires:	%{name} = %{version}-%{release}
+Requires:       policycoreutils
+Requires:       selinux-policy-targeted
+BuildRequires:  selinux-policy-devel
+
+%description selinux
+Configures Matahari to run in SELinux enabled environments.
+
 %prep
 %setup -q -n matahari-matahari-%{upstream_version}
 
@@ -193,17 +203,26 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 %{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
-%{__install} -d -m0755 %{buildroot}%{_localstatedir}/lib/%{name}
-%{__install} -d -m0755 %{buildroot}%{_localstatedir}/run/%{name}
+%{__mkdir} -p $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
+%{__mkdir} -p $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
 %endif
 
-%post -n matahari-lib -p /sbin/ldconfig
+%post -n matahari-lib -p /sbin/ldconfig 
 %postun -n matahari-lib -p /sbin/ldconfig
 
 %post -n matahari-agent-lib -p /sbin/ldconfig
 %postun -n matahari-agent-lib
 # Can't use -p, gives: '/sbin/ldconfig: relative path `0' used to build cache' error
 /sbin/ldconfig
+
+%post selinux
+semanage fcontext -a -t qpidd_var_lib_t '%{_localstatedir}/lib/%{name}(/.*)?' >/dev/null 2>&1 || :
+restorecon -R '%{_localstatedir}/lib/%{name}' || :
+
+%postun selinux
+if [ $1 -eq 0 ]; then
+   semanage fcontext -d -t qpidd_var_lib_t '%{_localstatedir}/lib/%{name}(/.*)?' >/dev/null 2>&1 || :
+fi
 
 %if %{with qmf}
 #== Host
@@ -293,6 +312,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files
 %defattr(644, root, root, 755)
+%attr(755,root,root) %{_localstatedir}/lib/%{name}
 %doc AUTHORS COPYING
 
 %files agent-lib
@@ -418,9 +438,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
 %{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
 %{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
-%{_datadir}/matahari/check-policy.xsl
 %{_datadir}/polkit-1/actions/org.matahariproject.Resources.policy
 %endif
+
+%files selinux
+%defattr(-,root,root,-)
 
 %files devel
 %defattr(644, root, root, 755)
@@ -449,6 +471,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_datadir}/cmake/Modules/MatahariMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
 %{_datadir}/matahari/dbus-to-c.xsl
+%{_datadir}/matahari/check-policy.xsl
 %endif
 
 %changelog

@@ -493,7 +493,8 @@ mh_add_option(int code, int has_arg, const char *name, const char *description,
     return -1;
 }
 
-static int should_daemonize(int code, const char *name, const char *arg, void *userdata)
+int 
+should_daemonize(int code, const char *name, const char *arg, void *userdata)
 {
 #ifndef WIN32
     if (daemon(0, 0) < 0) {
