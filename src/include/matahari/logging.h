@@ -99,7 +99,7 @@ extern struct _mh_ddebug __stop___verbose[];
             { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};            \
                                                                           \
         if (__unlikely((expr) == 0)) {                                    \
-            mh_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,      \
+            mh_abort(__FILE__, __FUNCTION__, __LINE__, #expr,      \
                      descriptor.bump != LOG_TRACE, 1);                    \
             failure_action;                                               \
         }                                                                 \
@@ -116,11 +116,11 @@ extern struct _mh_ddebug __stop___verbose[];
             { __func__, __FILE__, fmt, __LINE__, LOG_TRACE};              \
                                                                           \
         if (__likely((level) <= mh_log_level)) {                          \
-            mh_log_fn((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args); \
+            mh_log_fn((level), "%s: " fmt, __FUNCTION__ , ##args); \
                                                                           \
         } else if (__unlikely(descriptor.bump != LOG_TRACE)) {            \
             mh_log_fn(descriptor.bump, "TRACE: %s: %s:%d " fmt,           \
-                      __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args);  \
+                      __FUNCTION__ , __FILE__, __LINE__, ##args);  \
         }                                                                 \
     } while(0)
 
@@ -130,11 +130,11 @@ extern struct _mh_ddebug __stop___verbose[];
             { __func__, __FILE__, fmt, __LINE__, LOG_TRACE };             \
                                                                           \
         if (__unlikely((level) <= mh_log_level)) {                        \
-            mh_log_fn((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args); \
+            mh_log_fn((level), "%s: " fmt, __FUNCTION__ , ##args); \
                                                                           \
         } else if (__unlikely(descriptor.bump != LOG_TRACE)) {            \
             mh_log_fn(descriptor.bump, "TRACE: %s: %s:%d " fmt,           \
-                      __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args);  \
+                      __FUNCTION__ , __FILE__, __LINE__, ##args);  \
         }                                                                 \
     } while(0)
 
@@ -153,20 +153,20 @@ extern struct _mh_ddebug __stop___verbose[];
 
 #  define MH_CHECK(expr, failure_action) do {                             \
         if (__unlikely((expr) == 0)) {                                    \
-            mh_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, 0, 1); \
+            mh_abort(__FILE__,__FUNCTION__,__LINE__, #expr, 0, 1); \
             failure_action;                                               \
         }                                                                 \
     } while(0)
 
 #  define mh_log(level, fmt, args...) do {                                \
         if (__likely((level) <= mh_log_level)) {                          \
-            mh_log_fn((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args); \
+            mh_log_fn((level), "%s: " fmt, __FUNCTION__ , ##args); \
         }                                                                 \
     } while(0)
 
 #  define mh_log_unlikely(level, fmt, args...) do {                       \
         if (__unlikely((level) <= mh_log_level)) {                        \
-            mh_log_fn((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args); \
+            mh_log_fn((level), "%s: " fmt, __FUNCTION__ , ##args); \
         }                                                                 \
     } while(0)
 
@@ -177,7 +177,7 @@ extern struct _mh_ddebug __stop___verbose[];
 #endif
 
 #define mh_log_always(level, fmt, args...) mh_log_fn(level, "%s: " fmt,   \
-                                                     __PRETTY_FUNCTION__ ,\
+                                                     __FUNCTION__ ,\
                                                      ##args)
 #define mh_crit(fmt, args...)    mh_log(LOG_CRIT,    fmt , ##args)
 #define mh_err(fmt, args...)     mh_log(LOG_ERR,     fmt , ##args)
