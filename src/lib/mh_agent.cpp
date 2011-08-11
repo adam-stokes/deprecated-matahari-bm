@@ -158,10 +158,9 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
         options->insert(std::pair<std::string, qpid::types::Variant>("sasl-mechanism", "GSSAPI"));
 
     } else if(strcmp(name, "reconnect") == 0) {
-        if(arg && strcmp(arg, "no") == 0) {
-            options->insert(std::pair<std::string, qpid::types::Variant>("reconnect", false));
-        }
-
+        bool reconnect = !arg || (strcasecmp(arg, "no") != 0 &&
+                                  strcasecmp(arg, "false") != 0);
+        (*options)["reconnect"] = reconnect;
     } else {
         options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
     }
