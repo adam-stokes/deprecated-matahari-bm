@@ -49,7 +49,7 @@ class MhHsaSuite : public CxxTest::TestSuite
          char *target = NULL;
 
          fqdn << "_matahari._tcp." << mh_domainname();
-         TS_ASSERT(fqdn.str().empty());
+         TS_ASSERT(!fqdn.str().empty());
          target = mh_os_dnssrv_lookup(fqdn.str().c_str());
          TS_ASSERT(target == NULL);
          TS_ASSERT((mh_test_is_match("^www\\.matahariproject\\.org$",
