@@ -71,6 +71,6 @@
 
  </class>
 
- <event name="heartbeat" args="timestamp,sequence" />
+ <event name="heartbeat" args="timestamp,sequence,hostname,uuid" />
 
 </schema>
