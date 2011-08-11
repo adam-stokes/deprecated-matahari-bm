@@ -46,14 +46,15 @@ class MhHsaSuite : public CxxTest::TestSuite
 
      void testSrvLookup(void)
      {
-         char *target = NULL;
+         char *target;
+         const char *host = "_matahari._tcp.matahariproject.org";
+         int ret = 0;
 
-         fqdn << "_matahari._tcp." << mh_domainname();
-         TS_ASSERT(fqdn.str().empty());
-         target = mh_os_dnssrv_lookup(fqdn.str().c_str());
-         TS_ASSERT(target == NULL);
-         TS_ASSERT((mh_test_is_match("^qpid.*matahariproject\\.org$",
+         target = mh_os_dnssrv_lookup(host);
+         TS_ASSERT(target != NULL);
+         TS_ASSERT((mh_test_is_match("^www\\.matahariproject\\.org$",
                                      target)) >= 0);
+         free(target);
      }
 };
 

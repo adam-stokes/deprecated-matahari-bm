@@ -32,7 +32,7 @@
 #include "matahari/utilities.h"
 
 MH_TRACE_INIT_DATA(mh_core);
-int mh_log_level = LOG_INFO;
+int mh_log_level = LOG_NOTICE;
 gboolean mh_stderr_enabled = FALSE;
 
 #if __linux__
@@ -358,6 +358,9 @@ mh_domainname(void)
     }
 
     if (domainname == NULL) {
+        return "";
+    } else if (strlen(domainname) == 0 || strcasecmp(domainname, "(none)") == 0) {
+        domainname = NULL;
         return "";
     }
 
