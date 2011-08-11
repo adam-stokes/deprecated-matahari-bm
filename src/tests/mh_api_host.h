@@ -57,8 +57,9 @@ class MhApiHostSuite : public CxxTest::TestSuite
     {
         infomsg << "Verify " << mh_host_get_hostname() << " format";
         TS_TRACE(infomsg.str());
-        TS_ASSERT((mh_test_is_match("^([0-9a-zA-Z]+([\\.]|$)){1,3}$",
-                                    mh_host_get_hostname())) >= 0);
+        /* http://stackoverflow.com/questions/1418423/the-hostname-regex */
+        TS_ASSERT((mh_test_is_match("^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|\\b-){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|\\b-){0,61}[0-9A-Za-z])?)*\\.?$",
+                        mh_host_get_hostname())) >= 0);
         infomsg.str("");
     }
 
