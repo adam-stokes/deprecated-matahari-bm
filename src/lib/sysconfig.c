@@ -33,10 +33,35 @@
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 #ifdef WIN32
-static const char keys_dir[] = "c:\\";
+static const char DEFAULT_KEYS_DIR[] = "c:\\";
 #else
-static const char keys_dir[] = "/var/lib/matahari/";
+static const char DEFAULT_KEYS_DIR[] = "/var/lib/matahari/";
 #endif
+
+/*!
+ * Directory to store sysconfig action keys
+ *
+ * Set with mh_sysconfig_keys_dir_set(), get with keys_dir_get().
+ */
+static char _keys_dir[PATH_MAX];
+
+static const char *
+keys_dir_get(void)
+{
+    if (!*_keys_dir) {
+        strncpy(_keys_dir, DEFAULT_KEYS_DIR, sizeof(_keys_dir) - 1);
+        _keys_dir[sizeof(_keys_dir) - 1] = '\0';
+    }
+
+    return _keys_dir;
+}
+
+void
+mh_sysconfig_keys_dir_set(const char *path)
+{
+    strncpy(_keys_dir, path, sizeof(_keys_dir) - 1);
+    _keys_dir[sizeof(_keys_dir) - 1] = '\0';
+}
 
 static gboolean
 set_key(const char *key)
@@ -44,7 +69,7 @@ set_key(const char *key)
     char key_file[PATH_MAX];
     const char contents[] = "ok";
 
-    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
+    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
         mh_err("Could not set file %s", key_file);
         return FALSE;
@@ -59,7 +84,7 @@ get_key(const char *key)
     char *contents;
     size_t length;
 
-    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir, key);
+    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
         if(g_file_get_contents(key_file, &contents, &length, NULL)) {
             if (strcmp(contents, "ok") == 0) {
