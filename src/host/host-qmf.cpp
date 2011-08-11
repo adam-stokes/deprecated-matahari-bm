@@ -242,7 +242,13 @@ HostAgent::heartbeat()
     event.setProperty("sequence",  _heartbeat_sequence);
     event.setProperty("hostname",  mh_host_get_hostname());
     event.setProperty("uuid",      mh_host_get_uuid("Filesystem"));
-    getSession().raiseEvent(event);
+    try {
+        getSession().raiseEvent(event);
+    } catch (const qpid::messaging::ConnectionError& e) {
+        mh_log(LOG_ERR, "Connection error sending event to broker. (%s)", e.what());
+    } catch (const qpid::types::Exception& e) {
+        mh_log(LOG_ERR, "Exception sending event to broker. (%s)", e.what());
+    }
 
     return interval * 1000;
 }
