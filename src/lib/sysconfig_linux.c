@@ -108,7 +108,7 @@ static int
 sysconfig_os_run_augeas(const char *query, const char *data)
 {
     mh_warn("not implemented\n");
-    return 0;
+    return -1;
 }
 
 static const char *
@@ -128,6 +128,8 @@ sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
     if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
             rc = sysconfig_os_run_puppet(uri, NULL);
+        } else if (strcasecmp(scheme, "augeas") == 0) {
+            rc = sysconfig_os_run_augeas(uri, NULL);
         } else {
             rc = -1;
         }
