@@ -74,10 +74,11 @@ export:
 	git archive --prefix=$(TARPREFIX)/ $(TAG) | gzip > $(TARFILE)
 	echo `date`: Rebuilt $(TARFILE) from $(TAG)
 
-srpm:	export $(VARIANT)$(PACKAGE).spec
+srpm:	export $(VARIANT)$(PACKAGE).spec.in
 	rm -f *.src.rpm
-	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(VARIANT)$(PACKAGE).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
+	cp $(VARIANT)$(PACKAGE).spec.in $(VARIANT)$(PACKAGE).spec
+	sed -i 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(VARIANT)$(PACKAGE).spec
+	sed -i 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
