@@ -241,17 +241,20 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
 	
 	try {
 	    amqp.open();
+	    free(target);
 	    return amqp;
 	    
 	} catch (const std::exception& err) {
 	    if(!retry) {
-		return NULL;
+		goto bail;
+		
 	    } else if(backoff) {
 		g_usleep(backoff * G_USEC_PER_SEC);
 	    }
         }
     }
-
+  bail:
+    free(target);
     return NULL;
 }
 
