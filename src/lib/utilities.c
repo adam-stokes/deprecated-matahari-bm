@@ -359,6 +359,9 @@ mh_domainname(void)
 
     if (domainname == NULL) {
 	return "";
+    } else if (strlen(domainname) == 0 || strcasecmp(domainname, "(none)") == 0) {
+	domainname = NULL;
+	return "";
     }
 
     mh_trace("Got domainname: %s", domainname);
