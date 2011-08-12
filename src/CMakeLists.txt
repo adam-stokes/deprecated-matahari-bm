@@ -92,6 +92,9 @@ check_function_exists (g_list_free_full HAVE_G_LIST_FREE_FULL)
 
 # cURL
 find_library(CURL curl)
+if(CURL STREQUAL "CURL-NOTFOUND")
+    message(FATAL_ERROR "libcurl not found.")
+endif(CURL STREQUAL "CURL-NOTFOUND")
 
 # Include QMF and DBus generation macros
 include(MatahariMacros)
