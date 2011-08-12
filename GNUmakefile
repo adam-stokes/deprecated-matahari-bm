@@ -82,11 +82,14 @@ $(VARIANT)$(PACKAGE).spec: $(VARIANT)$(PACKAGE).spec.in
 
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
-	if [ -e $(BUILD_COUNTER) ]; then								\
-		echo $(COUNT) > $(BUILD_COUNTER);							\
-		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(VARIANT)$(PACKAGE).spec;	\
+	if [ -e $(BUILD_COUNTER) ]; then									\
+		echo $(COUNT) > $(BUILD_COUNTER);								\
+		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(VARIANT)$(PACKAGE).spec;  \
+	else													\
+		echo 1 > $(BUILD_COUNTER);									\
+		sed -i.sed 's/global\ specversion.*/global\ specversion\ 1/' $(VARIANT)$(PACKAGE).spec; 	\
 	fi
-	sed -i 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
