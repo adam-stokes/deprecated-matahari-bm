@@ -29,9 +29,36 @@
 #include <stdlib.h>
 #include <sigar.h>
 
+/**
+ * Get a UUID for a host.
+ *
+ * \param[in] lifetime This function can retrieve a few different UUIDs from
+ *            different sources that each have different lifetimes.
+ *            The valid lifetimes are:
+ *             - "Hardware", unique to the host itself
+ *             - "Filesystem", valid for the lifetime of the OS
+ *             - "Reboot", reset on each reboot of the host
+ *             - "Agent", reset on each execution of the agent serving up this information.
+ *             - "Custom", set by mh_host_set_uuid()
+ *
+ * \return the UUID
+ */
+extern const char *
+mh_host_get_uuid(const char *lifetime);
 
-extern const char *mh_host_get_uuid(const char *lifetime);
-extern int mh_host_set_uuid(const char *lifetime, const char *uuid);
+/**
+ * Set a custom UUID for this host.
+ *
+ * \param[in] lifetime Which lifetime to set.  The only valid input for
+ *            this parameter right now is "Custom".
+ * \param[in] uuid the value of the UUID to set
+ *
+ * \retval 0 success
+ * \retval non-zero failure
+ */
+extern int
+mh_host_set_uuid(const char *lifetime, const char *uuid);
+
 extern const char *mh_host_get_hostname(void);
 extern const char *mh_host_get_operating_system(void);
 

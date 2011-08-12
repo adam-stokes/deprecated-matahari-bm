@@ -265,32 +265,32 @@ mh_host_get_uuid(const char *lifetime)
     static const char *reboot_uuid = NULL;
     static const char *agent_uuid = NULL;
 
-    if (lifetime == NULL || strcmp("Filesystem", lifetime) == 0) {
+    if (lifetime == NULL || strcasecmp("Filesystem", lifetime) == 0) {
         if (immutable_uuid == NULL) {
             immutable_uuid = mh_uuid();
         }
         uuid = immutable_uuid;
 
-    } else if (strcmp("Hardware", lifetime) == 0) {
+    } else if (strcasecmp("Hardware", lifetime) == 0) {
         if(hardware_uuid == NULL) {
             hardware_uuid = host_os_machine_uuid();
         }
         uuid = hardware_uuid;
 
-    } else if (strcmp("Reboot", lifetime) == 0) {
+    } else if (strcasecmp("Reboot", lifetime) == 0) {
 
         if(reboot_uuid == NULL) {
             reboot_uuid = host_os_reboot_uuid();
         }
         uuid = reboot_uuid;
 
-    } else if (strcmp("Agent", lifetime) == 0) {
+    } else if (strcasecmp("Agent", lifetime) == 0) {
         if(agent_uuid == NULL) {
             agent_uuid = host_os_agent_uuid();
         }
         uuid = agent_uuid;
 
-    } else if (strcmp("Custom", lifetime) == 0) {
+    } else if (strcasecmp("Custom", lifetime) == 0) {
         if(custom_uuid == NULL) {
             custom_uuid = host_os_custom_uuid();
         }
@@ -310,11 +310,12 @@ mh_host_get_uuid(const char *lifetime)
 int
 mh_host_set_uuid(const char *lifetime, const char *uuid)
 {
-    if(lifetime && strcmp("Custom", lifetime) == 0) {
+    if (lifetime && strcmp("Custom", lifetime) == 0) {
         int rc = host_os_set_custom_uuid(uuid);
         free(custom_uuid);
         custom_uuid = host_os_custom_uuid();
-	return rc;
+        return rc;
     }
+
     return G_FILE_ERROR_NOSYS;
 }
