@@ -50,6 +50,7 @@ int main(int argc, char **argv)
 {
     qpid::types::Variant::Map options;
     qpid::types::Variant::Map callOptions;
+    qpid::messaging::Connection connection;
     string sessionOptions;
     ConsoleEvent event;
     Agent agent;
@@ -57,14 +58,15 @@ int main(int argc, char **argv)
     mh_log_init("sysconfig-console", LOG_TRACE, TRUE);
 
     mh_add_option('U', required_argument, "uri", "URI of configuration", &options, NULL);
+    mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, mh_should_daemonize);
 
-    qpid::types::Variant::Map urlMap = mh_parse_options("sysconfig-console", argc, argv, options);
+    qpid::types::Variant::Map amqp_options = mh_parse_options("sysconfig-console", argc, argv, options);
 
     callOptions["uri"] = options["uri"];
 
     mh_log_init("sysconfig-console", mh_log_level, mh_log_level > LOG_INFO);
 
-    qpid::messaging::Connection connection(urlMap["uri"], options);
+    connection = mh_connect(options, amqp_options, TRUE);
     connection.open();
 
     ConsoleSession session(connection, sessionOptions);

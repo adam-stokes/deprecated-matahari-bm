@@ -462,7 +462,8 @@ mh_add_option(int code, int has_arg, const char *name, const char *description,
     return -1;
 }
 
-static int should_daemonize(int code, const char *name, const char *arg, void *userdata)
+int 
+mh_should_daemonize(int code, const char *name, const char *arg, void *userdata)
 {
 #ifndef WIN32
     if (daemon(0, 0) < 0) {
@@ -498,7 +499,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     /* Set up basic logging */
     mh_log_init(proc_name, mh_log_level, FALSE);
-    mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, should_daemonize);
+    mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, mh_should_daemonize);
 
     qpid::types::Variant::Map amqp_options = mh_parse_options(proc_name, argc, argv, options);
 

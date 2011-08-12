@@ -65,6 +65,17 @@ typedef struct mainloop_qmf_s {
                              gpointer user_data);
 } mainloop_qmf_t;
 
+/*
+ * Provides ability for an agent/console to daemonize itself
+ *
+ * matches prototype expected by mh_add_arg
+ *
+ * retval[1] failed to daemonize
+ * retval[0] successfully daemonize
+ */
+extern int 
+mh_should_daemonize(int code, const char *name, const char *arg, void *userdata);
+
 extern int mh_add_option(
     int code, int has_arg, const char *name, const char *description,
     void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata));
