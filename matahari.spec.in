@@ -9,7 +9,7 @@
 %bcond_without pre_release
 
 %if %{with pre_release}
-%global mh_release 0.%{specversion}.%{upstream_version}.hg
+%global mh_release 0.%{specversion}.%{upstream_version}.git
 %else
 %global mh_release %{specversion}
 %endif
