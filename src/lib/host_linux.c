@@ -164,7 +164,81 @@ host_os_identify(void)
 
 char *host_os_machine_uuid(void)
 {
-    return strdup("not-implemented");
+    gchar *output = NULL;
+    gchar **lines = NULL;
+    unsigned int i;
+    static const gint max_lines = 256;
+    pcre *regex;
+    const char *pcre_error = NULL;
+    int pcre_error_offset = 0;
+    static const char regex_str[] = "\\s+UUID:\\s+(.*)";
+    GError *error = NULL;
+    gboolean res;
+    char *uuid = NULL;
+    gchar *argv[] = { "dmidecode", "-t", "system", NULL };
+
+    /*
+     * libsmbios doesn't expose the UUID.  dmidecode already does a good job
+     * of getting it, but it doesn't have a library.  Executing dmidecode
+     * doesn't seem pretty, but it should at least provide reliable info.
+     */
+
+    res = g_spawn_sync(NULL, argv, NULL,
+                G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL,
+                NULL, NULL, &output, NULL, NULL, &error);
+
+    if (res == FALSE) {
+        mh_err("Failed to run dmidecode to get UUID: %s\n", error->message);
+        g_error_free(error);
+        error = NULL;
+    }
+
+    if (!output) {
+        mh_err("Got no output from dmidecode when trying to get UUID.\n");
+        return strdup("(dmidecode-failed)");
+    }
+
+    lines = g_strsplit(output, "\n", max_lines);
+
+    g_free(output);
+    output = NULL;
+
+    regex = pcre_compile(regex_str, 0, &pcre_error, &pcre_error_offset, NULL);
+    if (!regex) {
+        mh_err("Unable to compile regular expression '%s' at offset %d: %s",
+               regex_str, pcre_error_offset, pcre_error);
+        uuid = strdup("(regex-compile-failed)");
+        goto cleanup;
+    }
+
+    for (i = 0; lines && lines[i]; i++) {
+        int match;
+        int found[8] = { 0, };
+
+        match = pcre_exec(regex, NULL, lines[i], strlen(lines[i]),
+                          0, 0, found,
+                          sizeof(found) / sizeof(found[0]));
+
+        if (match == 2) {
+            uuid = strdup(lines[i] + found[2]);
+            break;
+        }
+    }
+
+cleanup:
+    if (!uuid) {
+        uuid = strdup("(not-found)");
+    }
+
+    if (lines) {
+        g_strfreev(lines);
+    }
+
+    if (regex) {
+        pcre_free(regex);
+    }
+
+    return uuid;
 }
 
 char *host_os_custom_uuid(void)
