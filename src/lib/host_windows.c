@@ -100,7 +100,7 @@ char *host_os_machine_uuid(void)
 }
 
 char *host_os_custom_uuid(void)
-{    
+{
     return mh_file_first_line("custom-machine-id");
 }
 
@@ -118,14 +118,14 @@ int host_os_set_custom_uuid(const char *uuid)
 {
     int rc = 0;
     GError* error = NULL;
-    
+
     if(g_file_set_contents("custom-machine-id", uuid, strlen(uuid?uuid:""), &error) == FALSE) {
-	mh_info("%s", error->message);
-	rc = error->code;
+        mh_info("%s", error->message);
+        rc = error->code;
     }
-    
+
     if(error) {
-	g_error_free(error);	
+        g_error_free(error);
     }
 
     return rc;
