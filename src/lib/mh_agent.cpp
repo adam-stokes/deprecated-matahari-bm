@@ -235,7 +235,7 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
 	/* Is _ssl valid here as a protocol?  _udp? */
 	std::stringstream fqdn;
 	fqdn << "_matahari._tcp." << mh_domainname();
-	target = mh_os_dnssrv_lookup(fqdn.str().c_str());
+	target = mh_dnssrv_lookup(fqdn.str().c_str());
 
 	if(target) {
 	    mh_info("SRV record resolved to: %s", target);

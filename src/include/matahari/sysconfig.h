@@ -94,4 +94,17 @@ mh_sysconfig_set_configured(const char *key);
 extern gboolean
 mh_sysconfig_is_configured(const char *key);
 
+/**
+ * Set the directory used to store data about keys
+ *
+ * This is primarily intended to be used in unit test code.  It should not
+ * be needed by any production usage of this library.
+ *
+ * \param[in] path directory to store key info
+ *
+ * \return nothing
+ */
+extern void
+mh_sysconfig_keys_dir_set(const char *path);
+
 #endif // __MH_SYSCONFIG_H__

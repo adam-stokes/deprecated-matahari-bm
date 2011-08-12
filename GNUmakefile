@@ -34,6 +34,9 @@ WITH   ?=
 VARIANT ?=
 PROFILE ?= fedora-rawhide-x86_64
 
+BUILD_COUNTER	?= build.counter
+COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))
+
 DOXYGEN:=$(shell which doxygen 2>/dev/null)
 DOT:=$(shell which dot 2>/dev/null)
 
@@ -74,9 +77,18 @@ export:
 	git archive --prefix=$(TARPREFIX)/ $(TAG) | gzip > $(TARFILE)
 	echo `date`: Rebuilt $(TARFILE) from $(TAG)
 
+$(VARIANT)$(PACKAGE).spec: $(VARIANT)$(PACKAGE).spec.in
+	cp $(VARIANT)$(PACKAGE).spec.in $(VARIANT)$(PACKAGE).spec
+
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
-	sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(VARIANT)$(PACKAGE).spec
+	if [ -e $(BUILD_COUNTER) ]; then									\
+		echo $(COUNT) > $(BUILD_COUNTER);								\
+		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(VARIANT)$(PACKAGE).spec;  \
+	else													\
+		echo 1 > $(BUILD_COUNTER);									\
+		sed -i.sed 's/global\ specversion.*/global\ specversion\ 1/' $(VARIANT)$(PACKAGE).spec; 	\
+	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 

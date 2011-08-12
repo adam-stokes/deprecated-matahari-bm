@@ -90,6 +90,9 @@ include_directories(${glib_INCLUDE_DIRS})
 SET(CMAKE_REQUIRED_LIBRARIES ${glib_LIBRARIES})
 check_function_exists (g_list_free_full HAVE_G_LIST_FREE_FULL)
 
+# cURL
+find_library(CURL curl)
+
 # Include QMF and DBus generation macros
 include(MatahariMacros)
 

@@ -48,7 +48,7 @@ class MhHsaSuite : public CxxTest::TestSuite
          char *target;
          const char *host = "_matahari._tcp.matahariproject.org";
 
-         target = mh_os_dnssrv_lookup(host);
+         target = mh_dnssrv_lookup(host);
          TS_ASSERT(target != NULL);
          TS_ASSERT((mh_test_is_match("^www\\.matahariproject\\.org$",
                                      target)) >= 0);

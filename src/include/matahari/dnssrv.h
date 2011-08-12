@@ -34,7 +34,7 @@
  *
  * \return buffer to hold domain retrieved
  */
-extern char *mh_os_dnssrv_lookup(const char *query);
+extern char *mh_dnssrv_lookup(const char *query);
 
 
 #endif /* __MH_DNSSRV_H__ */

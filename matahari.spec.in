@@ -1,20 +1,22 @@
 %global specversion 110
 %global upstream_version 3fc12c7
 
-# Keep around for when/if required
-%global alphatag %{upstream_version}.git
-%global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
-
 # Messaging buses
 %bcond_without dbus
 %bcond_without qmf
 
-# Systemd init scripts
-%bcond_without systemd
+# Choose a versioning scheme
+%bcond_without pre_release
+
+%if %{with pre_release}
+%global mh_release 0.%{specversion}.%{upstream_version}.hg
+%else
+%global mh_release %{specversion}
+%endif
 
 Name:		matahari
 Version:	0.4.2
-Release:	%{mh_release}
+Release:	%{mh_release}%{?dist}
 Summary:	Matahari QMF Agents for Linux guests
 
 Group:		Applications/System
@@ -38,10 +40,6 @@ BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
 BuildRequires:  cxxtest
-
-%if %{with systemd}
-BuildRequires:	systemd-units
-%endif
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
@@ -96,16 +94,6 @@ Requires:	qpid-cpp-client-ssl > 0.7
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
-
-%if %{with dbus}
-%package dbus
-License:	GPLv2+
-Summary:	DBus policies for Matahari services
-Group:		Applications/System
-
-%description dbus
-DBus policies for allowing Matahari to be used on the local system
-%endif
 
 %package host
 License:	GPLv2+
@@ -342,7 +330,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{with systemd}
+%if %{defined _unitdir}
 %{_unitdir}/matahari-network.service
 %endif
 
@@ -353,13 +341,17 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-networkd
+%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Network.conf
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Network.xml
+%{_datadir}/dbus-1/system-services/org.matahariproject.Network.service
+%{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
 %endif
 
 %files host
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{with systemd}
+%if %{defined _unitdir}
 %{_unitdir}/matahari-host.service
 %endif
 
@@ -370,13 +362,17 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-hostd
+%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Host.conf
+%{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Host.xml
+%{_datadir}/dbus-1/system-services/org.matahariproject.Host.service
 %endif
 
 %files service
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{with systemd}
+%if %{defined _unitdir}
 %{_unitdir}/matahari-service.service
 %endif
 
@@ -388,6 +384,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
+%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Services.conf
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Services.xml
+%{_datadir}/dbus-1/system-services/org.matahariproject.Services.service
+%{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
+%{_datadir}/polkit-1/actions/org.matahariproject.Resources.policy
 %endif
 
 %files sysconfig
@@ -424,23 +425,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %exclude %{_sysconfdir}/matahari-broker.conf
 %endif
 
-%if %{with dbus}
-%files dbus
-%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Host.conf
-%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Network.conf
-%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Services.conf
-%{_datadir}/dbus-1/interfaces/org.matahariproject.Host.xml
-%{_datadir}/dbus-1/interfaces/org.matahariproject.Network.xml
-%{_datadir}/dbus-1/interfaces/org.matahariproject.Services.xml
-%{_datadir}/dbus-1/system-services/org.matahariproject.Host.service
-%{_datadir}/dbus-1/system-services/org.matahariproject.Network.service
-%{_datadir}/dbus-1/system-services/org.matahariproject.Services.service
-%{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
-%{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
-%{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
-%{_datadir}/polkit-1/actions/org.matahariproject.Resources.policy
-%endif
-
 %files selinux
 %defattr(-,root,root,-)
 
@@ -458,6 +442,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_includedir}/matahari/sysconfig.h
 %{_includedir}/matahari/services.h
 %{_datadir}/cmake/Modules/FindMatahari.cmake
+%{_datadir}/cmake/Modules/MatahariMacros.cmake
 
 %if %{with qmf}
 %{_includedir}/matahari/agent.h
@@ -468,7 +453,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with dbus}
 %{_includedir}/matahari/dbus_common.h
 %{_includedir}/matahari/gobject_class.h
-%{_datadir}/cmake/Modules/MatahariMacros.cmake
 %{_datadir}/matahari/schema-to-dbus.xsl
 %{_datadir}/matahari/dbus-to-c.xsl
 %{_datadir}/matahari/check-policy.xsl

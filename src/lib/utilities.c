@@ -391,34 +391,34 @@ mh_hostname(void)
     return hostname;
 }
 
-char *mh_file_first_line(const char *file) 
+char *mh_file_first_line(const char *file)
 {
     GError* error = NULL;
     char *buffer = NULL;
 
     if(!g_file_test(file, G_FILE_TEST_EXISTS)) {
-	return NULL;
+        return NULL;
     }
-    
+
     if(g_file_get_contents(file, &buffer, NULL, &error) == FALSE) {
-	buffer = strdup(error->message);
-	g_error_free(error);
+        buffer = strdup(error->message);
+        g_error_free(error);
     }
-	    
+
     if (buffer) {
-	/* Truncate after at most one line */
+        /* Truncate after at most one line */
 #ifdef __linux__
-	char *tmp = strchrnul(buffer, '\n');
-	if(tmp) {
-	    *tmp = '\0';
-	}
+        char *tmp = strchrnul(buffer, '\n');
+        if(tmp) {
+            *tmp = '\0';
+        }
 #else
-	int len = 0, lpc = 0;
-	for(len = strlen(buffer); lpc < len; lpc++) {
-	    if(buffer[lpc] == '\n') {
-		buffer[lpc] = '\0';
-	    }
-	}
+        int len = 0, lpc = 0;
+        for(len = strlen(buffer); lpc < len; lpc++) {
+            if(buffer[lpc] == '\n') {
+                buffer[lpc] = '\0';
+            }
+        }
 #endif
     }
     return buffer;
@@ -431,16 +431,16 @@ mh_uuid(void)
 
 #ifdef __linux__
     if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
-	uuid = mh_file_first_line("/etc/machine-id");
+        uuid = mh_file_first_line("/etc/machine-id");
     }
     if (uuid == NULL && g_file_test("/var/lib/dbus/machine-id", G_FILE_TEST_EXISTS)) {
-	/* For pre-systemd machines */
-	uuid = mh_file_first_line("/var/lib/dbus/machine-id");
+        /* For pre-systemd machines */
+        uuid = mh_file_first_line("/var/lib/dbus/machine-id");
     }
 #endif
 
     if(uuid) {
-	mh_trace("Got uuid: %s", uuid);
+        mh_trace("Got uuid: %s", uuid);
     }
     return uuid;
 }
