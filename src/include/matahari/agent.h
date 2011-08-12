@@ -69,10 +69,7 @@ typedef struct mainloop_qmf_s {
 /*
  * Provides ability for an agent/console to daemonize itself
  *
- * param[in] code
- * param[in] name
- * param[in] arg
- * param[in] userdata
+ * matches prototype expected by mh_add_arg
  *
  * retval[1] failed to daemonize
  * retval[0] successfully daemonize
