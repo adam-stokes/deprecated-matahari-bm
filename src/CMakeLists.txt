@@ -91,10 +91,12 @@ SET(CMAKE_REQUIRED_LIBRARIES ${glib_LIBRARIES})
 check_function_exists (g_list_free_full HAVE_G_LIST_FREE_FULL)
 
 # cURL
-find_library(CURL curl)
-if(CURL STREQUAL "CURL-NOTFOUND")
-    message(FATAL_ERROR "libcurl not found.")
-endif(CURL STREQUAL "CURL-NOTFOUND")
+if(NOT WIN32)
+    find_library(CURL curl)
+    if(CURL STREQUAL "CURL-NOTFOUND")
+        message(FATAL_ERROR "libcurl not found.")
+    endif(CURL STREQUAL "CURL-NOTFOUND")
+endif(NOT WIN32)
 
 # Include QMF and DBus generation macros
 include(MatahariMacros)
