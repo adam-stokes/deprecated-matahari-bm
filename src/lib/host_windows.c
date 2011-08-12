@@ -96,6 +96,13 @@ host_os_identify(void)
 
 char *host_os_machine_uuid(void)
 {
+    /*
+     * Doc on SMBIOS support in windows:
+     *     http://msdn.microsoft.com/en-us/windows/hardware/gg463136
+     *
+     * See GetSystemFirmwareTable()
+     *     http://msdn.microsoft.com/en-us/library/ms724379%28v=VS.85%29.aspx
+     */
     return strdup("not-implemented");
 }
 
