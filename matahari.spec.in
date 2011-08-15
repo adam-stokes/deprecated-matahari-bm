@@ -194,8 +194,8 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 %{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
-%{__mkdir} -p $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
-%{__mkdir} -p $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
+%{__install} -d -m0755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
+%{__install} -d -m0755 $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
 %endif
 
 %post -n matahari-lib -p /sbin/ldconfig 

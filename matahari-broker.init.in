@@ -73,7 +73,7 @@ federate() {
         esac
     done
 
-    for $name in ${array[@]}
+    for name in ${array[@]}
     do
        /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
             localhost:$MATAHARI_PORT amq.direct &> /dev/null

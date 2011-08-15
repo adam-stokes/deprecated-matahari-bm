@@ -63,7 +63,7 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
 {
     gboolean ret;
     GError *error = NULL;
-    gchar *cmd[3];
+    gchar *cmd[4];
     char filename[PATH_MAX];
     int fd;
     FILE *fp;
@@ -92,8 +92,9 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     }
 
     cmd[0] = "puppet";
-    cmd[1] = filename;
-    cmd[2] = NULL;
+    cmd[1] = "apply";
+    cmd[2] = filename;
+    cmd[3] = NULL;
     mh_info("Running %s %s", cmd[0], cmd[1]);
     ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
             NULL, NULL, NULL, &error);
