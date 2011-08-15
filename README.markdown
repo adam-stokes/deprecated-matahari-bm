@@ -21,8 +21,11 @@ Matahari has build dependencies on the following packages:
 9. sigar
 10. sigar-devel
 
-Requires : runtime dependencies
-Sysconfig Agent: puppet >= 2.6.6
+Matahari requires that the following packages are installed at runtime
+for certain pieces of functionality to work:
+
+1. puppet, version 2.6.6 or above, required for the sysconfig agent
+2. dmidecode, required for the host agent
 
 These packages may be available in your distribution.  In Fedora 14, they can
 be installed via the yum command.
