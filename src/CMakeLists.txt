@@ -102,7 +102,7 @@ endif(NOT WIN32)
 if(NOT WIN32)
     find_program(DMIDECODE dmidecode)
     if(DMIDECODE STREQUAL "DMIDECODE-NOTFOUND")
-        message(FATAL_ERROR "dmidecode not found")
+        message(WARNING "dmidecode not found.  This command is needed to get the hardware UUID in the host agent.")
     endif(DMIDECODE STREQUAL "DMIDECODE-NOTFOUND")
 endif(NOT WIN32)
 
