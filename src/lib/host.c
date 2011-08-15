@@ -255,6 +255,7 @@ mh_host_identify(void)
     return host_os_identify();
 }
 
+static char *custom_uuid = NULL;
 const char *
 mh_host_get_uuid(const char *lifetime)
 {
@@ -263,7 +264,6 @@ mh_host_get_uuid(const char *lifetime)
     static const char *hardware_uuid = NULL;
     static const char *reboot_uuid = NULL;
     static const char *agent_uuid = NULL;
-    static const char *custom_uuid = NULL;
 
     if (lifetime == NULL || strcmp("Filesystem", lifetime) == 0) {
         if (immutable_uuid == NULL) {
@@ -311,7 +311,10 @@ int
 mh_host_set_uuid(const char *lifetime, const char *uuid)
 {
     if(lifetime && strcmp("Custom", lifetime) == 0) {
-        return host_os_set_custom_uuid(uuid);
+        int rc = host_os_set_custom_uuid(uuid);
+        free(custom_uuid);
+        custom_uuid = host_os_custom_uuid();
+	return rc;
     }
     return G_FILE_ERROR_NOSYS;
 }
