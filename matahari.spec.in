@@ -41,6 +41,7 @@ BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
 BuildRequires:  cxxtest
+BuildRequires:	dmidecode
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
