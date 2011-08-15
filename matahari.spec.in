@@ -31,7 +31,6 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
-Requires:	dmidecode
 
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
@@ -103,6 +102,7 @@ Summary:	QMF agent for remote hosts
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires:	dmidecode
 
 %description host
 QMF agent for viewing and controlling remote hosts
