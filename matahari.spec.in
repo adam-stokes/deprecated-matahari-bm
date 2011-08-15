@@ -31,6 +31,7 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
+Requires:	dmidecode
 
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
@@ -40,6 +41,7 @@ BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
 BuildRequires:  cxxtest
+BuildRequires:	dmidecode
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
@@ -312,6 +314,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with qmf}
 %{_libdir}/libmcommon_qmf.so.*
+%attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
+%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 %endif
 
 %if %{with dbus}
@@ -417,9 +421,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %{_sbindir}/matahari-brokerd
-
-%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
-%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 %doc AUTHORS COPYING
 
 %else
