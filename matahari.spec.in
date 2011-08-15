@@ -291,6 +291,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with qmf}
 %{_libdir}/libmcommon_qmf.so.*
+%attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
+%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 %endif
 
 %if %{with dbus}
@@ -396,9 +398,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %{_sbindir}/matahari-brokerd
-
-%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
-%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
 %doc AUTHORS COPYING
 
 %else
