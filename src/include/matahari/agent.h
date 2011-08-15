@@ -49,7 +49,6 @@ int required_argument = 1;
 #ifndef NS_MAXDNAME
 # define NS_MAXDNAME 1025
 #endif
-
 using namespace qpid::management;
 using namespace std;
 

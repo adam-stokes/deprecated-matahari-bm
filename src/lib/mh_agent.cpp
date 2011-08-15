@@ -133,34 +133,6 @@ mh_qpid_disconnect(gpointer user_data)
     mh_err("Qpid connection closed");
 }
 
-static struct MatahariAgentImpl *
-mh_qmf_connect(qpid::types::Variant::Map &urlMap, qpid::types::Variant::Map &options,
-        struct MatahariAgentImpl *_impl)
-{
-    _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
-    try {
-        _impl->_amqp_connection.open();
-    } catch (const std::exception& err) {
-        while (!_impl->_amqp_connection.isOpen()) {
-            if (!urlMap["dnssrv"].asString().empty()) {
-                _impl->_amqp_connection = qpid::messaging::Connection(urlMap["dnssrv"], options);
-                try {
-                    _impl->_amqp_connection.open();
-                } catch (const std::exception& err2) {
-                    mh_err("Failed to connect to broker: %s", urlMap["dnssrv"].asString().c_str());
-                }
-            }
-            mh_info("Trying qpid broker %s again", urlMap["servername"].asString().c_str());
-            _impl->_amqp_connection = qpid::messaging::Connection(urlMap["uri"], options);
-            try {
-                _impl->_amqp_connection.open();
-            } catch (const std::exception& err3) {
-                g_usleep(G_USEC_PER_SEC);
-            }
-        }
-    }
-    return _impl;
-}
 
 typedef struct mh_opt_s
 {
@@ -355,8 +327,6 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
     struct addrinfo hints, *res;
     int rc, arg;
-    char query[NS_MAXDNAME];
-    char target[NS_MAXDNAME];
 
 
     /* Force more local-only processing */
