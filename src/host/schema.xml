@@ -24,7 +24,7 @@
    <property name="memory"           type="uint64" access="RO" desc="Amount of primary memory for host" unit="kb" />
    <property name="swap"             type="uint64" access="RO" desc="Amount of swap for host" unit="kb" />
 
-   <property name="cpu_count"        type="uint8"  access="RO" desc="The number of physical CPUs." />
+   <property name="cpu_count"        type="uint8"  access="RO" desc="The number of logical CPUs." />
    <property name="cpu_cores"        type="uint8"  access="RO" desc="The total number of processor cores." />
    <property name="cpu_model"        type="lstr"   access="RO" desc="The processor(s) model description." />
    <property name="cpu_flags"        type="lstr"   access="RO" desc="The processor(s) CPU flags." />
