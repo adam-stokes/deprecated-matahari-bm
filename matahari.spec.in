@@ -32,6 +32,14 @@ Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
 
+Requires:	%{name}-selinux = %{version}-%{release}
+Requires:	%{name}-consoles = %{version}-%{release}
+Requires:	%{name}-broker = %{version}-%{release}
+Requires:	%{name}-host = %{version}-%{release}
+Requires:	%{name}-network = %{version}-%{release}
+Requires:	%{name}-service = %{version}-%{release}
+Requires:	%{name}-sysconfig = %{version}-%{release}
+
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++
@@ -91,7 +99,6 @@ Summary:	C++ library used by Matahari agents
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	qpid-cpp-client-ssl > 0.7
-Requires:   %{name}-selinux
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
@@ -166,6 +173,7 @@ QMF console for monitoring various agents
 %package selinux
 Summary:        SElinux support for Matahari
 Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
 Requires:       policycoreutils
 Requires:       selinux-policy-targeted
 BuildRequires:  selinux-policy-devel
