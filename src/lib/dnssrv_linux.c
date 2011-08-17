@@ -35,7 +35,7 @@ mh_os_dnssrv_lookup(const char *query)
         HEADER hdr;
         unsigned char buf[NS_PACKETSZ];
     } answer;
-    ns_msg nsh;
+    ns_msg nsh = { NULL, };
     ns_rr rr;
     int size, rrnum;
 

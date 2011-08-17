@@ -167,17 +167,17 @@ mainloop_signal(int sig, void (*dispatch)(int sig))
 {
 #if __linux__
     sigset_t mask;
-    struct sigaction sa;
+    struct sigaction sa = {
+        .sa_handler = dispatch,
+        .sa_flags = SA_RESTART,
+        .sa_mask = mask,
+    };
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
         mh_perror(LOG_ERR, "Call to sigemptyset failed");
         return FALSE;
     }
-
-    sa.sa_handler = dispatch;
-    sa.sa_flags = SA_RESTART;
-    sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
         mh_perror(LOG_ERR, "Could not install signal handler for signal %d",
