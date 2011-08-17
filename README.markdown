@@ -15,11 +15,17 @@ Matahari has build dependencies on the following packages:
 3. qmf
 4. qmf-devel
 5. qpid-cpp-client
-6. qpid-cpp-serer
+6. qpid-cpp-server
 7. qpid-cpp-client-devel
 8. qpid-cpp-server-devel
 9. sigar
 10. sigar-devel
+
+Matahari requires that the following packages are installed at runtime
+for certain pieces of functionality to work:
+
+1. puppet, version 2.6.6 or above, required for the sysconfig agent
+2. dmidecode, required for the host agent
 
 These packages may be available in your distribution.  In Fedora 14, they can
 be installed via the yum command.

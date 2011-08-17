@@ -6,5 +6,5 @@ matahari-broker
 matahari-host
 matahari-net
 matahari-lib
-matahari-devel
+!matahari-devel
 %end

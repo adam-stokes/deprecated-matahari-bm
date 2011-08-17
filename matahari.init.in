@@ -39,6 +39,7 @@ start() {
     if [ ! -z "$MATAHARI_PORT" ]; then
 	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS --port $MATAHARI_PORT"
     fi
+
     if [ ! -z "$@BASE@_AGENT_ARGS" ]; then
 	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS $@BASE@_AGENT_ARGS"
     fi

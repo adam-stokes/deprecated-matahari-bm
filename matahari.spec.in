@@ -1,5 +1,5 @@
-%global specversion 110
-%global upstream_version 3fc12c7
+%global specversion 102
+%global upstream_version 2ce6cba
 
 # Messaging buses
 %bcond_without dbus
@@ -31,7 +31,6 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
-Requires:	dmidecode
 
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
@@ -41,7 +40,6 @@ BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
 BuildRequires:  cxxtest
-BuildRequires:	dmidecode
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
@@ -93,7 +91,6 @@ Summary:	C++ library used by Matahari agents
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	qpid-cpp-client-ssl > 0.7
-Requires:       %{name}-selinux
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
@@ -104,6 +101,7 @@ Summary:	QMF agent for remote hosts
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires:	dmidecode
 
 %description host
 QMF agent for viewing and controlling remote hosts
@@ -135,6 +133,7 @@ Summary:	QMF agent for post boot configuration services.
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires:   puppet >= 2.6.6
 
 %description sysconfig
 QMF agent/console for providing post boot capabilities.
@@ -166,6 +165,7 @@ QMF console for monitoring various agents
 %package selinux
 Summary:        SElinux support for Matahari
 Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}-agent-lib = %{version}-%{release}
 Requires:       policycoreutils
 Requires:       selinux-policy-targeted
 BuildRequires:  selinux-policy-devel
@@ -198,7 +198,7 @@ make DESTDIR=%{buildroot} install
 %{__install} -d -m0755 $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
 %endif
 
-%post -n matahari-lib -p /sbin/ldconfig 
+%post -n matahari-lib -p /sbin/ldconfig
 %postun -n matahari-lib -p /sbin/ldconfig
 
 %post -n matahari-agent-lib -p /sbin/ldconfig
@@ -303,7 +303,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files
 %defattr(644, root, root, 755)
-%attr(755,root,root) %{_localstatedir}/lib/%{name}
 %doc AUTHORS COPYING
 
 %files agent-lib
