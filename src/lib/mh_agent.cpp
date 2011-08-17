@@ -171,13 +171,13 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 {
     int lpc = 0;
     printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
-    printf("\nCommon options:\n");
+    printf("\nCommon connection options:\n");
     printf("\t-h | --help             print this help message.\n");
     printf("\t-b | --broker value     specify broker host name..\n");
     printf("\t-p | --port value       specify broker port.\n");
-    printf("\t-u | --username value   username to use for authentication purproses.\n");
-    printf("\t-P | --password value   password to use for authentication purproses.\n");
-    printf("\t-s | --service value    service name to use for authentication purproses.\n");
+    printf("\t-u | --username value   username to use for authentication purposes.\n");
+    printf("\t-P | --password value   password to use for authentication purposes.\n");
+    printf("\t-s | --service value    service name to use for authentication purposes.\n");
     printf("\t-r | --reconnect value  attempt to reconnect on failure.\n");
 #ifdef MH_SSL
     printf("\t-C | --ssl-cert-db             specify certificate database.\n");
@@ -189,7 +189,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if(matahari_options[lpc].callback
             && matahari_options[lpc].callback != connection_option) {
-            printf("\t-%c | --%s\t %s\n", matahari_options[lpc].code,
+            printf("\t-%c | --%-10s\t%s\n", matahari_options[lpc].code,
                    matahari_options[lpc].long_name, matahari_options[lpc].description);
         }
     }
