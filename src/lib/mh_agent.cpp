@@ -154,15 +154,14 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
 
     if(strcmp(name, "service") == 0) {
-        options->insert(std::pair<std::string, qpid::types::Variant>("sasl-service", arg));
-        options->insert(std::pair<std::string, qpid::types::Variant>("sasl-mechanism", "GSSAPI"));
-
+        (*options)["sasl-service"] = arg;
+        (*options)["sasl-mechanism"] = "GSSAPI";
     } else if(strcmp(name, "reconnect") == 0) {
         bool reconnect = !arg || (strcasecmp(arg, "no") != 0 &&
                                   strcasecmp(arg, "false") != 0);
         (*options)["reconnect"] = reconnect;
     } else {
-        options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
+        (*options)[name] = arg;
     }
     return 0;
 }

@@ -54,10 +54,9 @@ resource_arg(int code, const char *name, const char *arg, void *userdata)
     cout << name << "=" << arg << endl;
     if(strcmp(name, "timeout") == 0 || strcmp(name, "interval") == 0) {
         uint32_t number = 1000 * atoi(arg);
-        options->insert(std::pair<std::string, qpid::types::Variant>(name, number));
-
+        (*options)[name] = number;
     } else {
-        options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
+        (*options)[name] = arg;
     }
 
     return 0;
