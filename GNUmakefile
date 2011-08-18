@@ -22,7 +22,7 @@ PACKAGE		?= matahari
 VERSION		?= 0.4.0
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
-HTML_ROOT	= root@www.clusterlabs.org:/var/www/html
+HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
 
 RPM_ROOT	?= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
