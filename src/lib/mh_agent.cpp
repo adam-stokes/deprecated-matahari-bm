@@ -371,7 +371,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
             case 'b':
                 memset(&hints, 0, sizeof(struct addrinfo));
                 hints.ai_family = AF_UNSPEC;
-                if ((rc = getaddrinfo(optarg, NULL, &hints, &res)) != 0) {
+                rc = getaddrinfo(optarg, NULL, &hints, &res);
+                if (rc == 0) {
 		    options["servername"] = optarg;
                 } else {
 		    mh_err("Broker '%s' is not resolvable - ignoring", optarg);
