@@ -24,8 +24,8 @@
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-SERVICE=matahari-@BASE@
-PROCESS=matahari-qmf-@BASE@d
+SERVICE=matahari-@BASE@@BASE_SUB@
+PROCESS=matahari-qmf-@BASE@@BASE_SUB@d
 
 RETVAL=0
 
