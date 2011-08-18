@@ -129,13 +129,25 @@ done:
 void
 host_os_reboot(void)
 {
-    reboot(LINUX_REBOOT_CMD_RESTART);
+    gint rc = 0;
+    GError *err = NULL;
+    if(g_spawn_command_line_sync("reboot", NULL, NULL, &rc, &err) == FALSE) {
+	mh_err("reboot command failed (rc=%d) - falling back to brut force", rc);
+	sync();
+	reboot(LINUX_REBOOT_CMD_RESTART);
+    }
 }
 
 void
 host_os_shutdown(void)
 {
-    reboot(LINUX_REBOOT_CMD_HALT);
+    gint rc = 0;
+    GError *err = NULL;
+    if(g_spawn_command_line_sync("shutdown -h now", NULL, NULL, &rc, &err) == FALSE) {
+	mh_err("shutdown command failed (rc=%d) - falling back to brut force", rc);
+	sync();
+	reboot(LINUX_REBOOT_CMD_HALT);
+    }
 }
 
 int
