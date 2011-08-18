@@ -196,59 +196,59 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 }
 
 qpid::messaging::Connection
-mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_options, int retry) 
+mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_options, int retry)
 {
     int retries = 0;
     int backoff = 0;
     char *target = NULL;
 
     if(mh_options.count("servername") == 0) {
-	/* Is _ssl valid here as a protocol?  _udp? */
-	std::stringstream fqdn;
-	fqdn << "_matahari._tcp." << mh_domainname();
-	target = mh_dnssrv_lookup(fqdn.str().c_str());
+        /* Is _ssl valid here as a protocol?  _udp? */
+        std::stringstream fqdn;
+        fqdn << "_matahari._tcp." << mh_domainname();
+        target = mh_dnssrv_lookup(fqdn.str().c_str());
 
-	if(target) {
-	    mh_info("SRV record resolved to: %s", target);
-	} else {
-	    mh_info("Could not resolve SRV record for %s", fqdn.str().c_str());
-	}
+        if(target) {
+            mh_info("SRV record resolved to: %s", target);
+        } else {
+            mh_info("Could not resolve SRV record for %s", fqdn.str().c_str());
+        }
     }
-    
+
     while (true) {
-	std::stringstream url;
-	if(mh_options.count("servername") > 0) {
-	    url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
-	} else if(target != NULL && (retries % 2) == 1) {
-	    /* Try DNS */
-	    url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
-	} else {
-	    /* Try localhost */
-	    url << "amqp:" << mh_options["protocol"] << ":localhost:" << mh_options["serverport"] ;
-	}	
-	
-	retries++;
-	qpid::messaging::Connection amqp = qpid::messaging::Connection(url.str(), amqp_options);
-	if(retries < 5) {
-	    mh_info("Trying: %s", url.str().c_str());
-	} else if(retries == 5) {
-	    mh_warn("Cannot find a QMF broker - will keep retrying silently");
-	} else {
-	    backoff = retries % 300;
-	}
-	
-	try {
-	    amqp.open();
-	    free(target);
-	    return amqp;
-	    
-	} catch (const std::exception& err) {
-	    if(!retry) {
-		goto bail;
-		
-	    } else if(backoff) {
-		g_usleep(backoff * G_USEC_PER_SEC);
-	    }
+        std::stringstream url;
+        if(mh_options.count("servername") > 0) {
+            url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
+        } else if(target != NULL && (retries % 2) == 1) {
+            /* Try DNS */
+            url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
+        } else {
+            /* Try localhost */
+            url << "amqp:" << mh_options["protocol"] << ":localhost:" << mh_options["serverport"] ;
+        }
+
+        retries++;
+        qpid::messaging::Connection amqp = qpid::messaging::Connection(url.str(), amqp_options);
+        if(retries < 5) {
+            mh_info("Trying: %s", url.str().c_str());
+        } else if(retries == 5) {
+            mh_warn("Cannot find a QMF broker - will keep retrying silently");
+        } else {
+            backoff = retries % 300;
+        }
+
+        try {
+            amqp.open();
+            free(target);
+            return amqp;
+
+        } catch (const std::exception& err) {
+            if(!retry) {
+                goto bail;
+
+            } else if(backoff) {
+                g_usleep(backoff * G_USEC_PER_SEC);
+            }
         }
     }
   bail:
@@ -373,10 +373,10 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 hints.ai_family = AF_UNSPEC;
                 rc = getaddrinfo(optarg, NULL, &hints, &res);
                 if (rc == 0) {
-		    options["servername"] = optarg;
+                    options["servername"] = optarg;
                 } else {
-		    mh_err("Broker '%s' is not resolvable - ignoring", optarg);
-		}
+                    mh_err("Broker '%s' is not resolvable - ignoring", optarg);
+                }
                 break;
 #ifdef MH_SSL
             case 'N':
@@ -462,7 +462,7 @@ mh_add_option(int code, int has_arg, const char *name, const char *description,
     return -1;
 }
 
-int 
+int
 mh_should_daemonize(int code, const char *name, const char *arg, void *userdata)
 {
 #ifndef WIN32
@@ -511,7 +511,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     signal(SIGINT, shutdown);
 
     _impl->_amqp_connection = mh_connect(options, amqp_options, TRUE);
-    
+
     _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection);
     _impl->_agent_session.setVendor("matahariproject.org");
     _impl->_agent_session.setProduct(proc_name);
