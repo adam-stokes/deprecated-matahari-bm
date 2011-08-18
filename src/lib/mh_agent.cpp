@@ -154,15 +154,14 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
 
     if(strcmp(name, "service") == 0) {
-        options->insert(std::pair<std::string, qpid::types::Variant>("sasl-service", arg));
-        options->insert(std::pair<std::string, qpid::types::Variant>("sasl-mechanism", "GSSAPI"));
-
+        (*options)["sasl-service"] = arg;
+        (*options)["sasl-mechanism"] = "GSSAPI";
     } else if(strcmp(name, "reconnect") == 0) {
         bool reconnect = !arg || (strcasecmp(arg, "no") != 0 &&
                                   strcasecmp(arg, "false") != 0);
         (*options)["reconnect"] = reconnect;
     } else {
-        options->insert(std::pair<std::string, qpid::types::Variant>(name, arg));
+        (*options)[name] = arg;
     }
     return 0;
 }
@@ -171,13 +170,13 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 {
     int lpc = 0;
     printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
-    printf("\nCommon options:\n");
+    printf("\nCommon connection options:\n");
     printf("\t-h | --help             print this help message.\n");
     printf("\t-b | --broker value     specify broker host name..\n");
     printf("\t-p | --port value       specify broker port.\n");
-    printf("\t-u | --username value   username to use for authentication purproses.\n");
-    printf("\t-P | --password value   password to use for authentication purproses.\n");
-    printf("\t-s | --service value    service name to use for authentication purproses.\n");
+    printf("\t-u | --username value   username to use for authentication purposes.\n");
+    printf("\t-P | --password value   password to use for authentication purposes.\n");
+    printf("\t-s | --service value    service name to use for authentication purposes.\n");
     printf("\t-r | --reconnect value  attempt to reconnect on failure.\n");
 #ifdef MH_SSL
     printf("\t-C | --ssl-cert-db             specify certificate database.\n");
@@ -189,7 +188,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if(matahari_options[lpc].callback
             && matahari_options[lpc].callback != connection_option) {
-            printf("\t-%c | --%s\t %s\n", matahari_options[lpc].code,
+            printf("\t-%c | --%-10s\t%s\n", matahari_options[lpc].code,
                    matahari_options[lpc].long_name, matahari_options[lpc].description);
         }
     }
@@ -373,7 +372,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
             case 'b':
                 memset(&hints, 0, sizeof(struct addrinfo));
                 hints.ai_family = AF_UNSPEC;
-                if ((rc = getaddrinfo(optarg, NULL, &hints, &res)) != 0) {
+                rc = getaddrinfo(optarg, NULL, &hints, &res);
+                if (rc == 0) {
 		    options["servername"] = optarg;
                 } else {
 		    mh_err("Broker '%s' is not resolvable - ignoring", optarg);

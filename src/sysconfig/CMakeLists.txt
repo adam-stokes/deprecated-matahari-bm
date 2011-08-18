@@ -18,8 +18,11 @@ if(WITH-QMF)
     if(NOT WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
         install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
-    	configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}-console)
-    	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}-console DESTINATION ${initdir})
+    	# Override BASE for matahari-sysconfig-console
+        # unset(BASE)
+    	set(BASE_SUB "-console")
+    	configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}${BASE_SUB})
+    	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}${BASE_SUB} DESTINATION ${initdir})
     endif(NOT WIN32)
     
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)

@@ -31,11 +31,20 @@ messages used for commits to the Matahari repository.
 --- 2) Commit Message Structure
 -------------------------------------------------------------------------------
 
-<short one line summary>
-...blank line...
-<Verbose description of changes>
-...blank line...
-<commit message tags>
+a) Structure Overview
+
+    <short one line summary>
+    ...blank line...
+    <Verbose description of changes>
+    ...blank line...
+    <commit message tags>
+
+b) Summary Line
+
+The summary line should:
+    - be one line and short (<50 chars, ideally).
+    - be prefixed with a component id, like "host: fix something in host agent"
+    - include bug numbers if applicable, in the form "rhbz#000000"
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------

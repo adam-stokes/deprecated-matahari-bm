@@ -133,6 +133,10 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
 	    rc = mh_host_set_uuid(lifetime, uuid);
 	    event.addReturnArgument("rc", rc);
 
+	    /* Now refresh the properties in case they changed */ 
+	    _instance.setProperty("custom_uuid", mh_host_get_uuid("Custom"));
+	    _instance.setProperty("uuid", mh_host_get_uuid("Filesystem"));
+
         } else {
 	    session.raiseException(event, "No UUID supplied");
 	    goto bail;

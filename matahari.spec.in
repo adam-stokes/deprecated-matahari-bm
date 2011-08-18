@@ -32,6 +32,14 @@ Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
 
+Requires:	%{name}-selinux = %{version}-%{release}
+Requires:	%{name}-consoles = %{version}-%{release}
+Requires:	%{name}-broker = %{version}-%{release}
+Requires:	%{name}-host = %{version}-%{release}
+Requires:	%{name}-network = %{version}-%{release}
+Requires:	%{name}-service = %{version}-%{release}
+Requires:	%{name}-sysconfig = %{version}-%{release}
+
 BuildRequires:	cmake
 BuildRequires:	libudev-devel
 BuildRequires:	gcc-c++

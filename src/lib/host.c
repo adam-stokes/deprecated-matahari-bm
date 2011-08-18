@@ -227,26 +227,23 @@ mh_host_get_swap_free(void)
 static void
 host_get_cpu_details(void)
 {
-    int lpc = 0;
-    sigar_cpu_info_list_t cpus;
+    sigar_cpu_info_list_t procs;
 
     if (cpuinfo.cpus) {
         return;
     }
 
     init();
-    sigar_cpu_info_list_get(host_init.sigar, &cpus);
+    sigar_cpu_info_list_get(host_init.sigar, &procs);
 
-    cpuinfo.cpus = cpus.number;
-    for (lpc = 0; lpc < cpus.number; lpc++) {
-        sigar_cpu_info_t *cpu = (sigar_cpu_info_t *) cpus.data;
-        if (cpuinfo.model == NULL) {
-            cpuinfo.model = g_strdup(cpu->model);
-        }
-        cpuinfo.cores += cpu->total_cores;
+    cpuinfo.cpus = procs.number;
+    if (procs.number) {
+        sigar_cpu_info_t *proc = (sigar_cpu_info_t *)procs.data;
+        cpuinfo.model = g_strdup(proc->model);
+        cpuinfo.cores = proc->total_cores;
     }
 
-    sigar_cpu_info_list_destroy(host_init.sigar, &cpus);
+    sigar_cpu_info_list_destroy(host_init.sigar, &procs);
 }
 
 int

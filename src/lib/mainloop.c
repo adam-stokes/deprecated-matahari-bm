@@ -167,7 +167,10 @@ mainloop_signal(int sig, void (*dispatch)(int sig))
 {
 #if __linux__
     sigset_t mask;
-    struct sigaction sa;
+    struct sigaction sa = {
+        .sa_handler = dispatch,
+        .sa_flags = SA_RESTART,
+    };
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
@@ -175,8 +178,6 @@ mainloop_signal(int sig, void (*dispatch)(int sig))
         return FALSE;
     }
 
-    sa.sa_handler = dispatch;
-    sa.sa_flags = SA_RESTART;
     sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
