@@ -32,7 +32,6 @@ Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
 
-Requires:	%{name}-selinux = %{version}-%{release}
 Requires:	%{name}-consoles = %{version}-%{release}
 Requires:	%{name}-broker = %{version}-%{release}
 Requires:	%{name}-host = %{version}-%{release}
@@ -170,17 +169,6 @@ Requires:	%{name}-agent-lib = %{version}-%{release}
 %description consoles
 QMF console for monitoring various agents
 
-%package selinux
-Summary:        SElinux support for Matahari
-Requires:	%{name} = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:       policycoreutils
-Requires:       selinux-policy-targeted
-BuildRequires:  selinux-policy-devel
-
-%description selinux
-Configures Matahari to run in SELinux enabled environments.
-
 %prep
 %setup -q -n matahari-matahari-%{upstream_version}
 
@@ -213,15 +201,6 @@ make DESTDIR=%{buildroot} install
 %postun -n matahari-agent-lib
 # Can't use -p, gives: '/sbin/ldconfig: relative path `0' used to build cache' error
 /sbin/ldconfig
-
-%post selinux
-semanage fcontext -a -t qpidd_var_lib_t '%{_localstatedir}/lib/%{name}(/.*)?' >/dev/null 2>&1 || :
-restorecon -R '%{_localstatedir}/lib/%{name}' || :
-
-%postun selinux
-if [ $1 -eq 0 ]; then
-   semanage fcontext -d -t qpidd_var_lib_t '%{_localstatedir}/lib/%{name}(/.*)?' >/dev/null 2>&1 || :
-fi
 
 %if %{with qmf}
 #== Host
@@ -433,9 +412,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %else
 %exclude %{_sysconfdir}/matahari-broker.conf
 %endif
-
-%files selinux
-%defattr(-,root,root,-)
 
 %files devel
 %defattr(644, root, root, 755)
