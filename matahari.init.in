@@ -81,7 +81,14 @@ reload() {
 
 # See how we were called.
 case "$1" in
-    start|stop|restart|reload)
+    start)
+        if
+	    ! status $PROCESS
+	then
+            $1
+	fi
+	;;
+    stop|restart|reload)
         $1
         ;;
     status)
