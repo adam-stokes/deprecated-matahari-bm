@@ -174,6 +174,9 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     printf("\t-h | --help             print this help message.\n");
     printf("\t-b | --broker value     specify broker host name..\n");
     printf("\t-p | --port value       specify broker port.\n");
+    printf("\t-d | --domain value     Specify domain to connect to (Use DNS SRV to determine host).\n"
+           "\t                        For this option to take effect, the broker option must not\n"
+           "\t                        be provided.\n");
     printf("\t-u | --username value   username to use for authentication purposes.\n");
     printf("\t-P | --password value   password to use for authentication purposes.\n");
     printf("\t-s | --service value    service name to use for authentication purposes.\n");
@@ -205,7 +208,13 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     if(mh_options.count("servername") == 0) {
         /* Is _ssl valid here as a protocol?  _udp? */
         std::stringstream fqdn;
-        fqdn << "_matahari._tcp." << mh_domainname();
+
+        if (mh_options.count("domain")) {
+            fqdn << "_matahari._tcp." << mh_options["domain"];
+        } else {
+            fqdn << "_matahari._tcp." << mh_domainname();
+        }
+
         target = mh_dnssrv_lookup(fqdn.str().c_str());
 
         if(target) {
@@ -219,7 +228,7 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
         std::stringstream url;
         if(mh_options.count("servername") > 0) {
             url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
-        } else if(target != NULL && (retries % 2) == 1) {
+        } else if (target) {
             /* Try DNS */
             url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
         } else {
@@ -272,6 +281,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                 NULL, NULL, NULL);
+    mh_add_option('d', required_argument, "domain",                 NULL, NULL, NULL);
     mh_add_option('p', required_argument, "port",                   NULL, NULL, NULL);
 #ifdef MH_SSL
     mh_add_option('N', required_argument, "ssl-cert-name",          NULL, NULL, NULL);
@@ -291,6 +301,13 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
                      L"broker", &value) == 0) {
         options["servername"] = value;
+        value = NULL;
+    }
+
+    if (RegistryRead(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     L"domain", &value) == 0) {
+        options["domain"] = value;
         value = NULL;
     }
 
@@ -377,6 +394,9 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                 } else {
                     mh_err("Broker '%s' is not resolvable - ignoring", optarg);
                 }
+                break;
+            case 'd':
+                options["domain"] = optarg;
                 break;
 #ifdef MH_SSL
             case 'N':
