@@ -88,6 +88,16 @@ services_action_free(svc_action_t *op)
         return;
     }
 
+    if (op->opaque->stderr_gsource) {
+        mainloop_destroy_fd(op->opaque->stderr_gsource);
+        op->opaque->stderr_gsource = NULL;
+    }
+
+    if (op->opaque->stdout_gsource) {
+        mainloop_destroy_fd(op->opaque->stdout_gsource);
+        op->opaque->stdout_gsource = NULL;
+    }
+
     free(op->id);
     free(op->opaque->exec);
 
