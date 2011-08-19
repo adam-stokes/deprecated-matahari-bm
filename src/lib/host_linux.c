@@ -132,9 +132,9 @@ host_os_reboot(void)
     gint rc = 0;
     GError *err = NULL;
     if(g_spawn_command_line_sync("reboot", NULL, NULL, &rc, &err) == FALSE) {
-	mh_err("reboot command failed (rc=%d) - falling back to brut force", rc);
-	sync();
-	reboot(LINUX_REBOOT_CMD_RESTART);
+        mh_err("reboot command failed (rc=%d) - falling back to brut force", rc);
+        sync();
+        reboot(LINUX_REBOOT_CMD_RESTART);
     }
 }
 
@@ -144,9 +144,9 @@ host_os_shutdown(void)
     gint rc = 0;
     GError *err = NULL;
     if(g_spawn_command_line_sync("shutdown -h now", NULL, NULL, &rc, &err) == FALSE) {
-	mh_err("shutdown command failed (rc=%d) - falling back to brut force", rc);
-	sync();
-	reboot(LINUX_REBOOT_CMD_HALT);
+        mh_err("shutdown command failed (rc=%d) - falling back to brut force", rc);
+        sync();
+        reboot(LINUX_REBOOT_CMD_HALT);
     }
 }
 
