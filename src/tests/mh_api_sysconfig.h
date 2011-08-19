@@ -31,8 +31,8 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
 
         mh_sysconfig_keys_dir_set("/tmp/");
 
-        TS_ASSERT((mh_sysconfig_set_configured(key)) == TRUE);
-        TS_ASSERT((mh_sysconfig_is_configured(key)) == TRUE);
+        TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == TRUE);
+        TS_ASSERT((mh_sysconfig_is_configured(key)) != NULL);
         TS_ASSERT((mh_sysconfig_run_uri(uri, flags, "puppet", key)) != -1);
     }
 };

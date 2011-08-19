@@ -77,21 +77,24 @@ mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
  * Set system as configured
  *
  * \param[in] key config item to define
+ * \param[in] contents specifies success/fail with error where applicable
  *
- * \return TRUE if applying key to config succeeds
+ * \retval 1 if writing to file suceeds
+ * \retval 0 failed to write to file
  */
 extern gboolean
-mh_sysconfig_set_configured(const char *key);
+mh_sysconfig_set_configured(const char *key, const char *contents);
 
 /**
  * Test if system has been configured
  *
- * \param[in] flags allow a force reconfiguration
  * \param[in] key config item to test if used
  *
- * \return TRUE if system is configured
+ * \note The return of this routine must be freed with free()
+ *
+ * \return STATUS of key
  */
-extern gboolean
+extern char *
 mh_sysconfig_is_configured(const char *key);
 
 /**
@@ -101,6 +104,8 @@ mh_sysconfig_is_configured(const char *key);
  * be needed by any production usage of this library.
  *
  * \param[in] path directory to store key info
+ *
+ * \note The return of this routine must be freed with free()
  *
  * \return nothing
  */
