@@ -99,6 +99,7 @@ Summary:	C++ library used by Matahari agents
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	qpid-cpp-client-ssl > 0.7
+Requires(pre):	shadow-utils
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
@@ -202,8 +203,8 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 %{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
-%{__install} -d -m0755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
-%{__install} -d -m0755 $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
+%{__install} -d -m0770 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
+%{__install} -d -m0775 $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
 %endif
 
 %post -n matahari-lib -p /sbin/ldconfig
@@ -304,6 +305,12 @@ if [ "$1" -ge "1" ]; then
     /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
+#== Agent Lib
+
+%pre agent-lib
+getent group qpidd >/dev/null || groupadd -r qpidd
+exit 0
+
 %endif
 
 %clean
@@ -314,15 +321,15 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %files agent-lib
-%defattr(644, root, root, 755)
-%dir %{_datadir}/matahari/
+%defattr(644, root, root)
+%attr(755, -, -) %dir %{_datadir}/matahari/
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari
 %doc AUTHORS COPYING
 
 %if %{with qmf}
 %{_libdir}/libmcommon_qmf.so.*
-%attr(755, qpidd, qpidd) %{_localstatedir}/lib/%{name}
-%ghost %attr(755, qpidd, qpidd) %{_localstatedir}/run/%{name}
+%dir %attr(0770, root, qpidd) %{_localstatedir}/lib/%{name}
+%ghost %dir %attr(0775, root, qpidd) %{_localstatedir}/run/%{name}
 %endif
 
 %if %{with dbus}
