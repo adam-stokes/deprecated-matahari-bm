@@ -5,17 +5,13 @@
 ]>
 <bookinfo id="book-Matahari-Matahari">
 	<title>Matahari</title>
-	<subtitle>Collection of generically useful APIs accessible over a remote interface</subtitle>
 	<productname>Documentation</productname>
 	<productnumber>0.4</productnumber>
 	<edition>0.1</edition>
 	<pubsnumber>0</pubsnumber>
 	<abstract>
-		<para>This document is intended for developers who wish to 
-implement an enterprise messaging framework within 
-their organization. The main focus of this article is
-the fundamentals behind Matahari and QMF.
-		</para>
+        <para>Matahari is a collection of generally useful APIs for systems management and monitoring
+        that are accessible over local and remote interfaces.</para>
 	</abstract>
 	<corpauthor>
 		<inlinemediaobject>

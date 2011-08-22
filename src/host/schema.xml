@@ -38,30 +38,29 @@
    <statistic name="free_mem"        type="uint64"  desc="Amount of available memory for host" unit="kb" />
    <statistic name="free_swap"       type="uint64"  desc="Amount of available swap for host" unit="kb" />
 
-   <statistic name="load"	        type="map"  desc="The one/five/fifteen minute load average" />
+   <statistic name="load"                type="map"  desc="The one/five/fifteen minute load average" />
    <statistic name="process_statistics" type="map"  desc="Number of processes in each possible state" />
 
-   <!-- Methods -->
    <method name="identify"  desc="Tell the host to beep its pc speaker." />
    <method name="shutdown"  desc="Shutdown node" />
    <method name="reboot"    desc="Reboot node" />
    <!--
-	  | Valid UUID lifetimes:
-	  |	Filesystem	- Automatically configured by the system during installation and never reset.
-	  |			  May be pre-populated.
-	  |	Hardware	- UUID supplied by or generated from the underlying hardware
-	  |	Reboot		- Automatically (re)configured by the system whenever it boots
-	  |	Agent		- Automatically (re)configured by the agent whenever it starts
-	  |	Custom		- Manually configured by the admin/user. 
-	  |			  May be pre-populated.
+     Valid UUID lifetimes:
+        Filesystem - Automatically configured by the system during installation and never reset.
+                     May be pre-populated.
+        Hardware   - UUID supplied by or generated from the underlying hardware
+        Reboot     - Automatically (re)configured by the system whenever it boots
+        Agent      - Automatically (re)configured by the agent whenever it starts
+        Custom     - Manually configured by the admin/user. 
+                     May be pre-populated.
    -->
    <method name="get_uuid"  desc="Obtain a UUID with the specified lifetime from the machine" >
      <arg name="lifetime"   dir="I"  type="sstr" />
      <arg name="uuid"       dir="O"  type="sstr" />
    </method>
    <!--
-	  |  The only valid lifetime for 'set_uuid' is 'Custom'
-	  |  Later implementations may support re-generating the 'Hardware' uuid
+     The only valid lifetime for 'set_uuid' is 'Custom'
+     Later implementations may support re-generating the 'Hardware' uuid
    -->
    <method name="set_uuid"  desc="Set a UUID with the specified lifetime" >
      <arg name="lifetime"   dir="I"  type="sstr" />
