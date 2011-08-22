@@ -51,7 +51,10 @@ private:
                       qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
 
     qmf::Data _services;
+    static const char SERVICES_NAME[];
+
     qmf::Data _resources;
+    static const char RESOURCES_NAME[];
 
     _qtype::Variant::List standards;
 
@@ -68,6 +71,10 @@ public:
                             qmf::AgentEvent event, gpointer user_data);
     void raiseEvent(svc_action_t *op, enum service_id service, const char *userdata);
 };
+
+const char SrvAgent::SERVICES_NAME[] = "Services";
+
+const char SrvAgent::RESOURCES_NAME[] = "Resources";
 
 /**
  * Async process callback
@@ -228,14 +235,14 @@ SrvAgent::setup(qmf::AgentSession session)
     _services.setProperty("uuid", mh_uuid());
     _services.setProperty("hostname", mh_hostname());
 
-    session.addData(_services, "Services");
+    session.addData(_services, SERVICES_NAME);
 
     _resources = qmf::Data(_package.data_Resources);
 
     _resources.setProperty("uuid", mh_uuid());
     _resources.setProperty("hostname", mh_hostname());
 
-    session.addData(_resources, "Resources");
+    session.addData(_resources, RESOURCES_NAME);
 
     return 0;
 }
@@ -245,10 +252,10 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
                  gpointer user_data)
 {
     if (event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
-        if (event.getDataAddr().getName() == "Services") {
+        if (event.getDataAddr().getName() == SERVICES_NAME) {
             return invoke_services(session, event, user_data);
 
-        } else if (event.getDataAddr().getName() == "Resources") {
+        } else if (event.getDataAddr().getName() == RESOURCES_NAME) {
             return invoke_resources(session, event, user_data);
 
         } else {

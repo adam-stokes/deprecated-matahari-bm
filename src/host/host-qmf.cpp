@@ -72,6 +72,7 @@ private:
 
     qmf::org::matahariproject::PackageDefinition _package;
     qmf::Data _instance;
+    static const char HOST_NAME[];
 
     /**
      * Default update interval for HostAgent heartbeat.
@@ -80,6 +81,8 @@ private:
      */
     static const uint32_t DEFAULT_UPDATE_INTERVAL = 5;
 };
+
+const char HostAgent::HOST_NAME[] = "Host";
 
 gboolean
 HostAgent::heartbeat_timer(gpointer data)
@@ -190,7 +193,7 @@ HostAgent::setup(qmf::AgentSession session)
     _instance.setProperty("cpu_model", mh_host_get_cpu_model());
     _instance.setProperty("cpu_flags", mh_host_get_cpu_flags());
 
-    session.addData(_instance);
+    session.addData(_instance, HOST_NAME);
     return 0;
 }
 

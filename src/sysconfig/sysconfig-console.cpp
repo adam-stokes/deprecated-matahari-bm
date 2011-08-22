@@ -84,7 +84,7 @@ int main(int argc, char **argv)
                 case CONSOLE_AGENT_ADD:
                     {
                         agent = event.getAgent();
-                        DataAddr agent_event_addr("config", agent.getName(), 0);
+                        DataAddr agent_event_addr("Sysconfig", agent.getName(), 0);
                         ConsoleEvent result(agent.callMethod("run_uri",
                                                               callOptions,
                                                               agent_event_addr));
