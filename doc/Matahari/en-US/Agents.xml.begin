@@ -3,8 +3,8 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Matahari.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter id="Matahari-Agents">
-	<title>Agents</title>
+<chapter id="Matahari-APIs">
+	<title>Matahari APIs</title>
 	<para>
 		This chapter provides detailed information on the APIs provided by each Matahari agent.
 	</para>
