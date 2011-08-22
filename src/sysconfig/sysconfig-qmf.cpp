@@ -74,7 +74,7 @@ ConfigAgent::setup(qmf::AgentSession session)
 gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
-    int rc = 0;
+    char *status = NULL;
 
     const std::string& methodName(event.getMethodName());
     if (event.getType() != qmf::AGENT_METHOD) {
@@ -84,23 +84,19 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "run_uri") {
-        rc = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
+        mh_sysconfig_run_uri(args["uri"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
-        if (rc == 0) {
-            rc = mh_sysconfig_set_configured(args["key"].asString().c_str());
-        }
-        event.addReturnArgument("status", rc ? "ok" : "no");
+        status = mh_sysconfig_is_configured(args["key"].asString().c_str());
+        event.addReturnArgument("status", status);
     } else if (methodName == "run_string") {
-        rc = mh_sysconfig_run_string(args["data"].asString().c_str(),
+        mh_sysconfig_run_string(args["data"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
-        if (rc == 0) {
-            rc = mh_sysconfig_set_configured(args["key"].asString().c_str());
-        }
-        event.addReturnArgument("status", rc ? "ok" : "no");
+        status = mh_sysconfig_is_configured(args["key"].asString().c_str());
+        event.addReturnArgument("status", status);
     } else if (methodName == "query") {
         const char *data = NULL;
         data = mh_sysconfig_query(args["query"].asString().c_str(),
@@ -108,14 +104,15 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
                                   args["scheme"].asString().c_str());
         event.addReturnArgument("query", data);
     } else if (methodName == "is_configured") {
-        rc = mh_sysconfig_is_configured(args["key"].asString().c_str());
-        _instance.setProperty("is_postboot_configured", rc);
-        event.addReturnArgument("status", rc ? "ok" : "no");
+        status = mh_sysconfig_is_configured(args["key"].asString().c_str());
+        _instance.setProperty("is_postboot_configured", status);
+        event.addReturnArgument("status", status);
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
         goto bail;
     }
 
+    free(status);
     session.methodSuccess(event);
 
 bail:

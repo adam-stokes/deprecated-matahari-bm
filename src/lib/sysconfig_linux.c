@@ -32,7 +32,6 @@
 #include "matahari/utilities.h"
 #include "sysconfig_private.h"
 
-
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 static int
@@ -59,10 +58,11 @@ sysconfig_os_download(const char *uri, FILE *fp)
 
 
 static int
-sysconfig_os_run_puppet(const char *uri, const char *data)
+sysconfig_os_run_puppet(const char *uri, const char *data, const char *key)
 {
     gboolean ret;
     GError *error = NULL;
+    char fmt_error[1024];
     gchar *cmd[4];
     char filename[PATH_MAX];
     int fd;
@@ -99,14 +99,22 @@ sysconfig_os_run_puppet(const char *uri, const char *data)
     ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
             NULL, NULL, NULL, &error);
     if (ret == FALSE) {
+        snprintf(fmt_error, sizeof(fmt_error), "ERROR\n%s", error->message);
+        if (mh_sysconfig_set_configured(key, fmt_error) == FALSE) {
+            mh_err("Unable to write to file.");
+        }
         g_error_free(error);
+        return -1;
+    }
+    if (mh_sysconfig_set_configured(key, "OK") == FALSE) {
+        mh_err("Unable to write to file.");
         return -1;
     }
     return 0;
 }
 
 static int
-sysconfig_os_run_augeas(const char *query, const char *data)
+sysconfig_os_run_augeas(const char *query, const char *data, const char *key)
 {
     mh_warn("not implemented\n");
     return -1;
@@ -128,9 +136,9 @@ sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
 
     if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
-            rc = sysconfig_os_run_puppet(uri, NULL);
+            rc = sysconfig_os_run_puppet(uri, NULL, key);
         } else if (strcasecmp(scheme, "augeas") == 0) {
-            rc = sysconfig_os_run_augeas(uri, NULL);
+            rc = sysconfig_os_run_augeas(uri, NULL, key);
         } else {
             rc = -1;
         }
@@ -146,7 +154,7 @@ sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
 
     if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
-            rc = sysconfig_os_run_puppet(NULL, data);
+            rc = sysconfig_os_run_puppet(NULL, data, key);
         } else {
             rc = -1;
         }

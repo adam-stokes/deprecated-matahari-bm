@@ -64,10 +64,9 @@ mh_sysconfig_keys_dir_set(const char *path)
 }
 
 static gboolean
-set_key(const char *key)
+set_key(const char *key, const char *contents)
 {
     char key_file[PATH_MAX];
-    const char contents[] = "ok";
 
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
@@ -77,42 +76,35 @@ set_key(const char *key)
     return TRUE;
 }
 
-static gboolean
+static char *
 get_key(const char *key)
 {
     char key_file[PATH_MAX];
-    char *contents;
+    char *contents = NULL;
     size_t length;
 
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
         if(g_file_get_contents(key_file, &contents, &length, NULL)) {
-            if (strcmp(contents, "ok") == 0) {
-                free(contents);
-                return TRUE;
-            }
+            return contents;
         }
-        free(contents);
     }
-    return FALSE;
+    return contents;
 }
 
-gboolean
-mh_sysconfig_set_configured(const char *key)
+int
+mh_sysconfig_set_configured(const char *key, const char *contents)
 {
-    if (!set_key(key)) {
+    if (!set_key(key, contents)) {
         return FALSE;
     }
     return TRUE;
 }
 
-gboolean
+char *
 mh_sysconfig_is_configured(const char *key)
 {
-    if (!get_key(key)) {
-        return FALSE;
-    }
-    return TRUE;
+    return get_key(key);
 }
 
 int
