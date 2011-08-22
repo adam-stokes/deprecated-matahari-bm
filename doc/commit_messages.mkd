@@ -1,0 +1,42 @@
+# Matahari Commit Message Guidelines
+
+-------------------------------------------------------------------------------
+
+## Table of Contents
+
+1. Introduction
+2. Commit Message Structure
+3. Commit Message Tags
+
+
+## 1) Introduction
+
+The purpose of this document is to specify the guidelines for commit
+messages used for commits to the Matahari repository.
+
+
+## 2) Commit Message Structure
+
+### Structure Overview
+
+    <short one line summary>
+    ...blank line...
+    <Verbose description of changes>
+    ...blank line...
+    <commit message tags>
+
+### Summary Line
+
+The summary line should:
+
+ * be one line and short (&lt;50 chars, ideally).
+ * be prefixed with a component id, like "host: fix something in host agent"
+ * include bug numbers if applicable, in the form "rhbz#000000"
+
+## 3) Commit Message Tags
+
+### Signed-off-by: Name &lt;email&gt;
+
+The Signed-off-by tag should be on every single commit message.  A person
+that is listed as signing off on the changes is someone that helped write the
+patch.  The "-s" option to "git commit" will automatically add this for you.

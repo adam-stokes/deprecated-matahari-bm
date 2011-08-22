@@ -97,7 +97,8 @@ federate() {
 
 start() {
 	echo -n $"Starting Matahari broker daemon: "
-	install -o qpidd -g qpidd -d @localstatedir@/{run,lib}/matahari
+	install -o root -g qpidd -m 770 -d @localstatedir@/lib/matahari
+	install -o root -g qpidd -m 775 -d @localstatedir@/run/matahari
 	daemon --pidfile $pidfile --check $prog --user qpidd /usr/sbin/$prog --daemon --pid-dir @localstatedir@/run/matahari --data-dir @localstatedir@/lib/matahari $QPIDD_OPTIONS
 	RETVAL=$?
 	echo

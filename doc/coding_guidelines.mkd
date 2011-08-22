@@ -1,0 +1,152 @@
+# Matahari Coding Guidelines
+
+-------------------------------------------------------------------------------
+
+## Table of Contents
+
+1. Introduction
+2. Formatting Guidelines
+3. Naming Conventions
+4. vim Settings
+
+## 1) Introduction
+
+The purpose of this document is to discuss guidelines about how to write
+code that will be a part of the Matahari project.
+
+
+## 2) Formatting Guidelines
+
+### Whitespace
+
+- Indentation must be 4 spaces, no tabs.
+- Do not leave trailing whitespace.
+
+### Line Length
+
+- Lines should be no longer than 80 characters unless limiting line length significantly impacts readability.
+
+### Pointers
+
+- The '*' goes by the variable name, not the type:
+
+```C
+    char *foo;
+```
+
+- Use a space before the '*' and after the closing parenthesis in a cast:
+
+```C
+    char *foo = (char *) bar;
+```
+
+### Functions
+
+- Put the return type on its own line:
+- Place the opening brace for a function on the next line:
+
+```C
+    static int
+    foo(void)
+    {
+```
+
+- For functions with enough arguments that they must break to the next line, align arguments with the first argument:
+
+```C
+    static int
+    function_name(int bar, const char *a, const char *b,
+                  const char *c, const char *d)
+    {
+```
+
+- If a function name gets really long, start the arguments on their own line with 8 spaces of indentation:
+
+```C
+    static int
+    really_really_long_function_name_this_is_getting_silly_now(
+            int bar, const char *a, const char *b,
+            const char *c, const char *d)
+    {
+```
+
+### Control statements (if, else, while, for, switch)
+
+- Keyword is followed by one space, then left parenthesis witout space,
+  condition, right parenthesis, space, opening bracket on the same line.
+
+- "else" and "else if" are on the same line with ending brace and opening
+  brace, separated by space
+
+```C
+    if (condition1) {
+        statement1;
+    } else if (condition2) {
+        statement2;
+    } else {
+        statement3;
+    }
+```
+
+- Cases in switch statement have same indentation as switch. Body of cases
+  is indented by one level. Opening brace is on the same line as switch.
+
+```C
+    switch (expression)
+    {
+    case 0:
+        command0;
+        break;
+    case 1:
+        command1;
+        break;
+    default:
+        command;
+    }
+```
+
+### Operators
+
+- Operators have spaces from both sides. Do not rely on operator precedence,
+  use brackets when mixing operators with different priority.
+- No space after opening bracked and before closing bracket.
+
+```C
+    x = a + b - (c * d);
+```
+
+### Classes
+
+- Visibility modifiers have same indentation as the class, methods and
+  properties are indented.
+
+```C++
+    class TestClass : public ParentClass
+    {
+    private:
+        int x;
+    public:
+        void test();
+    };
+```
+
+## 3) Naming Conventions
+
+- Public C API calls and type names must begin with "mh_".
+
+- Name of the class should be Upper-CamelCase (first letter of each word
+  upper cased).
+
+
+## 4) vim Settings
+
+```vim
+    " This section contains settings that can be placed in the vimrc file that are
+    " compatible with the Matahari coding guidelines.
+
+    " Whitespace
+    set ts=4
+    set sw=4
+    set expandtab
+    let c_space_error=1
+```
