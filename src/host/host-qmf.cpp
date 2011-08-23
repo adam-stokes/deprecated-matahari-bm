@@ -123,40 +123,40 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
     } else if (methodName == "identify") {
         mh_host_identify();
     } else if (methodName == "set_uuid") {
-	const char *uuid = NULL;
-	const char *lifetime = NULL;
+        const char *uuid = NULL;
+        const char *lifetime = NULL;
 
         if(args.count("lifetime") > 0) {
             lifetime = args["lifetime"].asString().c_str();
         }
 
         if(args.count("uuid") > 0) {
-	    int rc = 0;
+            int rc = 0;
             uuid = args["uuid"].asString().c_str();
-	    rc = mh_host_set_uuid(lifetime, uuid);
-	    event.addReturnArgument("rc", rc);
+            rc = mh_host_set_uuid(lifetime, uuid);
+            event.addReturnArgument("rc", rc);
 
-	    /* Now refresh the properties in case they changed */ 
-	    _instance.setProperty("custom_uuid", mh_host_get_uuid("Custom"));
-	    _instance.setProperty("uuid", mh_host_get_uuid("Filesystem"));
+            /* Now refresh the properties in case they changed */
+            _instance.setProperty("custom_uuid", mh_host_get_uuid("Custom"));
+            _instance.setProperty("uuid", mh_host_get_uuid("Filesystem"));
 
         } else {
-	    session.raiseException(event, "No UUID supplied");
-	    goto bail;
-	}
+            session.raiseException(event, "No UUID supplied");
+            goto bail;
+        }
 
     } else if (methodName == "get_uuid") {
-	const char *uuid = NULL;
-	const char *lifetime = NULL;
+        const char *uuid = NULL;
+        const char *lifetime = NULL;
 
         if(args.count("lifetime") > 0) {
             lifetime = args["lifetime"].asString().c_str();
         }
 
-	uuid = mh_host_get_uuid(lifetime);
-	if(uuid) {
-	    event.addReturnArgument("uuid", uuid);
-	}
+        uuid = mh_host_get_uuid(lifetime);
+        if(uuid) {
+            event.addReturnArgument("uuid", uuid);
+        }
 
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
@@ -179,7 +179,7 @@ HostAgent::setup(qmf::AgentSession session)
     _instance.setProperty("update_interval", DEFAULT_UPDATE_INTERVAL);
     _instance.setProperty("uuid", mh_host_get_uuid("Filesystem"));
     if(custom_uuid) {
-	_instance.setProperty("custom_uuid", custom_uuid);
+        _instance.setProperty("custom_uuid", custom_uuid);
     }
 
     _instance.setProperty("hostname", mh_host_get_hostname());
