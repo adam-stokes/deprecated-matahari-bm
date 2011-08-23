@@ -151,6 +151,7 @@ int main(int argc, char** argv)
                 callOptions.erase("host-dns");
                 callOptions.erase("host-uuid");
                 callOptions.erase("protocol");
+                callOptions.erase("serverport");
             }
         }
 
