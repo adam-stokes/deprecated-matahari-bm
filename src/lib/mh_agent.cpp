@@ -278,9 +278,12 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     std::stringstream url;
     qpid::types::Variant::Map amqp_options;
 
+#ifdef MH_SSL
     const char *ssl_cert_db = NULL;
     const char *ssl_cert_name = NULL;
     const char *ssl_cert_password_file = NULL;
+#endif /* MH_SSL */
+
     int lpc = 0;
 
     amqp_options["reconnect"] = true;
@@ -441,8 +444,11 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     free(long_opts);
 #endif
 
+    options["protocol"] = "tcp";
+
 #ifdef MH_SSL
     if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
+        options["protocol"] = "ssl";
         qpid::sys::ssl::SslOptions ssl_options;
         ssl_options.certDbPath = strdup(ssl_cert_db);
         ssl_options.certName = strdup(ssl_cert_name);
@@ -454,12 +460,6 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         exit(1);
     }
 #endif
-
-    if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
-        options["protocol"] = "ssl";
-    } else {
-        options["protocol"] = "tcp";
-    }
 
     if(options["serverport"].asString().empty()) {
         options["serverport"] = string("49000");
