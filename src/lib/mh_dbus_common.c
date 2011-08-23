@@ -283,8 +283,7 @@ matahari_class_init(MatahariClass *matahari_class)
 static void
 matahari_init(Matahari *matahari)
 {
-    MatahariPrivate *priv;
-    matahari->priv = priv = MATAHARI_GET_PRIVATE(matahari);
+    matahari->priv = MATAHARI_GET_PRIVATE(matahari);
 }
 
 Dict *

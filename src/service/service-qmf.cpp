@@ -51,7 +51,10 @@ private:
                       qmf::AgentEvent& event, svc_action_t *op, bool has_rc);
 
     qmf::Data _services;
+    static const char SERVICES_NAME[];
+
     qmf::Data _resources;
+    static const char RESOURCES_NAME[];
 
     _qtype::Variant::List standards;
 
@@ -66,8 +69,12 @@ public:
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session,
                             qmf::AgentEvent event, gpointer user_data);
-    void raiseEvent(svc_action_t *op, enum service_id service, const char *userdata);
+    void raiseEvent(svc_action_t *op, enum service_id service, const std::string &userdata);
 };
+
+const char SrvAgent::SERVICES_NAME[] = "Services";
+
+const char SrvAgent::RESOURCES_NAME[] = "Resources";
 
 /**
  * Async process callback
@@ -106,21 +113,21 @@ public:
 void
 AsyncCB::mh_async_callback(svc_action_t *op)
 {
-    const char *userdata = NULL;
+    std::string userdata;
     AsyncCB *cb_data = static_cast<AsyncCB *>(op->cb_data);
 
     mh_trace("Completed: %s = %d", op->id, op->rc);
 
     qpid::types::Variant::Map& args = cb_data->event.getArguments();
     if (args.count("userdata") > 0) {
-        userdata = args["userdata"].asString().c_str();
+        userdata = args["userdata"].asString();
     }
 
     if (cb_data->first_result) {
         if (cb_data->has_rc) {
             cb_data->event.addReturnArgument("rc", op->rc);
         }
-        if (userdata) {
+        if (userdata.length()) {
             cb_data->event.addReturnArgument("userdata", userdata);
         }
         cb_data->session.methodSuccess(cb_data->event);
@@ -171,7 +178,7 @@ main(int argc, char **argv)
 }
 
 void
-SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *userdata)
+SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const std::string &userdata)
 {
     uint64_t timestamp = 0L;
     qmf::Data event;
@@ -203,7 +210,7 @@ SrvAgent::raiseEvent(svc_action_t *op, enum service_id service, const char *user
         event.setProperty("expected-rc", op->expected_rc);
     }
 
-    if(userdata) {
+    if (userdata.length()) {
         event.setProperty("userdata", userdata);
     }
 
@@ -228,14 +235,14 @@ SrvAgent::setup(qmf::AgentSession session)
     _services.setProperty("uuid", mh_uuid());
     _services.setProperty("hostname", mh_hostname());
 
-    session.addData(_services, "Services");
+    session.addData(_services, SERVICES_NAME);
 
     _resources = qmf::Data(_package.data_Resources);
 
     _resources.setProperty("uuid", mh_uuid());
     _resources.setProperty("hostname", mh_hostname());
 
-    session.addData(_resources, "Resources");
+    session.addData(_resources, RESOURCES_NAME);
 
     return 0;
 }
@@ -245,10 +252,10 @@ SrvAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
                  gpointer user_data)
 {
     if (event.getType() == qmf::AGENT_METHOD && event.hasDataAddr()) {
-        if (event.getDataAddr().getName() == "Services") {
+        if (event.getDataAddr().getName() == SERVICES_NAME) {
             return invoke_services(session, event, user_data);
 
-        } else if (event.getDataAddr().getName() == "Resources") {
+        } else if (event.getDataAddr().getName() == RESOURCES_NAME) {
             return invoke_resources(session, event, user_data);
 
         } else {
@@ -349,18 +356,19 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
     } else if (methodName == "list") {
         GList *gIter = NULL;
         GList *agents = NULL;
-        const char *standard = "ocf";
-        const char *provider = "heartbeat";
+        std::string standard("ocf");
+        std::string provider("heartbeat");
         _qtype::Variant::List t_list;
 
-        if(args.count("standard") > 0) {
-            standard = args["standard"].asString().c_str();
-        }
-        if(args.count("provider") > 0) {
-            provider = args["provider"].asString().c_str();
+        if (args.count("standard")) {
+            standard = args["standard"].asString();
         }
 
-        agents = resources_list_agents(standard, provider);
+        if (args.count("provider")) {
+            provider = args["provider"].asString();
+        }
+
+        agents = resources_list_agents(standard.c_str(), provider.c_str());
         for (gIter = agents; gIter != NULL; gIter = gIter->next) {
             t_list.push_back((const char *) gIter->data);
         }
@@ -382,9 +390,9 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
 
         int32_t interval = 0;
         int32_t timeout = 60000;
-        const char *agent = NULL;
-        const char *standard = "ocf";
-        const char *provider = "heartbeat";
+        std::string agent;
+        std::string standard("ocf");
+        std::string provider("heartbeat");
 
         for ( iter=standards.begin() ; iter != standards.end(); iter++ ) {
             if(args["standard"].asString() == (*iter).asString()) {
@@ -399,16 +407,16 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
             return TRUE;
         }
 
-        if(args.count("standard") > 0) {
-            standard = args["standard"].asString().c_str();
+        if (args.count("standard")) {
+            standard = args["standard"].asString();
         }
-        if(args.count("provider") > 0) {
-            provider = args["provider"].asString().c_str();
+        if (args.count("provider")) {
+            provider = args["provider"].asString();
         }
-        if(args.count("agent") > 0) {
-            agent = args["agent"].asString().c_str();
+        if (args.count("agent")) {
+            agent = args["agent"].asString();
         } else {
-            agent = args["name"].asString().c_str();
+            agent = args["name"].asString();
         }
 
         if(args.count("interval") > 0) {
@@ -420,7 +428,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
 
         op = resources_action_create(
             args["name"].asString().c_str(),
-            standard, provider, agent,
+            standard.c_str(), provider.c_str(), agent.c_str(),
             args["action"].asString().c_str(),
             interval, timeout, params);
 

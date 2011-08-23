@@ -41,11 +41,15 @@ class NetAgent : public MatahariAgent
 private:
     qmf::org::matahariproject::PackageDefinition _package;
     qmf::Data _instance;
+    static const char NETWORK_NAME[];
+
 public:
     virtual int setup(qmf::AgentSession session);
     virtual gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
                             gpointer user_data);
 };
+
+const char NetAgent::NETWORK_NAME[] = "Network";
 
 int
 main(int argc, char **argv)
@@ -85,7 +89,7 @@ NetAgent::setup(qmf::AgentSession session)
     _instance.setProperty("hostname", mh_hostname());
     _instance.setProperty("uuid", mh_uuid());
 
-    session.addData(_instance);
+    session.addData(_instance, NETWORK_NAME);
     return 0;
 }
 
