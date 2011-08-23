@@ -123,17 +123,14 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
     } else if (methodName == "identify") {
         mh_host_identify();
     } else if (methodName == "set_uuid") {
-        const char *uuid = NULL;
-        const char *lifetime = NULL;
-
-        if(args.count("lifetime") > 0) {
-            lifetime = args["lifetime"].asString().c_str();
-        }
-
-        if(args.count("uuid") > 0) {
+        if (args.count("uuid")) {
             int rc = 0;
-            uuid = args["uuid"].asString().c_str();
-            rc = mh_host_set_uuid(lifetime, uuid);
+            if (args.count("lifetime")) {
+                rc = mh_host_set_uuid(args["lifetime"].asString().c_str(),
+                                      args["uuid"].asString().c_str());
+            } else {
+                rc = mh_host_set_uuid(NULL, args["uuid"].asString().c_str());
+            }
             event.addReturnArgument("rc", rc);
 
             /* Now refresh the properties in case they changed */
@@ -147,14 +144,14 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
 
     } else if (methodName == "get_uuid") {
         const char *uuid = NULL;
-        const char *lifetime = NULL;
 
-        if(args.count("lifetime") > 0) {
-            lifetime = args["lifetime"].asString().c_str();
+        if (args.count("lifetime")) {
+            uuid = mh_host_get_uuid(args["lifetime"].asString().c_str());
+        } else {
+            uuid = mh_host_get_uuid(NULL);
         }
 
-        uuid = mh_host_get_uuid(lifetime);
-        if(uuid) {
+        if (uuid) {
             event.addReturnArgument("uuid", uuid);
         }
 

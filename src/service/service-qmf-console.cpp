@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 
     if (options.count("action")) {
         uint32_t lpc = 1;
-        const char *action = options["action"].asString().c_str();
+        std::string action = options["action"].asString();
         cout << "Building " << options["api-type"] << " options" << endl;
         if(options["api-type"] == "Services") {
             if(options["action"] == "list") {
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
             }
 
         } else {
-            if(strstr(action, "list") != NULL) {
+            if(strstr(action.c_str(), "list") != NULL) {
                 callOptions["standard"] = options["standard"].asString();
                 callOptions["provider"] = options["provider"].asString();
 
