@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     ConsoleEvent event;
     Agent agent;
 
-    options["api"] = "Resources";
+    options["api-type"] = "Resources";
     options["host-dns"] = mh_hostname();
     options["standard"] = "ocf";
     options["provider"] = "heartbeat";
@@ -126,8 +126,8 @@ int main(int argc, char** argv)
     if (options.count("action")) {
         uint32_t lpc = 1;
         const char *action = options["action"].asString().c_str();
-        cout << "Building " << options["api"] << " options" << endl;
-        if(options["api"] == "Services") {
+        cout << "Building " << options["api-type"] << " options" << endl;
+        if(options["api-type"] == "Services") {
             if(options["action"] == "list") {
             } else if(options["action"] == "enable") {
                 callOptions["name"] = options["name"].asString();
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
             } else {
                 action = "invoke";
                 callOptions = options;
-                callOptions.erase("api");
+                callOptions.erase("api-type");
                 callOptions.erase("reconnect");
                 callOptions.erase("host-dns");
                 callOptions.erase("host-uuid");
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
             cout << agent.getName() << endl;
 
             // event = agent.query("class: Resources, package: 'org.matahariproject', where: [eq, hostname, [quote, f15.beekhof.net]]}");
-            DataAddr agent_data(options["api"], agent.getName(), 0);
+            DataAddr agent_data(options["api-type"], agent.getName(), 0);
 
             cout << callOptions << endl;
             event = agent.callMethod(action, callOptions, agent_data);
@@ -193,10 +193,10 @@ int main(int argc, char** argv)
 
                         /* The rest is mostly to show we can */
                         agent = event.getAgent();
-                        DataAddr agent_data(options["api"], agent.getName(), 0);
+                        DataAddr agent_data(options["api-type"], agent.getName(), 0);
                         // event = agent.callMethod("list", callOptions, agent_data);
 
-                        if (options["api"] == "Resources") {
+                        if (options["api-type"] == "Resources") {
                             callOptions["standard"] = options["standard"];
                             callOptions["provider"] = options["provider"];
                         }
