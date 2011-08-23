@@ -174,9 +174,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     printf("\t-h | --help             print this help message.\n");
     printf("\t-b | --broker value     specify broker host name..\n");
     printf("\t-p | --port value       specify broker port.\n");
-    printf("\t-d | --domain value     Specify domain to connect to (Use DNS SRV to determine host).\n"
-           "\t                        For this option to take effect, the broker option must not\n"
-           "\t                        be provided.\n");
+    printf("\t-S | --srv              Enable DNS SRV lookup for the specified broker.\n");
     printf("\t-u | --username value   username to use for authentication purposes.\n");
     printf("\t-P | --password value   password to use for authentication purposes.\n");
     printf("\t-s | --service value    service name to use for authentication purposes.\n");
@@ -205,12 +203,18 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     int backoff = 0;
     char *target = NULL;
 
-    if(mh_options.count("servername") == 0) {
+    if (!mh_options.count("servername") || mh_options.count("srv")) {
+        /*
+         * Do an SRV lookup either because no broker was specified at all,
+         * or because a broker domain was given and the --srv option was
+         * used specifically requesting an SRV lookup.
+         */
+
         /* Is _ssl valid here as a protocol?  _udp? */
         std::stringstream fqdn;
 
-        if (mh_options.count("domain")) {
-            fqdn << "_matahari._tcp." << mh_options["domain"];
+        if (mh_options.count("servername")) {
+            fqdn << "_matahari._tcp." << mh_options["servername"];
         } else {
             fqdn << "_matahari._tcp." << mh_domainname();
         }
@@ -226,13 +230,15 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
 
     while (true) {
         std::stringstream url;
-        if(mh_options.count("servername") > 0) {
-            url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
-        } else if (target) {
-            /* Try DNS */
+
+        if (target) {
+            /* Use the result of a DNS SRV lookup. */
             url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
+        } else if (mh_options.count("servername")) {
+            /* Use the explicitly specified broker hostname or IP address. */
+            url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
         } else {
-            /* Try localhost */
+            /* If nothing else, try localhost */
             url << "amqp:" << mh_options["protocol"] << ":localhost:" << mh_options["serverport"] ;
         }
 
@@ -281,7 +287,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                 NULL, NULL, NULL);
-    mh_add_option('d', required_argument, "domain",                 NULL, NULL, NULL);
+    mh_add_option('S', no_argument,       "srv",                    NULL, NULL, NULL);
     mh_add_option('p', required_argument, "port",                   NULL, NULL, NULL);
 #ifdef MH_SSL
     mh_add_option('N', required_argument, "ssl-cert-name",          NULL, NULL, NULL);
@@ -306,8 +312,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 
     if (RegistryRead(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-                     L"domain", &value) == 0) {
-        options["domain"] = value;
+                     L"srv", &value) == 0) {
+        options["srv"] = value;
         value = NULL;
     }
 
@@ -395,8 +401,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
                     mh_err("Broker '%s' is not resolvable - ignoring", optarg);
                 }
                 break;
-            case 'd':
-                options["domain"] = optarg;
+            case 'S':
+                options["srv"] = 1;
                 break;
 #ifdef MH_SSL
             case 'N':
