@@ -44,14 +44,10 @@ using qpid::types::Variant;
 using qpid::messaging::Duration;
 
 static int
-resource_arg(int code, const char *name, const char *arg, void *userdata)
+call_arg(int code, const char *name, const char *arg, void *userdata)
 {
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
-    if(options->count(name) > 0) {
-        options->erase(name);
-    }
-
-    cout << name << "=" << arg << endl;
+    mh_debug("Found call option: '%s' = '%s'", name, arg);
     if(strcmp(name, "timeout") == 0 || strcmp(name, "interval") == 0) {
         uint32_t number = 1000 * atoi(arg);
         (*options)[name] = number;
@@ -62,45 +58,67 @@ resource_arg(int code, const char *name, const char *arg, void *userdata)
     return 0;
 }
 
+static int
+agent_arg(int code, const char *name, const char *arg, void *userdata)
+{
+    qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
+    string tokenize = arg;
+    string delimiters = " \t=";
+    string::size_type start = tokenize.find_first_not_of(delimiters, 0);
+    string::size_type delim = tokenize.find_first_of(delimiters, start);
+
+    if (string::npos != delim || string::npos != start) {
+        string opt_name = tokenize.substr(start, delim - start);
+
+        start = tokenize.find_first_not_of(delimiters, delim);
+        string opt_value = tokenize.substr(start);
+
+        mh_debug("Found agent option: '%s' = '%s'", opt_name.c_str(), opt_value.c_str());
+        (*options)[opt_name] = opt_value;
+    }
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     qpid::types::Variant::Map options;
-    qpid::types::Variant::Map callOptions;
+    qpid::types::Variant::Map core_options;
+    qpid::types::Variant::Map agent_options;
     string sessionOptions;
     ConsoleEvent event;
     Agent agent;
 
-    options["api-type"] = "Resources";
-    options["host-dns"] = mh_hostname();
+    core_options["api-type"] = "Resources";
+    core_options["host-dns"] = mh_hostname();
     options["standard"] = "ocf";
     options["provider"] = "heartbeat";
     options["interval"] = 0;
     options["timeout"] = 60000;
-    options["parameters"] = qpid::types::Variant::Map();
 
-    mh_log_init("service-cli", LOG_TRACE, TRUE);
+    mh_log_init("service-cli", LOG_INFO, TRUE);
 
-    mh_add_option('T', required_argument, "api-type", "Resources|Services", &options, resource_arg);
-    mh_add_option('H', required_argument, "host-dns", "Host DNS name", &options, resource_arg);
-    mh_add_option('U', required_argument, "host-uuid", "Host UUID", &options, resource_arg);
+    mh_add_option('T', required_argument, "api-type", "Resources|Services", &core_options, call_arg);
+    mh_add_option('H', required_argument, "host-dns", "Host DNS name", &core_options, call_arg);
+    mh_add_option('U', required_argument, "host-uuid", "Host UUID", &core_options, call_arg);
 
-    mh_add_option('N', required_argument, "name", "Name of a resource", &options, resource_arg);
-    mh_add_option('S', required_argument, "standard", "lsb|ocf|windows (Resources API only)", &options, resource_arg);
-    mh_add_option('J', required_argument, "provider", "(Resources API only)", &options, resource_arg);
-    mh_add_option('A', required_argument, "agent", "(Resources API only)", &options, resource_arg);
+    mh_add_option('N', required_argument, "name", "Name of a resource", &options, call_arg);
+    mh_add_option('S', required_argument, "standard", "lsb|ocf|windows (Resources API only)", &options, call_arg);
+    mh_add_option('J', required_argument, "provider", "(Resources API only)", &options, call_arg);
+    mh_add_option('A', required_argument, "agent", "(Resources API only)", &options, call_arg);
 
-    mh_add_option('a', required_argument, "action", "Action to perform", &options, resource_arg);
-    mh_add_option('i', required_argument, "interval", "(Resources API only)", &options, resource_arg);
-    mh_add_option('t', required_argument, "timeout", "Time to wait, in seconds, for the action to complete", &options, resource_arg);
+    mh_add_option('a', required_argument, "action", "Action to perform", &options, call_arg);
+    mh_add_option('i', required_argument, "interval", "(Resources API only)", &options, call_arg);
+    mh_add_option('t', required_argument, "timeout", "Time to wait, in seconds, for the action to complete", &options, call_arg);
 
-    mh_add_option('o', required_argument, "option", "Option to pass to the resource script (Resources API only)", NULL, NULL);
+    mh_add_option('o', required_argument, "option", "Option to pass to the resource script (Resources API only)", &agent_options, agent_arg);
 
-    qpid::types::Variant::Map amqpOptions = mh_parse_options("qmf-service-cli", argc, argv, options);
+    qpid::types::Variant::Map amqpOptions = mh_parse_options("qmf-service-cli", argc, argv, core_options);
+    options["parameters"] = agent_options;
 
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init("service-cli", mh_log_level, mh_log_level > LOG_INFO);
 
-    qpid::messaging::Connection connection = mh_connect(options, amqpOptions, TRUE);
+    qpid::messaging::Connection connection = mh_connect(core_options, amqpOptions, TRUE);
     ConsoleSession session(connection, sessionOptions);
     std::stringstream filter;
 
@@ -108,12 +126,12 @@ int main(int argc, char** argv)
 
     filter << ", [eq, _vendor, [quote, 'matahariproject.org']]";
     filter << ", [eq, _product, [quote, 'service']]";
-    if (options.count("action") && options.count("host-uuid")) {
-        filter << ", [eq, hostname, [quote, " << options["host-uuid"] << "]]";
+    if (options.count("action") && core_options.count("host-uuid")) {
+        filter << ", [eq, hostname, [quote, " << core_options["host-uuid"] << "]]";
 
-    } else if (options.count("action") && options.count("host-dns")) {
+    } else if (options.count("action") && core_options.count("host-dns")) {
         /* Restrict further, to a single host */
-        filter << ", [eq, hostname, [quote, " << options["host-dns"] << "]]";
+        filter << ", [eq, hostname, [quote, " << core_options["host-dns"] << "]]";
     }
 
     filter << "]";
@@ -126,33 +144,28 @@ int main(int argc, char** argv)
 
     if (options.count("action")) {
         uint32_t lpc = 1;
+        qpid::types::Variant::Map call_options;
         std::string action = options["action"].asString();
-        cout << "Building " << options["api-type"] << " options" << endl;
-        if(options["api-type"] == "Services") {
+        mh_debug("Building %s options...", core_options["api-type"].asString().c_str());
+        if(core_options["api-type"] == "Services") {
             if(options["action"] == "list") {
             } else if(options["action"] == "enable") {
-                callOptions["name"] = options["name"].asString();
+                call_options["name"] = options["name"].asString();
             } else if(options["action"] == "disable") {
-                callOptions["name"] = options["name"].asString();
+                call_options["name"] = options["name"].asString();
             } else {
-                callOptions["name"] = options["name"].asString();
-                callOptions["timeout"] = options["timeout"].asUint32();
+                call_options["name"] = options["name"].asString();
+                call_options["timeout"] = options["timeout"].asUint32();
             }
 
         } else {
             if(strstr(action.c_str(), "list") != NULL) {
-                callOptions["standard"] = options["standard"].asString();
-                callOptions["provider"] = options["provider"].asString();
+                call_options["standard"] = options["standard"].asString();
+                call_options["provider"] = options["provider"].asString();
 
             } else {
                 action = "invoke";
-                callOptions = options;
-                callOptions.erase("api-type");
-                callOptions.erase("reconnect");
-                callOptions.erase("host-dns");
-                callOptions.erase("host-uuid");
-                callOptions.erase("protocol");
-                callOptions.erase("serverport");
+                call_options = options;
             }
         }
 
@@ -165,10 +178,10 @@ int main(int argc, char** argv)
             cout << agent.getName() << endl;
 
             // event = agent.query("class: Resources, package: 'org.matahariproject', where: [eq, hostname, [quote, f15.beekhof.net]]}");
-            DataAddr agent_data(options["api-type"], agent.getName(), 0);
+            DataAddr agent_data(core_options["api-type"], agent.getName(), 0);
 
-            cout << callOptions << endl;
-            event = agent.callMethod(action, callOptions, agent_data);
+            cout << "Call options: " << call_options << endl;
+            event = agent.callMethod(action, call_options, agent_data);
             if(event.getType() != CONSOLE_METHOD_RESPONSE) {
                 uint32_t llpc = 0;
                 cout << "Call failed: " << event.getType() << endl;
@@ -177,7 +190,7 @@ int main(int argc, char** argv)
                 }
 
             } else {
-                cout << event.getArguments() << endl;
+                cout << "Call returned: " << event.getArguments() << endl;
             }
 
 //            event = agent.query("{class: Resources}");
@@ -195,15 +208,16 @@ int main(int argc, char** argv)
 
                         /* The rest is mostly to show we can */
                         agent = event.getAgent();
-                        DataAddr agent_data(options["api-type"], agent.getName(), 0);
-                        // event = agent.callMethod("list", callOptions, agent_data);
+                        qpid::types::Variant::Map call_options;
+                        DataAddr agent_data(core_options["api-type"], agent.getName(), 0);
+                        // event = agent.callMethod("list", call_options, agent_data);
 
-                        if (options["api-type"] == "Resources") {
-                            callOptions["standard"] = options["standard"];
-                            callOptions["provider"] = options["provider"];
+                        if (core_options["api-type"] == "Resources") {
+                            call_options["standard"] = options["standard"];
+                            call_options["provider"] = options["provider"];
                         }
 
-                        event = agent.callMethod("list", callOptions, agent_data);
+                        event = agent.callMethod("list", call_options, agent_data);
                         if(event.getType() != CONSOLE_METHOD_RESPONSE) {
                             uint32_t llpc = 0;
                             cout << "Call failed: " << event.getType() << endl;

@@ -32,6 +32,7 @@ int use_stderr = 0;
 #include <exception>
 
 #include <signal.h>
+#include <stdlib.h>
 #include <cstdlib>
 
 #include <qpid/sys/Time.h>
@@ -149,6 +150,73 @@ typedef struct mh_opt_s
 static mh_option matahari_options[MAX_CHAR];
 
 static int
+map_option(int code, const char *name, const char *arg, void *userdata)
+{
+    qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
+
+    if(strcmp(name, "verbose") == 0) {
+        mh_log_level++;
+        mh_enable_stderr(1);
+
+    } else if(strcmp(name, "broker") == 0) {
+#ifdef WIN32
+        (*options)["servername"] = arg;
+#else
+        int rc;
+        struct addrinfo hints, *res;
+
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_family = AF_UNSPEC;
+        rc = getaddrinfo(arg, NULL, &hints, &res);
+        if (rc == 0) {
+            (*options)["servername"] = arg;
+        } else {
+            mh_err("Broker '%s' is not resolvable - ignoring", arg);
+        }
+#endif
+
+    } else if(strcmp(name, "port") == 0) {
+        (*options)["serverport"] = atoi(arg);
+
+    } else if(strcmp(name, "dns-srv") == 0) {
+        (*options)["dns-srv"] = 1;
+
+    } else {
+        (*options)[name] = arg;
+    }
+    return 0;
+}
+
+#ifdef MH_SSL
+static int
+ssl_option(int code, const char *name, const char *arg, void *userdata)
+{
+    qpid::sys::ssl::SslOptions *options = static_cast<qpid::sys::ssl::SslOptions*>(userdata);
+
+    if(strcmp(name, "ssl-cert-db") == 0) {
+        options->certDbPath = strdup(arg);
+        setenv("QPID_SSL_CERT_DB", arg, 1);
+        if (!g_file_test(arg, G_FILE_TEST_IS_DIR)) {
+            fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
+            exit(1);
+        }
+
+    } else if(strcmp(name, "ssl-cert-name") == 0) {
+        options->certName = strdup(arg);
+
+    } else if(strcmp(name, "ssl-cert-password-file") == 0) {
+        options->certPasswordFile = strdup(arg);
+        setenv("QPID_SSL_CERT_PASSWORD_FILE", arg, 1);
+        if (!g_file_test(arg, G_FILE_TEST_EXISTS)) {
+            fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
+            exit(1);
+        }
+    }
+    return 0;
+}
+#endif /* MH_SSL */
+
+static int
 connection_option(int code, const char *name, const char *arg, void *userdata)
 {
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
@@ -170,22 +238,9 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 {
     int lpc = 0;
     printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
-    printf("\nCommon connection options:\n");
-    printf("\t-h | --help             print this help message.\n");
-    printf("\t-b | --broker value     specify broker host name..\n");
-    printf("\t-p | --port value       specify broker port.\n");
-    printf("\t-S | --srv              Enable DNS SRV lookup for the specified broker.\n");
-    printf("\t-u | --username value   username to use for authentication purposes.\n");
-    printf("\t-P | --password value   password to use for authentication purposes.\n");
-    printf("\t-s | --service value    service name to use for authentication purposes.\n");
-    printf("\t-r | --reconnect value  attempt to reconnect on failure.\n");
-#ifdef MH_SSL
-    printf("\t-C | --ssl-cert-db             specify certificate database.\n");
-    printf("\t-N | --ssl-cert-name           specify certificate name.\n");
-    printf("\t-f | --ssl-cert-password-file  specify certificate password file.\n");
-#endif
 
-    printf("\nCustom options:\n");
+    printf("\nOptions:\n");
+    printf("\t-h | --help             print this help message.\n");
     for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if(matahari_options[lpc].callback
             && matahari_options[lpc].callback != connection_option) {
@@ -203,7 +258,7 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     int backoff = 0;
     char *target = NULL;
 
-    if (!mh_options.count("servername") || mh_options.count("srv")) {
+    if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
          * Do an SRV lookup either because no broker was specified at all,
          * or because a broker domain was given and the --srv option was
@@ -271,65 +326,39 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     return NULL;
 }
 
-
 qpid::types::Variant::Map
 mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options)
 {
     std::stringstream url;
     qpid::types::Variant::Map amqp_options;
 
-#ifdef MH_SSL
-    const char *ssl_cert_db = NULL;
-    const char *ssl_cert_name = NULL;
-    const char *ssl_cert_password_file = NULL;
-#endif /* MH_SSL */
-
     int lpc = 0;
 
+    options["protocol"] = "tcp";
+    options["serverport"] = "49000";
     amqp_options["reconnect"] = true;
 
     /* Force local-only handling */
-    mh_add_option('b', required_argument, "broker",                 NULL, NULL, NULL);
-    mh_add_option('S', no_argument,       "srv",                    NULL, NULL, NULL);
-    mh_add_option('p', required_argument, "port",                   NULL, NULL, NULL);
+    mh_add_option('b', required_argument, "broker",                 "specify broker host name", &options, map_option);
+    mh_add_option('d', no_argument,       "dns-srv",                "interpret the value of --broker as a domain name for DNS SRV lookups", &options, map_option);
+    mh_add_option('p', required_argument, "port",                   "specify broker ", &options, map_option);
+
+    mh_add_option('u', required_argument, "username",  "username to use for authentication to the broker", &amqp_options, connection_option);
+    mh_add_option('P', required_argument, "password",  "username to use for authentication to the broker", &amqp_options, connection_option);
+    mh_add_option('s', required_argument, "service",   "service name to use for authentication to the broker", &amqp_options, connection_option);
+    mh_add_option('r', required_argument, "reconnect", "attempt to reconnect if the broker connection is lost", &amqp_options, connection_option);
+
 #ifdef MH_SSL
-    mh_add_option('N', required_argument, "ssl-cert-name",          NULL, NULL, NULL);
-    mh_add_option('C', required_argument, "ssl-cert-db",            NULL, NULL, NULL);
-    mh_add_option('f', required_argument, "ssl-cert-password-file", NULL, NULL, NULL);
+    qpid::sys::ssl::SslOptions ssl_options;
+    mh_add_option('N', required_argument, "ssl-cert-name",          "name of the certificate to use", &ssl_options, ssl_option);
+    mh_add_option('C', required_argument, "ssl-cert-db",            "file containing the certificate database", &ssl_options, ssl_option);
+    mh_add_option('f', required_argument, "ssl-cert-password-file", "file containing the certificate password", &ssl_options, ssl_option);
 #endif
 
-    mh_add_option('u', required_argument, "username",  NULL, &amqp_options, connection_option);
-    mh_add_option('P', required_argument, "password",  NULL, &amqp_options, connection_option);
-    mh_add_option('s', required_argument, "service",   NULL, &amqp_options, connection_option);
-    mh_add_option('r', required_argument, "reconnect", NULL, &amqp_options, connection_option);
-
 #ifdef WIN32
-    char *value = NULL;
-
-    if (RegistryRead(HKEY_LOCAL_MACHINE,
-                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-                     L"broker", &value) == 0) {
-        options["servername"] = value;
-        value = NULL;
-    }
-
-    if (RegistryRead(HKEY_LOCAL_MACHINE,
-                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-                     L"srv", &value) == 0) {
-        options["srv"] = value;
-        value = NULL;
-    }
-
-    if (RegistryRead(HKEY_LOCAL_MACHINE,
-                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-                     L"port", &value) == 0) {
-        options["serverport"] = atoi(value);
-        free(value);
-        value = NULL;
-    }
-
     for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if (matahari_options[lpc].callback) {
+            char *value = NULL;
             wchar_t *name_ws = char2wide(matahari_options[lpc].long_name);
             if (RegistryRead (HKEY_LOCAL_MACHINE,
                              L"SYSTEM\\CurrentControlSet\\services\\Matahari",
@@ -350,13 +379,11 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     int opt_string_len = 0;
     char opt_string[2 * DIMOF(matahari_options)];
     struct option *long_opts = (struct option *)calloc(1, sizeof(struct option));
-    struct addrinfo hints, *res;
-    int rc, arg;
+    int arg;
 
-
-    /* Force more local-only processing */
+    /* Force more local-only processing specific to linux */
     mh_add_option('h', no_argument, "help", NULL, NULL, NULL);
-    mh_add_option('v', no_argument, "verbose", NULL, NULL, NULL);
+    mh_add_option('v', no_argument, "verbose", "Increase the log level", NULL, map_option);
 
     opt_string[0] = 0;
     for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
@@ -383,88 +410,33 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     }
 
     while ((arg = getopt_long(argc, argv, opt_string, long_opts, &idx)) != -1) {
-        switch (arg) {
-            case 'h':
-                print_help('h', NULL, NULL, (void*)proc_name);
-                exit(0);
-                break;
-            case 'v':
-                mh_log_level++;
-                mh_enable_stderr(1);
-                break;
-            case 'p':
-                options["serverport"] = optarg;
-                break;
-            case 'b':
-                memset(&hints, 0, sizeof(struct addrinfo));
-                hints.ai_family = AF_UNSPEC;
-                rc = getaddrinfo(optarg, NULL, &hints, &res);
-                if (rc == 0) {
-                    options["servername"] = optarg;
-                } else {
-                    mh_err("Broker '%s' is not resolvable - ignoring", optarg);
-                }
-                break;
-            case 'S':
-                options["srv"] = 1;
-                break;
-#ifdef MH_SSL
-            case 'N':
-                ssl_cert_name = optarg;
-                break;
-            case 'C':
-                ssl_cert_db = optarg;
-                setenv("QPID_SSL_CERT_DB", optarg, 1);
-                if (!g_file_test(ssl_cert_db, G_FILE_TEST_IS_DIR)) {
-                    fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
-                    exit(1);
-                }
-                break;
-            case 'f':
-                ssl_cert_password_file = optarg;
-                setenv("QPID_SSL_CERT_PASSWORD_FILE", optarg, 1);
-                if (!g_file_test(ssl_cert_password_file, G_FILE_TEST_EXISTS)) {
-                    fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
-                    exit(1);
-                }
-                break;
-#endif
-            default:
-                if(arg > 0 && arg < DIMOF(matahari_options) && matahari_options[arg].callback) {
-                    matahari_options[arg].callback(
-                        matahari_options[arg].code, matahari_options[arg].long_name,
-                        optarg, matahari_options[arg].userdata);
+        if(arg == 'h') {
+            print_help('h', NULL, NULL, (void*)proc_name);
+            exit(0);
 
-                } else {
-                    print_help(arg, NULL, NULL, (void*)proc_name);
-                    exit(1);
-                }
-                break;
+        } else if(arg > 0 && arg < DIMOF(matahari_options) && matahari_options[arg].callback) {
+            matahari_options[arg].callback(
+                matahari_options[arg].code, matahari_options[arg].long_name,
+                optarg, matahari_options[arg].userdata);
+
+        } else {
+            print_help(arg, NULL, NULL, (void*)proc_name);
+            exit(1);
         }
     }
     free(long_opts);
 #endif
 
-    options["protocol"] = "tcp";
-
 #ifdef MH_SSL
-    if (ssl_cert_name && ssl_cert_db && ssl_cert_password_file) {
+    if (ssl_options.certDbPath && ssl_options.certName && ssl_options.certPasswordFile) {
         options["protocol"] = "ssl";
-        qpid::sys::ssl::SslOptions ssl_options;
-        ssl_options.certDbPath = strdup(ssl_cert_db);
-        ssl_options.certName = strdup(ssl_cert_name);
-        ssl_options.certPasswordFile = strdup(ssl_cert_password_file);
         qpid::sys::ssl::initNSS(ssl_options, true);
 
-    } else if (ssl_cert_name || ssl_cert_db || ssl_cert_password_file) {
+    } else if (ssl_options.certDbPath || ssl_options.certName || ssl_options.certPasswordFile) {
         fprintf(stderr, "To enable SSL, you must supply a cert name, db and password file. See --help.\n");
         exit(1);
     }
 #endif
-
-    if(options["serverport"].asString().empty()) {
-        options["serverport"] = string("49000");
-    }
 
     return amqp_options;
 }
