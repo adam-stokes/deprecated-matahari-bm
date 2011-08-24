@@ -109,10 +109,9 @@ static int
 extract_service_status(const char *unmutable, int max)
 {
     int lpc = 0, last = 0;
-    int rc = LSB_STATUS_OTHER_ERROR;
 
     if (unmutable == NULL || max < 10) {
-        return rc;
+        return LSB_STATUS_OTHER_ERROR;
     }
 
     for (; lpc < max; lpc++) {
@@ -147,6 +146,7 @@ extract_service_status(const char *unmutable, int max)
                             rc = LSB_STATUS_OK;
                             break;
                         default:
+                            rc = LSB_STATUS_OTHER_ERROR;
                             mh_info("Unknown status: %s", next);
                         }
                         /* free(next); */
@@ -160,7 +160,7 @@ extract_service_status(const char *unmutable, int max)
         }
     }
     mh_info("Couldn't parse service status");
-    return rc;
+    return LSB_STATUS_OTHER_ERROR;
 }
 
 gboolean

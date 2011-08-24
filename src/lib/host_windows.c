@@ -44,27 +44,29 @@ host_os_get_cpu_flags(void)
 }
 
 static void
-get_token_priv(HANDLE token, TOKEN_PRIVILEGES tkp)
+enable_se_priv(void)
 {
-    OpenProcessToken(GetCurrentProcess(),
-                     TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token);
+    HANDLE token;
+    TOKEN_PRIVILEGES tkp;
+
     LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME,
                          &tkp.Privileges[0].Luid);
 
     tkp.PrivilegeCount = 1;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    AdjustTokenPrivileges(token, FALSE, &tkp, 0,
-                          (PTOKEN_PRIVILEGES) NULL, 0);
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
+        AdjustTokenPrivileges(token, FALSE, &tkp, 0,
+                              (PTOKEN_PRIVILEGES) NULL, 0);
+        CloseHandle(token);
+    }
 }
 
 void
 host_os_reboot(void)
 {
-    HANDLE token;
-    TOKEN_PRIVILEGES tkp;
-
-    get_token_priv(token, tkp);
+    enable_se_priv();
     ExitWindowsEx(EWX_REBOOT | EWX_FORCE,
                   SHTDN_REASON_FLAG_PLANNED);
 }
@@ -72,10 +74,7 @@ host_os_reboot(void)
 void
 host_os_shutdown(void)
 {
-    HANDLE token;
-    TOKEN_PRIVILEGES tkp;
-
-    get_token_priv(token, tkp);
+    enable_se_priv();
     ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE,
                   SHTDN_REASON_FLAG_PLANNED);
 }
