@@ -32,6 +32,7 @@ int use_stderr = 0;
 #include <exception>
 
 #include <signal.h>
+#include <stdlib.h>
 #include <cstdlib>
 
 #include <qpid/sys/Time.h>
@@ -180,25 +181,6 @@ map_option(int code, const char *name, const char *arg, void *userdata)
     } else if(strcmp(name, "dns-srv") == 0) {
 	(*options)["dns-srv"] = 1;
 
-    } else if(strcmp(name, "ssl-cert-db") == 0) {
-        (*options)[name] = arg;
-	setenv("QPID_SSL_CERT_DB", arg, 1);
-	if (!g_file_test(arg, G_FILE_TEST_IS_DIR)) {
-	    fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
-	    exit(1);
-	}
-
-    } else if(strcmp(name, "ssl-cert-name") == 0) {
-        (*options)[name] = arg;
-
-    } else if(strcmp(name, "ssl-cert-password-file") == 0) {
-        (*options)[name] = arg;
-	setenv("QPID_SSL_CERT_PASSWORD_FILE", optarg, 1);
-	if (!g_file_test(arg, G_FILE_TEST_EXISTS)) {
-	    fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
-	    exit(1);
-	}
-
     } else {
         (*options)[name] = arg;
     }
@@ -224,7 +206,7 @@ ssl_option(int code, const char *name, const char *arg, void *userdata)
 
     } else if(strcmp(name, "ssl-cert-password-file") == 0) {
         options->certPasswordFile = strdup(arg);
-	setenv("QPID_SSL_CERT_PASSWORD_FILE", optarg, 1);
+	setenv("QPID_SSL_CERT_PASSWORD_FILE", arg, 1);
 	if (!g_file_test(arg, G_FILE_TEST_EXISTS)) {
 	    fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
 	    exit(1);
