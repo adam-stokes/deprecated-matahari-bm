@@ -155,31 +155,31 @@ map_option(int code, const char *name, const char *arg, void *userdata)
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
 
     if(strcmp(name, "verbose") == 0) {
-	mh_log_level++;
-	mh_enable_stderr(1);
+        mh_log_level++;
+        mh_enable_stderr(1);
 
     } else if(strcmp(name, "broker") == 0) {
 #ifdef WIN32
-	(*options)["servername"] = arg;
+        (*options)["servername"] = arg;
 #else
-	int rc;
-	struct addrinfo hints, *res;
-	
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC;
-	rc = getaddrinfo(arg, NULL, &hints, &res);
-	if (rc == 0) {
-	    (*options)["servername"] = arg;
-	} else {
-	    mh_err("Broker '%s' is not resolvable - ignoring", arg);
-	}
+        int rc;
+        struct addrinfo hints, *res;
+
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_family = AF_UNSPEC;
+        rc = getaddrinfo(arg, NULL, &hints, &res);
+        if (rc == 0) {
+            (*options)["servername"] = arg;
+        } else {
+            mh_err("Broker '%s' is not resolvable - ignoring", arg);
+        }
 #endif
 
     } else if(strcmp(name, "port") == 0) {
-	(*options)["serverport"] = atoi(arg);
+        (*options)["serverport"] = atoi(arg);
 
     } else if(strcmp(name, "dns-srv") == 0) {
-	(*options)["dns-srv"] = 1;
+        (*options)["dns-srv"] = 1;
 
     } else {
         (*options)[name] = arg;
@@ -195,22 +195,22 @@ ssl_option(int code, const char *name, const char *arg, void *userdata)
 
     if(strcmp(name, "ssl-cert-db") == 0) {
         options->certDbPath = strdup(arg);
-	setenv("QPID_SSL_CERT_DB", arg, 1);
-	if (!g_file_test(arg, G_FILE_TEST_IS_DIR)) {
-	    fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
-	    exit(1);
-	}
+        setenv("QPID_SSL_CERT_DB", arg, 1);
+        if (!g_file_test(arg, G_FILE_TEST_IS_DIR)) {
+            fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
+            exit(1);
+        }
 
     } else if(strcmp(name, "ssl-cert-name") == 0) {
         options->certName = strdup(arg);
 
     } else if(strcmp(name, "ssl-cert-password-file") == 0) {
         options->certPasswordFile = strdup(arg);
-	setenv("QPID_SSL_CERT_PASSWORD_FILE", arg, 1);
-	if (!g_file_test(arg, G_FILE_TEST_EXISTS)) {
-	    fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
-	    exit(1);
-	}
+        setenv("QPID_SSL_CERT_PASSWORD_FILE", arg, 1);
+        if (!g_file_test(arg, G_FILE_TEST_EXISTS)) {
+            fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
+            exit(1);
+        }
     }
     return 0;
 }
@@ -358,7 +358,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 #ifdef WIN32
     for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
         if (matahari_options[lpc].callback) {
-	    char *value = NULL;
+            char *value = NULL;
             wchar_t *name_ws = char2wide(matahari_options[lpc].long_name);
             if (RegistryRead (HKEY_LOCAL_MACHINE,
                              L"SYSTEM\\CurrentControlSet\\services\\Matahari",
@@ -410,19 +410,19 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
     }
 
     while ((arg = getopt_long(argc, argv, opt_string, long_opts, &idx)) != -1) {
-	if(arg == 'h') {
-	    print_help('h', NULL, NULL, (void*)proc_name);
-	    exit(0);
-	    
-	} else if(arg > 0 && arg < DIMOF(matahari_options) && matahari_options[arg].callback) {
-	    matahari_options[arg].callback(
-		matahari_options[arg].code, matahari_options[arg].long_name,
-		optarg, matahari_options[arg].userdata);
-	    
-	} else {
-	    print_help(arg, NULL, NULL, (void*)proc_name);
-	    exit(1);
-	}
+        if(arg == 'h') {
+            print_help('h', NULL, NULL, (void*)proc_name);
+            exit(0);
+
+        } else if(arg > 0 && arg < DIMOF(matahari_options) && matahari_options[arg].callback) {
+            matahari_options[arg].callback(
+                matahari_options[arg].code, matahari_options[arg].long_name,
+                optarg, matahari_options[arg].userdata);
+
+        } else {
+            print_help(arg, NULL, NULL, (void*)proc_name);
+            exit(1);
+        }
     }
     free(long_opts);
 #endif

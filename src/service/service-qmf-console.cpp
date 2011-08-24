@@ -73,8 +73,8 @@ agent_arg(int code, const char *name, const char *arg, void *userdata)
         start = tokenize.find_first_not_of(delimiters, delim);
         string opt_value = tokenize.substr(start);
 
-	mh_debug("Found agent option: '%s' = '%s'", opt_name.c_str(), opt_value.c_str());
-	(*options)[opt_name] = opt_value;
+        mh_debug("Found agent option: '%s' = '%s'", opt_name.c_str(), opt_value.c_str());
+        (*options)[opt_name] = opt_value;
     }
     return 0;
 }
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 
     if (options.count("action")) {
         uint32_t lpc = 1;
-	qpid::types::Variant::Map call_options;
+        qpid::types::Variant::Map call_options;
         std::string action = options["action"].asString();
         mh_debug("Building %s options...", core_options["api-type"].asString().c_str());
         if(core_options["api-type"] == "Services") {
@@ -207,8 +207,8 @@ int main(int argc, char** argv)
 
                         /* The rest is mostly to show we can */
                         agent = event.getAgent();
-			qpid::types::Variant::Map call_options;
-			DataAddr agent_data(core_options["api-type"], agent.getName(), 0);
+                        qpid::types::Variant::Map call_options;
+                        DataAddr agent_data(core_options["api-type"], agent.getName(), 0);
                         // event = agent.callMethod("list", call_options, agent_data);
 
                         if (core_options["api-type"] == "Resources") {

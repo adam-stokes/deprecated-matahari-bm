@@ -52,14 +52,14 @@ mh_os_dnssrv_lookup(const char *query)
 
         for(record = rr; record != NULL; record = record->pNext) {
             if (record->wType == DNS_TYPE_SRV) {
-		char *buffer = malloc(NI_MAXHOST);
+                char *buffer = malloc(NI_MAXHOST);
 
-		/* record->Data.Srv.wPort */
-		len = 1 + wcslen(record->Data.Srv.pNameTarget);
+                /* record->Data.Srv.wPort */
+                len = 1 + wcslen(record->Data.Srv.pNameTarget);
                 WideCharToMultiByte(CP_UTF8, 0, record->Data.Srv.pNameTarget, len, buffer, NI_MAXHOST, NULL, NULL);
             }
-	}
-	DnsRecordListFree(rr, DnsFreeRecordList);
+        }
+        DnsRecordListFree(rr, DnsFreeRecordList);
     }
 
     return NULL;
