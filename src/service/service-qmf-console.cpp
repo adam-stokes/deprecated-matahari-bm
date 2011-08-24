@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     options["interval"] = 0;
     options["timeout"] = 60000;
 
-    mh_log_init("service-cli", LOG_TRACE, TRUE);
+    mh_log_init("service-cli", LOG_INFO, TRUE);
 
     mh_add_option('T', required_argument, "api-type", "Resources|Services", &core_options, call_arg);
     mh_add_option('H', required_argument, "host-dns", "Host DNS name", &core_options, call_arg);
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
         uint32_t lpc = 1;
 	qpid::types::Variant::Map call_options;
         std::string action = options["action"].asString();
-        cout << "Building " << core_options["api-type"] << " options" << endl;
+        mh_debug("Building %s options...", core_options["api-type"].asString().c_str());
         if(core_options["api-type"] == "Services") {
             if(options["action"] == "list") {
             } else if(options["action"] == "enable") {
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
             // event = agent.query("class: Resources, package: 'org.matahariproject', where: [eq, hostname, [quote, f15.beekhof.net]]}");
             DataAddr agent_data(core_options["api-type"], agent.getName(), 0);
 
-            cout << call_options << endl;
+            cout << "Call options: " << call_options << endl;
             event = agent.callMethod(action, call_options, agent_data);
             if(event.getType() != CONSOLE_METHOD_RESPONSE) {
                 uint32_t llpc = 0;
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
                 }
 
             } else {
-                cout << event.getArguments() << endl;
+                cout << "Call returned: " << event.getArguments() << endl;
             }
 
 //            event = agent.query("{class: Resources}");
