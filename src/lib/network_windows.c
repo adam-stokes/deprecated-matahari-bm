@@ -25,64 +25,44 @@
 #endif
 
 #include "matahari/network.h"
+#include "matahari/utilities.h"
 
 #include <config.h>
 
 #include <glib.h>
 #include <windows.h>
 
-void
-network_os_stop(const char *iface)
+static void
+network_os_setstate(const char *iface, const char *state)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
     char *p;
     char *exe_path;
+    wchar_t *wexe_path;
 
     p = getenv("WINDIR");
-    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface "
-                               "%s disabled", p, iface);
+    exe_path = g_strdup_printf("\"%s\\system32\\netsh\" "
+                               "interface set interface %s %s",
+                               p, iface, state);
+    wexe_path = char2wide(exe_path);
+    g_free(exe_path);
 
-    gboolean ok = CreateProcess(NULL,
-                                exe_path,
-                                NULL,
-                                NULL,
-                                TRUE,
-                                0,
-                                NULL,
-                                NULL,
-                                &si,
-                                &pi);
+    CreateProcess(NULL, wexe_path, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
 
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
-    g_free(exe_path);
+    free(wexe_path);
+}
+
+void
+network_os_stop(const char *iface)
+{
+    network_os_setstate(iface, "disabled");
 }
 
 void
 network_os_start(const char *iface)
 {
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si;
-    char *p;
-    char *exe_path;
-
-    p = getenv("WINDIR");
-    exe_path = g_strdup_printf("%s\\system32\\netsh interface set interface "
-                               "%s enabled", p, iface);
-
-    gboolean ok = CreateProcess(NULL,
-                                exe_path,
-                                NULL,
-                                NULL,
-                                TRUE,
-                                0,
-                                NULL,
-                                NULL,
-                                &si,
-                                &pi);
-
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
-    g_free(exe_path);
+    network_os_setstate(iface, "enabled");
 }

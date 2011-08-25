@@ -340,7 +340,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                 "specify broker host name", &options, map_option);
-    mh_add_option('d', no_argument,       "dns-srv",                "interpret the value of --broker as a domain name for DNS SRV lookups", &options, map_option);
+    mh_add_option('D', no_argument,       "dns-srv",                "interpret the value of --broker as a domain name for DNS SRV lookups", &options, map_option);
     mh_add_option('p', required_argument, "port",                   "specify broker ", &options, map_option);
 
     mh_add_option('u', required_argument, "username",  "username to use for authentication to the broker", &amqp_options, connection_option);
@@ -350,7 +350,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
 
 #ifdef MH_SSL
     qpid::sys::ssl::SslOptions ssl_options;
-    mh_add_option('N', required_argument, "ssl-cert-name",          "name of the certificate to use", &ssl_options, ssl_option);
+    mh_add_option('n', required_argument, "ssl-cert-name",          "name of the certificate to use", &ssl_options, ssl_option);
     mh_add_option('C', required_argument, "ssl-cert-db",            "file containing the certificate database", &ssl_options, ssl_option);
     mh_add_option('f', required_argument, "ssl-cert-password-file", "file containing the certificate password", &ssl_options, ssl_option);
 #endif

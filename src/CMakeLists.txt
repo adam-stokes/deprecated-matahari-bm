@@ -23,6 +23,14 @@ option(WITH-QMF "Build the QMF daemon" ON)
 set(CMAKE_C_FLAGS "-Wall -Wshadow")
 set(CMAKE_CXX_FLAGS "-Wall -Wshadow")
 
+find_program(HELP2MAN help2man)
+
+set(AGENT_MAN_SECTION "8")
+set(AGENT_MAN_DESC "Part of the Matahari suite of remote agents")
+
+set(CONSOLE_MAN_SECTION "8")
+set(CONSOLE_MAN_DESC "Console for the Matahari suite of remote agents")
+
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
