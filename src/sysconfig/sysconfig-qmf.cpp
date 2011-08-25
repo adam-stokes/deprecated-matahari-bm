@@ -109,7 +109,6 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
         event.addReturnArgument("data", data ? data : "unknown");
     } else if (methodName == "is_configured") {
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-        _instance.setProperty("is_postboot_configured", status);
         event.addReturnArgument("status", status ? status : "unknown");
     } else {
         session.raiseException(event, MH_NOT_IMPLEMENTED);
