@@ -393,6 +393,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
+%if %{defined _unitdir}
+%{_unitdir}/matahari-sysconfig.service
+%endif
+
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
