@@ -99,3 +99,27 @@ macro(check_policies_for_schema SCHEMA)
         message(AUTHOR_WARNING "Policy file is missing some actions:\n" ${OUTPUT})
     endif (NOT ${OUTPUT} EQUAL "")
 endmacro(check_policies_for_schema)
+
+macro(create_manpage BINARY SECTION DESC)
+    if(HELP2MAN)
+        add_custom_command(
+	    TARGET ${BINARY}
+	    POST_BUILD
+            COMMAND ${HELP2MAN} --output ${BINARY}.${SECTION} --no-info --section ${SECTION} --name ${DESC} ${BINARY}
+            COMMENT "Generating ${BINARY} man page"
+            VERBATIM
+        )
+    endif(HELP2MAN)
+endmacro(create_manpage)
+
+macro(create_service_scripts BASE)
+    if(NOT WIN32)
+        configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
+        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
+    endif(NOT WIN32)
+
+    if(systemd_FOUND)
+        configure_file(${CMAKE_SOURCE_DIR}/matahari.service.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service)
+        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service DESTINATION ${systemdunitdir})
+    endif(systemd_FOUND)
+endmacro(create_service_scripts)

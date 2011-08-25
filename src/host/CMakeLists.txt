@@ -12,17 +12,10 @@ if(WITH-QMF)
     add_executable(${QMF_AGENT} ${BASE}-qmf.cpp ${SCHEMA_SOURCES})
     target_link_libraries(${QMF_AGENT} ${BASE_LIB} mcommon_qmf)
 
-    if(NOT WIN32)
-        configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE})
-        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE} DESTINATION ${initdir})
-    endif(NOT WIN32)
+    create_manpage(${QMF_AGENT} ${AGENT_MAN_SECTION} ${AGENT_MAN_DESC})
+    create_service_scripts(${BASE})
 
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
-
-    if(systemd_FOUND)
-        configure_file(${CMAKE_SOURCE_DIR}/matahari.service.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service)
-        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service DESTINATION ${systemdunitdir})
-    endif(systemd_FOUND)
     
 endif(WITH-QMF)
 
