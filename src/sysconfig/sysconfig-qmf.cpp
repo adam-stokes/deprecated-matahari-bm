@@ -93,22 +93,25 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-        event.addReturnArgument("status", status);
+        event.addReturnArgument("status", status ? status : "unknown");
     } else if (methodName == "run_string") {
         mh_sysconfig_run_string(args["data"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-        event.addReturnArgument("status", status);
+        event.addReturnArgument("status", status ? status : "unknown");
     } else if (methodName == "query") {
         const char *data = NULL;
         data = mh_sysconfig_query(args["query"].asString().c_str(),
                                   args["flags"].asUint32(),
                                   args["scheme"].asString().c_str());
-        event.addReturnArgument("query", data);
+        event.addReturnArgument("data", data ? data : "unknown");
     } else if (methodName == "is_configured") {
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
+        if (!status) {
+            goto bail;
+        }
         _instance.setProperty("is_postboot_configured", status);
         event.addReturnArgument("status", status);
     } else {
@@ -120,5 +123,6 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     session.methodSuccess(event);
 
 bail:
+    session.raiseException(event, "Error in return arguments");
     return TRUE;
 }
