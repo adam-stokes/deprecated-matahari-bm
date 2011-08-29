@@ -8,6 +8,23 @@
 	<simpara>
 		<revhistory>
 			<revision>
+              <revnumber>0-2</revnumber>
+				<date>Mon Aug 29 2011</date>
+				<author>
+					<firstname>Matahari</firstname>
+					<surname>Team</surname>
+					<email>matahari@lists.fedorahosted.org</email>
+				</author>
+				<revdescription>
+					<simplelist>
+						<member>Add API's</member>
+                        <member>Add Kerberos Configuration</member>
+                        <member>Add SSL Configuration</member>
+					</simplelist>
+				</revdescription>
+			</revision>
+
+			<revision>
 				<revnumber>0-1</revnumber>
 				<date>Tue Jun 21 2011</date>
 				<author>

@@ -21,7 +21,7 @@ Summary:	Matahari QMF Agents for Linux guests
 
 Group:		Applications/System
 License:	GPLv2
-URL:		http://fedorahosted.org/matahari
+URL:		http://matahariproject.org
 
 # wget --no-check-certificate -O matahari-matahari-{upstream_version}.tgz https://github.com/matahari/matahari/tarball/{upstream_version}
 Source0:	matahari-matahari-%{upstream_version}.tgz
