@@ -1,25 +1,25 @@
 #!/bin/sh
 
 # the following is chkconfig init header
-# matahari-@BASE@: QMF agent for @BASE@
+# matahari-@BASE@@BASE_SUB@: Matahari QMF @BASE@@BASE_SUB@ daemon
 ### BEGIN INIT INFO
 # Provides:
 # Required-Start: $local_fs matahari-broker
 # Required-Stop: $local_fs matahari-broker
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: Starts and stops the @BASE@ matahari agent
-# Description: Matahari agent providing a @BASE@-related API using the AMQP protocol.
+# Short-Description: Starts and stops the @BASE@@BASE_SUB@ matahari daemon
+# Description: Matahari @BASE@@BASE_SUB@ daemon using the AMQP protocol.
 ### END INIT INFO
 
 # chkconfig: - 99 01
-# description: Matahari agent providing a @BASE@-related API using the AMQP protocol.
-# processname: matahari-@BASE@d
-# pidfile: @localstatedir@/run/matahari-@BASE@.pid
+# description: Matahari @BASE@@BASE_SUB@ daemon using the AMQP protocol.
+# processname: matahari-@BASE@@BASE_SUB@d
+# pidfile: @localstatedir@/run/matahari-@BASE@@BASE_SUB@.pid
 #
 
 # Turn off automatic systemd redirects
-# SYSTEMCTL_SKIP_REDIRECT=1
+#SYSTEMCTL_SKIP_REDIRECT=1
 
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
@@ -33,6 +33,7 @@ test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
 
 start() {
     echo -n $"Starting the $SERVICE daemon: "
+
     if [ ! -z "$MATAHARI_BROKER" ]; then
 	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS --broker $MATAHARI_BROKER"
     fi
@@ -44,11 +45,15 @@ start() {
 	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS $@BASE@_AGENT_ARGS"
     fi
 
-    if [ ! -z "$@BASE@_CONSOLE_ARGS" ]; then
-	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS $MATAHARI_CONSOLE_ARGS $@BASE@_CONSOLE_ARGS"
+    MATAHARI_ARGS="$MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS"
+    if [ -n "$MATAHARI_PORT" ]; then
+	MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
+    fi
+    if [ -n "$MATAHARI_BROKER" ]; then
+	MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
     fi
 
-    daemon $PROCESS $MATAHARI_AGENT_ARGS --daemon
+    daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$SERVICE
@@ -83,12 +88,8 @@ reload() {
 # See how we were called.
 case "$1" in
     start)
-        if
-	    ! status $PROCESS
-	then
-            $1
-	fi
-	;;
+        status $PROCESS >/dev/null || $1
+        ;;
     stop|restart|reload)
         $1
         ;;

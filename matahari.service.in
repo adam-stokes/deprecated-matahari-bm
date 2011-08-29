@@ -1,6 +1,6 @@
 [Unit]
-Description=Matahari agent providing a @BASE@-related API using the AMQP protocol.
-After=syslog.target network.target
+Description=Matahari @BASE@@BASE_SUB@ daemon using the AMQP protocol.
+After=syslog.target network.target matahari-broker.service
 Requires=syslog.target network.target
 
 [Install]
@@ -8,13 +8,11 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
-KillMode=main
 NotifyAccess=main
 SysVStartPriority=99
-GuessMainPID=forking
 
-EnvironmentFile=@sysconfdir@/sysconfig/matahari
-ExecStart=matahari-qmf-@BASE@d
+EnvironmentFile=-@sysconfdir@/sysconfig/matahari
+ExecStart=/usr/sbin/matahari-qmf-@BASE@@BASE_SUB@d $MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS
 
 # Restart options include: no, on-success, on-failure, on-abort or always
 Restart=on-failure

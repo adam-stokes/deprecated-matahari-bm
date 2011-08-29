@@ -105,7 +105,7 @@ macro(create_manpage BINARY SECTION DESC)
         add_custom_command(
 	    TARGET ${BINARY}
 	    POST_BUILD
-            COMMAND ${HELP2MAN} --output ${BINARY}.${SECTION} --no-info --section ${SECTION} --name ${DESC} ${BINARY}
+            COMMAND ${HELP2MAN} --output ${BINARY}.${SECTION} --no-info --section ${SECTION} --name ${DESC} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY}
             COMMENT "Generating ${BINARY} man page"
             VERBATIM
         )
@@ -120,6 +120,6 @@ macro(create_service_scripts BASE)
 
     if(systemd_FOUND)
         configure_file(${CMAKE_SOURCE_DIR}/matahari.service.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service)
-        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service DESTINATION ${systemdunitdir})
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service DESTINATION ${systemdunitdir})
     endif(systemd_FOUND)
 endmacro(create_service_scripts)

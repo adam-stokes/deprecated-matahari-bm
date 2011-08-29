@@ -189,7 +189,6 @@ make DESTDIR=%{buildroot} install
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
-%{__ln_s} qpidd $RPM_BUILD_ROOT/%{_sbindir}/matahari-brokerd
 
 %{__install} -d -m0770 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
 %{__install} -d -m0775 $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
@@ -409,6 +408,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with qmf}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig-console
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
+
+%if %{defined _unitdir}
+%{_unitdir}/matahari-sysconfig-console.service
+%endif
 %endif
 
 %if %{with qmf}
@@ -419,6 +422,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %{_sbindir}/matahari-brokerd
 %doc AUTHORS COPYING
+
+%if %{defined _unitdir}
+%{_unitdir}/matahari-broker.service
+%endif
 
 %else
 %exclude %{_sysconfdir}/matahari-broker.conf

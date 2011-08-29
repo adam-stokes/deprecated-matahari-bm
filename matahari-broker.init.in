@@ -35,22 +35,19 @@
 # description: Matahari Broker is an AMQP broker. It receives, stores, routes and forwards messages using the AMQP protcol.
 # processname: qpidd
 
-prog=matahari-brokerd
+prog="matahari-brokerd --pid-dir @localstatedir@/run/matahari"
+proc=qpidd
 lockfile=@localstatedir@/lock/subsys/matahari-broker
 pidfile=@localstatedir@/run/matahari-broker.pid
 
 # Turn off automatic systemd redirects
-SYSTEMCTL_SKIP_REDIRECT=1
+#SYSTEMCTL_SKIP_REDIRECT=1
 
 # Timeout for qpid-route in seconds
 TIMEOUT=5
 
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
-
-if [ -f @sysconfdir@/sysconfig/matahari-broker ] ; then
-	. @sysconfdir@/sysconfig/matahari-broker
-fi
 
 RETVAL=0
 
@@ -97,9 +94,8 @@ federate() {
 
 start() {
 	echo -n $"Starting Matahari broker daemon: "
-	install -o root -g qpidd -m 770 -d @localstatedir@/lib/matahari
 	install -o root -g qpidd -m 775 -d @localstatedir@/run/matahari
-	daemon --pidfile $pidfile --check $prog --user qpidd /usr/sbin/$prog --daemon --pid-dir @localstatedir@/run/matahari --data-dir @localstatedir@/lib/matahari $QPIDD_OPTIONS
+	daemon --pidfile $pidfile --check $proc --user qpidd /usr/sbin/$prog --daemon
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch $lockfile
@@ -107,7 +103,7 @@ start() {
 	    touch $pidfile
 	    chown qpidd.qpidd $pidfile
             [ -x /sbin/restorecon ] && /sbin/restorecon $pidfile
-	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check --pid-dir @localstatedir@/run/matahari $QPIDD_OPTIONS > $pidfile"
+	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check > $pidfile"
 	fi
 
     federate ${FEDERATED_BROKERS[@]}
@@ -117,7 +113,7 @@ start() {
 
 stop() {
 	echo -n $"Stopping Matahari broker daemon: "
-	killproc -p $pidfile $prog
+	killproc -p $pidfile $proc
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && rm -f $lockfile $pidfile
@@ -135,11 +131,14 @@ restart() {
 
 # See how we were called.
 case "$1" in
-  start|stop|restart|reload)
-	$1
+  start)
+        status -p $pidfile -l $lockfile $proc >/dev/null || $1
+        ;;
+  stop|restart|reload)
+        $1
 	;;
   status)
-	status -p $pidfile -l $lockfile $prog
+	status -p $pidfile -l $lockfile $proc
 	RETVAL=$?
 	;;
   force-reload)

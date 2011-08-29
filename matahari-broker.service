@@ -1,0 +1,19 @@
+[Unit]
+Description=Matahari Broker is an AMQP broker. It receives, stores, routes and forwards messages using the AMQP protcol.
+After=syslog.target network.target
+Requires=syslog.target network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+NotifyAccess=all
+SysVStartPriority=85
+User=qpidd
+Group=qpidd
+
+ExecStart=/usr/sbin/matahari-brokerd
+
+# Restart options include: no, on-success, on-failure, on-abort or always
+Restart=on-failure
