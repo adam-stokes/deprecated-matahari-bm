@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Matahari.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="Matahari-Adding_New_Agent">
+  <title>Adding a New Agent</title>
+
+  <section id="Matahari-Getting_Started">
+    <title>Getting Started</title>
+
+    <para>Getting Started with Matahari development</para>
+
+    <section>
+      <title>Setting up the environment</title>
+
+      <section>
+        <title>Install required packages</title>
+
+        <screen><prompt>#</prompt> <userinput>yum groupinstall "Fedora Packager" "Development Libraries" "Development Tools" "MinGW cross-compiler"</userinput></screen>
+      </section>
+
+      <section>
+        <title>Checkout source code</title>
+
+        <screen><prompt>$</prompt> <userinput>git clone git://github.com/matahari/matahari.git</userinput></screen>
+      </section>
+
+      <section>
+        <title>Verify Matahari Build</title>
+
+        <para>It's always a good idea to build and test the existing code to
+        make sure no problems crop up before attempting to develop an agent.
+        There are 2 commands provided for cross compilation.</para>
+
+        <para>Once building is complete our unittest's should run
+        automatically on the Linux platform. Before beginning the journey to
+        create an agent make sure that these core unit test never fail. <note>
+            <para>Windows builds will need their unittests run on a Windows
+            host.</para>
+          </note></para>
+
+        <section>
+          <title>Building for Linux</title>
+
+          <screen><prompt>$</prompt> <userinput>make</userinput></screen>
+        </section>
+
+        <section>
+          <title>Building for Windows</title>
+
+          <screen><prompt>$</prompt> <userinput>make windows.build</userinput></screen>
+        </section>
+      </section>
+    </section>
+  </section>
+
+  <section id="Matahari-Prepare_Agent">
+    <title>Preparing the Agent</title>
+
+    <section>
+      <title>Directory Structure</title>
+
+      <para>Below is a diagram of how the directory should look with an agent
+      named <application>test</application>. <programlisting language="Bash">matahari/
+|
+|--src/
+      |--include/
+                |--matahari/
+                          |--test.h                # agent library
+      |--lib/
+            |--test.c                              # agent library
+      |--test/
+             |--test-dbus.c                        # dbus agent
+             |--test-qmf.cpp                       # qmf agent
+             |--schema.xml                         # qmf schema definition
+             |--CMakeLists.txt                     # build instructions
+             |--org.matahariproject.Test.conf      # dbus xml configuration
+             |--org.matahariproject.Test.policy    # policykit xml configuration
+             |--org.matahariproject.Test.service   # dbus service configuration
+
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>Define the API</title>
+
+      <para>This library's routine is pretty self explanatory and it what is
+      used as our agent's api. <programlisting language="C">int 
+mh_plus(int x, int y)
+{
+    return x + y;
+}
+</programlisting> <note>
+          <para>All Matahari related public api's are prefixed with
+          <application>mh_</application></para>
+        </note></para>
+    </section>
+
+    <section>
+      <title>The schema definition</title>
+
+      <para>A schema describes the structure of management data. Each agent
+      provides a schema that describes its management model including the
+      object classes, methods, events, etc. that it provides. In the current
+      QMF distribution, the agent's schema is codified in an XML document. In
+      the near future, there will also be ways to programatically create QMF
+      schemata. <footnote>
+          <para><ulink
+          url="https://cwiki.apache.org/qpid/qpid-management-framework.html\#QpidManagementFramework-Schema">Borrowed
+          from Apache QPID Wiki</ulink></para>
+        </footnote></para>
+
+      <para>Creating a <application>schema.xml</application> file requires the
+      use of property and method attributes to describe the api.</para>
+
+      <note>
+        <para>All agents now contain their own
+        <application>schema.xml</application> file which is found within the
+        agents source level directory.</para>
+      </note>
+
+      <para><programlisting language="XML">&lt;schema package="org.matahariproject"&gt;
+    &lt;class name="Test"&gt;
+        &lt;property name="uuid" type="sstr" access="RO" desc="Host UUID" index="y" /&gt;
+        &lt;property name="hostname" type="sstr" access="RO" desc="Hostname" index="y" /&gt;
+
+        &lt;method name="plus" desc="Sum of two numbers"&gt;
+            &lt;arg name="x" dir="I" type="int32" /&gt;
+            &lt;arg name="y" dir="I" type="int32" /&gt;
+            &lt;arg name="result" dir="O" type="int32" /&gt;
+        &lt;/method&gt;
+    &lt;/class&gt;
+&lt;/schema&gt;
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>Building with CMake</title>
+
+      <para>The build tool of choice is CMake. Setting up our agent to be
+      included into the distribution should contain a
+      <application>CMakeLists.txt</application> which gives the build process
+      the necessary instructions.</para>
+
+      <para><programlisting language="CMake">cmake_minimum_required(VERSION 2.8)
+
+add_library(mtest SHARED test.c) # Create shared library libmtest from source test.c
+set_target_properties(mtest PROPERTIES SOVERSION 0.0.1) # Set the version of shared library
+target_link_libraries(mtest SOMELIB_LIBRARIES) # Linkage with some external library
+
+# Link to XML definition of your API
+set(SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/schema.xml)
+
+include(FindPkgConfig) # needed for pkg_check_modules
+
+find_package(Matahari REQUIRED) # Find matahari
+include(MatahariMacros) # You need to include this to use some macros
+
+# QMF
+
+ # Find QPid and test if QMF2 is present
+find_package(QPID REQUIRED)
+if(NOT QMF2_FOUND)
+    message(FATAL_ERROR "QPid or QMF2 not found")
+endif(NOT QMF2_FOUND)
+
+# Schema points to autogenerated QMF sources
+set(SCHEMA_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qmf/org/matahariproject/QmfPackage.cpp)
+
+# Generation of QMF sources
+generate_qmf_schemas(${SCHEMA} ${SCHEMA_SOURCES})
+
+# Create QMF agent executable
+add_executable(matahari-qmf-testd test-qmf.cpp ${SCHEMA_SOURCES})
+# Link required libraries
+target_link_libraries(matahari-qmf-testd mtest ${MATAHARI_LIBRARY} ${MATAHARI_QMF_LIBRARY} ${QPIDCOMMON_LIBRARY} ${QMF2_LIBRARY} ${QPIDTYPES_LIBRARY} ${QPIDMESSAGING_LIBRARY})
+
+# DBus
+
+# dbus-glib is required by DBus
+pkg_check_modules(dbus-glib REQUIRED dbus-glib-1)
+include_directories(${dbus-glib_INCLUDE_DIRS})
+
+# Create DBus interface XML files from schema
+generate_dbus_interface(${SCHEMA})
+
+# Create test-dbus-glue.h and test-dbus-properties.h that are used by DBus agent
+generate_dbus_headers(test ${CMAKE_CURRENT_BINARY_DIR}/org.matahariproject.Test.xml)
+
+# Search for generated files in current binary dir
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+# Create DBus agent executable
+add_executable(matahari-dbus-testd test-dbus.c test-dbus-glue.h)
+# Link required libraries
+target_link_libraries(matahari-dbus-testd mtest ${MATAHARI_LIBRARY} ${MATAHARI_DBUS_LIBRARIES} ${dbus-glib_LIBRARIES})
+
+# Install DBus conf and service files
+install(FILES org.matahariproject.Test.conf DESTINATION /etc/dbus-1/system.d)
+install(FILES org.matahariproject.Test.service DESTINATION share/dbus-1/system-services)
+</programlisting></para>
+    </section>
+  </section>
+
+  <section id="Matahari-Creating_Agent">
+    <title>Creating the Agent</title>
+
+    <para><note>
+        <para>For remote access we'll want to create a QMF agent and for our
+        local access a DBUS agent.</para>
+      </note></para>
+
+    <section>
+      <title>QMF Agent</title>
+
+      <para>Creating the QMF agent requires an agent file
+      <application>test-qmf.cpp</application>. This file should contain the
+      following code <programlisting language="C++">// Include header files with base class MatahariAgent
+#include &lt;matahari/mh_agent.h&gt;
+// Include QMF header generated from schema.xml
+#include "qmf/org/matahariproject/QmfPackage.h"
+
+// Include header to library that implements action of the agent
+extern "C" {
+#include "test.h"
+}
+
+// Class for the new agent - inherited from MatahariAgent
+class TestAgent : public MatahariAgent
+{
+private:
+    qmf::org::matahariproject::PackageDefinition _package;
+public:
+    int setup(qmf::AgentSession session);
+    gboolean invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                    gpointer user_data);
+};
+
+
+int
+main(int argc, char **argv)
+{
+    // Create and run the agent
+    TestAgent agent;
+    int rc = agent.init(argc, argv, "test");
+    if (rc == 0) {
+        agent.run();
+    }
+    return rc;
+}
+
+int
+TestAgent::setup(qmf::AgentSession session)
+{
+    _package.configure(session);
+    _instance = qmf::Data(_package.data_Test);
+
+    // Set values for the properties
+    _instance.setProperty("answer", get_answer());
+
+    _agent_session.addData(_instance);
+    return 0;
+}
+
+gboolean
+TestAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
+                  gpointer user_data)
+{
+    if(event.getType() == qmf::AGENT_METHOD) {
+        // Method handling
+        const std::string&amp; methodName(event.getMethodName());
+        if (methodName == "plus") {
+            int32_t x, y, sum;
+            // Get the input parameters
+            x = event.getArguments()["x"].asInt32();
+            y = event.getArguments()["y"].asInt32();
+            // Call method from the library
+            // (:: is here because of conflict with STL)
+            sum = ::mh_plus(x, y);
+            // Set output parameters
+            event.addReturnArgument("result", sum);
+        } else {
+            // Function is not implemented
+            session.raiseException(event, MH_NOT_IMPLEMENTED);
+            goto bail;
+        }
+    }
+    // Method call succeeded
+    session.methodSuccess(event);
+  bail:
+    return TRUE;
+}
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>DBus Agent</title>
+
+      <para>Creating the DBus agent requires a couple of resource files that
+      define DBus relevant information. These examples demonstrate policykit
+      and automatic activation of the dbus service. <programlisting
+      language="C">// Some supporting function for DBus agent
+#include &lt;matahari/mh_dbus_common.h&gt;
+
+// Include header to library that implements action of the agent
+#include "test.h"
+
+// Name of the object on DBus
+#define HOST_BUS_NAME "org.matahariproject.Test"
+// Path to the object
+#define HOST_OBJECT_PATH "/org/matahariproject/Test"
+
+// Every function in your schema must be defined here with following prototype:
+// gboolean className_methodName(Matahari *matahari, IN_argument_1,
+//                               IN_argument_2, IN_argument_n,
+//                               DBusGMethodInvocation *context);
+// Return output arguments with dbus_g_method_return(context, OUT_argument_1,
+//                                                   OUT_argument_2,
+//                                                   OUT_arguemnt_n);
+// Or return error with dbus_g_method_return_error(context, error);
+// where error is GError
+gboolean
+Test_plus(Matahari *matahari, int x, int y, DBusGMethodInvocation *context)
+{
+    dbus_g_method_return(context, plus(x, y));
+    return TRUE;
+}
+
+// Include autogenerated files AFTER declaration of functions
+#include "test-dbus-glue.h"
+#include "test-dbus-properties.h"
+
+// This function is executed when property is set to some value
+void
+matahari_set_property(GObject *object, guint property_id, const GValue *value,
+    GParamSpec *pspec)
+{
+}
+
+// This function is executed when value of some property is requested
+void
+matahari_get_property(GObject *object, guint property_id, GValue *value,
+    GParamSpec *pspec)
+{
+    switch (property_id)
+    {
+    case PROP_ANSWER:
+        g_value_set_int (value, get_answer());
+        break;
+    }
+}
+
+// This function must be present. It can be used to define types of dictionaries
+GType matahari_dict_type(int prop)
+{
+  g_printerr("Type of property %d is map of unknown types\n", prop);
+  return G_TYPE_VALUE;
+}
+
+int main(int argc, char *argv[])
+{
+    g_type_init();
+    // Run the agent
+    return run_dbus_server(HOST_BUS_NAME, HOST_OBJECT_PATH);
+}
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>DBus configuration</title>
+
+      <para>The next bit of code is DBus configuration
+      <application>org.matahariproject.Test.conf</application> which will be
+      installed to <application>/etc/dbus-1/system.d</application>
+      <programlisting language="XML">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd"&gt;
+&lt;busconfig&gt;
+  &lt;!-- Only root can own the service --&gt;
+  &lt;policy user="root"&gt;
+    &lt;allow own="org.matahariproject.Test"/&gt;
+  &lt;/policy&gt;
+
+  &lt;!-- Allow anyone to invoke methods on the interfaces --&gt;
+  &lt;policy context="default"&gt;
+    &lt;allow send_destination="org.matahariproject.Test"/&gt;
+  &lt;/policy&gt;
+&lt;/busconfig&gt;
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>Configuration of on demand activation</title>
+
+      <para>Finally, the on demand activation configuration
+      <application>org.matahariproject.Test.service</application> which is to
+      be installed in
+      <application>/usr/share/dbus-1/system-services/</application>
+      <programlisting language="INI Files">[D-BUS Service]
+Name=org.matahariproject.Test
+Exec=/usr/sbin/matahari-dbus-test
+User=root
+</programlisting></para>
+    </section>
+  </section>
+
+  <section id="chap-Matahari-Testing_Agent">
+    <title>We like quality software so please test</title>
+
+    <para>For now Cxxtest is the choice of testing platform. It's cross
+    platform and for the most part easy to get up to speed on. <important>
+        <para><application>mingw32-cxxtest</application> is needed if wanting
+        to build test cases for Windows platform. <footnote>
+            <para><ulink
+            url="https://bugzilla.redhat.com/show_bug.cgi?id=708473">mingw32-cxxtest
+            - Red Hat package review</ulink></para>
+          </footnote></para>
+      </important></para>
+
+    <section>
+      <title>Defining the Test Suite</title>
+
+      <para>Create <application>matahari/src/tests/mh_api_test.h</application>
+      and include the following. <programlisting language="C++">#ifndef __MH_API_TEST_UNITTEST_H
+#define __MH_API_TEST_UNITTEST_H
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;sstream&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+#include &lt;cstdlib&gt;
+#include &lt;cstdio&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;dirent.h&gt;
+#include &lt;cxxtest/TestSuite.h&gt;
+
+extern "C" {
+#include "matahari/test.h"
+#include &lt;glib.h&gt;
+#include "mh_test_utilities.h"
+};
+
+using namespace std;
+
+class MhApiTestSuite : public CxxTest::TestSuite
+{
+ public:
+
+    void testAddition(void)
+    {
+        TS_ASSERT((mh_plus(2,2)) == 4);
+    }
+};
+
+#endif
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>Building tests with CMake</title>
+
+      <para>CMake provides a macro for CxxTest which enables a seamless
+      integration with the build process. <programlisting language="CMake">set(CXXTEST_USE_PYTHON TRUE)
+find_package(CxxTest)
+if(CXXTEST_FOUND)
+   include_directories(${CXXTEST_INCLUDE_DIR})
+   ENABLE_TESTING()
+   CXXTEST_ADD_TEST(mh_test_unittest test_unittest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/mh_api_test.h)
+endif(CXXTEST_FOUND)
+</programlisting></para>
+    </section>
+  </section>
+</chapter>

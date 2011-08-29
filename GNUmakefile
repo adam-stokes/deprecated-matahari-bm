@@ -175,4 +175,7 @@ endif
 	@sed -i -e 's/###MATAHARI_VERSION###/$(VERSION)/' doc/Doxyfile
 	@doxygen doc/Doxyfile
 
-.PHONY: check linux.build windows.build clean doxygen tags www-doxygen coverity
+manual.html:
+	cd doc/Matahari && ./genagentschapter.py && publican build --langs=en-US --formats=html
+
+.PHONY: check linux.build windows.build clean doxygen tags www-doxygen coverity manual.html
