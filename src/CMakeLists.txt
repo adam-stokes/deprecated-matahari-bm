@@ -31,6 +31,8 @@ set(AGENT_MAN_DESC "Part of the Matahari suite of remote agents")
 set(CONSOLE_MAN_SECTION "8")
 set(CONSOLE_MAN_DESC "Console for the Matahari suite of remote agents")
 
+set(DAEMON_TYPE "AGENT")
+
 include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")

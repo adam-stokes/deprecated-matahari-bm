@@ -56,6 +56,8 @@ using namespace qpid::management;
 using namespace qpid::client;
 using namespace std;
 
+typedef qpid::types::Variant::Map OptionsMap;
+
 
 struct MatahariAgentImpl {
     GMainLoop *_mainloop;
@@ -152,28 +154,14 @@ static mh_option matahari_options[MAX_CHAR];
 static int
 map_option(int code, const char *name, const char *arg, void *userdata)
 {
-    qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
+    OptionsMap *options = (OptionsMap*)userdata;
 
     if(strcmp(name, "verbose") == 0) {
         mh_log_level++;
         mh_enable_stderr(1);
 
     } else if(strcmp(name, "broker") == 0) {
-#ifdef WIN32
         (*options)["servername"] = arg;
-#else
-        int rc;
-        struct addrinfo hints, *res;
-
-        memset(&hints, 0, sizeof(struct addrinfo));
-        hints.ai_family = AF_UNSPEC;
-        rc = getaddrinfo(arg, NULL, &hints, &res);
-        if (rc == 0) {
-            (*options)["servername"] = arg;
-        } else {
-            mh_err("Broker '%s' is not resolvable - ignoring", arg);
-        }
-#endif
 
     } else if(strcmp(name, "port") == 0) {
         (*options)["serverport"] = atoi(arg);
@@ -219,7 +207,7 @@ ssl_option(int code, const char *name, const char *arg, void *userdata)
 static int
 connection_option(int code, const char *name, const char *arg, void *userdata)
 {
-    qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
+    OptionsMap *options = (OptionsMap*)userdata;
 
     if(strcmp(name, "service") == 0) {
         (*options)["sasl-service"] = arg;
@@ -252,7 +240,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
 }
 
 qpid::messaging::Connection
-mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_options, int retry)
+mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 {
     int retries = 0;
     int backoff = 0;
@@ -326,11 +314,51 @@ mh_connect(qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_
     return NULL;
 }
 
-qpid::types::Variant::Map
-mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options)
+#ifndef WIN32
+static void
+read_environment(OptionsMap& options)
+{
+    const char *data;
+
+    data = getenv("MATAHARI_BROKER");
+    if (data && strlen(data)) {
+        options["servername"] = data;
+    }
+
+    data = getenv("MATAHARI_PORT");
+    if (data && strlen(data)) {
+        options["serverport"] = data;
+    }
+}
+
+static void
+verify_broker_option(OptionsMap& options)
+{
+    if (!options.count("servername")) {
+        return;
+    }
+
+    struct addrinfo hints, *res;
+    std::string broker = options["servername"];
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+
+    if (getaddrinfo(broker.c_str(), NULL, &hints, &res) == 0) {
+        freeaddrinfo(res);
+    } else {
+        OptionsMap::iterator iter = options.find("servername");
+        options.erase(iter);
+        mh_err("Broker '%s' is not resolvable - ignoring", broker.c_str());
+    }
+}
+#endif
+
+OptionsMap
+mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &options)
 {
     std::stringstream url;
-    qpid::types::Variant::Map amqp_options;
+    OptionsMap amqp_options;
 
     int lpc = 0;
 
@@ -409,6 +437,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         }
     }
 
+    read_environment(options);
+
     while ((arg = getopt_long(argc, argv, opt_string, long_opts, &idx)) != -1) {
         if(arg == 'h') {
             print_help('h', NULL, NULL, (void*)proc_name);
@@ -425,6 +455,10 @@ mh_parse_options(const char *proc_name, int argc, char **argv, qpid::types::Vari
         }
     }
     free(long_opts);
+
+    if (!options.count("dns-srv")) {
+        verify_broker_option(options);
+    }
 #endif
 
 #ifdef MH_SSL
@@ -491,7 +525,7 @@ qmf::AgentSession& MatahariAgent::getSession(void)
 int
 MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {
-    qpid::types::Variant::Map options;
+    OptionsMap options;
     int res = 0;
     std::stringstream logname;
     logname << "matahari-" << proc_name;
@@ -500,7 +534,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     mh_log_init(proc_name, mh_log_level, FALSE);
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, mh_should_daemonize);
 
-    qpid::types::Variant::Map amqp_options = mh_parse_options(proc_name, argc, argv, options);
+    OptionsMap amqp_options = mh_parse_options(proc_name, argc, argv, options);
 
 
     /* Re-initialize logging now that we've completed option processing */

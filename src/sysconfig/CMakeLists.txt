@@ -18,12 +18,10 @@ if(WITH-QMF)
     create_manpage(${QMF_AGENT} ${AGENT_MAN_SECTION} ${AGENT_MAN_DESC})
     create_service_scripts(${BASE})
 
-    if(NOT WIN32)
-    	set(BASE_SUB "-console")
-    	configure_file(${CMAKE_SOURCE_DIR}/matahari.init.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}${BASE_SUB})
-    	install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}${BASE_SUB} DESTINATION ${initdir})
-    endif(NOT WIN32)
-    
+    set(BASE_SUB "-console")
+    set(DAEMON_TYPE "CONSOLE")
+    create_service_scripts(${BASE}${BASE_SUB})
+
     install(TARGETS ${QMF_AGENT} DESTINATION sbin)
     install(TARGETS ${QMF_CONSOLE} DESTINATION sbin)
 endif(WITH-QMF)

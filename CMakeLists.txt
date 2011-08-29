@@ -109,6 +109,9 @@ else(WIN32)
 
   set (CPACK_GENERATOR "TGZ")
 
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-brokerd.in
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-brokerd)
+
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari.init.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari.init)
 
@@ -118,6 +121,13 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.sysconf.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
 
+  install(DIRECTORY DESTINATION ${localstatedir}/lib/matahari
+          DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                                GROUP_READ GROUP_WRITE GROUP_EXECUTE)
+  install(CODE "execute_process(COMMAND chown root:qpidd ${localstatedir}/lib/matahari)")
+
+  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-brokerd DESTINATION sbin)
+
   install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker DESTINATION ${initdir})
 
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf DESTINATION ${sysconfdir}/sysconfig RENAME matahari)
@@ -126,6 +136,14 @@ else(WIN32)
 
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION ${sysconfdir})
 
+  # Check for systemd
+  include(FindPkgConfig)
+  pkg_check_modules(systemd systemd)
+
+  if(systemd_FOUND)
+    set(systemdunitdir "/lib/systemd/system")
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.service DESTINATION ${systemdunitdir})
+  endif(systemd_FOUND)
 endif(WIN32)
 
 INCLUDE(InstallRequiredSystemLibraries)
