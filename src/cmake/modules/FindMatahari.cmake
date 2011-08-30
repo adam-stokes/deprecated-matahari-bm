@@ -1,5 +1,5 @@
 
-find_path(MATAHARI_INCLUDE_DIR mh_agent.h
+find_path(MATAHARI_INCLUDE_DIR agent.h
     HINTS
     $ENV{MATAHARI_DIR}
     PATH_SUFFIXES include/matahari include
