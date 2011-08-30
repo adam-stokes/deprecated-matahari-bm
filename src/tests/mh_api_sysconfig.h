@@ -28,12 +28,14 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
         const char *uri = "http://matahariproject.org/atom.xml"; // Test if download succeeds
         const char flags = 0;
         const char key[] = "org.matahariproject.test.unittest"; // Unimportant key defined
+        const char run_string[] = "file { \"/etc/sudoers\":\n    owner => root, group => root, mode => 440\n}";
 
         mh_sysconfig_keys_dir_set("/tmp/");
 
         TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == TRUE);
         TS_ASSERT((mh_sysconfig_is_configured(key)) != NULL);
         TS_ASSERT((mh_sysconfig_run_uri(uri, flags, "puppet", key)) != -1);
+        TS_ASSERT((mh_sysconfig_run_string(run_string, flags, "puppet", key)) != -1);
     }
 };
 

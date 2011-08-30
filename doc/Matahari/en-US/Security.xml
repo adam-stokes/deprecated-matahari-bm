@@ -202,6 +202,13 @@ sudo -u qpidd certutil -S -d /path/to/test_cert_db -n agent -s "CN=agent" -t "CT
             </programlisting>
           </section>
           <section>
+            <title>Define Matahari's global port for use with SSL</title>
+            <programlisting language="INI Files">
+# Connect to a broker on a non-standard port
+MATAHARI_PORT=49001
+            </programlisting>
+          </section>
+          <section>
             <title>Configure Matahari broker to use SSL</title>
             <para>
               Edit <application>/etc/matahari-broker.conf</application> and append the
