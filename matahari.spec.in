@@ -99,6 +99,7 @@ Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	qpid-cpp-client-ssl > 0.7
 Requires(pre):	shadow-utils
+Requires:       kstart
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
@@ -141,7 +142,7 @@ Summary:	QMF agent for post boot configuration services.
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:   puppet >= 2.6.6
+Requires:       puppet >= 2.6.6
 
 %description sysconfig
 QMF agent/console for providing post boot capabilities.
