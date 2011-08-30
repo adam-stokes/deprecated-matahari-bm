@@ -259,7 +259,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
         if (mh_options.count("servername")) {
             fqdn << "_matahari._tcp." << mh_options["servername"];
         } else {
-            fqdn << "_matahari._tcp." << mh_domainname();
+            fqdn << "_matahari._tcp." << mh_dnsdomainname();
         }
 
         target = mh_dnssrv_lookup(fqdn.str().c_str());

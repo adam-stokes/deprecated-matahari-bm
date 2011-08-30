@@ -369,6 +369,18 @@ mh_domainname(void)
 }
 
 const char *
+mh_dnsdomainname(void)
+{
+    char *res;
+
+    res = mh_os_dnsdomainname();
+
+    mh_trace("Got dnsdomainname: '%s'", res);
+
+    return res;
+}
+
+const char *
 mh_hostname(void)
 {
     static char *hostname = NULL;
