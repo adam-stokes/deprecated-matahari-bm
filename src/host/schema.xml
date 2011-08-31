@@ -2,7 +2,6 @@
 
  <eventArguments>
 
-   <!-- Common -->
    <arg name="timestamp" type="absTime" />
    <arg name="sequence"  type="uint32" />
    <arg name="hostname"  type="sstr"/>
@@ -10,9 +9,7 @@
 
  </eventArguments>
 
-<!-- Host API -->
  <class name="Host">
-   <!-- Properties -->
    <property name="hostname"         type="sstr"   access="RO" desc="Hostname" index="y" />
    <property name="uuid"             type="sstr"   access="RO" desc="Filesystem Host UUID" index="y" />
    <property name="custom_uuid"      type="sstr"   access="RO" desc="Custom Host UUID" index="y" />
@@ -31,7 +28,6 @@
 
    <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
 
-   <!-- Statistics -->
    <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
    <statistic name="sequence"        type="uint32"  desc="The heartbeat sequence number." />
 
@@ -44,23 +40,51 @@
    <method name="identify"  desc="Tell the host to beep its pc speaker." />
    <method name="shutdown"  desc="Shutdown node" />
    <method name="reboot"    desc="Reboot node" />
+
    <!--
-     Valid UUID lifetimes:
-        Filesystem - Automatically configured by the system during installation and never reset.
-                     May be pre-populated.
-        Hardware   - UUID supplied by or generated from the underlying hardware
-        Reboot     - Automatically (re)configured by the system whenever it boots
-        Agent      - Automatically (re)configured by the agent whenever it starts
-        Custom     - Manually configured by the admin/user. 
-                     May be pre-populated.
+     <variablelist><title>Valid UUID lifetimes:</title>
+
+        <varlistentry><term><literal>Filesystem</literal></term>
+          <listitem><para>
+            Automatically configured by the system during
+            installation and never reset.  May be pre-populated.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry><term><literal>Hardware</literal></term>
+          <listitem><para>
+            UUID supplied by or generated from the underlying hardware
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry><term><literal>Reboot</literal></term>
+          <listitem><para>
+            Automatically (re)configured by the system whenever it boots
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry><term><literal>Agent</literal></term>
+          <listitem><para>
+            Automatically (re)configured by the agent whenever it starts
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry><term><literal>Custom</literal></term>
+          <listitem><para>
+            Manually configured by the admin/user.  May be pre-populated.
+          </para></listitem>
+        </varlistentry>
+
+     </variablelist>
    -->
    <method name="get_uuid"  desc="Obtain a UUID with the specified lifetime from the machine" >
      <arg name="lifetime"   dir="I"  type="sstr" />
      <arg name="uuid"       dir="O"  type="sstr" />
-   </method>
+ </method>
+
    <!--
-     The only valid lifetime for 'set_uuid' is 'Custom'
-     Later implementations may support re-generating the 'Hardware' uuid
+     <para>The only valid lifetime for <literal>set_uuid</literal> is <literal>Custom</literal>.
+     Later implementations may support re-generating the 'Hardware' uuid.</para>
    -->
    <method name="set_uuid"  desc="Set a UUID with the specified lifetime" >
      <arg name="lifetime"   dir="I"  type="sstr" />

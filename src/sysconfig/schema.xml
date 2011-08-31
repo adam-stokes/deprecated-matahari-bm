@@ -4,13 +4,14 @@
     <class name="Sysconfig">
         <property name="uuid"                   type="sstr" access="RO" desc="Host UUID" />
         <property name="hostname"               type="sstr" access="RO" desc="Hostname" index="y"/>
+
         <!--
-        It is useful to have some information in a property since you can
+        <para>It is useful to have some information in a property since you can
         filter on properties.  This property is intended to be used as a
         flag to know whether or not initial configuration of a host has
         been done or not.  It is not automatically set.  Once the
         configuring entity has completed its tasks, it should set this
-        property itself.
+        property itself.</para>
          -->
         <property name="is_postboot_configured" type="uint32" access="RW" desc="Set if agent is configured." />
 
