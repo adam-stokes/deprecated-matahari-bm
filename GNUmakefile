@@ -19,7 +19,7 @@
 -include Makefile
 
 PACKAGE		?= matahari
-VERSION		?= 0.4.0
+VERSION		?= 0.4.3
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html

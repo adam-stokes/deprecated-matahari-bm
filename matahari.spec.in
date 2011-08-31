@@ -15,7 +15,7 @@
 %endif
 
 Name:		matahari
-Version:	0.4.2
+Version:	0.4.3
 Release:	%{mh_release}%{?dist}
 Summary:	Matahari QMF Agents for Linux guests
 
