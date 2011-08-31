@@ -85,6 +85,7 @@ sysconfig_os_run_puppet(const char *uri, const char *data, const char *key)
         }
         fclose(fp);
     } else if (data != NULL) {
+        mh_info("Puppet string to process: %s", data);
         snprintf(filename, sizeof(filename), "%s", "puppet_conf_blob");
         g_file_set_contents(filename, data, strlen(data), NULL);
     } else {

@@ -26,9 +26,9 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
     void testIsConfigured(void)
     {
         const char *uri = "http://matahariproject.org/atom.xml"; // Test if download succeeds
-        const char flags = MH_SYSCONFIG_FLAG_FORCE;
+        const char flags = 1;
         const char key[] = "org.matahariproject.test.unittest"; // Unimportant key defined
-        const char run_string[] = "file { \"/etc/sudoers\":\n    owner => root, group => root, mode => 440\n}";
+        const char run_string[] = "file { \"/tmp/zetest\":\n    owner => root, group => root, mode => 440\n}";
 
         mh_sysconfig_keys_dir_set("/tmp/");
 
