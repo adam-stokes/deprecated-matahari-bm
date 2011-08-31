@@ -18,6 +18,7 @@ Be sure to change them all.
    - GNUmakefile
    - autobuild.sh
    - matahari.spec.in
+   - CMakeLists.txt
 If you have already done this, hit enter to continue.  If you haven't,
 hit control-c and go do it.
 
