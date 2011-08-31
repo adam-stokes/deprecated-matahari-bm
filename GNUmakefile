@@ -19,7 +19,7 @@
 -include Makefile
 
 PACKAGE		?= matahari
-VERSION		?= 0.4.0
+VERSION		?= 0.4.3
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
@@ -45,8 +45,10 @@ linux.build:
 	mkdir -p $@
 	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 	@$(MAKE) --no-print-dir -C $@
-	@if [ -f $@/src/tests/CTestTestfile.cmake ]; then \
-		cd $@/src/tests && ctest; \
+
+tests: linux.build
+	@if [ -f linux.build/src/tests/CTestTestfile.cmake ]; then \
+		cd linux.build/src/tests && ctest; \
 	fi
 
 windows.build:

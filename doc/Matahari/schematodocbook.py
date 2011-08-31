@@ -21,17 +21,11 @@ class Schema(object):
         f.write("<section>\n")
         f.write("  <title>Schema: <literal>%s</literal></title>\n" % self.package)
         if len(self.events):
-            f.write("  <section>\n")
-            f.write("    <title>Events</title>\n")
             for e in self.events:
                 e.write_docbook(f)
-            f.write("  </section>\n")
         if len(self.classes):
-            f.write("  <section>\n")
-            f.write("    <title>Classes</title>\n")
             for c in self.classes:
                 c.write_docbook(f)
-            f.write("  </section>\n")
         f.write("</section>\n")
 
 
@@ -91,13 +85,14 @@ class Class(object):
             f.write("      <table>\n")
             f.write("        <title>Properties for Class: <literal>%s</literal></title>\n"
                     % self.name)
-            f.write("        <tgroup cols=\"4\">\n")
+            f.write("        <tgroup cols=\"5\">\n")
             f.write("          <thead>\n")
             f.write("            <row>\n")
             f.write("              <entry>Name</entry>\n")
             f.write("              <entry>Type</entry>\n")
             f.write("              <entry>Access</entry>\n")
             f.write("              <entry>Description</entry>\n")
+            f.write("              <entry>Comments</entry>\n")
             f.write("            </row>\n")
             f.write("          </thead>\n")
             f.write("          <tbody>\n")
@@ -138,18 +133,23 @@ class Class(object):
 
 
 class Property(object):
-    def __init__(self, name, type, access, desc):
+    def __init__(self, name, type, access, desc, more_info):
         self.name = name
         self.type = type
         self.access = access
         self.desc = desc
+        self.more_info = more_info
 
     def write_docbook(self, f):
         f.write("            <row>\n")
         f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.name)
         f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.type)
         f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.access)
-        f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.desc)
+        f.write("              <entry><para>%s</para></entry>\n" % self.desc)
+        if self.more_info:
+            f.write("              <entry>%s</entry>\n" % self.more_info)
+        else:
+            f.write("              <entry><para></para></entry>\n")
         f.write("            </row>\n")
 
 
@@ -165,7 +165,7 @@ class Statistic(object):
         f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.name)
         f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.type)
         f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.unit)
-        f.write("              <entry><para><literal>%s</literal></para></entry>\n" % self.desc)
+        f.write("              <entry><para>%s</para></entry>\n" % self.desc)
         f.write("            </row>\n")
 
 
@@ -181,8 +181,7 @@ class Method(object):
         f.write("        <title>Method: <literal>%s</literal></title>\n" % self.name)
         f.write("        <para>%s</para>\n" % self.desc)
         if self.more_info:
-            f.write("        <para>Additional Information:</para>\n")
-            f.write("        <programlisting><![CDATA[%s]]></programlisting>\n" % self.more_info)
+            f.write("%s\n" % self.more_info)
         if len(self.args):
             f.write("        <table>\n")
             f.write("          <title>Arguments for Method: <literal>%s</literal></title>\n"
@@ -261,7 +260,8 @@ class SchemaCallbacks(object):
             self.cur_class.methods.append(self.cur_method)
         elif tag == "property":
             self.cur_class.properties.append(Property(attrs["name"],
-                                attrs["type"], attrs["access"], attrs["desc"]))
+                                attrs["type"], attrs["access"], attrs["desc"],
+                                self.last_comment))
         elif tag == "statistic":
             stat = Statistic(attrs["name"], attrs["type"], attrs["desc"])
             self.cur_class.statistics.append(stat)

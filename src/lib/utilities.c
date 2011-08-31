@@ -30,6 +30,7 @@
 
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
+#include "utilities_private.h"
 
 MH_TRACE_INIT_DATA(mh_core);
 int mh_log_level = LOG_NOTICE;
@@ -366,6 +367,18 @@ mh_domainname(void)
 
     mh_trace("Got domainname: %s", domainname);
     return domainname;
+}
+
+const char *
+mh_dnsdomainname(void)
+{
+    const char *res;
+
+    res = mh_os_dnsdomainname();
+
+    mh_trace("Got dnsdomainname: '%s'", res);
+
+    return res;
 }
 
 const char *

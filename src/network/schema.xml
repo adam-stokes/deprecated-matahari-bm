@@ -1,6 +1,5 @@
 <schema package="org.matahariproject">
 
- <!-- Network API -->
   <class name="Network">
    <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" />
    <property name="hostname"         type="sstr"  access="RO" desc="Hostname" index="y" />
