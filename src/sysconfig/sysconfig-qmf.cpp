@@ -95,7 +95,7 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
         event.addReturnArgument("status", status ? status : "unknown");
     } else if (methodName == "run_string") {
-        mh_sysconfig_run_string(args["data"].asString().c_str(),
+        mh_sysconfig_run_string(args["text"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
             args["key"].asString().c_str());
