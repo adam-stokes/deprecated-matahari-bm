@@ -7,18 +7,24 @@
 <chapter id="Matahari-Security">
   <title>Security</title>
 
+  <para>As with any system that involves remote access to systems, security
+  considerations are critical. Security with Matahari in particular is
+  especially critical given that the APIs provide system administration
+  capabilities. This chapter covers various aspects of security as they relate
+  to Matahari.</para>
+
   <section id="Matahari-Kerberos_setup">
     <title>Kerberos</title>
 
-    <para>Configuring Kerberos for use with Matahari</para>
-          <note>
-            <para>
-              Configuring a Kerberos server is beyond the scope of this document. However,
-              documentation exist at <ulink url="https://github.com/matahari/matahari/wiki/Kerberos-Setup">Kerberos Wiki</ulink>
-              which does have those steps outlined.
-            </para>
-          </note>
+    <para>This section covers how to configure Matahari to use Kerberos
+    authentication.</para>
 
+    <note>
+      <para>Configuring a Kerberos server is beyond the scope of this
+      document. However, documentation exists at the <ulink
+      url="https://github.com/matahari/matahari/wiki/Kerberos-Setup">Kerberos
+      Wiki</ulink> which does have those steps outlined.</para>
+    </note>
 
     <section>
       <title>Setting up Matahari broker</title>
@@ -26,12 +32,10 @@
       <section>
         <title>Update configuration items</title>
 
-        <para>
-          First, edit <application>/etc/matahari-broker.conf</application> and verify that 
-          the realm is defined and auth is set to <application>yes</application>.
-
-          <programlisting language="INI Files">
-#
+        <para>First, edit
+        <application><filename>/etc/matahari-broker.conf</filename></application>
+        and verify that the realm is defined and auth is set to
+        <application><literal>yes</literal></application>. <programlisting>#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -55,185 +59,172 @@
 # (Note: no spaces on either side of '='). Using default settings:
 # "qpidd --help" or "man qpidd" for more details.
 cluster-mechanism=ANONYMOUS
-auth=yes
+auth=<replaceable>yes</replaceable>
 realm=HAMMER
-
-          </programlisting>
-
-        </para>
+</programlisting></para>
       </section>
+
       <section>
         <title>Start the broker</title>
-        <para><programlisting language="Bash">
-[root@thors ~]# service matahari-broker start
-Starting Matahari broker daemon:                           [  OK  ]
-        </programlisting></para>
+
+        <screen><prompt>#</prompt> <userinput>service matahari-broker start</userinput>
+Starting Matahari broker daemon:                           [  OK  ]</screen>
       </section>
     </section>
+
     <section>
       <title>Configuring Matahari Agent</title>
-        <section>
-          <title>Obtain kerberos ticket</title>
-          <para>
-            <programlisting language="Bash">
-[root@thors ~]# kinit root
-Password for root@HAMMER:
-            </programlisting>
-          </para>
-        </section>
-        <section>
-          <title>Verify we have a ticket</title>
-          <programlisting language="Bash">
+
+      <section>
+        <title>Obtain kerberos ticket</title>
+
+        <screen><prompt>#</prompt> <userinput>kinit root</userinput>
+Password for root@HAMMER:</screen>
+      </section>
+
+      <section>
+        <title>Verify we have a ticket</title>
+
+        <screen><prompt>#</prompt> <userinput>klist</userinput>
 Ticket cache: FILE:/tmp/krb5cc_500
 Default principal: root@HAMMER
 
 Valid starting     Expires            Service principal
-08/25/11 10:29:41  08/25/11 17:09:38  krbtgt/HAMMER@HAMMER
-          </programlisting>
-          <para>
-            For long running agents we want to make sure our agents have a 
-            renewable kerberos ticket so that re-autenctication is not necessary. 
-            A required application is needed for this process called <application>k5start</application>. 
-            The administrator of the agent would need to make sure this is 
-            running if they wish to refresh kerberos ticket's without any further interaction.
-          </para>
+08/25/11 10:29:41  08/25/11 17:09:38  krbtgt/HAMMER@HAMMER</screen>
 
-          <para>
-            <programlisting language="Bash">
-[root@thors ~]# k5start -f /etc/krb5.keytab -K 10 -l 10h qpidd/HAMMER
-            </programlisting>
+        <para>For long running agents we want to make sure our agents have a
+        renewable kerberos ticket so that re-autenctication is not necessary.
+        An application is needed for this called
+        <application><command>k5start</command></application>. The
+        administrator of the agent needs to make sure this is running if they
+        wish to refresh kerberos tickets without any further
+        interaction.</para>
 
-            What this command is doing is setting a lifetime of 10 hours and 
-            to periodically check the expiration of the ticket every 10 minutes. 
-            Further information/examples can be found in k5start's man page.
-            <note>
-              <para>
-                Windows does not have anything similar to <application>k5start</application>.
-            A windows service would most likely need to be created in order to re-initialize the
-            credentials using <application>kinit</application>.
-              </para>
-            </note>
-          </para>
-        </section>
-        <section>
-          <title>Update /etc/sysconfig/matahari</title>
-            <programlisting language="Bash">
-[root@thors ~]# cat /etc/sysconfig/matahari
+        <screen><prompt>#</prompt> <userinput>k5start -f /etc/krb5.keytab -K 10 -l 10h qpidd/HAMMER</userinput></screen>
+
+        <para>What this command is doing is setting a lifetime of 10 hours and
+        periodically checking the expiration of the ticket every 10 minutes.
+        Further information or examples can be found in the
+        <command>k5start</command> man page. <note>
+            <para>Windows does not have anything similar to
+            <application><command>k5start</command></application>. A windows
+            service would most likely need to be created in order to
+            re-initialize the credentials using
+            <application><command>kinit</command></application>.</para>
+          </note></para>
+      </section>
+
+      <section>
+        <title>Update <filename>/etc/sysconfig/matahari</filename></title>
+
+        <programlisting># cat /etc/sysconfig/matahari
 # SPECIFY REALM (-s) KRB-USER (-u) FORCE GSSAPI (-g)
 MATAHARI_AGENT_ARGS="-s qpidd -u root/admin -g"
 MATAHARI_BROKER=127.0.0.1
-MATAHARI_PORT=49000
-            </programlisting>
-        </section>
-        <section>
-          <title>Start agent</title>
-            <programlisting language="Bash">
-[root@thors ~]# service matahari-net start
-Starting matahari-net daemon:                              [  OK  ]
-[root@thors ~]# ps -ef |grep qpidd
-root     15483     1  0 09:15 ?        00:00:00 matahari-netd --broker 127.0.0.1 --port 49000 -s qpidd -g -u root/admin@HAMMER --daemon
-            </programlisting>
-        </section>
-    </section>
-        <section>
-          <title>Troubleshooting</title>
-          <section>
-            <title>Debugging</title>
-            <para>
-              Any authentication issues here should be identifiable if the 
-              broker and agents are run in the foreground.
-              <programlisting language="Bash">
-# QPID_TRACE=1 qpidd --auth yes --realm HAMMER -p 49000 
-# matahari-netd -s qpidd -p 49000 -b thors.hammer -g -u root/admin
-              </programlisting>
-            </para>
-          </section>
-          <section>
-            <title>Common Issues</title>
-            <para>
-              If unable to lookup sasl username make sure you've added the 
-              qpidd host principal to the kerberos keytab. Also make sure 
-              <application>/etc/hosts</application> has the correct entry 
-              for the kerberos lookup to work properly.  
-              <itemizedlist>
-                <listitem>
-                  <para>
-                    Attempting to connect with qpid-tool as your kerberos user fails with something like
-                    <programlisting language="Bash">
-2011-02-11 10:54:35 error Execution exception: unauthorized-access: authorised user id : anonymous@HACKSAW but user id in message declared as stokes (qpid/broker/SemanticState.cpp:473)
-                  </programlisting>
-                  The error comes from the client sending a message with a userid other 
-                  than that it has authenticated as.
-                 </para>
-                </listitem>
-              </itemizedlist>
-            </para>
-          </section>
-          <section>
-            <title>Included QPID Examples</title>
-            <para>
-              It is also possible to test with one of the provided examples from qpid-cpp-client-devel: 
-              <programlisting language="Bash">
-$ cd /usr/share/qpidc/examples/messaging
-$ c++ -o hello_world hello_world.cpp -lqpidclient -lqpidcommon -lqpidmessaging
-$ ./hello_world localhost:49000 amq.topic '{sasl-mechanism:GSSAPI,sasl-service:qpidd}'
-              </programlisting>
-              Which should return "Hello World" 
-            </para>
-          </section>
-        </section>
+MATAHARI_PORT=49000</programlisting>
       </section>
+
       <section>
-          <title>SSL</title>
-          <section>
-            <title>Install necessary packages</title>
-            <programlisting language="Bash">
-[root@box ~]# yum install qpid-cpp-client-ssl qpid-cpp-server-ssl nss nspr nss-tools
-            </programlisting>
-          </section>
-          <section>
-            <title>Create SSL Certificates</title>
-            <programlisting language="Bash">
-sudo -u qpidd mkdir /path/to/test_cert_db
-sudo -u echo password > /path/to/cert.password
-sudo -u qpidd certutil -N -d /path/to/test_cert_db -f /path/to/cert.password
-sudo -u qpidd certutil -S -d /path/to/test_cert_db -n 127.0.0.1 -s "CN=127.0.0.1" -t "CT,," -x -f /path/to/cert.password -z /usr/bin/certutil
-sudo -u qpidd certutil -S -d /path/to/test_cert_db -n agent -s "CN=agent" -t "CT,," -x -f /path/to/cert.password -z /usr/bin/certutil
-            </programlisting>
-          </section>
-          <section>
-            <title>Configure Matahari broker to use SSL</title>
-            <para>
-              Edit <application>/etc/matahari-broker.conf</application> and append the
-              following options
-              <programlisting language="INI Files">
-auth=no
+        <title>Start agent</title>
+
+        <screen><prompt>#</prompt> <userinput>service matahari-net start</userinput>
+Starting matahari-net daemon:                              [  OK  ]
+<prompt>#</prompt> <userinput>ps -ef |grep qpidd</userinput>
+root     15483     1  0 09:15 ?        00:00:00 matahari-netd --broker 127.0.0.1 --port 49000 -s qpidd -g -u root/admin@HAMMER --daemon</screen>
+      </section>
+    </section>
+
+    <section>
+      <title>Troubleshooting</title>
+
+      <section>
+        <title>Debugging</title>
+
+        <para>Any authentication issues here should be identifiable if the
+        broker and agents are run in the foreground. </para>
+
+        <screen><prompt>#</prompt> <userinput>QPID_TRACE=1 qpidd --auth yes --realm HAMMER -p 49000</userinput>
+<prompt>#</prompt> <userinput>matahari-netd -s qpidd -p 49000 -b thors.hammer -g -u root/admin</userinput></screen>
+      </section>
+
+      <section>
+        <title>Common Issues</title>
+
+        <para>If unable to lookup sasl username make sure you've added the
+        qpidd host principal to the kerberos keytab. Also make sure
+        <filename><application>/etc/hosts</application></filename> has the
+        correct entry for the kerberos lookup to work properly. <itemizedlist>
+            <listitem>
+              <para>Attempting to connect with <command>qpid-tool</command> as
+                  your kerberos user fails with something like <programlisting>
+              2011-02-11 10:54:35 error Execution exception: unauthorized-access: authorised user id : anonymous@HACKSAW but user id in message declared as stokes (qpid/broker/SemanticState.cpp:473)</programlisting>The
+              error comes from the client sending a message with a userid
+              other than that it has authenticated as.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Included QPID Examples</title>
+
+        <para>It is also possible to test with one of the provided examples
+        from the <literal>qpid-cpp-client-devel</literal> package: Which
+        should return "Hello World"</para>
+
+        <screen><prompt>$</prompt> <userinput>cd /usr/share/qpidc/examples/messaging</userinput>
+<prompt>$</prompt> <userinput>c++ -o hello_world hello_world.cpp -lqpidclient -lqpidcommon -lqpidmessaging</userinput>
+<prompt>$</prompt> <userinput>./hello_world localhost:49000 amq.topic '{sasl-mechanism:GSSAPI,sasl-service:qpidd}'</userinput></screen>
+
+        <para>which should return "<literal>Hello World</literal>".</para>
+      </section>
+    </section>
+  </section>
+
+  <section>
+    <title>SSL</title>
+
+    <section>
+      <title>Install necessary packages</title>
+
+      <screen><prompt>#</prompt> <userinput>yum install qpid-cpp-client-ssl qpid-cpp-server-ssl nss nspr nss-tools</userinput></screen>
+    </section>
+
+    <section>
+      <title>Create SSL Certificates</title>
+
+      <screen><prompt>$</prompt> <userinput>sudo -u qpidd mkdir /path/to/test_cert_db</userinput>
+<prompt>$</prompt> <userinput>sudo -u echo password &gt; /path/to/cert.password</userinput>
+<prompt>$</prompt> <userinput>sudo -u qpidd certutil -N -d /path/to/test_cert_db -f /path/to/cert.password</userinput>
+<prompt>$</prompt><userinput> sudo -u qpidd certutil -S -d /path/to/test_cert_db -n 127.0.0.1 -s "CN=127.0.0.1" -t "CT,," -x -f /path/to/cert.password -z /usr/bin/certutil</userinput>
+<prompt>$</prompt> <userinput>sudo -u qpidd certutil -S -d /path/to/test_cert_db -n agent -s "CN=agent" -t "CT,," -x -f /path/to/cert.password -z /usr/bin/certutil</userinput></screen>
+    </section>
+
+    <section>
+      <title>Configure Matahari broker to use SSL</title>
+
+      <para>Edit
+      <filename><application>/etc/matahari-broker.conf</application></filename>
+      and append the following options:<programlisting>auth=no
 ssl-cert-db=/path/to/test_cert_db
 ssl-cert-name=127.0.0.1
 ssl-cert-password-file=/path/to/cert.password
-ssl-port=49001
-              </programlisting>
-            </para>
-          </section>
-          <section>
-            <title>Configure Matahari agents to use SSL</title>
-            <para>
-              At the time of this writing we need to add in some options 
-              to give us the ability to set the protocol and ssl options. 
-              In the meantime for testing we can do the following
-              <programlisting language="Bash">
-export QPID_SSL_CERT_DB=/path/to/test_cert_db/
-export QPID_SSL_CERT_PASSWORD_FILE=/path/to/cert.password
-export QPID_SSL_CERT_NAME=agent
-              </programlisting>
-              <note>
-                <para>
-                  A feature request is made to allow us to define where to look 
-                  for the qpid client config file. 
-                  <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=703563">Bugzilla Request</ulink>
-                </para>
-              </note>
-            </para>
-          </section>
+ssl-port=49001</programlisting></para>
     </section>
+
+    <section>
+      <title>Configure Matahari agents to use SSL</title>
+
+      <para>At the time of this writing we need to add in some options to give
+      us the ability to set the protocol and ssl options. In the meantime for
+      testing we can do the following <screen><prompt>#</prompt> <userinput>export QPID_SSL_CERT_DB=/path/to/test_cert_db/</userinput>
+<prompt>#</prompt> <userinput>export QPID_SSL_CERT_PASSWORD_FILE=/path/to/cert.password</userinput>
+<prompt>#</prompt> <userinput>export QPID_SSL_CERT_NAME=agent</userinput></screen>
+      <note>
+          <para>A feature request is made to allow us to define where to look
+          for the qpid client config file. <ulink
+          url="https://bugzilla.redhat.com/show_bug.cgi?id=703563">Bugzilla
+          Request</ulink></para>
+        </note></para>
+    </section>
+  </section>
 </chapter>
