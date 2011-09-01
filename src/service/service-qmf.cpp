@@ -305,7 +305,12 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
             args["name"].asString().c_str(), methodName.c_str(), 0,
             default_timeout_ms);
 
-        action_async(SRV_SERVICES, session, event, op, true);
+        if (!op) {
+            session.raiseException(event, MH_INVALID_ARGS);
+        } else {
+            action_async(SRV_SERVICES, session, event, op, true);
+        }
+
         return TRUE;
 
     } else if (methodName == "start"
@@ -314,7 +319,12 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
         svc_action_t *op = services_action_create(
                 args["name"].asString().c_str(), methodName.c_str(), 0, args["timeout"].asInt32());
 
-        action_async(SRV_SERVICES, session, event, op, true);
+        if (!op) {
+            session.raiseException(event, MH_INVALID_ARGS);
+        } else {
+            action_async(SRV_SERVICES, session, event, op, true);
+        }
+
         return TRUE;
 
     } else {
@@ -431,6 +441,11 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
             standard.c_str(), provider.c_str(), agent.c_str(),
             args["action"].asString().c_str(),
             interval, timeout, params);
+
+        if (!op) {
+            session.raiseException(event, MH_INVALID_ARGS);
+            return TRUE;
+        }
 
         if(args.count("expected-rc") == 1) {
             op->expected_rc = args["expected-rc"].asInt32();
