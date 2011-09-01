@@ -16,7 +16,7 @@
     <xsl:variable name="package">
         <xsl:value-of select="schema/@package" />
     </xsl:variable>
-    <xsl:variable name="filename" select="concat($package, '.', schema/class/@name,'.xml')" />
+    <xsl:variable name="filename" select="concat($package, '.xml')" />
     <exsl:document method="xml" indent="yes" version="1.0" encoding="utf-8" href="{$filename}">
         <node>
             <xsl:for-each select="schema/class">
