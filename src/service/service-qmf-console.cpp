@@ -49,7 +49,7 @@ call_arg(int code, const char *name, const char *arg, void *userdata)
     qpid::types::Variant::Map *options = static_cast<qpid::types::Variant::Map*>(userdata);
     mh_debug("Found call option: '%s' = '%s'", name, arg);
     if(strcmp(name, "timeout") == 0 || strcmp(name, "interval") == 0) {
-        uint32_t number = 1000 * atoi(arg);
+        uint32_t number = atoi(arg);
         (*options)[name] = number;
     } else {
         (*options)[name] = arg;
@@ -107,8 +107,8 @@ int main(int argc, char** argv)
     mh_add_option('A', required_argument, "agent", "(Resources API only)", &options, call_arg);
 
     mh_add_option('a', required_argument, "action", "Action to perform", &options, call_arg);
-    mh_add_option('i', required_argument, "interval", "(Resources API only)", &options, call_arg);
-    mh_add_option('t', required_argument, "timeout", "Time to wait, in seconds, for the action to complete", &options, call_arg);
+    mh_add_option('i', required_argument, "interval", "(Resources API only) Time, in milliseconds, in between recurring executions of this action.", &options, call_arg);
+    mh_add_option('t', required_argument, "timeout", "Time to wait, in milliseconds, for the action to complete", &options, call_arg);
 
     mh_add_option('o', required_argument, "option", "Option to pass to the resource script (Resources API only)", &agent_options, agent_arg);
 
