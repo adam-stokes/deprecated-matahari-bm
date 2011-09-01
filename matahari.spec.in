@@ -421,7 +421,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-broker
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
-%{_sbindir}/matahari-brokerd
+%attr(755, root, root) %{_sbindir}/matahari-brokerd
 %doc AUTHORS COPYING
 
 %if %{defined _unitdir}

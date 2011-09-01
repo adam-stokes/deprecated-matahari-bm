@@ -18,15 +18,13 @@ class Schema(object):
         self.classes = []
 
     def write_docbook(self, f):
-        f.write("<section>\n")
-        f.write("  <title>Schema: <literal>%s</literal></title>\n" % self.package)
+        f.write("<para>Package: <literal>%s</literal></para>\n" % self.package)
         if len(self.events):
             for e in self.events:
                 e.write_docbook(f)
         if len(self.classes):
             for c in self.classes:
                 c.write_docbook(f)
-        f.write("</section>\n")
 
 
 class Event(object):
