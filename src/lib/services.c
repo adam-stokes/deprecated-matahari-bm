@@ -49,6 +49,40 @@ svc_action_t *resources_action_create(
 {
     svc_action_t *op;
 
+    /*
+     * Do some up front sanity checks before we go off and
+     * build the svc_action_t instance.
+     */
+
+    if (mh_strlen_zero(name)) {
+        mh_err("A service or resource action must have a name.");
+        return NULL;
+    }
+
+    if (mh_strlen_zero(standard)) {
+        mh_err("A service action must have a valid standard.");
+        return NULL;
+    }
+
+    if (!strcasecmp(standard, "ocf") && mh_strlen_zero(provider)) {
+        mh_err("An OCF resource action must have a provider.");
+        return NULL;
+    }
+
+    if (mh_strlen_zero(agent)) {
+        mh_err("A service or resource action must have an agent.");
+        return NULL;
+    }
+
+    if (mh_strlen_zero(action)) {
+        mh_err("A service or resource action must specify an action.");
+        return NULL;
+    }
+
+    /*
+     * Sanity checks passed, proceed!
+     */
+
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);

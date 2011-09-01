@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
+#include <glib.h>
 
 extern const char *mh_uuid(void);
 extern const char *mh_hostname(void);
