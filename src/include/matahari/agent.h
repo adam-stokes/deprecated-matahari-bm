@@ -45,6 +45,7 @@ int required_argument = 1;
 }
 
 #define MH_NOT_IMPLEMENTED "Not implemented"
+#define MH_INVALID_ARGS "Invalid Arguments"
 
 #ifndef NS_MAXDNAME
 # define NS_MAXDNAME 1025
