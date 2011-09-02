@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Matahari.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="Matahari-Creating_your_own_Agent">
+  <title>Creating your own Agent</title>
+
+  <para>The easiest way to begin developing your own Matahari agent is to start with the example agent code. You can fork the <ulink url="http://github.com/matahari/matahari-agent-example">matahari-example-agent repository on GitHub</ulink>, or clone the repository directly:</para>
+
+  <screen><prompt>$</prompt> <userinput>git clone git://github.com/matahari/matahari-agent-example.git</userinput></screen>
+
+  <para>Full instructions for customising the example are in the <ulink url="https://github.com/matahari/matahari-agent-example/blob/master/README.md"><filename>README.md</filename> file</ulink> in the repository</para>
+
+</chapter>
