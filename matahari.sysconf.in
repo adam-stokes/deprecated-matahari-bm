@@ -1,7 +1,7 @@
 # Connect to a broker on the named host
-# If this is not defined, agents will attempt to connect to localhost 
-#  and/or the contents of a _matahari._tcp SRV record if it exists
-#MATAHARI_BROKER=@MATAHARI_BROKER@
+# If this is not defined, agents will attempt to connect to the server specified
+# by the _matahari._tcp SRV record in DNS if that exists, otherwise to localhost
+MATAHARI_BROKER=@MATAHARI_BROKER@
 
 # Connect to a broker on a non-standard port
 #MATAHARI_PORT=@MATAHARI_PORT@
