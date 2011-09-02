@@ -34,17 +34,6 @@ test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
 start() {
     echo -n $"Starting the $SERVICE daemon: "
 
-    if [ ! -z "$MATAHARI_BROKER" ]; then
-	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS --broker $MATAHARI_BROKER"
-    fi
-    if [ ! -z "$MATAHARI_PORT" ]; then
-	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS --port $MATAHARI_PORT"
-    fi
-
-    if [ ! -z "$@BASE@_AGENT_ARGS" ]; then
-	MATAHARI_AGENT_ARGS="$MATAHARI_AGENT_ARGS $@BASE@_AGENT_ARGS"
-    fi
-
     MATAHARI_ARGS="$MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS"
     if [ -n "$MATAHARI_PORT" ]; then
 	MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
