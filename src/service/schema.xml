@@ -99,6 +99,84 @@
      <arg name="agent"           dir="I"  type="sstr" />
      <arg name="xml"            dir="O"  type="sstr" />
    </method>
+   <!--
+    <para>The <literal>rc</literal> output parameter warrants some additional discussion.
+    The potential return values depends on which <literal>standard</literal> is being
+    used.  In the case of <literal>OCF</literal>, these values are defined by the
+    <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD">OCF
+    resource agent specification</ulink>.  However, see <xref linkend="ocf_return_vals"/>
+    for an overview of the OCF resource agent return codes.</para>
+
+    <table id="ocf_return_vals">
+    <title>OCF Resource Agent Exit Codes</title>
+    <tgroup cols="3">
+    <thead>
+      <row>
+        <entry>Value(s)</entry>
+        <entry>OCF Name</entry>
+        <entry>Description</entry>
+      </row>
+    </thead>
+    <tbody>
+      <row>
+        <entry><literal>0</literal></entry>
+        <entry><literal>OCF_SUCCESS</literal></entry>
+        <entry>Success. The command complete successfully. This is the expected result for all start, stop, promote and demote commands.</entry>
+      </row>
+      <row>
+        <entry><literal>1</literal></entry>
+        <entry><literal>OCF_ERR_GENERIC</literal></entry>
+        <entry>Generic "there was a problem" error code.</entry>
+      </row>
+      <row>
+        <entry><literal>2</literal></entry>
+        <entry><literal>OCF_ERR_ARGS</literal></entry>
+        <entry>The resource's configuration is not valid on this machine. Eg. Refers to a location/tool not found on the node.</entry>
+      </row>
+      <row>
+        <entry><literal>3</literal></entry>
+        <entry><literal>OCF_ERR_UNIMPLEMENTED</literal></entry>
+        <entry>The requested action is not implemented.</entry>
+      </row>
+      <row>
+        <entry><literal>4</literal></entry>
+        <entry><literal>OCF_ERR_PERM</literal></entry>
+        <entry>The resource agent does not have sufficient privileges to complete the task.</entry>
+      </row>
+      <row>
+        <entry><literal>5</literal></entry>
+        <entry><literal>OCF_ERR_INSTALLED</literal></entry>
+        <entry>The tools required by the resource are not installed on this machine.</entry>
+      </row>
+      <row>
+        <entry><literal>6</literal></entry>
+        <entry><literal>OCF_ERR_CONFIGURED</literal></entry>
+        <entry>The resource's configuration is invalid. Eg. A required parameters are missing.</entry>
+      </row>
+      <row>
+        <entry><literal>7</literal></entry>
+        <entry><literal>OCF_NOT_RUNNING</literal></entry>
+        <entry>The resource is safely stopped.</entry>
+      </row>
+      <row>
+        <entry><literal>8</literal></entry>
+        <entry><literal>OCF_RUNNING_MASTER</literal></entry>
+        <entry>The resource is running in Master mode.</entry>
+      </row>
+      <row>
+        <entry><literal>9</literal></entry>
+        <entry><literal>OCF_FAILED_MASTER</literal></entry>
+        <entry>The resource is in Master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.</entry>
+      </row>
+      <row>
+        <entry>other</entry>
+        <entry>N/A</entry>
+        <entry>Custom error code.</entry>
+      </row>
+    </tbody>
+    </tgroup>
+    </table>
+   -->
    <method name="invoke"        desc="Perform a custom action on a resource">
      <arg name="name"           dir="I"  type="sstr"   />
      <arg name="standard"       dir="I"  type="sstr"   />
