@@ -18,3 +18,15 @@ MATAHARI_AGENT_ARGS="--reconnect=yes"
 
 # Per console options
 # sysconfig_CONSOLE_ARGS=...
+
+# Security
+# Kerberos
+
+# Uncomment to enable auto-renew credentials
+# KRB_RENEW=yes
+
+# Set custom application and arguments for renew process
+# KRB_RENEW_ARGS="-f /etc/krb5.keytab -K 10 -l 10h"
+
+# Kerberos REALM
+# KRB_REALM="qpidd/EXAMPLE.COM"

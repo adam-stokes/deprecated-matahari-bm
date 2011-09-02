@@ -99,6 +99,7 @@ Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	qpid-cpp-client-ssl > 0.7
 Requires(pre):	shadow-utils
+Requires:       kstart
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
