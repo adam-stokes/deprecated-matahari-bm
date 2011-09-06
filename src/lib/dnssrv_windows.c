@@ -1,5 +1,6 @@
 /* dnssrv_windows.c - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
+ * Written by Russell Bryant <rbryant@redhat.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,40 +28,44 @@
 #ifndef DNS_TYPE_SRV
 # define DNS_TYPE_SRV 33
 #endif
-/**
- * Domain lookup providing a Matahari broker
- *
- * \param[in] srv record query i.e. "_matahari._tcp.matahariproject.org
- * \param[in] set buffer to hold domain retrieved
- * \param[in] set buffer length
- *
- * \return 0 or greater for successful match
- */
 
-char *
+GList *
 mh_os_dnssrv_lookup(const char *query)
 {
     PDNS_RECORD rr, record;
     int len = strlen(query);
     WCHAR query_wstr[len];
-
+    GList *records = NULL;
 
     MultiByteToWideChar(CP_UTF8, 0, query, len, query_wstr, len);
     if (DnsQuery(query_wstr, DNS_TYPE_SRV,
                 DNS_QUERY_STANDARD, NULL,
-                &rr, NULL) == ERROR_SUCCESS) {
-
-        for(record = rr; record != NULL; record = record->pNext) {
-            if (record->wType == DNS_TYPE_SRV) {
-                char *buffer = malloc(NI_MAXHOST);
-
-                /* record->Data.Srv.wPort */
-                len = 1 + wcslen(record->Data.Srv.pNameTarget);
-                WideCharToMultiByte(CP_UTF8, 0, record->Data.Srv.pNameTarget, len, buffer, NI_MAXHOST, NULL, NULL);
-            }
-        }
-        DnsRecordListFree(rr, DnsFreeRecordList);
+                &rr, NULL) != ERROR_SUCCESS) {
+        return NULL;
     }
 
-    return NULL;
+    for (record = rr; record; record = record->pNext) {
+        char host[NI_MAX_HOST];
+        uint16_t port;
+        uint16_t priority;
+        uint16_t weight;
+
+        if (record->wType != DNS_TYPE_SRV) {
+            continue;
+        }
+
+        /* record->Data.Srv.wPort */
+        len = 1 + wcslen(record->Data.Srv.pNameTarget);
+        WideCharToMultiByte(CP_UTF8, 0, record->Data.Srv.pNameTarget, len, host, sizeof(host), NULL, NULL);
+
+        port = (uint16_t) record->Data.Srv.wPort;
+        priority = (uint16_t) record->Data.Srv.wPriority;
+        weight = (uint16_t) record->Data.Srv.wWeight;
+
+        records = mh_dnssrv_add_record(records, host, port, priority, weight);
+    }
+
+    DnsRecordListFree(rr, DnsFreeRecordList);
+
+    return records;
 }

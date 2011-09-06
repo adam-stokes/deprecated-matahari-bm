@@ -46,6 +46,7 @@ extern "C" {
 #include <sys/types.h>
 #include "matahari/logging.h"
 #include "matahari/dnssrv.h"
+#include "matahari/utilities.h"
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netdb.h>
@@ -244,7 +245,8 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 {
     int retries = 0;
     int backoff = 0;
-    char *target = NULL;
+    char host_from_srv[256] = "";
+    uint16_t port_from_srv;
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
@@ -262,10 +264,8 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
             fqdn << "_matahari._tcp." << mh_dnsdomainname();
         }
 
-        target = mh_dnssrv_lookup(fqdn.str().c_str());
-
-        if(target) {
-            mh_info("SRV record resolved to: %s", target);
+        if (mh_dnssrv_lookup_single(fqdn.str().c_str(), host_from_srv, sizeof(host_from_srv), &port_from_srv)) {
+            mh_info("SRV record resolved to: %s:%u", host_from_srv, port_from_srv);
         } else {
             mh_info("Could not resolve SRV record for %s", fqdn.str().c_str());
         }
@@ -274,9 +274,9 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
     while (true) {
         std::stringstream url;
 
-        if (target) {
+        if (!mh_strlen_zero(host_from_srv)) {
             /* Use the result of a DNS SRV lookup. */
-            url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
+            url << "amqp:" << mh_options["protocol"] << ":" << host_from_srv << ":" << port_from_srv;
         } else if (mh_options.count("servername")) {
             /* Use the explicitly specified broker hostname or IP address. */
             url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
@@ -297,7 +297,6 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 
         try {
             amqp.open();
-            free(target);
             return amqp;
 
         } catch (const std::exception& err) {
@@ -310,7 +309,6 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
         }
     }
   bail:
-    free(target);
     return NULL;
 }
 

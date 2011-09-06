@@ -1,5 +1,6 @@
 /* dnssrv.c - Copyright (c) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
+ * Written by Russell Bryant <rbryant@redhat.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,10 +26,12 @@
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
+#include <limits.h>
 
+#include "dnssrv_private.h"
 #include "matahari/dnssrv.h"
 
-char *
+GList *
 mh_os_dnssrv_lookup(const char *query)
 {
     union {
@@ -38,6 +41,7 @@ mh_os_dnssrv_lookup(const char *query)
     ns_msg nsh = { NULL, };
     ns_rr rr;
     int size, rrnum;
+    GList *records = NULL;
 
     size = res_query(query, C_IN, T_SRV, (u_char *) &answer, sizeof(answer));
 
@@ -48,24 +52,33 @@ mh_os_dnssrv_lookup(const char *query)
     }
 
     for (rrnum = 0; rrnum < ns_msg_count(nsh, ns_s_an); rrnum++) {
+        char host[_POSIX_HOST_NAME_MAX];
+        uint16_t port, priority, weight;
+        uint16_t *data;
+
         if (ns_parserr(&nsh, ns_s_an, rrnum, &rr)) {
-            return NULL;
+            goto error_cleanup;
         }
 
-        if (ns_rr_type(rr) == T_SRV) {
-            char *buffer = calloc(1, NS_MAXDNAME);
-
-            /* Only care about domain name from rdata
-             * First 6 elements in rdata are broken up
-             * contain dns information such as type, class
-             * ttl, rdlength.
-             */
-            ns_name_uncompress(ns_msg_base(nsh), ns_msg_end(nsh),
-                               ns_rr_rdata(rr) + 6, buffer, NS_MAXDNAME);
-
-            return buffer;
+        if (ns_rr_type(rr) != T_SRV) {
+            continue;
         }
+
+        data = (uint16_t *) ns_rr_rdata(rr);
+        priority = ntohs(data[0]);
+        weight = ntohs(data[1]);
+        port = ntohs(data[2]);
+
+        ns_name_uncompress(ns_msg_base(nsh), ns_msg_end(nsh),
+                           ns_rr_rdata(rr) + 6, host, sizeof(host));
+
+        records = mh_dnssrv_add_record(records, host, port, priority, weight);
     }
+
+    return records;
+
+error_cleanup:
+    g_list_free_full(records, mh_dnssrv_record_free);
 
     return NULL;
 }

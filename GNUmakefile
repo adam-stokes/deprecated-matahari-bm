@@ -48,7 +48,7 @@ linux.build:
 
 tests: linux.build
 	@if [ -f linux.build/src/tests/CTestTestfile.cmake ]; then \
-		cd linux.build/src/tests && ctest; \
+		cd linux.build/src/tests && ctest -V; \
 	fi
 
 windows.build:
