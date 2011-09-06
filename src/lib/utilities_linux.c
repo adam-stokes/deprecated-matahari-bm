@@ -69,7 +69,6 @@ mh_os_uuid(void)
 {
     static char *uuid = NULL;
 
-#ifdef __linux__
     if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
         uuid = mh_file_first_line("/etc/machine-id");
     }
@@ -77,7 +76,6 @@ mh_os_uuid(void)
         /* For pre-systemd machines */
         uuid = mh_file_first_line("/var/lib/dbus/machine-id");
     }
-#endif
 
     if(uuid) {
         mh_trace("Got uuid: %s", uuid);

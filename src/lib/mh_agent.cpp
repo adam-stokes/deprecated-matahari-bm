@@ -108,13 +108,10 @@ RegistryRead(
     }
     mh_info("Obtained '%ls[%ls]' = '%ls' from the registry", szKeyPath, szValue,
             szData);
-    fprintf(stderr, "Obtained '%ls[%ls]' = '%ls' from the registry\n", szKeyPath, szValue,
-            szData);
     if (out) {
         *out = (char *) malloc(BUFFER_SIZE);
         wcstombs(*out, szData, (size_t) BUFFER_SIZE);
     }
-    fprintf(stderr, "done registryread\n");
     return 0;
 }
 #endif
@@ -475,7 +472,6 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
     }
 #endif
 
-    fprintf(stderr, "returning amqp options\n");
     return amqp_options;
 }
 
@@ -546,21 +542,16 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
 
-    fprintf(stderr, "connecting\n");
     _impl->_amqp_connection = mh_connect(options, amqp_options, TRUE);
-    fprintf(stderr, "wtfookkkkkk %s\n", proc_name);
 
     _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection);
     _impl->_agent_session.setVendor("matahariproject.org");
     _impl->_agent_session.setProduct(proc_name);
-    fprintf(stderr, "getting uuid\n");
     _impl->_agent_session.setAttribute("uuid", mh_uuid());
-    fprintf(stderr, "uuuuuid fix\n");
     _impl->_agent_session.setAttribute("hostname", mh_hostname());
 
     _impl->_agent_session.open();
 
-    fprintf(stderr, "setupshit required by agent\n");
     /* Do any setup required by our agent */
     if (this->setup(_impl->_agent_session) < 0) {
         mh_err("Failed to set up broker connection to %s for %s\n",

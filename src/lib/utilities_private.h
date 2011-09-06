@@ -30,14 +30,6 @@
 #ifndef __MH_UTILITIES_PRIVATE_H__
 #define __MH_UTILITIES_PRIVATE_H__
 
-#include <windows.h>
-#include <rpc.h>
-
-#ifdef uuid_t
-#undef uuid_t
-#endif
-typedef UUID uuid_t[1];
-
 /**
  * Get the local dnsdomainname.
  */
