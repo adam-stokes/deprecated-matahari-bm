@@ -93,4 +93,18 @@ extern void g_list_free_full(GList *list, GDestroyNotify free_func);
         }                                                                   \
     } while(0)
 
+/**
+ * Check if a string is empty.
+ *
+ * \param[in] s the string to check
+ *
+ * \retval 0 not empty
+ * \retval non-zero empty
+ */
+static inline int
+mh_strlen_zero(const char *s)
+{
+    return !s || *s == '\0';
+}
+
 #endif
