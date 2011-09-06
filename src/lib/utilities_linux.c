@@ -63,3 +63,22 @@ mh_os_dnsdomainname(void)
 
     return dnsdomainname ? dnsdomainname : "";
 }
+
+const char *
+mh_os_uuid(void)
+{
+    static char *uuid = NULL;
+
+    if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
+        uuid = mh_file_first_line("/etc/machine-id");
+    }
+    if (uuid == NULL && g_file_test("/var/lib/dbus/machine-id", G_FILE_TEST_EXISTS)) {
+        /* For pre-systemd machines */
+        uuid = mh_file_first_line("/var/lib/dbus/machine-id");
+    }
+
+    if(uuid) {
+        mh_trace("Got uuid: %s", uuid);
+    }
+    return uuid;
+}

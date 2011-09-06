@@ -18,8 +18,14 @@
 
 #include "config.h"
 
+#include <windows.h>
+#include <rpc.h>
+#include <wchar.h>
 #include "matahari/utilities.h"
+#include "matahari/logging.h"
 #include "utilities_private.h"
+
+#define MAXUUIDLEN 255
 
 const char *
 mh_os_dnsdomainname(void)
@@ -31,4 +37,54 @@ mh_os_dnsdomainname(void)
      */
 
     return mh_domainname();
+}
+
+const char *
+mh_os_uuid(void)
+{
+    UUID u;
+    HKEY hKey;
+    DWORD nSize = MAXUUIDLEN;
+    wchar_t szData[MAXUUIDLEN];
+    static char s[MAXUUIDLEN];
+    wchar_t *szValue = char2wide("UUID");
+    unsigned char *rs;
+    long lSuccess = RegOpenKey(HKEY_LOCAL_MACHINE,
+                               L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                               &hKey);
+
+    if (lSuccess != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 lSuccess);
+        goto bail;
+    }
+
+    lSuccess = RegQueryValueEx(hKey, szValue,  NULL, NULL, (LPBYTE) szData,
+                               &nSize);
+    if (lSuccess == ERROR_SUCCESS) {
+        wcstombs(s, szData, (size_t) MAXUUIDLEN);
+        return s;
+    }
+
+    UuidCreate(&u);
+
+    if (UuidToStringA(&u, &rs) == RPC_S_OK) {
+        wchar_t *s_ws = NULL;
+        strncpy(s, (char *)rs, MAXUUIDLEN);
+        s[sizeof(s) - 1] = '\0';
+        RpcStringFreeA(&rs);
+        mh_trace("Got uuid: %s", s);
+        s_ws = char2wide(s);
+        lSuccess = RegSetValueEx(hKey, szValue, 0, REG_SZ, (CONST BYTE *)s_ws,
+                                 wcslen(s_ws) * sizeof(wchar_t *));
+        free(s_ws);
+        free(szValue);
+        if (lSuccess != ERROR_SUCCESS) {
+            goto bail;
+        }
+    }
+    return s;
+ bail:
+    free(szValue);
+    return "";
 }
