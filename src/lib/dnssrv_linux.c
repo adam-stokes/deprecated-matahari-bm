@@ -39,11 +39,8 @@ mh_os_dnssrv_lookup(const char *query)
     ns_rr rr;
     int size, rrnum;
 
-    size = res_query(query,
-                     C_IN, 
-                     T_SRV,
-                     (u_char *)&answer,
-                     sizeof(answer));
+    size = res_query(query, C_IN, T_SRV, (u_char *) &answer, sizeof(answer));
+
     if (size > 0) {
         if (ns_initparse(answer.buf, size, &nsh) < 0) {
             return NULL;
@@ -56,19 +53,16 @@ mh_os_dnssrv_lookup(const char *query)
         }
 
         if (ns_rr_type(rr) == T_SRV) {
-	    char *buffer = malloc(NS_MAXDNAME);
-	    memset(buffer, 0, NS_MAXDNAME);
-	    
+            char *buffer = calloc(1, NS_MAXDNAME);
+
             /* Only care about domain name from rdata
              * First 6 elements in rdata are broken up
              * contain dns information such as type, class
              * ttl, rdlength.
              */
-            ns_name_uncompress(ns_msg_base(nsh),
-                               ns_msg_end(nsh),
-                               ns_rr_rdata(rr)+6,
-                               buffer,
-                               NS_MAXDNAME);
+            ns_name_uncompress(ns_msg_base(nsh), ns_msg_end(nsh),
+                               ns_rr_rdata(rr) + 6, buffer, NS_MAXDNAME);
+
             return buffer;
         }
     }
