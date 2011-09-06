@@ -17,13 +17,14 @@ else(WIN32)
    if(NOT DEFINED WITH-DBUS)
       set(WITH-DBUS "TRY" CACHE STRING "Build the DBus daemons (ON|TRY|OFF)")
    endif(NOT DEFINED WITH-DBUS)
+
+   find_program(HELP2MAN help2man)
 endif(WIN32)
+
 option(WITH-QMF "Build the QMF daemon" ON)
 
 set(CMAKE_C_FLAGS "-Wall -Wshadow")
 set(CMAKE_CXX_FLAGS "-Wall -Wshadow")
-
-find_program(HELP2MAN help2man)
 
 set(AGENT_MAN_SECTION "8")
 set(AGENT_MAN_DESC "Part of the Matahari suite of remote agents")
