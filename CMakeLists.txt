@@ -117,10 +117,10 @@ else(WIN32)
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari.init)
 
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.init.in
-		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker)
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker @ONLY)
 
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.sysconf.in
-		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf)
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf @ONLY)
 
   install(DIRECTORY DESTINATION ${localstatedir}/lib/matahari
           DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE

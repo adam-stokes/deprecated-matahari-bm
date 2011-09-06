@@ -18,8 +18,14 @@
 
 #include "config.h"
 
+#include <windows.h>
+#include <rpc.h>
+
 #include "matahari/utilities.h"
+#include "matahari/logging.h"
 #include "utilities_private.h"
+
+#define MAXUUIDLEN 37
 
 const char *
 mh_os_dnsdomainname(void)
@@ -31,4 +37,22 @@ mh_os_dnsdomainname(void)
      */
 
     return mh_domainname();
+}
+
+const char *
+mh_os_uuid(void)
+{
+    uuid_t u;
+    static char s[MAXUUIDLEN];
+    unsigned char __RPC_FAR *rs;
+
+    UuidCreate(u);
+
+    if (UuidToStringA((UUID *)u, &rs) == RPC_S_OK) {
+        strncpy(s,(char __RPC_FAR *)rs, MAXUUIDLEN);
+        RpcStringFree(&rs);
+        mh_trace("Got uuid: %s", s);
+        return s;
+    }
+    return "";
 }

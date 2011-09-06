@@ -382,6 +382,16 @@ mh_dnsdomainname(void)
 }
 
 const char *
+mh_uuid(void)
+{
+    const char *res;
+    
+    res = mh_os_uuid();
+    
+    return res;
+}
+
+const char *
 mh_hostname(void)
 {
     static char *hostname = NULL;
@@ -397,7 +407,7 @@ mh_hostname(void)
 
     if (hostname != NULL && strcmp(hostname, "localhost") == 0) {
         free(hostname);
-        hostname = strdup(mh_uuid());
+        hostname = strdup(mh_os_uuid());
     }
 
     mh_trace("Got hostname: %s", hostname);
@@ -435,27 +445,6 @@ char *mh_file_first_line(const char *file)
 #endif
     }
     return buffer;
-}
-
-const char *
-mh_uuid(void)
-{
-    static char *uuid = NULL;
-
-#ifdef __linux__
-    if (uuid == NULL && g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
-        uuid = mh_file_first_line("/etc/machine-id");
-    }
-    if (uuid == NULL && g_file_test("/var/lib/dbus/machine-id", G_FILE_TEST_EXISTS)) {
-        /* For pre-systemd machines */
-        uuid = mh_file_first_line("/var/lib/dbus/machine-id");
-    }
-#endif
-
-    if(uuid) {
-        mh_trace("Got uuid: %s", uuid);
-    }
-    return uuid;
 }
 
 #ifdef WIN32
