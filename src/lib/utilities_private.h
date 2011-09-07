@@ -36,4 +36,10 @@
 const char *
 mh_os_dnsdomainname(void);
 
+/**
+ * Generate UUID
+ */
+const char *
+mh_os_uuid(void);
+
 #endif /* __MH_UTILITIES_PRIVATE_H__ */
