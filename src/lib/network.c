@@ -152,6 +152,10 @@ mh_network_get_ip_address(const char *iface, char *buf, size_t len)
     GList *plist;
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
 
+    if (len) {
+        *buf = '\0';
+    }
+
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {
         struct mh_network_interface *mh_iface = plist->data;
