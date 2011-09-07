@@ -48,7 +48,6 @@ class MhHsaSuite : public CxxTest::TestSuite
      {
          char *target;
          const char *host = "_matahari._tcp.matahariproject.org";
-         int ret = 0;
 
          target = mh_dnssrv_lookup(host);
          TS_ASSERT(target != NULL);

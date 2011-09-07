@@ -1,15 +1,20 @@
-# Try to use the centrally defined port (also used by the agents)
-# Otherwise, use the default port specified at build-time
+# Override the broker port set in @sysconfdir@/sysconfig/matahari
+#MATAHARI_PORT=@MATAHARI_PORT@
 
-if [ -f @sysconfdir@/sysconfig/matahari ] ; then
-   . @sysconfdir@/sysconfig/matahari
-fi
+QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf"
 
-if [ -z $MATAHARI_PORT ]; then
-   MATAHARI_PORT=@MATAHARI_PORT@
-fi
-
-QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf --port $MATAHARI_PORT"
+# Federated Broker configuration - list the brokers to federate with
+# The following formats are allowed:
+#   Hostname and port
+#     <fqdn>:<port>
+#   DNS SRV query format ("_matahari._tcp" is REQUIRED)
+#     _matahari._tcp.<fqdn>
+#
+# Note that only the first (highest priority) SRV record returned by the DNS
+# for each given query will be used.
+#
+# Addresses need not all be in the same format.
+#FEDERATED_BROKERS="broker1.example.com:49000, _matahari._tcp.example.com"
 
 # Federated Broker configuration
 #   Takes the following formats:

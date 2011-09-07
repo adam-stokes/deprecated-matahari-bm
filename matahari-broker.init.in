@@ -49,6 +49,13 @@ TIMEOUT=5
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
+if [ -f @sysconfdir@/sysconfig/matahari ]; then
+    . @sysconfdir@/sysconfig/matahari
+fi
+if [ -f @sysconfdir@/sysconfig/matahari-broker ]; then
+    . @sysconfdir@/sysconfig/matahari-broker
+fi
+
 RETVAL=0
 
 # Enable broker federation
@@ -95,7 +102,7 @@ federate() {
 start() {
 	echo -n $"Starting Matahari broker daemon: "
 	install -o root -g qpidd -m 775 -d @localstatedir@/run/matahari
-	daemon --pidfile $pidfile --check $proc --user qpidd /usr/sbin/$prog --daemon
+	daemon --pidfile $pidfile --check $proc --user qpidd /usr/sbin/$prog $QPIDD_OPTIONS --daemon
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch $lockfile
