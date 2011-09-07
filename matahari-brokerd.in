@@ -1,8 +1,0 @@
-#!/bin/sh
-
-if [ -f @sysconfdir@/sysconfig/matahari-broker ]; then
-    . @sysconfdir@/sysconfig/matahari-broker
-fi
-
-/usr/sbin/qpidd --data-dir @localstatedir@/lib/matahari $QPIDD_OPTIONS $*
-

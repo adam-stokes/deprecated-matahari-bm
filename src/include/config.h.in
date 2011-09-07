@@ -1,3 +1,6 @@
+#ifndef MH_CONFIG_H
+#define MH_CONFIG_H
+
 #cmakedefine HAVE_STRING_H 1
 #cmakedefine HAVE_SYS_IOCTL_H 1
 #cmakedefine HAVE_ASPRINTF 1
@@ -5,3 +8,9 @@
 #cmakedefine HAVE_TIME 1
 #cmakedefine HAVE_G_LIST_FREE_FULL 1
 #cmakedefine HAVE_PK_GET_SYNC 1
+
+#define LOCAL_STATE_DIR "@localstatedir@"
+
+#define MATAHARI_PORT @MATAHARI_PORT@
+
+#endif
