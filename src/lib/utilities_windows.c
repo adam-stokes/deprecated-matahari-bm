@@ -45,7 +45,7 @@ mh_os_uuid(void)
 {
     UUID uuid;
     HKEY key;
-    DWORD registry_buf = MAXUUIDLEN;
+    DWORD uuid_str_len = MAXUUIDLEN - 1;
     // Note: not thread safe, but neither is a ton of other code ...
     static char uuid_str[MAXUUIDLEN];
     unsigned char *rs;
@@ -60,11 +60,11 @@ mh_os_uuid(void)
     }
 
     res = RegQueryValueExA(key, UUID_REGISTRY_KEY, NULL, NULL,
-                           (BYTE *) uuid_str, &registry_buf);
+                           (BYTE *) uuid_str, &uuid_str_len);
 
     if (res == ERROR_SUCCESS) {
-        uuid_str[sizeof(uuid_str) - 1] = '\0';
-        return uuid_str;    
+        uuid_str[uuid_str_len] = '\0';
+        return uuid_str; /* <("<) stokachu! */
     }
 
     UuidCreate(&uuid);
