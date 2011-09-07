@@ -45,7 +45,7 @@ mh_os_dnssrv_lookup(const char *query)
     }
 
     for (record = rr; record; record = record->pNext) {
-        char host[NI_MAX_HOST];
+        char host[NI_MAXHOST];
         uint16_t port;
         uint16_t priority;
         uint16_t weight;
