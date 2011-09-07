@@ -32,7 +32,7 @@ target_link_libraries(msysconfig ${pcre_LIBRARIES} mcommon ${glib_LIBRARIES})
 
 if(WIN32)
     foreach (lib ${LIBS})
-        target_link_libraries(${lib} wsock32 dnsapi)
+        target_link_libraries(${lib} wsock32 dnsapi rpcrt4)
         install(TARGETS ${lib} DESTINATION sbin)
     endforeach (lib ${LIBS})
 else(WIN32)

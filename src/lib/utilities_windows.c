@@ -18,8 +18,15 @@
 
 #include "config.h"
 
+#include <windows.h>
+#include <rpc.h>
+#include <wchar.h>
 #include "matahari/utilities.h"
+#include "matahari/logging.h"
 #include "utilities_private.h"
+
+#define MAXUUIDLEN 255
+#define UUID_REGISTRY_KEY "UUID"
 
 const char *
 mh_os_dnsdomainname(void)
@@ -31,4 +38,54 @@ mh_os_dnsdomainname(void)
      */
 
     return mh_domainname();
+}
+
+const char *
+mh_os_uuid(void)
+{
+    UUID uuid;
+    HKEY key;
+    DWORD uuid_str_len = MAXUUIDLEN - 1;
+    // Note: not thread safe, but neither is a ton of other code ...
+    static char uuid_str[MAXUUIDLEN];
+    unsigned char *rs;
+    long res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                          &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        goto bail;
+    }
+
+    res = RegQueryValueExA(key, UUID_REGISTRY_KEY, NULL, NULL,
+                           (BYTE *) uuid_str, &uuid_str_len);
+
+    if (res == ERROR_SUCCESS) {
+        uuid_str[uuid_str_len] = '\0';
+        return uuid_str; /* <("<) stokachu! */
+    }
+
+    UuidCreate(&uuid);
+
+    if (UuidToStringA(&uuid, &rs) == RPC_S_OK) {
+        strncpy(uuid_str, (char *) rs, sizeof(uuid_str));
+        uuid_str[sizeof(uuid_str) - 1] = '\0';
+        RpcStringFreeA(&rs);
+        mh_trace("Got uuid: %s", uuid_str);
+        res = RegSetValueExA(key, UUID_REGISTRY_KEY, 0, REG_SZ,
+                             (CONST BYTE *) uuid_str, strlen(uuid_str) + 1);
+
+        if (res != ERROR_SUCCESS) {
+            goto bail;
+        }
+    }
+
+    return uuid_str;
+
+ bail:
+    mh_warn("Failed to get UUID.");
+
+    return "";
 }
