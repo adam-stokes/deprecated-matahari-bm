@@ -162,6 +162,7 @@ endif(WITH-QMF)
 
 
 ### Subdirectories
+add_subdirectory(broker)
 add_subdirectory(lib)
 add_subdirectory(host)
 add_subdirectory(network)
