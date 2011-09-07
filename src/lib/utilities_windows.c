@@ -26,6 +26,7 @@
 #include "utilities_private.h"
 
 #define MAXUUIDLEN 255
+#define UUID_REGISTRY_KEY "UUID"
 
 const char *
 mh_os_dnsdomainname(void)
@@ -42,49 +43,49 @@ mh_os_dnsdomainname(void)
 const char *
 mh_os_uuid(void)
 {
-    UUID u;
-    HKEY hKey;
-    DWORD nSize = MAXUUIDLEN;
-    wchar_t szData[MAXUUIDLEN];
-    static char s[MAXUUIDLEN];
-    wchar_t *szValue = char2wide("UUID");
+    UUID uuid;
+    HKEY key;
+    DWORD registry_buf = MAXUUIDLEN;
+    // Note: not thread safe, but neither is a ton of other code ...
+    static char uuid_str[MAXUUIDLEN];
     unsigned char *rs;
-    long lSuccess = RegOpenKey(HKEY_LOCAL_MACHINE,
-                               L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-                               &hKey);
+    long res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                          &key);
 
-    if (lSuccess != ERROR_SUCCESS) {
+    if (res != ERROR_SUCCESS) {
         mh_debug("Could not open Matahari key from the registry: %ld",
-                 lSuccess);
+                 res);
         goto bail;
     }
 
-    lSuccess = RegQueryValueEx(hKey, szValue,  NULL, NULL, (LPBYTE) szData,
-                               &nSize);
-    if (lSuccess == ERROR_SUCCESS) {
-        wcstombs(s, szData, (size_t) MAXUUIDLEN);
-        return s;
+    res = RegQueryValueExA(key, UUID_REGISTRY_KEY, NULL, NULL,
+                           (BYTE *) uuid_str, &registry_buf);
+
+    if (res == ERROR_SUCCESS) {
+        uuid_str[sizeof(uuid_str) - 1] = '\0';
+        return uuid_str;    
     }
 
-    UuidCreate(&u);
+    UuidCreate(&uuid);
 
-    if (UuidToStringA(&u, &rs) == RPC_S_OK) {
-        wchar_t *s_ws = NULL;
-        strncpy(s, (char *)rs, MAXUUIDLEN);
-        s[sizeof(s) - 1] = '\0';
+    if (UuidToStringA(&uuid, &rs) == RPC_S_OK) {
+        strncpy(uuid_str, (char *) rs, sizeof(uuid_str));
+        uuid_str[sizeof(uuid_str) - 1] = '\0';
         RpcStringFreeA(&rs);
-        mh_trace("Got uuid: %s", s);
-        s_ws = char2wide(s);
-        lSuccess = RegSetValueEx(hKey, szValue, 0, REG_SZ, (CONST BYTE *)s_ws,
-                                 wcslen(s_ws) * sizeof(wchar_t *));
-        free(s_ws);
-        free(szValue);
-        if (lSuccess != ERROR_SUCCESS) {
+        mh_trace("Got uuid: %s", uuid_str);
+        res = RegSetValueExA(key, UUID_REGISTRY_KEY, 0, REG_SZ,
+                             (CONST BYTE *) uuid_str, strlen(uuid_str) + 1);
+
+        if (res != ERROR_SUCCESS) {
             goto bail;
         }
     }
-    return s;
+
+    return uuid_str;
+
  bail:
-    free(szValue);
+    mh_warn("Failed to get UUID.");
+
     return "";
 }
