@@ -41,7 +41,7 @@ struct mh_dnssrv_record;
  * by using glib_list_free_full(records, mh_dnssrv_record_free).
  */
 GList *
-mh_dnssrv_lookup(const char *query);
+mh_dnssrv_lookup(const char *query) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Do a DNS SRV lookup and get a single result.
@@ -73,7 +73,7 @@ mh_dnssrv_lookup_single(const char *query, char *host, size_t host_len, uint16_t
  */
 GList *
 mh_dnssrv_add_record(GList *records, const char *host, uint16_t port,
-                     uint16_t priority, uint16_t weight);
+                     uint16_t priority, uint16_t weight) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Sort a collection of DNS SRV records
@@ -86,7 +86,7 @@ mh_dnssrv_add_record(GList *records, const char *host, uint16_t port,
  * \return the new head of the records list.
  */
 GList *
-mh_dnssrv_records_sort(GList *records);
+mh_dnssrv_records_sort(GList *records) G_GNUC_WARN_UNUSED_RESULT;
 
 /**
  * Get the hostname in an SRV record
@@ -96,7 +96,7 @@ mh_dnssrv_records_sort(GList *records);
  * \return the hostname
  */
 const char *
-mh_dnssrv_record_get_host(struct mh_dnssrv_record *record);
+mh_dnssrv_record_get_host(const struct mh_dnssrv_record *record);
 
 /**
  * Get the port in an SRV record
@@ -106,7 +106,7 @@ mh_dnssrv_record_get_host(struct mh_dnssrv_record *record);
  * \return the port
  */
 uint16_t
-mh_dnssrv_record_get_port(struct mh_dnssrv_record *record);
+mh_dnssrv_record_get_port(const struct mh_dnssrv_record *record);
 
 /**
  * Get the priority in an SRV record
@@ -116,7 +116,7 @@ mh_dnssrv_record_get_port(struct mh_dnssrv_record *record);
  * \return the port
  */
 uint16_t
-mh_dnssrv_record_get_priority(struct mh_dnssrv_record *record);
+mh_dnssrv_record_get_priority(const struct mh_dnssrv_record *record);
 
 /**
  * Get the weigh5 in an SRV record
@@ -126,7 +126,7 @@ mh_dnssrv_record_get_priority(struct mh_dnssrv_record *record);
  * \return the weight
  */
 uint16_t
-mh_dnssrv_record_get_weight(struct mh_dnssrv_record *record);
+mh_dnssrv_record_get_weight(const struct mh_dnssrv_record *record);
 
 /**
  * Destructor for struct mh_dnssrv_record.

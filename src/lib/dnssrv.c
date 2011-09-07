@@ -39,25 +39,25 @@ struct mh_dnssrv_record {
 
 
 const char *
-mh_dnssrv_record_get_host(struct mh_dnssrv_record *record)
+mh_dnssrv_record_get_host(const struct mh_dnssrv_record *record)
 {
     return record->host;
 }
 
 uint16_t
-mh_dnssrv_record_get_port(struct mh_dnssrv_record *record)
+mh_dnssrv_record_get_port(const struct mh_dnssrv_record *record)
 {
     return record->port;
 }
 
 uint16_t
-mh_dnssrv_record_get_priority(struct mh_dnssrv_record *record)
+mh_dnssrv_record_get_priority(const struct mh_dnssrv_record *record)
 {
     return record->priority;
 }
 
 uint16_t
-mh_dnssrv_record_get_weight(struct mh_dnssrv_record *record)
+mh_dnssrv_record_get_weight(const struct mh_dnssrv_record *record)
 {
     return record->weight;
 }
