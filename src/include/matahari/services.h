@@ -219,18 +219,4 @@ services_get_ocf_exitcode(char *action, int lsb_exitcode)
     return (enum ocf_exitcode)lsb_exitcode;
 }
 
-/**
- * Check if a string is empty.
- *
- * \param[in] s the string to check
- *
- * \retval 0 not empty
- * \retval non-zero empty
- */
-static inline int
-mh_strlen_zero(const char *s)
-{
-    return !s || *s == '\0';
-}
-
 #endif /* __MH_SERVICES__ */
