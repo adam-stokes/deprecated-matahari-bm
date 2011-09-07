@@ -245,8 +245,8 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 {
     int retries = 0;
     int backoff = 0;
-    char host_from_srv[256] = "";
-    uint16_t port_from_srv;
+    GList *srv_records = NULL, *cur_srv_record = NULL;
+    struct mh_dnssrv_record *record;
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
@@ -255,28 +255,37 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
          * used specifically requesting an SRV lookup.
          */
 
-        /* Is _ssl valid here as a protocol?  _udp? */
-        std::stringstream fqdn;
+        std::stringstream query;
 
         if (mh_options.count("servername")) {
-            fqdn << "_matahari._tcp." << mh_options["servername"];
+            query << "_matahari._tcp." << mh_options["servername"];
         } else {
-            fqdn << "_matahari._tcp." << mh_dnsdomainname();
+            query << "_matahari._tcp." << mh_dnsdomainname();
         }
 
-        if (mh_dnssrv_lookup_single(fqdn.str().c_str(), host_from_srv, sizeof(host_from_srv), &port_from_srv)) {
-            mh_info("SRV record resolved to: %s:%u", host_from_srv, port_from_srv);
+        if ((cur_srv_record = srv_records = mh_dnssrv_lookup(query.str().c_str()))) {
+            mh_info("SRV query successful: %s", query.str().c_str());
         } else {
-            mh_info("Could not resolve SRV record for %s", fqdn.str().c_str());
+            mh_info("SRV query not successful: %s", query.str().c_str());
         }
     }
 
     while (true) {
         std::stringstream url;
 
-        if (!mh_strlen_zero(host_from_srv)) {
+        if (srv_records) {
             /* Use the result of a DNS SRV lookup. */
-            url << "amqp:" << mh_options["protocol"] << ":" << host_from_srv << ":" << port_from_srv;
+
+            record = (struct mh_dnssrv_record *) cur_srv_record->data;
+
+            url << "amqp:" << mh_options["protocol"];
+            url << ":" << mh_dnssrv_record_get_host(record);
+            url << ":" << mh_dnssrv_record_get_port(record);
+
+            cur_srv_record = cur_srv_record->next;
+            if (!cur_srv_record) {
+                cur_srv_record = srv_records;
+            }
         } else if (mh_options.count("servername")) {
             /* Use the explicitly specified broker hostname or IP address. */
             url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
@@ -297,6 +306,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 
         try {
             amqp.open();
+            g_list_free_full(srv_records, mh_dnssrv_record_free);
             return amqp;
 
         } catch (const std::exception& err) {
@@ -309,6 +319,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
         }
     }
   bail:
+    g_list_free_full(srv_records, mh_dnssrv_record_free);
     return NULL;
 }
 
