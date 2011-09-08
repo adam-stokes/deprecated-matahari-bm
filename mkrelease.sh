@@ -28,7 +28,4 @@ read
 
 git tag -a -m "Tagged release $TAG" $TAG $BRANCH
 git archive --prefix=matahari-${TAG:1}/ $TAG | tar x
-cd matahari-${TAG:1}
-make manual.html
-cd ..
 tar czvf matahari-${TAG:1}.tar.gz matahari-${TAG:1}/
