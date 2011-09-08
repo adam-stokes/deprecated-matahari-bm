@@ -19,7 +19,7 @@
 -include Makefile
 
 PACKAGE		?= matahari
-VERSION		?= 0.4.3
+VERSION		?= 0.4.4
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
@@ -32,7 +32,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 TAG    ?= $(shell git show --pretty="format:%h" --abbrev-commit | head -n 1)
 WITH   ?= 
 VARIANT ?=
-PROFILE ?= fedora-rawhide-x86_64
+PROFILE ?= fedora-16-x86_64
 
 BUILD_COUNTER	?= build.counter
 COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))

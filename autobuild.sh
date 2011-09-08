@@ -18,7 +18,7 @@
 #
 set -x
 PACKAGE=matahari
-VERSION=0.4.3
+VERSION=0.4.4
 
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
