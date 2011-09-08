@@ -182,12 +182,23 @@ make %{?_smp_mflags}
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
+%if %{defined _unitdir}
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig-console
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
+%endif
+
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
+%endif
 
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 
@@ -333,7 +344,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-network
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
 %endif
 
@@ -354,7 +367,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-host
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
 %endif
 
@@ -375,7 +390,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-service
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
 %attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
 %endif
@@ -398,7 +415,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
 %endif
 
@@ -407,7 +426,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig-console
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
 
 %if %{defined _unitdir}
@@ -418,7 +439,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with qmf}
 %files broker
 %defattr(644, root, root, 755)
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-broker
+%endif
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %attr(755, root, root) %{_sbindir}/matahari-brokerd
