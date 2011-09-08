@@ -20,7 +20,7 @@
 #include "config.h"
 #endif
 
-#include <stdio.h>
+#include <assert.h>
 #include <glib.h>
 
 #include "matahari/utilities.h"
@@ -68,13 +68,7 @@ dnssrv_record_priority_cmp(gconstpointer _a, gconstpointer _b)
     const struct mh_dnssrv_record *a = _a;
     const struct mh_dnssrv_record *b = _b;
 
-    if (a->priority < b->priority) {
-        return -1;
-    } else if (a->priority > b->priority) {
-        return 1;
-    } else { /* == */
-        return 0;
-    }
+    return (gint) (a->priority - b->priority);
 }
 
 static void
@@ -207,12 +201,19 @@ mh_dnssrv_add_record(GList *records, const char *host, uint16_t port,
                      uint16_t priority, uint16_t weight)
 {
     struct mh_dnssrv_record *record;
+    size_t host_len;
 
-    record = malloc(sizeof(*record) + strlen(host));
+    host_len = strlen(host);
+
+    record = malloc(sizeof(*record) + host_len);
+
+    assert(record != NULL);
+
     record->port = port;
     record->priority = priority;
     record->weight = weight;
-    strcpy(record->host, host); /* safe. */
+    memcpy(record->host, host, host_len);
+    record->host[host_len] = '\0';
 
     return g_list_insert_sorted(records, record, dnssrv_record_priority_cmp);
 }

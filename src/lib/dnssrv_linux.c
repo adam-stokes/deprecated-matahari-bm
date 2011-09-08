@@ -30,6 +30,7 @@
 
 #include "dnssrv_private.h"
 #include "matahari/dnssrv.h"
+#include "matahari/dnssrv_internal.h"
 
 GList *
 mh_os_dnssrv_lookup(const char *query)
@@ -52,7 +53,7 @@ mh_os_dnssrv_lookup(const char *query)
     }
 
     for (rrnum = 0; rrnum < ns_msg_count(nsh, ns_s_an); rrnum++) {
-        char host[_POSIX_HOST_NAME_MAX];
+        char host[NS_MAXDNAME];
         uint16_t port, priority, weight;
         uint16_t *data;
 

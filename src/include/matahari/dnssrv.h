@@ -61,34 +61,6 @@ int
 mh_dnssrv_lookup_single(const char *query, char *host, size_t host_len, uint16_t *port);
 
 /**
- * Add a record to a collection of DNS SRV records
- *
- * \param[in] records DNS SRV record collection.
- * \param[in] host the hostname in the record
- * \param[in] port the port in the record
- * \param[in] priority the priority in the record
- * \param[in] weight the weight in the record
- *
- * \return the new head of the records list.
- */
-GList *
-mh_dnssrv_add_record(GList *records, const char *host, uint16_t port,
-                     uint16_t priority, uint16_t weight) G_GNUC_WARN_UNUSED_RESULT;
-
-/**
- * Sort a collection of DNS SRV records
- *
- * This is only needed if a collection is built manually by directly calling
- * mh_dnssrv_add_record().  It is not normally needed.
- *
- * \param[in] records the collection of records to sort.
- *
- * \return the new head of the records list.
- */
-GList *
-mh_dnssrv_records_sort(GList *records) G_GNUC_WARN_UNUSED_RESULT;
-
-/**
  * Get the hostname in an SRV record
  *
  * \param[in] record the SRV record

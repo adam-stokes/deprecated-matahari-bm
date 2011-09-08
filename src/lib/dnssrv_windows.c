@@ -33,7 +33,7 @@ GList *
 mh_os_dnssrv_lookup(const char *query)
 {
     PDNS_RECORD rr, record;
-    int len = strlen(query);
+    int len = strlen(query) + 1;
     WCHAR query_wstr[len];
     GList *records = NULL;
 
