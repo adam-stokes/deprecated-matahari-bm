@@ -397,8 +397,6 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
 %{_mandir}/man8/matahari-qmf-serviced.8*
-%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
-%{_mandir}/man8/matahari-qmf-service-cli.8*
 %endif
 
 %if %{with dbus}
@@ -436,6 +434,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
 %{_mandir}/man8/matahari-qmf-sysconfig-consoled.8*
+%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
+%{_mandir}/man8/matahari-qmf-service-cli.8*
 
 %if %{defined _unitdir}
 %{_unitdir}/matahari-sysconfig-console.service
