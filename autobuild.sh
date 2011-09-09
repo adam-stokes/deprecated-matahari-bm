@@ -49,9 +49,8 @@ function make_srpm() {
 
 env
 
-# When qpid is consistently usable 
-# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
-build_target=`rpm --eval fedora-rawhide-%{_arch}`
+build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+#build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Linux Build =::=::=::= "
@@ -78,9 +77,8 @@ $results
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
 
-# When qpid is consistently usable 
-# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
-build_target=`rpm --eval fedora-rawhide-%{_arch}`
+build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+#build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
 make_srpm mingw32-
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch
