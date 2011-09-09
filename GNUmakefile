@@ -19,7 +19,7 @@
 -include Makefile
 
 PACKAGE		?= matahari
-VERSION		?= 0.4.4
+VERSION		?= $(shell cat .version)
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
@@ -92,6 +92,7 @@ srpm:	export $(VARIANT)$(PACKAGE).spec
 		sed -i.sed 's/global\ specversion.*/global\ specversion\ 1/' $(VARIANT)$(PACKAGE).spec; 	\
 	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
+	sed -i.sed 's/#MATAHARI_VERSION#/$(VERSION)/' $(VARIANT)$(PACKAGE).spec
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -101,6 +102,7 @@ rpm:	srpm
 
 overlay: export
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
+	sed -i.sed 's/#MATAHARI_VERSION#/$(VERSION)/' $(VARIANT)$(PACKAGE).spec
 	cp $(TARFILE) ~/rpmbuild/SOURCES
 	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
 	make -C ~/rpmbuild/SOURCES $(VARIANT)$(PACKAGE)
