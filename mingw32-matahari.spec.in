@@ -11,7 +11,7 @@
 %global mh_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
 Name:		mingw32-matahari
-Version:	0.4.4
+Version:	#MATAHARI_VERSION#
 Release:	%{mh_release}
 Summary:	Matahari QMF Agents for Windows guests
 
