@@ -9,6 +9,8 @@ if(NOT WIN32)
         target_link_libraries(${BROKER_DAEMON} resolv)
     endif(HAVE_RESOLV_H)
 
+    install(FILES ${BROKER_DAEMON}.${AGENT_MAN_SECTION}.gz DESTINATION share/man/man${AGENT_MAN_SECTION})
+
     install(TARGETS ${BROKER_DAEMON} DESTINATION sbin)
 
 endif(NOT WIN32)
