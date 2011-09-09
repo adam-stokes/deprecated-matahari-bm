@@ -348,6 +348,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-network
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
+%{_mandir}/man8/matahari-qmf-networkd.8*
 %endif
 
 %if %{with dbus}
@@ -371,6 +372,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-host
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
+%{_mandir}/man8/matahari-qmf-hostd.8*
 %endif
 
 %if %{with dbus}
@@ -394,7 +396,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-service
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
-%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
+%{_mandir}/man8/matahari-qmf-serviced.8*
 %endif
 
 %if %{with dbus}
@@ -419,6 +421,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
+%{_mandir}/man8/matahari-qmf-sysconfigd.8*
 %endif
 
 %files consoles
@@ -430,6 +433,9 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig-console
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
+%{_mandir}/man8/matahari-qmf-sysconfig-consoled.8*
+%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
+%{_mandir}/man8/matahari-qmf-service-cli.8*
 
 %if %{defined _unitdir}
 %{_unitdir}/matahari-sysconfig-console.service
@@ -445,6 +451,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %attr(755, root, root) %{_sbindir}/matahari-brokerd
+%{_mandir}/man8/matahari-brokerd.8*
 %doc AUTHORS COPYING
 
 %if %{defined _unitdir}
