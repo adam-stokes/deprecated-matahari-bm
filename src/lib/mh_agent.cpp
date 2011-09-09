@@ -226,17 +226,19 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
 int print_help(int code, const char *name, const char *arg, void *userdata)
 {
     int lpc = 0;
-    printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
+
+    printf("matahari-%sd <options>\n", (const char *) userdata);
 
     printf("\nOptions:\n");
     printf("\t-h | --help             print this help message.\n");
-    for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
-        if(matahari_options[lpc].callback
+    for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
+        if (matahari_options[lpc].callback
             && matahari_options[lpc].callback != connection_option) {
             printf("\t-%c | --%-10s\t%s\n", matahari_options[lpc].code,
                    matahari_options[lpc].long_name, matahari_options[lpc].description);
         }
     }
+
     return 0;
 }
 
