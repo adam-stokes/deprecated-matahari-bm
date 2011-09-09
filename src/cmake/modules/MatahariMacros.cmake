@@ -103,12 +103,13 @@ endmacro(check_policies_for_schema)
 macro(create_manpage BINARY SECTION DESC)
     if(HELP2MAN)
         add_custom_command(
-	    TARGET ${BINARY}
-	    POST_BUILD
-            COMMAND ${HELP2MAN} --output ${BINARY}.${SECTION} --no-info --section ${SECTION} --name ${DESC} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY}
+            TARGET ${BINARY}
+            POST_BUILD
+            COMMAND ${HELP2MAN} --no-info --section ${SECTION} --name ${DESC} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY} | gzip > ${BINARY}.${SECTION}.gz 
             COMMENT "Generating ${BINARY} man page"
             VERBATIM
         )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${BINARY}.${SECTION}.gz DESTINATION share/man/man${SECTION})
     endif(HELP2MAN)
 endmacro(create_manpage)
 
