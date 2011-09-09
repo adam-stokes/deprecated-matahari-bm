@@ -46,7 +46,8 @@ BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
-BuildRequires:  cxxtest
+BuildRequires:	cxxtest
+BuildRequires:	help2man
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
