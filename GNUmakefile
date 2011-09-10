@@ -81,9 +81,6 @@ export:
 
 $(VARIANT)$(PACKAGE).spec: $(VARIANT)$(PACKAGE).spec.in
 	cp $(VARIANT)$(PACKAGE).spec.in $(VARIANT)$(PACKAGE).spec
-
-srpm:	export $(VARIANT)$(PACKAGE).spec
-	rm -f *.src.rpm
 	if [ -e $(BUILD_COUNTER) ]; then									\
 		echo $(COUNT) > $(BUILD_COUNTER);								\
 		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(VARIANT)$(PACKAGE).spec;  \
@@ -93,6 +90,10 @@ srpm:	export $(VARIANT)$(PACKAGE).spec
 	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
 	sed -i.sed 's/#MATAHARI_VERSION#/$(VERSION)/' $(VARIANT)$(PACKAGE).spec
+
+srpm:	export $(VARIANT)$(PACKAGE).spec
+	rm -f *.src.rpm
+
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -100,9 +101,7 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
-overlay: export
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
-	sed -i.sed 's/#MATAHARI_VERSION#/$(VERSION)/' $(VARIANT)$(PACKAGE).spec
+overlay: export $(VARIANT)$(PACKAGE).spec
 	cp $(TARFILE) ~/rpmbuild/SOURCES
 	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
 	make -C ~/rpmbuild/SOURCES $(VARIANT)$(PACKAGE)
@@ -139,7 +138,7 @@ coverity:
 #	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
 
 clean:
-	rm -f *.tgz *.sed *.gres *~
+	rm -f *.tgz *.sed *.gres *~ *.spec
 	@if [ -d linux.build ] ; then \
 		$(MAKE) --no-print-dir -C linux.build clean ; \
 	elif [ -d windows.build ] ; then \

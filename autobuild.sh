@@ -33,9 +33,7 @@ function make_srpm() {
     TARPREFIX=${PACKAGE}-${PACKAGE}-${TAG}
     TARFILE=${TARPREFIX}.tgz
 
-    cp ${VARIANT}matahari.spec.in ${VARIANT}matahari.spec
-    sed -i.sed s/global\ specversion.*/global\ specversion\ ${AUTO_BUILD_COUNTER}/ ${VARIANT}matahari.spec
-    sed -i.sed s/global\ upstream_version.*/global\ upstream_version\ ${TAG}/ ${VARIANT}matahari.spec
+    make ${VARIANT}matahari.spec
     
     rm -f ${TARFILE}
     git archive --prefix=${TARPREFIX}/ ${TAG} | gzip > ${TARFILE}
