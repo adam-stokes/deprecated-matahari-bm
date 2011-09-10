@@ -11,7 +11,7 @@ fi
 BRANCH=$1
 TAG=$2
 
-git checkout v0.4
+git checkout ${BRANCH}
 echo "${TAG:1}" > .version
 git add .version
 git commit -s -m "build: update .version to ${TAG:1}"
