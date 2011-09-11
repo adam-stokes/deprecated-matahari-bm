@@ -24,3 +24,4 @@ tags
 TAGS
 install_manifest.txt
 matahari.spec
+mingw32-matahari.spec
