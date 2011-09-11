@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef WIN32
-# include "config.h"
-#endif
+#include "config.h"
 
 #include "matahari/network.h"
 #include "network_private.h"

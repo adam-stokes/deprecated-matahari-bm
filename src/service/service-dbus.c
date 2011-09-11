@@ -20,6 +20,8 @@
  *
  */
 
+#include "config.h"
+
 #include <string.h>
 
 #include "matahari/dbus_common.h"

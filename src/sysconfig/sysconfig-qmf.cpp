@@ -21,9 +21,7 @@
  * \brief Sysconfig QMF Agent
  */
 
-#ifndef WIN32
 #include "config.h"
-#endif
 
 #include <qpid/agent/ManagementAgent.h>
 #include "qmf/org/matahariproject/QmfPackage.h"

@@ -11,6 +11,8 @@
 
 #define LOCAL_STATE_DIR "@localstatedir@"
 
-#define MATAHARI_PORT @MATAHARI_PORT@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
 #endif
