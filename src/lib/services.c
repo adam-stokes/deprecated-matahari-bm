@@ -135,10 +135,9 @@ services_action_free(svc_action_t *op)
     free(op->id);
     free(op->opaque->exec);
 
-    free(op->opaque->args[0]);
-    free(op->opaque->args[1]);
-    free(op->opaque->args[2]);
-    free(op->opaque->args[3]);
+    for (i = 0; i < DIMOF(op->opaque->args); i++) {
+        free(op->opaque->args[i]);
+    }
 
     free(op->rsc);
     free(op->action);
