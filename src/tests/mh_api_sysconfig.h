@@ -1,6 +1,7 @@
 #ifndef __MH_API_NETWORK_UNITTEST_H
 #define __MH_API_NETWORK_UNITTEST_H
 #include <iostream>
+#include <cstring>
 #include <string>
 #include <sstream>
 #include <utility>
@@ -27,15 +28,16 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
 
     void testIsConfigured(void)
     {
-        const char *uri = "http://matahariproject.org/atom.xml"; // Test if download succeeds
-        const char flags = 0;
         const char key[] = "org.matahariproject.test.unittest"; // Unimportant key defined
+        char *key_res;
 
         mh_sysconfig_keys_dir_set("/tmp/");
 
         TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == TRUE);
-        TS_ASSERT((mh_sysconfig_is_configured(key)) != NULL);
-        TS_ASSERT((mh_sysconfig_run_uri(uri, flags, "puppet", key, NULL, NULL)) != -1);
+        TS_ASSERT(((key_res = mh_sysconfig_is_configured(key))) != NULL);
+        TS_ASSERT(!strcmp("OK", key_res));
+
+        free(key_res);
     }
 };
 
