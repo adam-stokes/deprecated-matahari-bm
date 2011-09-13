@@ -10,7 +10,7 @@ class matahari::yum {
       owner => root,
       group => root,
       mode => 600,
-      require => Package["yum"]
+      require => Package["yum"],
   }
 
   yumrepo {
@@ -19,6 +19,7 @@ class matahari::yum {
       baseurl => 'http://download.fedoraproject.org/pub/fedora/linux/updates/16/x86_64/',
       enabled => 1,
       gpgcheck => 0,
-      require => File["fedora-updates"]
+      gpgkey => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora',
+      require => File["fedora-updates"];
   }
 }

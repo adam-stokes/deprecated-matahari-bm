@@ -15,11 +15,11 @@ class matahari::base {
   }
 
   $serlist = [
-              "matahari-host",
-              "matahari-network",
-              "matahari-sysconfig",
-              "matahari-service",
-              "matahari-broker"]
+              "matahari-host.service",
+              "matahari-network.service",
+              "matahari-sysconfig.service",
+              "matahari-service.service",
+              "matahari-broker.service"]
   service {
     $serlist:
       ensure => stopped,
