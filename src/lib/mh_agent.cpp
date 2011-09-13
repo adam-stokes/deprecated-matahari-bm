@@ -234,8 +234,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     printf("\nOptions:\n");
     printf("\t-h | --help             print this help message.\n");
     for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
-        if (matahari_options[lpc].callback
-            && matahari_options[lpc].callback != connection_option) {
+        if (matahari_options[lpc].callback) {
             printf("\t-%c | --%-10s\t%s\n", matahari_options[lpc].code,
                    matahari_options[lpc].long_name, matahari_options[lpc].description);
         }
@@ -337,6 +336,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
      */
     if (mh_options.count("sasl-mechanism")) {
         if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
+            mh_info("Running k5start");
             ret = g_spawn_async(NULL, (gchar **) k5start_bin, NULL, G_SPAWN_SEARCH_PATH,
                                NULL, NULL, NULL, &error);
             if (ret == FALSE) {
