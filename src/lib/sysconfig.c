@@ -109,18 +109,22 @@ mh_sysconfig_is_configured(const char *key)
 }
 
 int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme,
-        const char *key) {
-    return sysconfig_os_run_uri(uri, flags, scheme, key);
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
+                     mh_sysconfig_result_cb result_cb, void *cb_data)
+{
+    return sysconfig_os_run_uri(uri, flags, scheme, key, result_cb, cb_data);
 }
 
 int
 mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
-        const char *key) {
-    return sysconfig_os_run_string(string, flags, scheme, key);
+                        const char *key, mh_sysconfig_result_cb result_cb,
+                        void *cb_data)
+{
+    return sysconfig_os_run_string(string, flags, scheme, key, result_cb, cb_data);
 }
 
 const char *
-mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme) {
+mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
+{
     return sysconfig_os_query(query, flags, scheme);
 }

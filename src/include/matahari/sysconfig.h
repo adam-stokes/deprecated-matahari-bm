@@ -1,5 +1,6 @@
 /* sysconfig.h - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
+ * Written by Russell Bryant <rbryant@redhat.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -27,8 +28,17 @@
 
 #include <stdint.h>
 #include <glib.h>
+
 /*! Supported FLAGS */
 #define MH_SYSCONFIG_FLAG_FORCE    (1 << 0)
+
+/**
+ * Callback for run_uri or run_string requests.
+ *
+ * \param[in] data cb_data provided with a run_string or run_uri request
+ * \param[in] res exit code from executed request
+ */
+typedef void (*mh_sysconfig_result_cb)(void *data, int res);
 
 /**
  * Download and process URI for configuration
@@ -38,12 +48,17 @@
  * \param[in] scheme the type of configuration i.e. puppet
  * \param[in] key configuration key for keeping track of existing
  *            configuration runs
+ * \param[in] result_cb This request may have to be executed asynchronously.  If this
+ *            function returns success (0), then this result callback will be called with the
+ *            final result of the request.
+ * \param[in] cb_data custom data to be passed to the result callback.
  *
- * \retval 0 for success
- * \retval-1 for failure
+ * \retval  0 for success
+ * \retval -1 for failure
  */
 extern int
-mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key);
+mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
+                     mh_sysconfig_result_cb result_cb, void *cb_data);
 
 /**
  * Process a text blob
@@ -53,13 +68,18 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const 
  * \param[in] scheme the type of configuration i.e. puppet
  * \param[in] key configuration key for keeping track of existing
  *            configuration runs
+ * \param[in] result_cb This request may have to be executed asynchronously.  If this
+ *            function returns success (0), then this result callback will be called with the
+ *            final result of the request.
+ * \param[in] cb_data custom data to be passed to the result callback.
  *
- * \retval 0 for success
- * \retval-1 for failure
+ * \retval  0 for success
+ * \retval -1 for failure
   */
 extern int
 mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
-        const char *key);
+                        const char *key, mh_sysconfig_result_cb result_cb,
+                        void *cb_data);
 
 /**
  * Query against a configuration object on the system

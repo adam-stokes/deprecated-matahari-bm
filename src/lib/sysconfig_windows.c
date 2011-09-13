@@ -1,5 +1,6 @@
 /* sysconfig_windows.c - Copyright (C) 2011 Red Hat, Inc.
  * Written by Adam Stokes <astokes@fedoraproject.org>
+ * Written by Russell Bryant <rbryant@redhat.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -26,44 +27,57 @@
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
 static int
-sysconfig_os_run_regedit(char *registry_file)
+run_regedit(char *registry_file)
 {
-    gchar *cmd[4];
+    gchar *cmd[] = {
+        "REGEDIT",
+        "/S",
+        registry_file,
+        NULL,
+    };
     gboolean ret;
     GError *error = NULL;
+    gint res = 0;
 
-    cmd[0] = "REGEDIT";
-    cmd[1] = "/S";
-    cmd[2] = registry_file;
-    cmd[3] = NULL;
+    ret = g_spawn_sync(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
+            NULL, NULL, NULL, &res, &error);
 
-    ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
-            NULL, NULL, NULL, &error);
     if (ret == FALSE) {
         g_error_free(error);
         return -1;
     }
-    return 0;
+
+    return res;
 }
 
 int
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
-        const char *key)
+        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
-    return 0;
+    return -1;
 }
 
 int
-sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
-        const char *key)
+sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
+        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data);
 {
-    char filename[PATH_MAX];
-    g_snprintf(filename, sizeof(filename), "%s\\%s.REG", g_getenv("TEMP"), key);
-    if (strcasecmp(scheme, "registry") == 0 ) {
-            g_file_set_contents(filename, data, strlen(data), NULL);
-            return sysconfig_os_run_regedit(filename);
+    if (!strcasecmp(scheme, "registry")) {
+        char filename[PATH_MAX];
+        int res;
+
+        g_snprintf(filename, sizeof(filename), "%s\\%s.REG", g_getenv("TEMP"), key);
+        g_file_set_contents(filename, data, strlen(data), NULL);
+
+        res = run_regedit(filename);
+
+        if (!res) {
+            result_cb(cb_data, res);
+        }
+
+        return res;
     }
-    return 0;
+
+    return -1;
 }
 
 const char *

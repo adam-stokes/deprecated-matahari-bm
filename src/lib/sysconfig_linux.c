@@ -27,13 +27,29 @@
 #include <unistd.h>
 #include <glib.h>
 #include <curl/curl.h>
+
 #include "matahari/logging.h"
-#include "matahari/sysconfig.h"
 #include "matahari/utilities.h"
+#include "matahari/services.h"
+#include "matahari/sysconfig.h"
 #include "sysconfig_private.h"
 
-
 MH_TRACE_INIT_DATA(mh_sysconfig);
+
+struct action_data {
+    char *key;
+    char *filename;
+    mh_sysconfig_result_cb result_cb;
+    void *cb_data;
+};
+
+static void
+action_data_free(struct action_data *action_data)
+{
+    free(action_data->key);
+    free(action_data->filename);
+    free(action_data);
+}
 
 static int
 sysconfig_os_download(const char *uri, FILE *fp)
@@ -57,65 +73,117 @@ sysconfig_os_download(const char *uri, FILE *fp)
     return 0;
 }
 
+static void
+action_cb(svc_action_t *action)
+{
+    struct action_data *action_data = action->cb_data;
+    char buf[32] = "OK";
+
+    if (action->rc) {
+        snprintf(buf, sizeof(buf), "FAILED\n%d", action->rc);
+    }
+
+    if (mh_sysconfig_set_configured(action_data->key, buf) == FALSE) {
+        mh_err("Unable to write to key file '%s'", action_data->key);
+    }
+
+    action_data->result_cb(action_data->cb_data, action->rc);
+
+    unlink(action_data->filename);
+
+    action_data_free(action_data);
+    action->cb_data = NULL;
+}
 
 static int
-sysconfig_os_run_puppet(const char *uri, const char *data, const char *key)
+run_puppet(const char *uri, const char *data, const char *key,
+           mh_sysconfig_result_cb result_cb, void *cb_data)
 {
-    gboolean ret;
-    GError *error = NULL;
-    char fmt_error[1024];
-    gchar *cmd[4];
+    const char *args[3];
     char filename[PATH_MAX];
-    int fd;
-    FILE *fp;
+    svc_action_t *action = NULL;
+    struct action_data *action_data = NULL;
 
-    if (uri != NULL) {
+    if (uri) {
+        int fd;
+        FILE *fp;
+
         snprintf(filename, sizeof(filename), "%s", "puppet_conf_XXXXXX");
+
         fd = mkstemp(filename);
         if (fd < 0) {
             return -1;
         }
+
         fp = fdopen(fd, "w+b");
         if (fp == NULL) {
             close(fd);
+            unlink(filename);
             return -1;
         }
+
         if ((sysconfig_os_download(uri, fp)) != 0) {
             fclose(fp);
+            unlink(filename);
             return -1;
         }
+
         fclose(fp);
-    } else if (data != NULL) {
-        snprintf(filename, sizeof(filename), "%s", "puppet_conf_blob");
+    } else if (data) {
+        snprintf(filename, sizeof(filename), "puppet_conf_%u", g_random_int());
         g_file_set_contents(filename, data, strlen(data), NULL);
     } else {
         return -1;
     }
 
-    cmd[0] = "puppet";
-    cmd[1] = "apply";
-    cmd[2] = filename;
-    cmd[3] = NULL;
-    mh_info("Running %s %s", cmd[0], cmd[1]);
-    ret = g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
-            NULL, NULL, NULL, &error);
-    if (ret == FALSE) {
-        snprintf(fmt_error, sizeof(fmt_error), "ERROR\n%s", error->message);
-        if (mh_sysconfig_set_configured(key, fmt_error) == FALSE) {
-            mh_err("Unable to write to file.");
-        }
-        g_error_free(error);
-        return -1;
+    args[0] = "apply";
+    args[1] = filename;
+    args[2] = NULL;
+
+    if (!(action = mh_services_action_create_generic("puppet", args))) {
+        goto return_failure;
     }
-    if (mh_sysconfig_set_configured(key, "OK") == FALSE) {
-        mh_err("Unable to write to file.");
-        return -1;
+
+    action_data = calloc(1, sizeof(*action_data));
+    action_data->key = strdup(key);
+    action_data->filename = strdup(filename);
+    action_data->result_cb = result_cb;
+    action_data->cb_data = cb_data;
+
+    action->cb_data = action_data;
+    action->id = strdup("puppet");
+
+    mh_info("Running puppet apply %s", filename);
+
+    if (services_action_async(action, action_cb) == FALSE) {
+        goto return_failure;
     }
+
     return 0;
+
+return_failure:
+    if (action) {
+        services_action_free(action);
+        action = NULL;
+    }
+
+    if (action_data) {
+        action_data_free(action_data);
+        action_data = NULL;
+    }
+
+    if (mh_sysconfig_set_configured(key, "ERROR") == FALSE) {
+        mh_err("Unable to write to file.");
+    }
+
+    unlink(filename);
+
+    return -1;
 }
 
 static int
-sysconfig_os_run_augeas(const char *query, const char *data, const char *key)
+run_augeas(const char *query, const char *data, const char *key,
+           mh_sysconfig_result_cb result_cb, void *cb_data)
 {
     mh_warn("not implemented\n");
     return -1;
@@ -131,35 +199,37 @@ sysconfig_os_query_augeas(const char *query)
 
 int
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
-        const char *key)
+        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
     int rc = 0;
 
     if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
-            rc = sysconfig_os_run_puppet(uri, NULL, key);
+            rc = run_puppet(uri, NULL, key, result_cb, cb_data);
         } else if (strcasecmp(scheme, "augeas") == 0) {
-            rc = sysconfig_os_run_augeas(uri, NULL, key);
+            rc = run_augeas(uri, NULL, key, result_cb, cb_data);
         } else {
             rc = -1;
         }
     }
+
     return rc;
 }
 
 int
-sysconfig_os_run_string(const char *data, uint32_t flags, const char *scheme,
-        const char *key)
+sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
+        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
     int rc = 0;
 
     if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
         if (strcasecmp(scheme, "puppet") == 0) {
-            rc = sysconfig_os_run_puppet(NULL, data, key);
+            rc = run_puppet(NULL, string, key, result_cb, cb_data);
         } else {
             rc = -1;
         }
     }
+
     return rc;
 }
 
