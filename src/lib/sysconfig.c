@@ -26,8 +26,9 @@
 #include <glib/gprintf.h>
 
 #include "matahari/logging.h"
-#include "matahari/sysconfig.h"
 #include "matahari/utilities.h"
+#include "matahari/sysconfig.h"
+#include "matahari/sysconfig_internal.h"
 #include "sysconfig_private.h"
 
 MH_TRACE_INIT_DATA(mh_sysconfig);

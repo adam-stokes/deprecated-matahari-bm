@@ -12,8 +12,10 @@
 #include <cxxtest/TestSuite.h>
 
 extern "C" {
-#include "matahari/sysconfig.h"
 #include <glib.h>
+
+#include "matahari/sysconfig.h"
+#include "matahari/sysconfig_internal.h"
 #include "mh_test_utilities.h"
 };
 
