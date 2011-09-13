@@ -188,11 +188,37 @@ extern svc_action_t *resources_action_create(
     const char *name, const char *standard, const char *provider, const char *agent,
     const char *action, int interval /* ms */, int timeout /* ms */, GHashTable *params);
 
+/**
+ * Utilize services API to execute an arbitrary command.
+ *
+ * This API has useful infrastructure in place to be able to run a command
+ * in the background and get notified via a callback when the command finishes.
+ *
+ * \param[in] exec command to execute
+ * \param[in] args arguments to the command, NULL terminated
+ *
+ * \return a svc_action_t object, used to pass to the execute function
+ * (services_action_sync() or services_action_async()) and is
+ * provided to the callback.
+ */
+svc_action_t *
+mh_services_action_create_generic(const char *exec, const char *args[]);
+
 extern void services_action_free(svc_action_t *op);
 
 extern gboolean services_action_sync(svc_action_t *op);
-extern gboolean services_action_async(svc_action_t *op,
-                                      void (*action_callback)(svc_action_t *));
+
+/**
+ * Run an action asynchronously.
+ *
+ * \param[in] op services action data
+ * \param[in] action_callback callback for when the action completes
+ *
+ * \retval TRUE succesfully started execution
+ * \retval FALSE failed to start execution, no callback will be received
+ */
+extern gboolean
+services_action_async(svc_action_t *op, void (*action_callback)(svc_action_t *));
 
 extern gboolean services_action_cancel(const char *name, const char *action,
                                        int interval);
