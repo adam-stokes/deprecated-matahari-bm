@@ -1,5 +1,5 @@
 /*
- * mh_hsa_linux.h: dns srv high availability test 
+ * mh_hs.h: dns srv high availability test 
  *
  * Copyright (C) 2011 Red Hat Inc.
  *
@@ -33,7 +33,6 @@ extern "C" {
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include "mh_test_utilities.h"
-#include "matahari/utilities.h"
 #include "matahari/dnssrv.h"
 #include "matahari/dnssrv_internal.h"
 };

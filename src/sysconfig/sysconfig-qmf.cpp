@@ -117,6 +117,5 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     session.methodSuccess(event);
 
 bail:
-    session.raiseException(event, "Error in return arguments");
     return TRUE;
 }

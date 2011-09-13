@@ -43,8 +43,6 @@ pidfile=@localstatedir@/run/matahari-broker.pid
 # Turn off automatic systemd redirects
 #SYSTEMCTL_SKIP_REDIRECT=1
 
-# Timeout for qpid-route in seconds
-TIMEOUT=5
 
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
@@ -57,47 +55,6 @@ if [ -f @sysconfdir@/sysconfig/matahari-broker ]; then
 fi
 
 RETVAL=0
-
-# Enable broker federation
-federate() {
-    unset array
-    declare -a array
-    for name in $@
-    do
-        case $name in
-            *_matahari-broker._tcp*)
-                RESP=`dig SRV $name +short| awk '{print $4":"$3}'|sed 's/\.:/:/'`
-                array+=$RESP
-                ;;
-            *:[[:digit:]]*)
-                array+=$name
-                ;;
-            *)
-                echo -n $"Invalid broker: $name"
-        esac
-    done
-
-    for name in ${array[@]}
-    do
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
-            localhost:$MATAHARI_PORT amq.direct &> /dev/null
-
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add localhost:$MATAHARI_PORT \
-            $name amq.direct &> /dev/null
-
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
-            localhost:$MATAHARI_PORT qmf.default.direct &> /dev/null
-
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add localhost:$MATAHARI_PORT \
-            $name qmf.default.direct &> /dev/null
-
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add $name \
-            localhost:$MATAHARI_PORT qmf.default.topic &> /dev/null
-
-       /usr/bin/qpid-route --timeout=$TIMEOUT dynamic add localhost:$MATAHARI_PORT \
-            $name qmf.default.topic &> /dev/null
-    done
-}
 
 start() {
 	echo -n $"Starting Matahari broker daemon: "
@@ -112,9 +69,6 @@ start() {
             [ -x /sbin/restorecon ] && /sbin/restorecon $pidfile
 	    runuser -s /bin/sh qpidd -c "/usr/sbin/$prog --check > $pidfile"
 	fi
-
-    federate ${FEDERATED_BROKERS[@]}
-
 	return $RETVAL
 }
 
