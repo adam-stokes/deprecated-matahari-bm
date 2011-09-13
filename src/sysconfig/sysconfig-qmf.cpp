@@ -48,12 +48,31 @@ public:
 
 const char ConfigAgent::SYSCONFIG_NAME[] = "Sysconfig";
 
+class AsyncCB
+{
+public:
+    AsyncCB(const std::string& _key, qmf::AgentEvent& _event,
+            qmf::AgentSession& _session) :
+                    key(_key), event(_event), session(_session) {}
+    ~AsyncCB() {}
+
+    static void result_cb(void *cb_data, int res);
+
+private:
+    std::string key;
+    /** The method call that initiated this async action */
+    qmf::AgentEvent event;
+    /** The QMF session that initiated this async action */
+    qmf::AgentSession session;
+};
+
 int
 main(int argc, char **argv)
 {
     ConfigAgent agent;
     int rc = agent.init(argc, argv, "Sysconfig");
     if (rc == 0) {
+        mainloop_track_children(G_PRIORITY_DEFAULT);
         agent.run();
     }
     return rc;
@@ -73,10 +92,26 @@ ConfigAgent::setup(qmf::AgentSession session)
     return 0;
 }
 
+void
+AsyncCB::result_cb(void *cb_data, int res)
+{
+    AsyncCB *action_data = static_cast<AsyncCB *>(cb_data);
+    char *status;
+
+    status = mh_sysconfig_is_configured(action_data->key.c_str());
+    action_data->event.addReturnArgument("status", status ? status : "unknown");
+
+    action_data->session.methodSuccess(action_data->event);
+
+    free(status);
+    delete action_data;
+}
+
 gboolean
 ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer user_data)
 {
     char *status = NULL;
+    bool async = false;
 
     const std::string& methodName(event.getMethodName());
     if (event.getType() != qmf::AGENT_METHOD) {
@@ -86,19 +121,37 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     qpid::types::Variant::Map& args = event.getArguments();
 
     if (methodName == "run_uri") {
-        mh_sysconfig_run_uri(args["uri"].asString().c_str(),
+        AsyncCB *action_data = new AsyncCB(args["key"].asString(), event, session);
+        int res;
+
+        res = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
-            args["key"].asString().c_str());
-        status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-        event.addReturnArgument("status", status ? status : "unknown");
+            args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
+
+        if (res) {
+            session.raiseException(event, MH_INVALID_ARGS);
+            delete action_data;
+            goto bail;
+        } else {
+            async = true;
+        }
     } else if (methodName == "run_string") {
-        mh_sysconfig_run_string(args["text"].asString().c_str(),
+        AsyncCB *action_data = new AsyncCB(args["key"].asString(), event, session);
+        int res;
+
+        res = mh_sysconfig_run_string(args["text"].asString().c_str(),
             args["flags"].asUint32(),
             args["scheme"].asString().c_str(),
-            args["key"].asString().c_str());
-        status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-        event.addReturnArgument("status", status ? status : "unknown");
+            args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
+
+        if (res) {
+            session.raiseException(event, MH_INVALID_ARGS);
+            delete action_data;
+            goto bail;
+        } else {
+            async = true;
+        }
     } else if (methodName == "query") {
         const char *data = NULL;
         data = mh_sysconfig_query(args["query"].asString().c_str(),
@@ -114,7 +167,10 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
     }
 
     free(status);
-    session.methodSuccess(event);
+
+    if (!async) {
+        session.methodSuccess(event);
+    }
 
 bail:
     return TRUE;

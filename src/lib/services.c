@@ -117,9 +117,35 @@ svc_action_t *resources_action_create(
     return op;
 }
 
+svc_action_t *
+mh_services_action_create_generic(const char *exec, const char *args[])
+{
+    svc_action_t *op;
+    unsigned int cur_arg;
+
+    op = calloc(1, sizeof(*op));
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
+
+    op->opaque->exec = strdup(exec);
+    op->opaque->args[0] = strdup(exec);
+
+    for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
+        op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
+
+        if (cur_arg == DIMOF(op->opaque->args) - 1) {
+            mh_err("svc_action_t args list not long enough for '%s' execution request.", exec);
+            break;
+        }
+    }
+
+    return op;
+}
+
 void
 services_action_free(svc_action_t *op)
 {
+    unsigned int i;
+
     if (op == NULL) {
         return;
     }
@@ -137,10 +163,9 @@ services_action_free(svc_action_t *op)
     free(op->id);
     free(op->opaque->exec);
 
-    free(op->opaque->args[0]);
-    free(op->opaque->args[1]);
-    free(op->opaque->args[2]);
-    free(op->opaque->args[3]);
+    for (i = 0; i < DIMOF(op->opaque->args); i++) {
+        free(op->opaque->args[i]);
+    }
 
     free(op->rsc);
     free(op->action);

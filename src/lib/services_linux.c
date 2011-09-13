@@ -57,6 +57,8 @@ read_output(int fd, gpointer user_data)
     char buf[500];
     static const size_t buf_read_len = sizeof(buf) - 1;
 
+    mh_trace("%p", op);
+
     if (fd == op->opaque->stderr_fd) {
         is_err = TRUE;
         if (op->stderr_data) {
@@ -99,6 +101,9 @@ static void
 pipe_out_done(gpointer user_data)
 {
     svc_action_t* op = (svc_action_t *) user_data;
+
+    mh_trace("%p", op);
+
     op->opaque->stdout_gsource = NULL;
     if (op->opaque->stdout_fd > STDERR_FILENO) {
         close(op->opaque->stdout_fd);
@@ -137,7 +142,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_OCF_env_vars(svc_action_t *op)
 {
-    if (strcmp("ocf", op->standard) != 0) {
+    if (!op->standard || strcmp("ocf", op->standard) != 0) {
         return;
     }
 
