@@ -1,4 +1,4 @@
-Puppet::Type.type(:service).provide :systemd,
+Puppet::Type.type(:service).provide :mh_systemd,
   :parent => :init, :source => :init do
 
   desc "execute systemd service using systemctl"

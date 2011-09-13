@@ -251,6 +251,16 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
     int backoff = 0;
     GList *srv_records = NULL, *cur_srv_record = NULL;
     struct mh_dnssrv_record *record;
+    GError *error = NULL;
+    gboolean ret;
+    const gchar *k5start_bin[] = {
+        "/usr/bin/k5start",
+        "-f",
+        "/etc/krb5.keytab",
+        "-K",
+        "10",
+        "-U",
+    };
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
@@ -319,6 +329,19 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 
             } else if(backoff) {
                 g_usleep(backoff * G_USEC_PER_SEC);
+            }
+        }
+    }
+    /* Attempt to intiate k5start for credential renewal's without prompting for a
+     * password each time an agent is run
+     */
+    if (mh_options.count("sasl-mechanism")) {
+        if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
+            ret = g_spawn_async(NULL, (gchar **) k5start_bin, NULL, G_SPAWN_SEARCH_PATH,
+                               NULL, NULL, NULL, &error);
+            if (ret == FALSE) {
+                mh_warn("Unable to initialize kerberos automatic ticket renewal: %s", error->message);
+                g_error_free(error);
             }
         }
     }
