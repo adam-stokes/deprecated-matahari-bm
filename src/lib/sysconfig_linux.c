@@ -51,26 +51,70 @@ action_data_free(struct action_data *action_data)
     free(action_data);
 }
 
+/**
+ * \internal
+ * \note This function is not thread-safe.
+ */
 static int
 sysconfig_os_download(const char *uri, FILE *fp)
 {
     CURL *curl;
-    CURLcode res;
+    CURLcode curl_res;
+    long http_code = 0;
+    int res = 0;
+    static int curl_init = 0;
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, uri);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        res = curl_easy_perform(curl);
+    if (!curl_init) {
+        curl_res = curl_global_init(CURL_GLOBAL_DEFAULT);
 
-        if (CURLE_OK != res) {
+        if (curl_res != CURLE_OK) {
+            mh_err("curl_global_init failed: %d", curl_res);
             return -1;
         }
-        curl_easy_cleanup(curl);
+
+        curl_init = 1;
     }
-    curl_global_cleanup();
-    return 0;
+
+    if (!(curl = curl_easy_init())) {
+        return -1;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_URL, uri);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of URI '%s' failed. (%d)", uri, curl_res);
+        res = -1;
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of WRITEDATA '%p' failed. (%d)", fp, curl_res);
+        res = -1;
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_perform(curl);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl request for URI '%s' failed. (%d)", uri, curl_res);
+        res = -1;
+        goto return_cleanup;
+    }
+
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_getinfo for RESPONSE_CODE failed. (%d)", curl_res);
+        res = -1;
+        goto return_cleanup;
+    }
+    if (http_code < 200 || http_code > 299) {
+        mh_warn("curl request for URI '%s' got response %ld", uri, http_code);
+        res = -1;
+    }
+
+return_cleanup:
+    curl_easy_cleanup(curl);
+
+    return res;
 }
 
 static void
