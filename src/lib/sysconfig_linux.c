@@ -95,6 +95,62 @@ action_cb(svc_action_t *action)
     action->cb_data = NULL;
 }
 
+/**
+ * \internal
+ * \brief Check the installed version of puppet.
+ *
+ * \param[out] use_apply whether to use "puppet <foo>" or "puppet apply <foo>"
+ *
+ * \retval 0 success
+ * \retval -1 failed to find puppet at all
+ */
+static int
+check_puppet(int *use_apply)
+{
+    gboolean spawn_res;
+    gchar *argv[] = {
+        "puppet", "--version", NULL,
+    };
+    gchar *out = NULL;
+    gchar *out_copy = NULL;
+    GError *error = NULL;
+    char *dot;
+    int res = 0;
+    unsigned int major;
+
+    spawn_res = g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
+                             &out, NULL, NULL, &error);
+
+    if (spawn_res == FALSE) {
+        mh_err("Failed to check puppet version: (%d) %s", error->code, error->message);
+        g_error_free(error);
+        return -1;
+    }
+
+    out_copy = g_strdup(out);
+
+    if (!(dot = strchr(out_copy, '.'))) {
+        mh_err("Unexpected output from 'puppet --version': '%s'", out);
+        res = -1;
+        goto return_cleanup;
+    }
+
+    *dot = '\0';
+
+    if (sscanf(out_copy, "%u", &major) != 1) {
+        mh_err("Failed to parse outpuet from 'puppet --version': '%s'", out);
+        res = -1;
+    }
+
+    *use_apply = (major >= 2) ? 1 : 0;
+
+return_cleanup:
+    g_free(out);
+    g_free(out_copy);
+
+    return res;
+}
+
 static int
 run_puppet(const char *uri, const char *data, const char *key,
            mh_sysconfig_result_cb result_cb, void *cb_data)
@@ -103,6 +159,11 @@ run_puppet(const char *uri, const char *data, const char *key,
     char filename[PATH_MAX];
     svc_action_t *action = NULL;
     struct action_data *action_data = NULL;
+    int use_apply = 0;
+
+    if (check_puppet(&use_apply)) {
+        return -1;
+    }
 
     if (uri) {
         int fd;
@@ -136,9 +197,14 @@ run_puppet(const char *uri, const char *data, const char *key,
         return -1;
     }
 
-    args[0] = "apply";
-    args[1] = filename;
-    args[2] = NULL;
+    if (use_apply) {
+        args[0] = "apply";
+        args[1] = filename;
+        args[2] = NULL;
+    } else {
+        args[0] = filename;
+        args[1] = NULL;
+    }
 
     if (!(action = mh_services_action_create_generic("puppet", args))) {
         goto return_failure;
@@ -153,7 +219,7 @@ run_puppet(const char *uri, const char *data, const char *key,
     action->cb_data = action_data;
     action->id = strdup("puppet");
 
-    mh_info("Running puppet apply %s", filename);
+    mh_info("Running puppet %s%s", use_apply ? "apply " : "", filename);
 
     if (services_action_async(action, action_cb) == FALSE) {
         goto return_failure;

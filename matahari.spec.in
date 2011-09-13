@@ -143,7 +143,7 @@ Summary:	QMF agent for post boot configuration services.
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:   puppet >= 2.6.6
+Requires:   puppet
 
 %description sysconfig
 QMF agent/console for providing post boot capabilities.
