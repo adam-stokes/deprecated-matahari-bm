@@ -65,15 +65,18 @@ static char *broker_lookup(const char *query)
 {
 #ifdef HAVE_RESOLV_H
     static char broker[1025 + 6];
-    char *host;
+    char host[1024];
+    uint16_t port;
     mh_trace("Looking up DNS SRV record for \"%s\"", query);
+    int res;
 
-    host = mh_dnssrv_lookup(query);
+    res = mh_dnssrv_lookup_single(query, host, sizeof(host), &port);
 
-    if (host) {
-        snprintf(broker, sizeof(broker), "%s:%hu", host, MATAHARI_PORT);
+    if (!res) {
+        snprintf(broker, sizeof(broker), "%s:%hu", host, port);
         return broker;
     }
+
     mh_warn("Failed to find DNS SRV record for \"%s\"", query);
 #else
     mh_warn("DNS SRV lookups are not supported");

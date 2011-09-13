@@ -11,23 +11,10 @@ fi
 BRANCH=$1
 TAG=$2
 
-cat << EOF
-
-For now, the version string is hard coded in a number of places.
-Be sure to change them all.
-   - GNUmakefile
-   - autobuild.sh
-   - matahari.spec.in
-   - CMakeLists.txt
-If you have already done this, hit enter to continue.  If you haven't,
-hit control-c and go do it.
-
-EOF
-read
-
+git checkout ${BRANCH}
+echo "${TAG:1}" > .version
+git add .version
+git commit -s -m "build: update .version to ${TAG:1}"
 git tag -a -m "Tagged release $TAG" $TAG $BRANCH
 git archive --prefix=matahari-${TAG:1}/ $TAG | tar x
-cd matahari-${TAG:1}
-make manual.html
-cd ..
 tar czvf matahari-${TAG:1}.tar.gz matahari-${TAG:1}/

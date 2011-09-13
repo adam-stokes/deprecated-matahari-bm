@@ -16,9 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef WIN32
-# include "config.h"
-#endif
+#include "config.h"
 
 #include "matahari/network.h"
 #include "network_private.h"
@@ -151,6 +149,10 @@ mh_network_get_ip_address(const char *iface, char *buf, size_t len)
     GList *list = NULL;
     GList *plist;
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
+
+    if (len) {
+        *buf = '\0';
+    }
 
     list = mh_network_get_interfaces();
     for (plist = g_list_first(list); plist; plist = g_list_next(plist)) {

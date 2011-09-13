@@ -19,7 +19,7 @@
 -include Makefile
 
 PACKAGE		?= matahari
-VERSION		?= 0.4.3
+VERSION		?= $(shell cat .version)
 TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
@@ -32,7 +32,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 TAG    ?= $(shell git show --pretty="format:%h" --abbrev-commit | head -n 1)
 WITH   ?= 
 VARIANT ?=
-PROFILE ?= fedora-rawhide-x86_64
+PROFILE ?= fedora-16-x86_64
 
 BUILD_COUNTER	?= build.counter
 COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))
@@ -48,7 +48,7 @@ linux.build:
 
 tests: linux.build
 	@if [ -f linux.build/src/tests/CTestTestfile.cmake ]; then \
-		cd linux.build/src/tests && ctest; \
+		cd linux.build/src/tests && ctest -V; \
 	fi
 
 windows.build:
@@ -81,9 +81,6 @@ export:
 
 $(VARIANT)$(PACKAGE).spec: $(VARIANT)$(PACKAGE).spec.in
 	cp $(VARIANT)$(PACKAGE).spec.in $(VARIANT)$(PACKAGE).spec
-
-srpm:	export $(VARIANT)$(PACKAGE).spec
-	rm -f *.src.rpm
 	if [ -e $(BUILD_COUNTER) ]; then									\
 		echo $(COUNT) > $(BUILD_COUNTER);								\
 		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(VARIANT)$(PACKAGE).spec;  \
@@ -92,6 +89,11 @@ srpm:	export $(VARIANT)$(PACKAGE).spec
 		sed -i.sed 's/global\ specversion.*/global\ specversion\ 1/' $(VARIANT)$(PACKAGE).spec; 	\
 	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
+	sed -i.sed 's/#MATAHARI_VERSION#/$(VERSION)/' $(VARIANT)$(PACKAGE).spec
+
+srpm:	export $(VARIANT)$(PACKAGE).spec
+	rm -f *.src.rpm
+
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -99,8 +101,7 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
-overlay: export
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(VARIANT)$(PACKAGE).spec
+overlay: export $(VARIANT)$(PACKAGE).spec
 	cp $(TARFILE) ~/rpmbuild/SOURCES
 	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
 	make -C ~/rpmbuild/SOURCES $(VARIANT)$(PACKAGE)
@@ -137,7 +138,7 @@ coverity:
 #	rm -rf $(COVERITY_DIR) $(COVERITY_DIR).build
 
 clean:
-	rm -f *.tgz *.sed *.gres *~
+	rm -f *.tgz *.sed *.gres *~ *.spec
 	@if [ -d linux.build ] ; then \
 		$(MAKE) --no-print-dir -C linux.build clean ; \
 	elif [ -d windows.build ] ; then \
@@ -177,4 +178,4 @@ endif
 	@sed -i -e 's/###MATAHARI_VERSION###/$(VERSION)/' doc/Doxyfile
 	@doxygen doc/Doxyfile
 
-.PHONY: check linux.build windows.build clean doxygen tags www-doxygen coverity
+.PHONY: check linux.build windows.build clean doxygen tags www-doxygen coverity $(VARIANT)$(PACKAGE).spec

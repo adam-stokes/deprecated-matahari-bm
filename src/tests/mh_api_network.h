@@ -59,7 +59,19 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
     void testGetNetworkIP(void)
     {
         const char *ip = NULL;
-        char buf[64];
+        char buf[64] = "blah";
+
+        /*
+         * Ensure that buf gets initialized even if a bogus interface
+         * name is specified.
+         */
+        ip = mh_network_get_ip_address("fakeInterface", buf, sizeof(buf));
+        TS_ASSERT(*ip == '\0');
+
+        /*
+         * Now verify we can get a valid IP address for each interface
+         * on this system.
+         */
         for(std::vector<char *>::iterator it = iface_names.begin(); 
             it != iface_names.end(); ++it) {
           ip = mh_network_get_ip_address(*it, buf, sizeof(buf));
@@ -69,6 +81,7 @@ class MhApiNetworkSuite : public CxxTest::TestSuite
                                       ip)) >= 0);
           infomsg.str("");
         }
+
     }
 
     void testGetNetworkMAC(void)

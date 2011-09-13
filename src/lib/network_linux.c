@@ -20,8 +20,11 @@
  * Author: Adam Stokes <astokes@fedoraproject.org>
  */
 
-#include "matahari/network.h"
+#include "config.h"
+
 #include <string.h>
+
+#include "matahari/network.h"
 
 void
 network_os_start(const char *iface)

@@ -15,7 +15,7 @@
 %endif
 
 Name:		matahari
-Version:	0.4.3
+Version:	#MATAHARI_VERSION#
 Release:	%{mh_release}%{?dist}
 Summary:	Matahari QMF Agents for Linux guests
 
@@ -46,7 +46,8 @@ BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
-BuildRequires:  cxxtest
+BuildRequires:	cxxtest
+BuildRequires:	help2man
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
@@ -182,12 +183,23 @@ make %{?_smp_mflags}
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
+%if %{defined _unitdir}
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig-console
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
+%endif
+
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
 %{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
 %{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
+%endif
 
 %{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
 
@@ -333,8 +345,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-network
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
+%{_mandir}/man8/matahari-qmf-networkd.8*
 %endif
 
 %if %{with dbus}
@@ -354,8 +369,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-host
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
+%{_mandir}/man8/matahari-qmf-hostd.8*
 %endif
 
 %if %{with dbus}
@@ -375,9 +393,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-service
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
-%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
+%{_mandir}/man8/matahari-qmf-serviced.8*
 %endif
 
 %if %{with dbus}
@@ -398,8 +418,11 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
+%{_mandir}/man8/matahari-qmf-sysconfigd.8*
 %endif
 
 %files consoles
@@ -407,8 +430,13 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %if %{with qmf}
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig-console
+%endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
+%{_mandir}/man8/matahari-qmf-sysconfig-consoled.8*
+%attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
+%{_mandir}/man8/matahari-qmf-service-cli.8*
 
 %if %{defined _unitdir}
 %{_unitdir}/matahari-sysconfig-console.service
@@ -418,10 +446,13 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with qmf}
 %files broker
 %defattr(644, root, root, 755)
+%if %{undefined _unitdir}
 %attr(755, root, root) %{_initddir}/matahari-broker
+%endif
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
 %attr(755, root, root) %{_sbindir}/matahari-brokerd
+%{_mandir}/man8/matahari-brokerd.8*
 %doc AUTHORS COPYING
 
 %if %{defined _unitdir}

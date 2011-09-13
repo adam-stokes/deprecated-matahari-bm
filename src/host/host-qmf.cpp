@@ -22,9 +22,7 @@
  * \brief Host QMF Agent
  */
 
-#ifndef WIN32
 #include "config.h"
-#endif
 
 #include <set>
 #include "matahari/agent.h"

@@ -18,7 +18,7 @@
 #
 set -x
 PACKAGE=matahari
-VERSION=0.4.3
+VERSION=`cat .version`
 
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
@@ -33,9 +33,7 @@ function make_srpm() {
     TARPREFIX=${PACKAGE}-${PACKAGE}-${TAG}
     TARFILE=${TARPREFIX}.tgz
 
-    cp ${VARIANT}matahari.spec.in ${VARIANT}matahari.spec
-    sed -i.sed s/global\ specversion.*/global\ specversion\ ${AUTO_BUILD_COUNTER}/ ${VARIANT}matahari.spec
-    sed -i.sed s/global\ upstream_version.*/global\ upstream_version\ ${TAG}/ ${VARIANT}matahari.spec
+    make ${VARIANT}matahari.spec
     
     rm -f ${TARFILE}
     git archive --prefix=${TARPREFIX}/ ${TAG} | gzip > ${TARFILE}
@@ -49,9 +47,8 @@ function make_srpm() {
 
 env
 
-# When qpid is consistently usable 
-# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
-build_target=`rpm --eval fedora-rawhide-%{_arch}`
+build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+#build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Linux Build =::=::=::= "
@@ -78,9 +75,8 @@ $results
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
 
-# When qpid is consistently usable 
-# build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
-build_target=`rpm --eval fedora-rawhide-%{_arch}`
+build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
+#build_target=`rpm --eval fedora-rawhide-%{_arch}`
 
 make_srpm mingw32-
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch

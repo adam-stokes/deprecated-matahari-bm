@@ -20,14 +20,14 @@
  * Author: Adam Stokes <astokes@fedoraproject.org>
  */
 
+#include "config.h"
+
 #ifndef WINVER
 # define WINVER 0x0501
 #endif
 
 #include "matahari/network.h"
 #include "matahari/utilities.h"
-
-#include <config.h>
 
 #include <glib.h>
 #include <windows.h>

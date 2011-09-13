@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "config.h"
+
 #ifdef WIN32
 #include <windows.h>
 int use_stderr = 1;
@@ -46,6 +48,7 @@ extern "C" {
 #include <sys/types.h>
 #include "matahari/logging.h"
 #include "matahari/dnssrv.h"
+#include "matahari/utilities.h"
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netdb.h>
@@ -225,17 +228,19 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
 int print_help(int code, const char *name, const char *arg, void *userdata)
 {
     int lpc = 0;
-    printf("Usage:\tmatahari-%sd <options>\n", (char *)userdata);
+
+    printf("matahari-%sd <options>\n", (const char *) userdata);
 
     printf("\nOptions:\n");
     printf("\t-h | --help             print this help message.\n");
-    for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
-        if(matahari_options[lpc].callback
+    for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
+        if (matahari_options[lpc].callback
             && matahari_options[lpc].callback != connection_option) {
             printf("\t-%c | --%-10s\t%s\n", matahari_options[lpc].code,
                    matahari_options[lpc].long_name, matahari_options[lpc].description);
         }
     }
+
     return 0;
 }
 
@@ -244,7 +249,8 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 {
     int retries = 0;
     int backoff = 0;
-    char *target = NULL;
+    GList *srv_records = NULL, *cur_srv_record = NULL;
+    struct mh_dnssrv_record *record;
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
@@ -253,30 +259,37 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
          * used specifically requesting an SRV lookup.
          */
 
-        /* Is _ssl valid here as a protocol?  _udp? */
-        std::stringstream fqdn;
+        std::stringstream query;
 
         if (mh_options.count("servername")) {
-            fqdn << "_matahari._tcp." << mh_options["servername"];
+            query << "_matahari._tcp." << mh_options["servername"];
         } else {
-            fqdn << "_matahari._tcp." << mh_dnsdomainname();
+            query << "_matahari._tcp." << mh_dnsdomainname();
         }
 
-        target = mh_dnssrv_lookup(fqdn.str().c_str());
-
-        if(target) {
-            mh_info("SRV record resolved to: %s", target);
+        if ((cur_srv_record = srv_records = mh_dnssrv_lookup(query.str().c_str()))) {
+            mh_info("SRV query successful: %s", query.str().c_str());
         } else {
-            mh_info("Could not resolve SRV record for %s", fqdn.str().c_str());
+            mh_info("SRV query not successful: %s", query.str().c_str());
         }
     }
 
     while (true) {
         std::stringstream url;
 
-        if (target) {
+        if (srv_records) {
             /* Use the result of a DNS SRV lookup. */
-            url << "amqp:" << mh_options["protocol"] << ":" << target << ":" << mh_options["serverport"] ;
+
+            record = (struct mh_dnssrv_record *) cur_srv_record->data;
+
+            url << "amqp:" << mh_options["protocol"];
+            url << ":" << mh_dnssrv_record_get_host(record);
+            url << ":" << mh_dnssrv_record_get_port(record);
+
+            cur_srv_record = cur_srv_record->next;
+            if (!cur_srv_record) {
+                cur_srv_record = srv_records;
+            }
         } else if (mh_options.count("servername")) {
             /* Use the explicitly specified broker hostname or IP address. */
             url << "amqp:" << mh_options["protocol"] << ":" << mh_options["servername"] << ":" << mh_options["serverport"] ;
@@ -297,7 +310,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 
         try {
             amqp.open();
-            free(target);
+            g_list_free_full(srv_records, mh_dnssrv_record_free);
             return amqp;
 
         } catch (const std::exception& err) {
@@ -310,7 +323,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
         }
     }
   bail:
-    free(target);
+    g_list_free_full(srv_records, mh_dnssrv_record_free);
     return NULL;
 }
 
