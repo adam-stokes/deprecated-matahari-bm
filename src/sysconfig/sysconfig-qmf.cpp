@@ -132,9 +132,9 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
             args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
 
         if (res) {
-            status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-            event.addReturnArgument("status", status ? status : "unknown");
+            session.raiseException(event, MH_INVALID_ARGS);
             delete action_data;
+            goto bail;
         } else {
             async = true;
         }
@@ -148,9 +148,9 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
             args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
 
         if (res) {
-            status = mh_sysconfig_is_configured(args["key"].asString().c_str());
-            event.addReturnArgument("status", status ? status : "unknown");
+            session.raiseException(event, MH_INVALID_ARGS);
             delete action_data;
+            goto bail;
         } else {
             async = true;
         }

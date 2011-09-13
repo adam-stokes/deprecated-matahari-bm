@@ -69,11 +69,17 @@ set_key(const char *key, const char *contents)
 {
     char key_file[PATH_MAX];
 
+    if (mh_strlen_zero(key)) {
+        mh_err("key cannot be empty");
+        return -1;
+    }
+
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
         mh_err("Could not set file %s", key_file);
         return FALSE;
     }
+
     return TRUE;
 }
 
@@ -84,12 +90,18 @@ get_key(const char *key)
     char *contents = NULL;
     size_t length;
 
+    if (mh_strlen_zero(key)) {
+        mh_err("key cannot be empty");
+        return NULL;
+    }
+
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (g_file_test(key_file, G_FILE_TEST_EXISTS)) {
-        if(g_file_get_contents(key_file, &contents, &length, NULL)) {
+        if (g_file_get_contents(key_file, &contents, &length, NULL)) {
             return contents;
         }
     }
+
     return contents;
 }
 
@@ -99,6 +111,7 @@ mh_sysconfig_set_configured(const char *key, const char *contents)
     if (!set_key(key, contents)) {
         return FALSE;
     }
+
     return TRUE;
 }
 
@@ -112,6 +125,11 @@ int
 mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
                      mh_sysconfig_result_cb result_cb, void *cb_data)
 {
+    if (mh_strlen_zero(key)) {
+        mh_err("key cannot be empty");
+        return -1;
+    }
+
     return sysconfig_os_run_uri(uri, flags, scheme, key, result_cb, cb_data);
 }
 
@@ -120,6 +138,11 @@ mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
                         const char *key, mh_sysconfig_result_cb result_cb,
                         void *cb_data)
 {
+    if (mh_strlen_zero(key)) {
+        mh_err("key cannot be empty");
+        return -1;
+    }
+
     return sysconfig_os_run_string(string, flags, scheme, key, result_cb, cb_data);
 }
 
