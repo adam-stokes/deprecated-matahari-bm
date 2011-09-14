@@ -42,7 +42,7 @@ run_regedit(char *registry_file)
     gint res = 0;
 
     ret = g_spawn_sync(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
-            NULL, NULL, NULL, &res, &error);
+            NULL, NULL, NULL, NULL, &res, &error);
 
     if (ret == FALSE) {
         g_error_free(error);
@@ -61,14 +61,14 @@ sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
 
 int
 sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
-        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data);
+        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
     if (!strcasecmp(scheme, "registry")) {
         char filename[PATH_MAX];
         int res;
 
         g_snprintf(filename, sizeof(filename), "%s\\%s.REG", g_getenv("TEMP"), key);
-        g_file_set_contents(filename, data, strlen(data), NULL);
+        g_file_set_contents(filename, string, strlen(string), NULL);
 
         res = run_regedit(filename);
 
