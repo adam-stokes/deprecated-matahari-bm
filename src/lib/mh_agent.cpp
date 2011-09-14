@@ -259,6 +259,7 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
         "-K",
         "10",
         "-U",
+        NULL,
     };
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
@@ -331,12 +332,12 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
             }
         }
     }
-    /* Attempt to intiate k5start for credential renewal's without prompting for a
+    /* Attempt to initiate k5start for credential renewal's without prompting for a
      * password each time an agent is run
      */
     if (mh_options.count("sasl-mechanism")) {
         if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
-            mh_info("Running k5start");
+            mh_trace("Running k5start");
             ret = g_spawn_async(NULL, (gchar **) k5start_bin, NULL, G_SPAWN_SEARCH_PATH,
                                NULL, NULL, NULL, &error);
             if (ret == FALSE) {
