@@ -1,14 +1,46 @@
 .TH MATAHARI-BROKERD "8" "September 2011" "matahari-brokerd"
 
 .SH NAME
-matahari-brokerd - Part of the Matahari suite of remote agents
+matahari-brokerd - A message broker for the Matahari suite of remote agents
 
 .SH SYNOPSIS
 .B matahari-brokerd
 \fI<options>\fR
 
-.SH Description
+.SH DESCRIPTION
 
-This is a wrapper around qpidd.  It processes configuration from the Matahari
-broker configuration file (/etc/sysconfig/matahari-broker) and then runs qpidd.
-All options acceppted by qpidd are accepted by matahari-brokerd.
+matahari-brokerd is a wrapper around
+.BR qpidd (1).
+It processes configuration from the environment
+and then runs qpidd.
+
+.SH OPTIONS
+All options accepted by
+.BR qpidd (1)
+are accepted by matahari-brokerd.
+
+.SH ENVIRONMENT
+.IP MATAHARI_PORT
+Sets the TCP port to listen on for connections. If this is not specified, the
+default port
+.B 49000
+will be used.
+
+.IP FEDERATED_BROKERS
+.RS
+A list of Qpid brokers to federate with. Brokers may be separated by spaces,
+commas and/or semicolons. There are two formats permitted, and the list may
+contain entries in both formats.
+.TP 8
+\fI<fqdn>\fR:\fI<port>\fR
+A hostname and TCP port for the remote broker.
+.TP
+_matahari._tcp.\fI<fqdn>\fR
+A DNS SRV query. Note that only the first (highest-priority) SRV record returned
+by the DNS for each given query will be used.
+.RE
+
+.IP QPID_\fI<option>\fR
+All environment variables supported by
+.BR qpidd (1)
+are also supported.
