@@ -220,8 +220,8 @@ SrvAgent::setup(qmf::AgentSession session)
 {
 #ifdef __linux__
     standards.push_back("ocf");
-#endif
     standards.push_back("lsb");
+#endif
 #ifndef WIN32
     standards.push_back("windows");
 #endif
