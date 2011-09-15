@@ -251,16 +251,47 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
     GList *srv_records = NULL, *cur_srv_record = NULL;
     struct mh_dnssrv_record *record;
     GError *error = NULL;
-    gboolean ret;
+    int status;
     const gchar *k5start_bin[] = {
         "/usr/bin/k5start",
-        "-f",
-        "/etc/krb5.keytab",
-        "-K",
-        "10",
         "-U",
+        "-f",
+        mh_options["krb5_keytab"].asString().c_str(),
+        "-K",
+        mh_options["krb5_interval"].asString().c_str(),
         NULL,
     };
+
+    mh_trace("kerberos: %s %s %s %s %s %s",
+             k5start_bin[0],
+             k5start_bin[1],
+             k5start_bin[2],
+             k5start_bin[3],
+             k5start_bin[4],
+             k5start_bin[5]);
+
+    /* Attempt to initiate k5start for credential renewal's without 
+     * prompting for a password each time an agent is run
+     */
+    if (strcmp(amqp_options["sasl-mechanism"].asString().c_str(),"GSSAPI") == 0) {
+        if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
+            mh_trace("Running k5start");
+            if (!g_spawn_sync(
+                              NULL,
+                              (gchar **) k5start_bin,
+                              NULL,
+                              G_SPAWN_SEARCH_PATH,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              &status,
+                              &error)) {
+                mh_warn("k5start failure: %s", error->message);
+                g_error_free(error);
+            }
+        }
+    }
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
@@ -332,20 +363,6 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
             }
         }
     }
-    /* Attempt to initiate k5start for credential renewal's without prompting for a
-     * password each time an agent is run
-     */
-    if (mh_options.count("sasl-mechanism")) {
-        if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
-            mh_trace("Running k5start");
-            ret = g_spawn_async(NULL, (gchar **) k5start_bin, NULL, G_SPAWN_SEARCH_PATH,
-                               NULL, NULL, NULL, &error);
-            if (ret == FALSE) {
-                mh_warn("Unable to initialize kerberos automatic ticket renewal: %s", error->message);
-                g_error_free(error);
-            }
-        }
-    }
   bail:
     g_list_free_full(srv_records, mh_dnssrv_record_free);
     return NULL;
@@ -365,6 +382,20 @@ read_environment(OptionsMap& options)
     data = getenv("MATAHARI_PORT");
     if (data && strlen(data)) {
         options["serverport"] = data;
+    }
+
+    data = getenv("KRB5_KEYTAB");
+    if (data && strlen(data)) {
+        options["krb5_keytab"] = data;
+    } else {
+        options["krb5_keytab"] = "/etc/krb5.keytab";
+    }
+
+    data = getenv("KRB5_INTERVAL");
+    if (data && strlen(data)) {
+        options["krb5_interval"] = data;
+    } else {
+        options["krb5_interval"] = "10";
     }
 }
 
