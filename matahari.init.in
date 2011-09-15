@@ -26,6 +26,10 @@
 
 SERVICE=matahari-@BASE@@BASE_SUB@
 PROCESS=matahari-qmf-@BASE@@BASE_SUB@d
+# Old process naming convention, this is here
+# for compability sake when starting/stopping the
+# service from an upgrade of 0.4.0 > 0.4.2
+OLDPROCESS=matahari-@BASE@@BASE_SUB@d
 
 RETVAL=0
 
@@ -51,8 +55,16 @@ start() {
 stop() {
     echo -n $"Stopping the $SERVICE daemon: "
 
-    killproc $PROCESS
+    # Check for OLDPROCESS for pre 0.4.2 compat
+    pidofproc $OLDPROCESS >/dev/null
     RETVAL=$?
+    if [ $RETVAL -lt 3 ]; then
+        killproc $OLDPROCESS
+        RETVAL=$?
+    else
+        killproc $PROCESS
+        RETVAL=$?
+    fi
     echo
     if [ $RETVAL -eq 0 ]; then
         rm -f @localstatedir@/lock/subsys/$SERVICE
