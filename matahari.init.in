@@ -46,10 +46,6 @@ start() {
 	MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
     fi
 
-    # Setup kerberos ticket renewal
-    if [ -n "$KRB_RENEW" ]; then
-        k5start $KRB_RENEW_ARGS $KRB_REALM
-    fi
 
     daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
