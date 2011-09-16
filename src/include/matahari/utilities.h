@@ -32,22 +32,31 @@
 #include <string.h>
 #include <glib.h>
 
-extern const char *mh_uuid(void);
-extern const char *mh_hostname(void);
-extern const char *mh_domainname(void);
+const char *
+mh_uuid(void);
+
+const char *
+mh_hostname(void);
+
+const char *
+mh_domainname(void);
 
 /**
  * Get the local dnsdomainname.
  */
-extern const char *
+const char *
 mh_dnsdomainname(void);
 
-extern char *mh_file_first_line(const char *file);
-extern void mh_abort(const char *file, const char *function, int line,
-                     const char *assert_condition, int do_core, int do_fork);
+char *
+mh_file_first_line(const char *file);
+
+void
+mh_abort(const char *file, const char *function, int line,
+         const char *assert_condition, int do_core, int do_fork);
 
 #ifdef WIN32
-extern wchar_t *char2wide(const char *str);
+wchar_t *
+char2wide(const char *str);
 #endif
 
 #ifndef HAVE_ASPRINTF
@@ -58,7 +67,8 @@ extern wchar_t *char2wide(const char *str);
  * asprintf() on the system.  For more information on how to use asprintf(),
  * see its man page.
  */
-extern int asprintf(char **ret, const char *fmt, ...);
+int
+asprintf(char **ret, const char *fmt, ...);
 #endif
 
 #ifndef HAVE_G_LIST_FREE_FULL
@@ -68,7 +78,8 @@ extern int asprintf(char **ret, const char *fmt, ...);
  * This version of g_list_free_full() is only used when the build system
  * doesn't find g_list_free_full() on the system.
  */
-extern void g_list_free_full(GList *list, GDestroyNotify free_func);
+void
+g_list_free_full(GList *list, GDestroyNotify free_func);
 #endif
 
 #define DIMOF(a)    ((int) (sizeof(a) / sizeof(0[a])))

@@ -41,7 +41,7 @@
  *
  * \return nothing
  */
-extern void
+void
 mh_sysconfig_keys_dir_set(const char *path);
 
 #endif /* __MH_SYSCONFIG_INTERNAL_H__ */

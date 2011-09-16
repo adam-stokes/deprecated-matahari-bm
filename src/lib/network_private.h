@@ -16,7 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __MH_NETWORK_PRIVATE_H__
+#define __MH_NETWORK_PRIVATE_H__
+
 #include <glib.h>
 
-extern void network_os_stop(const char *iface);
-extern void network_os_start(const char *iface);
+void
+network_os_stop(const char *iface);
+
+void
+network_os_start(const char *iface);
+
+#endif /* __MH_NETWORK_PRIVATE_H__ */

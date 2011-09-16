@@ -19,15 +19,17 @@
 #ifndef __MH_SYSCONFIG_PRIVATE_H_
 #define __MH_SYSCONFIG_PRIVATE_H_
 
-extern int
+int
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
-        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data);
+                     const char *key, mh_sysconfig_result_cb result_cb,
+                     void *cb_data);
 
-extern int
+int
 sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
-        const char *key, mh_sysconfig_result_cb result_cb, void *cb_data);
+                        const char *key, mh_sysconfig_result_cb result_cb,
+                        void *cb_data);
 
-extern const char *
+const char *
 sysconfig_os_query(const char *query, uint32_t flags, const char *scheme);
 
 #endif /* __MH_SYSCONFIG_PRIVATE_H_ */

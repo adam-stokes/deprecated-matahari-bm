@@ -43,7 +43,7 @@
  *
  * \return the UUID
  */
-extern const char *
+const char *
 mh_host_get_uuid(const char *lifetime);
 
 /**
@@ -56,24 +56,44 @@ mh_host_get_uuid(const char *lifetime);
  * \retval 0 success
  * \retval non-zero failure
  */
-extern int
+int
 mh_host_set_uuid(const char *lifetime, const char *uuid);
 
-extern const char *mh_host_get_hostname(void);
-extern const char *mh_host_get_operating_system(void);
+const char *
+mh_host_get_hostname(void);
 
-extern const char *mh_host_get_architecture(void);
-extern const char *mh_host_get_cpu_model(void);
-extern const char *mh_host_get_cpu_flags(void);
+const char *
+mh_host_get_operating_system(void);
 
-extern uint64_t mh_host_get_memory(void);
-extern uint64_t mh_host_get_mem_free(void);
-extern uint64_t mh_host_get_swap(void);
-extern uint64_t mh_host_get_swap_free(void);
+const char *
+mh_host_get_architecture(void);
 
-extern int mh_host_get_cpu_count(void);
-extern int mh_host_get_cpu_number_of_cores(void);
-extern int mh_host_get_cpu_wordsize(void);
+const char *
+mh_host_get_cpu_model(void);
+
+const char *
+mh_host_get_cpu_flags(void);
+
+uint64_t
+mh_host_get_memory(void);
+
+uint64_t
+mh_host_get_mem_free(void);
+
+uint64_t
+mh_host_get_swap(void);
+
+uint64_t
+mh_host_get_swap_free(void);
+
+int
+mh_host_get_cpu_count(void);
+
+int
+mh_host_get_cpu_number_of_cores(void);
+
+int
+mh_host_get_cpu_wordsize(void);
 
 /**
  * Identify a host.
@@ -83,11 +103,19 @@ extern int mh_host_get_cpu_wordsize(void);
  * \retval 0 success
  * \retval non-zero failure
  */
-extern int mh_host_identify(void);
+int
+mh_host_identify(void);
 
-extern void mh_host_reboot(void);
-extern void mh_host_shutdown(void);
-extern void mh_host_get_load_averages(sigar_loadavg_t *avg);
-extern void mh_host_get_processes(sigar_proc_stat_t *procs);
+void
+mh_host_reboot(void);
+
+void
+mh_host_shutdown(void);
+
+void
+mh_host_get_load_averages(sigar_loadavg_t *avg);
+
+void
+mh_host_get_processes(sigar_proc_stat_t *procs);
 
 #endif // __MH_HOST_H__

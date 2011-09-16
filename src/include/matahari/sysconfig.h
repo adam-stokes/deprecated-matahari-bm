@@ -56,7 +56,7 @@ typedef void (*mh_sysconfig_result_cb)(void *data, int res);
  * \retval  0 for success
  * \retval -1 for failure
  */
-extern int
+int
 mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
                      mh_sysconfig_result_cb result_cb, void *cb_data);
 
@@ -76,7 +76,7 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const 
  * \retval  0 for success
  * \retval -1 for failure
   */
-extern int
+int
 mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
                         const char *key, mh_sysconfig_result_cb result_cb,
                         void *cb_data);
@@ -90,7 +90,7 @@ mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
  *
  * \return DATA of returned query result
  */
-extern const char *
+const char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
 
 /**
@@ -102,7 +102,7 @@ mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
  * \retval 1 if writing to file suceeds
  * \retval 0 failed to write to file
  */
-extern gboolean
+gboolean
 mh_sysconfig_set_configured(const char *key, const char *contents);
 
 /**
@@ -114,7 +114,7 @@ mh_sysconfig_set_configured(const char *key, const char *contents);
  *
  * \return STATUS of key
  */
-extern char *
+char *
 mh_sysconfig_is_configured(const char *key);
 
 #endif // __MH_SYSCONFIG_H__
