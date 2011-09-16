@@ -497,3 +497,24 @@ g_list_free_full (GList *list, GDestroyNotify free_func)
     g_list_free (list);
 }
 #endif /* HAVE_G_LIST_FREE_FULL */
+
+char *
+mh_string_copy(char *dst, const char *src, size_t dst_len)
+{
+    char *ret = dst;
+    size_t orig_dst_len = dst_len;
+
+    while (*src && dst_len) {
+        *dst++ = *src++;
+        dst_len--;
+    }
+
+    if (orig_dst_len) {
+        if (!dst_len) {
+            dst--;
+        }
+        *dst = '\0';
+    }
+
+    return ret;
+}

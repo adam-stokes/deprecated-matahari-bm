@@ -118,4 +118,14 @@ mh_strlen_zero(const char *s)
     return !s || *s == '\0';
 }
 
+/**
+ * Like strncpy(), but with less suck.
+ *
+ * Use like strncpy().  The differences are that it guarantees to terminate
+ * the output string and that it doesn't wastefully zero out the entire output
+ * buffer after the end of the string.
+ */
+char *
+mh_string_copy(char *dst, const char *src, size_t dst_len);
+
 #endif
