@@ -70,8 +70,7 @@ mh_os_uuid(void)
     UuidCreate(&uuid);
 
     if (UuidToStringA(&uuid, &rs) == RPC_S_OK) {
-        strncpy(uuid_str, (char *) rs, sizeof(uuid_str));
-        uuid_str[sizeof(uuid_str) - 1] = '\0';
+        mh_string_copy(uuid_str, (char *) rs, sizeof(uuid_str));
         RpcStringFreeA(&rs);
         mh_trace("Got uuid: %s", uuid_str);
         res = RegSetValueExA(key, UUID_REGISTRY_KEY, 0, REG_SZ,

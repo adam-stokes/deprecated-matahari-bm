@@ -99,8 +99,7 @@ void broker_federation_configure(void)
 
     snprintf(local, sizeof(local), "localhost:%hu", broker_get_port());
 
-    strncpy(peers, brokers, sizeof(peers) - 1);
-    peers[sizeof(peers) - 1] = '\0';
+    mh_string_copy(peers, brokers, sizeof(peers));
 
     while ((peer = strtok_r(p ? NULL : peers, ",; ", &p)) != NULL) {
         if (strncmp(peer, DNS_SRV_PREFIX, strlen(DNS_SRV_PREFIX)) == 0) {
