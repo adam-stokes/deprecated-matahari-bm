@@ -234,8 +234,7 @@ int print_help(int code, const char *name, const char *arg, void *userdata)
     printf("\nOptions:\n");
     printf("\t-h | --help             print this help message.\n");
     for (lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
-        if (matahari_options[lpc].callback
-            && matahari_options[lpc].callback != connection_option) {
+        if (matahari_options[lpc].callback) {
             printf("\t-%c | --%-10s\t%s\n", matahari_options[lpc].code,
                    matahari_options[lpc].long_name, matahari_options[lpc].description);
         }
@@ -251,6 +250,50 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
     int backoff = 0;
     GList *srv_records = NULL, *cur_srv_record = NULL;
     struct mh_dnssrv_record *record;
+    GError *error = NULL;
+    int status;
+    std::string krb5_keytab(mh_options["krb5_keytab"].asString());
+    std::string krb5_interval(mh_options["krb5_interval"].asString());
+    const gchar *k5start_bin[] = {
+        "/usr/bin/k5start",
+        "-U",
+        "-f",
+        krb5_keytab.c_str(),
+        "-K",
+        krb5_interval.c_str(),
+        NULL,
+    };
+
+    mh_trace("kerberos: %s %s %s %s %s %s",
+             k5start_bin[0],
+             k5start_bin[1],
+             k5start_bin[2],
+             k5start_bin[3],
+             k5start_bin[4],
+             k5start_bin[5]);
+
+    /* Attempt to initiate k5start for credential renewal's without 
+     * prompting for a password each time an agent is run
+     */
+    if (strcmp(amqp_options["sasl-mechanism"].asString().c_str(),"GSSAPI") == 0) {
+        if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
+            mh_trace("Running k5start");
+            if (!g_spawn_sync(
+                              NULL,
+                              (gchar **) k5start_bin,
+                              NULL,
+                              G_SPAWN_SEARCH_PATH,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL,
+                              &status,
+                              &error)) {
+                mh_warn("k5start failure: %s", error->message);
+                g_error_free(error);
+            }
+        }
+    }
 
     if (!mh_options.count("servername") || mh_options.count("dns-srv")) {
         /*
@@ -341,6 +384,19 @@ read_environment(OptionsMap& options)
     data = getenv("MATAHARI_PORT");
     if (data && strlen(data)) {
         options["serverport"] = data;
+    }
+    data = getenv("KRB5_KEYTAB");
+    if (data && strlen(data)) {
+        options["krb5_keytab"] = data;
+    } else {
+        options["krb5_keytab"] = "/etc/krb5.keytab";
+    }
+
+    data = getenv("KRB5_INTERVAL");
+    if (data && strlen(data)) {
+        options["krb5_interval"] = data;
+    } else {
+        options["krb5_interval"] = "10";
     }
 }
 
