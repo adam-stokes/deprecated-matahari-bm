@@ -11,9 +11,6 @@ from grp import getgrgid
 import random
 import string
 
-errorCount = 0
-testCount = 1
-
 # QMF
 # ========================================================
 def connectToBroker(hostname, port):
@@ -35,7 +32,6 @@ def restartService(serviceName):
 
 # Files
 # ========================================================
-
 def getFilePermissionMask(file):
     return oct(os.stat(file)[ST_MODE])[-3:]
 
@@ -56,23 +52,15 @@ def setFileContents(file, content):
 
 # Other
 # =======================================================
-
-def error(msg):
-     print "\t\033[91m[ERROR]\033[0m "+ msg +"\n"
-     global errorCount
-     errorCount += 1
-
 def getDelta(int1, int2):
      delta = 0
      if int1 > int2:
           delta = int1 - int2
-
      elif int2 > int1:
           delta = int2 - int1
      # else it is even which is a test success
      else:
           delta = 0
-
      return delta
 
 def checkTwoValuesInMargin(val1, val2, fudgeFactor, description):
@@ -82,26 +70,5 @@ def checkTwoValuesInMargin(val1, val2, fudgeFactor, description):
     #delta > margin: error(description + " value gt "+ percent_str + " off (va1:"+str(val1)+" val2:" + str(val2) + ")")
     return delta < margin
 
-def printHeader(method_text):
-    #time.sleep(5)
-    global testCount
-    print '\n\n***************TESTCASE ' + str(testCount) + '*************************'
-    print 'Testing method: ' + method_text
-    print '***************************************************'
-    testCount = testCount + 1
-
-def finish():
-    print "\nerrorCount = " + str(errorCount)
-    sys.exit(errorCount)
-
-#def notImplementedTest(obj, method_name, parmList):
-#    TODO: figure out how to pass the parmList
-#    getattr(obj, method_name)('name', 1, 1) 
-#    results = obj.
-#    print "OUTPUT:",results
-#    if "Not implemented" not in results.text:
-#        error(method_name + "() result not expected")
-
 def getRandomKey(length):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(length))
-
