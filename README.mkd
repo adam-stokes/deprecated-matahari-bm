@@ -12,14 +12,21 @@ Matahari has build dependencies on the following packages:
 
 1. pcre-devel
 2. glib2-devel
-3. qmf
-4. qmf-devel
+3. qpid-qmf
+4. qpid-qmf-devel
 5. qpid-cpp-client
 6. qpid-cpp-server
 7. qpid-cpp-client-devel
 8. qpid-cpp-server-devel
 9. sigar
 10. sigar-devel
+11. libcurl
+12. libcurl-devel
+13. dbus-glib
+14. dbus-glib-devel
+15. polkit
+16. polkit-devel
+17. cmake
 
 Matahari requires that the following packages are installed at runtime
 for certain pieces of functionality to work:
