@@ -273,7 +273,8 @@ char *host_os_reboot_uuid(void)
 
         if(g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
             mh_info("%s", error->message);
-            uuid = error->message;
+            free(uuid);
+            uuid = strdup(error->message);
         }
 
         if(error) {
