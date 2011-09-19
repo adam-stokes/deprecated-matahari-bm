@@ -252,13 +252,15 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
     struct mh_dnssrv_record *record;
     GError *error = NULL;
     int status;
+    std::string krb5_keytab(mh_options["krb5_keytab"].asString());
+    std::string krb5_interval(mh_options["krb5_interval"].asString());
     const gchar *k5start_bin[] = {
         "/usr/bin/k5start",
         "-U",
         "-f",
-        mh_options["krb5_keytab"].asString().c_str(),
+        krb5_keytab.c_str(),
         "-K",
-        mh_options["krb5_interval"].asString().c_str(),
+        krb5_interval.c_str(),
         NULL,
     };
 
@@ -375,24 +377,24 @@ read_environment(OptionsMap& options)
     const char *data;
 
     data = getenv("MATAHARI_BROKER");
-    if (data && strlen(data)) {
+    if (!mh_strlen_zero(data)) {
         options["servername"] = data;
     }
 
     data = getenv("MATAHARI_PORT");
-    if (data && strlen(data)) {
+    if (!mh_strlen_zero(data)) {
         options["serverport"] = data;
     }
 
     data = getenv("KRB5_KEYTAB");
-    if (data && strlen(data)) {
+    if (!mh_strlen_zero(data)) {
         options["krb5_keytab"] = data;
     } else {
         options["krb5_keytab"] = "/etc/krb5.keytab";
     }
 
     data = getenv("KRB5_INTERVAL");
-    if (data && strlen(data)) {
+    if (!mh_strlen_zero(data)) {
         options["krb5_interval"] = data;
     } else {
         options["krb5_interval"] = "10";
