@@ -31,6 +31,7 @@
  *
  * \return 0 or greater for successful match
  */
-extern int mh_test_is_match(const char *pattern, const char *subject);
+int
+mh_test_is_match(const char *pattern, const char *subject);
 
 #endif /* __MH_TEST_UTILITIES */

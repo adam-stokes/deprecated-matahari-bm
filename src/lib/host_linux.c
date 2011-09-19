@@ -103,8 +103,7 @@ host_os_get_cpu_flags(void)
         if (!(flags = malloc(len))) {
             goto done;
         }
-        strncpy(flags, cur + found[4], len);
-        flags[len - 1] = '\0';
+        mh_string_copy(flags, cur + found[4], len);
         break;
     }
 

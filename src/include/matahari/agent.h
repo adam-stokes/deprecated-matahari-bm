@@ -74,25 +74,31 @@ typedef struct mainloop_qmf_s {
  * retval[1] failed to daemonize
  * retval[0] successfully daemonize
  */
-extern int 
+int
 mh_should_daemonize(int code, const char *name, const char *arg, void *userdata);
 
-extern int mh_add_option(
-    int code, int has_arg, const char *name, const char *description,
-    void *userdata, int(*callback)(int code, const char *name, const char *arg, void *userdata));
+int
+mh_add_option(int code, int has_arg, const char *name, const char *description,
+              void *userdata, int(*callback)(int code, const char *name,
+              const char *arg, void *userdata));
 
-extern qpid::types::Variant::Map mh_parse_options(
-    const char *proc_name, int argc, char **argv, qpid::types::Variant::Map &options);
+qpid::types::Variant::Map
+mh_parse_options(const char *proc_name, int argc, char **argv,
+                 qpid::types::Variant::Map &options);
 
-extern qpid::messaging::Connection mh_connect(
-	qpid::types::Variant::Map mh_options, qpid::types::Variant::Map amqp_options, int retry);
+qpid::messaging::Connection
+mh_connect(qpid::types::Variant::Map mh_options,
+           qpid::types::Variant::Map amqp_options, int retry);
 
-extern mainloop_qmf_t *mainloop_add_qmf(int priority, qmf::AgentSession session,
-        gboolean (*dispatch)(qmf::AgentSession session, qmf::AgentEvent event,
-                             gpointer userdata),
-        GDestroyNotify notify, gpointer userdata);
+mainloop_qmf_t *
+mainloop_add_qmf(int priority, qmf::AgentSession session,
+                 gboolean (*dispatch)(qmf::AgentSession session,
+                                      qmf::AgentEvent event,
+                                      gpointer userdata),
+                 GDestroyNotify notify, gpointer userdata);
 
-extern gboolean mainloop_destroy_qmf(mainloop_qmf_t *source);
+gboolean
+mainloop_destroy_qmf(mainloop_qmf_t *source);
 
 struct MatahariAgentImpl;
 

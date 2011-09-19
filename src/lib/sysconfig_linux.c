@@ -58,7 +58,7 @@ sysconfig_os_download(const char *uri, FILE *fp)
 {
     CURL *curl;
     CURLcode curl_res;
-    long http_code = 0;
+    long response = 0;
     int res = 0;
     static int curl_init = 0;
 
@@ -98,15 +98,17 @@ sysconfig_os_download(const char *uri, FILE *fp)
         goto return_cleanup;
     }
 
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-    if (curl_res != CURLE_OK) {
-        mh_warn("curl_easy_getinfo for RESPONSE_CODE failed. (%d)", curl_res);
-        res = -1;
-        goto return_cleanup;
-    }
-    if (http_code < 200 || http_code > 299) {
-        mh_warn("curl request for URI '%s' got response %ld", uri, http_code);
-        res = -1;
+    if (!strncasecmp(uri, "http", 4) || !strncasecmp(uri, "ftp", 3)) {
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+        if (curl_res != CURLE_OK) {
+            mh_warn("curl_easy_getinfo for RESPONSE_CODE failed. (%d)", curl_res);
+            res = -1;
+            goto return_cleanup;
+        }
+        if (response < 200 || response > 299) {
+            mh_warn("curl request for URI '%s' got response %ld", uri, response);
+            res = -1;
+        }
     }
 
 return_cleanup:

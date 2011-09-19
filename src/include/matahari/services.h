@@ -145,7 +145,7 @@ typedef struct svc_action_s
  * \return a list of what was found.  The list items are gchar *.  This list _must_
  *         be destroyed using g_list_free_full(list, free).
  */
-extern GList *
+GList *
 get_directory_list(const char *root, gboolean files);
 
 /**
@@ -154,7 +154,7 @@ get_directory_list(const char *root, gboolean files);
  * \return a list of services.  The list items are gchar *.  This list _must_
  *         be destroyed using g_list_free_full(list, free).
  */
-extern GList *
+GList *
 services_list(void);
 
 /**
@@ -165,7 +165,7 @@ services_list(void);
  * \return a list of providers.  The list items are gchar *.  This list _must_
  *         be destroyed using g_list_free_full(list, free).
  */
-extern GList *
+GList *
 resources_list_providers(const char *standard);
 
 /**
@@ -177,16 +177,27 @@ resources_list_providers(const char *standard);
  * \return a list of resource agents.  The list items are gchar *.  This list _must_
  *         be destroyed using g_list_free_full(list, free).
  */
-extern GList *
+GList *
 resources_list_agents(const char *standard, const char *provider);
 
-extern svc_action_t *services_action_create(
-    const char *name, const char *action, int interval /* ms */, int timeout /* ms */);
+svc_action_t *
+services_action_create(const char *name, const char *action,
+                       int interval /* ms */, int timeout /* ms */);
 
-/* After the call, 'params' is owned, and later free'd by the svc_action_t result */
-extern svc_action_t *resources_action_create(
-    const char *name, const char *standard, const char *provider, const char *agent,
-    const char *action, int interval /* ms */, int timeout /* ms */, GHashTable *params);
+/**
+ * Create a resources action.
+ *
+ * \param[in] timeout the timeout in milliseconds
+ * \param[in] interval how often to repeat this action, in milliseconds.
+ *            If this value is 0, only execute this action one time.
+ *
+ * \post After the call, 'params' is owned, and later free'd by the svc_action_t result
+ */
+svc_action_t *
+resources_action_create(const char *name, const char *standard,
+                        const char *provider, const char *agent,
+                        const char *action, int interval /* ms */,
+                        int timeout /* ms */, GHashTable *params);
 
 /**
  * Utilize services API to execute an arbitrary command.
@@ -204,9 +215,11 @@ extern svc_action_t *resources_action_create(
 svc_action_t *
 mh_services_action_create_generic(const char *exec, const char *args[]);
 
-extern void services_action_free(svc_action_t *op);
+void
+services_action_free(svc_action_t *op);
 
-extern gboolean services_action_sync(svc_action_t *op);
+gboolean
+services_action_sync(svc_action_t *op);
 
 /**
  * Run an action asynchronously.
@@ -217,11 +230,11 @@ extern gboolean services_action_sync(svc_action_t *op);
  * \retval TRUE succesfully started execution
  * \retval FALSE failed to start execution, no callback will be received
  */
-extern gboolean
+gboolean
 services_action_async(svc_action_t *op, void (*action_callback)(svc_action_t *));
 
-extern gboolean services_action_cancel(const char *name, const char *action,
-                                       int interval);
+gboolean
+services_action_cancel(const char *name, const char *action, int interval);
 
 static inline enum ocf_exitcode
 services_get_ocf_exitcode(char *action, int lsb_exitcode)

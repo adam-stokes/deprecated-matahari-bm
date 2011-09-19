@@ -31,13 +31,13 @@
 
 #include <glib.h>
 
-extern const char *
+const char *
 host_os_get_cpu_flags(void);
 
-extern void
+void
 host_os_reboot(void);
 
-extern void
+void
 host_os_shutdown(void);
 
 /**
@@ -46,14 +46,22 @@ host_os_shutdown(void);
  * \retval 0 success
  * \retval non-zero failure
  */
-extern int
+int
 host_os_identify(void);
 
-extern char *host_os_machine_uuid(void);
-extern char *host_os_custom_uuid(void);
-extern char *host_os_reboot_uuid(void);
-extern const char *host_os_agent_uuid(void);
+char *
+host_os_machine_uuid(void);
 
-extern int host_os_set_custom_uuid(const char *uuid);
+char *
+host_os_custom_uuid(void);
+
+char *
+host_os_reboot_uuid(void);
+
+const char *
+host_os_agent_uuid(void);
+
+int
+host_os_set_custom_uuid(const char *uuid);
 
 #endif /* __MH_HOST_PRIVATE_H__ */

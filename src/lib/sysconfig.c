@@ -52,8 +52,7 @@ static const char *
 keys_dir_get(void)
 {
     if (!*_keys_dir) {
-        strncpy(_keys_dir, DEFAULT_KEYS_DIR, sizeof(_keys_dir) - 1);
-        _keys_dir[sizeof(_keys_dir) - 1] = '\0';
+        mh_string_copy(_keys_dir, DEFAULT_KEYS_DIR, sizeof(_keys_dir));
     }
 
     return _keys_dir;
@@ -62,8 +61,7 @@ keys_dir_get(void)
 void
 mh_sysconfig_keys_dir_set(const char *path)
 {
-    strncpy(_keys_dir, path, sizeof(_keys_dir) - 1);
-    _keys_dir[sizeof(_keys_dir) - 1] = '\0';
+    mh_string_copy(_keys_dir, path, sizeof(_keys_dir));
 }
 
 static gboolean

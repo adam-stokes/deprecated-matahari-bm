@@ -7,5 +7,5 @@ if [ ! -f /etc/fedora-release ] ; then
     exit 1
 fi
 
-yum groupinstall "Development Tools"
-yum install ${FEDORA_PACKAGES}
+yum groupinstall -y "Development Tools"
+yum install -y ${FEDORA_PACKAGES}

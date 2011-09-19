@@ -46,9 +46,15 @@
 #define LOG_TRACE    8
 
 extern int mh_log_level;
-extern void mh_log_fn(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
-extern void mh_log_init(const char *ident, int level, gboolean to_stderr);
-extern void mh_enable_stderr(gboolean to_stderr);
+
+void
+mh_log_fn(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
+
+void
+mh_log_init(const char *ident, int level, gboolean to_stderr);
+
+void
+mh_enable_stderr(gboolean to_stderr);
 
 #if SUPPORT_TRACING
 

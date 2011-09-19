@@ -160,8 +160,7 @@ mh_network_get_ip_address(const char *iface, char *buf, size_t len)
 
         if ((g_str_equal(mh_network_interface_get_name(mh_iface), iface)) == TRUE) {
             sigar_net_address_to_string(NULL, &mh_iface->ifconfig.address, addr_str);
-            strncpy(buf, addr_str, len - 1);
-            buf[len - 1] = '\0';
+            mh_string_copy(buf, addr_str, len);
             break;
         }
     }

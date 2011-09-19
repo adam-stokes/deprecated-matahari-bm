@@ -48,7 +48,7 @@ enum mh_network_interface_flags {
  *
  * \return the name for the provided network interface
  */
-extern const char *
+const char *
 mh_network_interface_get_name(const struct mh_network_interface *iface);
 
 /**
@@ -76,7 +76,7 @@ mh_network_interface_get_flags(const struct mh_network_interface *iface);
  * g_list_free_full(iface_list, mh_network_interface_destroy);
  * \endcode
  */
-extern void
+void
 mh_network_interface_destroy(gpointer data);
 
 /**
@@ -88,7 +88,7 @@ mh_network_interface_destroy(gpointer data);
  * \return A list of network interfaces.  The data for each list item is a
  *         struct mh_network_interface.
  */
-extern GList *
+GList *
 mh_network_get_interfaces(void);
 
 /**
@@ -100,7 +100,7 @@ mh_network_get_interfaces(void);
  *
  * \return buf, for convenience
  */
-extern const char *
+const char *
 mh_network_get_ip_address(const char *iface, char *buf, size_t len);
 
 /**
@@ -112,12 +112,17 @@ mh_network_get_ip_address(const char *iface, char *buf, size_t len);
  *
  * \return buf, for convenience
  */
-extern const char *
+const char *
 mh_network_get_mac_address(const char *iface, char *buf, size_t len);
 
-extern void mh_network_stop(const char *iface);
-extern void mh_network_start(const char *iface);
-extern void mh_network_restart(const char *iface);
+void
+mh_network_stop(const char *iface);
+
+void
+mh_network_start(const char *iface);
+
+void
+mh_network_restart(const char *iface);
 
 /**
  * Get the status of a network interface
@@ -131,7 +136,7 @@ extern void mh_network_restart(const char *iface);
  * \retval non-zero network interface was not found and the value of flags
  *         is undefined.
  */
-extern int
+int
 mh_network_status(const char *iface, uint64_t *flags);
 
 #endif /* __NETWORK_H */
