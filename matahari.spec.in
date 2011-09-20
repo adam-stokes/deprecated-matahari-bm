@@ -219,7 +219,9 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 %preun host
 if [ $1 = 0 ]; then
    /sbin/service matahari-host stop >/dev/null 2>&1 || :
+%if %{undefined _unitdir}
    chkconfig --del matahari-host
+%endif
 fi
 
 %postun host
@@ -235,7 +237,9 @@ fi
 %preun network
 if [ $1 = 0 ]; then
    /sbin/service matahari-network stop >/dev/null 2>&1 || :
+%if %{undefined _unitdir}
    chkconfig --del matahari-network
+%endif
 fi
 
 %postun network
@@ -251,7 +255,9 @@ fi
 %preun service
 if [ $1 = 0 ]; then
    /sbin/service matahari-service stop >/dev/null 2>&1 || :
+%if %{undefined _unitdir}
    chkconfig --del matahari-service
+%endif
 fi
 
 %postun service
@@ -267,7 +273,9 @@ fi
 %preun sysconfig
 if [ $1 = 0 ]; then
    /sbin/service matahari-sysconfig stop >/dev/null 2>&1 || :
+%if %{undefined _unitdir}
    chkconfig --del matahari-sysconfig
+%endif
 fi
 
 %postun sysconfig
@@ -283,7 +291,9 @@ fi
 %preun broker
 if [ $1 = 0 ]; then
     /sbin/service matahari-broker stop >/dev/null 2>&1 || :
+%if %{undefined _unitdir}
     chkconfig --del matahari-broker
+%endif
 fi
 
 %postun broker
