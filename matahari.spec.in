@@ -40,7 +40,7 @@ Requires:	%{name}-service = %{version}-%{release}
 Requires:	%{name}-sysconfig = %{version}-%{release}
 
 BuildRequires:	cmake
-BuildRequires:	libudev-devel
+BuildRequires:	libuuid-devel
 BuildRequires:	gcc-c++
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
