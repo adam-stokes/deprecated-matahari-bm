@@ -44,7 +44,7 @@ BuildRequires:	libuuid-devel
 BuildRequires:	gcc-c++
 BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
-BuildRequires:	sigar-devel
+BuildRequires:	sigar-devel > 1.6.5-0.2
 BuildRequires:	libcurl-devel
 BuildRequires:	cxxtest
 BuildRequires:	help2man
