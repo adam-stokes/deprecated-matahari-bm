@@ -32,6 +32,7 @@ Requires:	dbus
 Requires:	qmf > 0.7
 Requires:	pcre
 
+Requires:	%{name}-core = %{version}-%{release}
 Requires:	%{name}-consoles = %{version}-%{release}
 Requires:	%{name}-broker = %{version}-%{release}
 Requires:	%{name}-host = %{version}-%{release}
@@ -71,12 +72,20 @@ AMQP).  This interface allows you to manage a host and its various components
 as a set of objects with properties and methods.
 
 
+%package core
+License:	GPLv2+
+Summary:	Core files for Matahari
+Group:		Applications/System
+
+%description core
+Core files for Matahari
+
 %if %{with qmf}
 %package broker
 License:	GPLv2+
 Summary:	Optional AMQP Broker for Matahari
 Group:		Applications/System
-Requires:	%{name} = %{version}-%{release}
+Requires:	%{name}-core = %{version}-%{release}
 Requires:	qpid-cpp-server > 0.7
 Requires:	qpid-cpp-server-ssl > 0.7
 Requires:	qmf > 0.7
@@ -89,6 +98,7 @@ Optional AMQP Broker for Matahari
 License:	GPLv2+
 Summary:	C libraries used by Matahari agents
 Group:		Applications/System
+Requires:	%{name}-core = %{version}-%{release}
 
 %description lib
 C libraries used by Matahari agents
@@ -139,7 +149,7 @@ QMF agent for viewing and controlling system services
 
 %package sysconfig
 License:	GPLv2+
-Summary:	QMF agent for post boot configuration services.
+Summary:	QMF agent for post boot configuration services
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
@@ -190,21 +200,6 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig-console
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
-%endif
-
-%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/
-%{__install} matahari.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari
-
-%if %{with qmf}
-%if %{undefined _unitdir}
-%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d
-%{__install} matahari-broker $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
-%endif
-
-%{__install} matahari-broker.sysconf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/matahari-broker
-
-%{__install} -d -m0770 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
-%{__install} -d -m0775 $RPM_BUILD_ROOT/%{_localstatedir}/run/%{name}
 %endif
 
 %post -n matahari-lib -p /sbin/ldconfig
@@ -296,9 +291,9 @@ if [ "$1" -ge "1" ]; then
     /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
-#== Agent Lib
+#== Core
 
-%pre agent-lib
+%pre core
 getent group qpidd >/dev/null || groupadd -r qpidd
 exit 0
 
@@ -314,13 +309,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files agent-lib
 %defattr(644, root, root)
 %attr(755, -, -) %dir %{_datadir}/matahari/
-%config(noreplace) %{_sysconfdir}/sysconfig/matahari
 %doc AUTHORS COPYING
 
 %if %{with qmf}
 %{_libdir}/libmcommon_qmf.so.*
-%dir %attr(0770, root, qpidd) %{_localstatedir}/lib/%{name}
-%ghost %dir %attr(0775, root, qpidd) %{_localstatedir}/run/%{name}
 %endif
 
 %if %{with dbus}
@@ -335,6 +327,14 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_libdir}/libmservice.so.*
 %{_libdir}/libmsysconfig.so.*
 %doc AUTHORS COPYING
+
+%files core
+%defattr(644, root, root, 755)
+%doc AUTHORS COPYING
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari
+%if %{with qmf}
+%dir %attr(0770, root, qpidd) %{_localstatedir}/lib/%{name}
+%endif
 
 %files network
 %defattr(644, root, root, 755)
@@ -354,7 +354,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-networkd
-%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Network.conf
+%config %{_sysconfdir}/dbus-1/system.d/org.matahariproject.Network.conf
 %{_datadir}/dbus-1/interfaces/org.matahariproject.Network.xml
 %{_datadir}/dbus-1/system-services/org.matahariproject.Network.service
 %{_datadir}/polkit-1/actions/org.matahariproject.Network.policy
@@ -378,7 +378,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-hostd
-%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Host.conf
+%config %{_sysconfdir}/dbus-1/system.d/org.matahariproject.Host.conf
 %{_datadir}/polkit-1/actions/org.matahariproject.Host.policy
 %{_datadir}/dbus-1/interfaces/org.matahariproject.Host.xml
 %{_datadir}/dbus-1/system-services/org.matahariproject.Host.service
@@ -402,7 +402,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{with dbus}
 %attr(755, root, root) %{_sbindir}/matahari-dbus-serviced
-%{_sysconfdir}/dbus-1/system.d/org.matahariproject.Services.conf
+%config %{_sysconfdir}/dbus-1/system.d/org.matahariproject.Services.conf
 %{_datadir}/dbus-1/interfaces/org.matahariproject.Services.xml
 %{_datadir}/dbus-1/system-services/org.matahariproject.Services.service
 %{_datadir}/polkit-1/actions/org.matahariproject.Services.policy
@@ -457,6 +457,8 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %if %{defined _unitdir}
 %{_unitdir}/matahari-broker.service
+%else
+%ghost %dir %attr(0775, root, qpidd) %{_localstatedir}/run/%{name}
 %endif
 
 %else
