@@ -13,6 +13,8 @@ import unittest
 import random
 import string
 import sys
+import platform
+
 err = sys.stderr
 testFile = "/sysconfig-test"
 testFileWithPath = "/var/www/html" + testFile
@@ -65,8 +67,18 @@ def checkFile(file,perms,owner,grp):
 # Initialization
 # =====================================================
 def setUp(self):
-    cmd.getoutput("yum -y install httpd")
+    # get httpd pre-req
+    result = cmd.getstatusoutput("yum -y install httpd")
+    if result[0] != 0:
+        sys.exit("Unable to install httpd server (required for sysconfig url tests)")
     cmd.getoutput("service httpd start")
+    # get puppet pre-req
+    if platform.dist()[0] == 'redhat':
+        cmd.getoutput("wget -O /etc/yum.repos.d/rhel-aeolus.repo http://repos.fedorapeople.org/repos/aeolus/conductor/0.3.0/rhel-aeolus.repo")
+    result = cmd.getstatusoutput("yum -y install puppet")
+    if result[0] != 0:
+        sys.exit("Unable to install puppet (required for sysconfig tests)")
+    # make connection
     global sysconfig
     global connection
     connection = SysconfigSetup()
@@ -102,7 +114,7 @@ class TestSysconfigApi(unittest.TestCase):
     # ================================================================
     def test_available_methods(self):
         meths = sysconfig.getMethods()
-        assert len(meths) == len(connection.expectedMethods)
+        self.assertTrue( len(meths) == len(connection.expectedMethods) , "number of methods not expected")
         for meth in meths:
             try:
                 connection.expectedMethods.index(str(meth))
@@ -114,7 +126,7 @@ class TestSysconfigApi(unittest.TestCase):
     # =====================================================
     def test_hostname_property(self):
         value = connection.getPropValueByKey('hostname')
-        assert value == cmd.getoutput("hostname")
+        self.assertTrue( value == cmd.getoutput("hostname"), "hostname not expected")
 
     # TODO:
     #	no puppet
@@ -126,77 +138,85 @@ class TestSysconfigApi(unittest.TestCase):
     # ================================================================
     def test_run_uri_good_url_puppet_manifest(self):
         results = wrapper('uri',testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup)
+        self.assertTrue( results.status == 0, "result: " + str(results) + " != 0")
+        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_uri_http_url_not_found(self):
         results = wrapper('uri',testFileUrl+"_bad", 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        self.assertTrue( results.status == 7, "invalid args text not in result")
+        self.assertTrue( results.text == 'Invalid Arguments', "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_good_file_puppet_manifest(self):
-        results = wrapper('uri', 'file:///'+testFileWithPath, 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup)
+        results = wrapper('uri', 'file://'+testFileWithPath, 0, 'puppet', testUtil.getRandomKey(5))
+        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_uri_file_url_not_found(self):
-        results = wrapper('uri', 'file:///'+testFile, 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        results = wrapper('uri', 'file://'+testFile, 0, 'puppet', testUtil.getRandomKey(5))
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_bad_puppet_manifest(self):
         resetTestFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup, 'bad puppet script')
-        results = sysconfig.run_uri('file:///'+testFileWithPath, 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        results = sysconfig.run_uri(testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
+        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( "FAILED" in results.outArgs['status'], "")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_non_schema(self):
-        results = wrapper('uri', 'file:///'+testFileWithPath, 0, 'schema', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        results = wrapper('uri', testFileUrl, 0, 'schema', testUtil.getRandomKey(5))
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_augeas_schema_not_implemented(self):
-        results = wrapper('uri', 'file:///'+testFileWithPath, 0, 'augeas', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        results = wrapper('uri', testFileUrl, 0, 'augeas', testUtil.getRandomKey(5))
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
-    #def test_run_uri_empty_key(self):
-    #    results = wrapper('uri', 'file:///'+testFileWithPath, 0, 'puppet', '')
-    #    assert results.status == 0
-    #    assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+    def test_run_uri_empty_key(self):
+        results = wrapper('uri', testFileUrl, 0, 'puppet', '')
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
-    #def test_run_uri_special_chars_in_key(self):
-    #    results = wrapper('uri', 'file:///'+testFileWithPath, 0, 'puppet', "dave's $$$")
-    #    assert results.status == 0
-    #    assert 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup)
+    def test_run_uri_special_chars_in_key(self):
+        results = wrapper('uri', testFileUrl, 0, 'puppet', testUtil.getRandomKey(5) + "'s $$$")
+        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     # TEST - run_string() 
     # ================================================================
     def test_run_string_good_puppet_manifest(self):
         results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup)
+        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_string_bad_puppet_manifest(self):
         results = wrapper('string', 'bad puppet manifest', 0, 'puppet', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_non_schema(self):
         results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'schema', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_augeas_schema_not_implemented(self):
         results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'augeas', testUtil.getRandomKey(5))
-        assert results.status == 0
-        assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
-    #def test_run_string_empty_key(self):
-    #    resetTestFile()
-    #    results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', '')
-    #    assert results.status == 0
-    #    assert 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup)
+    def test_run_string_empty_key(self):
+        results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', '')
+        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     # TEST - query() 
     # ================================================================
@@ -209,9 +229,9 @@ class TestSysconfigApi(unittest.TestCase):
         key = testUtil.getRandomKey(5)
         wrapper('uri',testFileUrl, 0, 'puppet', key)
         results = sysconfig.is_configured(key)
-        assert results.outArgs['status'] == 'OK'
+        self.assertTrue( results.outArgs['status'] == 'OK', "")
 
     def	test_is_configured_unknown_key(self):
         results = sysconfig.is_configured(testUtil.getRandomKey(5))
-        assert results.outArgs['status'] == 'unknown'
+        self.assertTrue( results.outArgs['status'] == 'unknown' , "")
 
