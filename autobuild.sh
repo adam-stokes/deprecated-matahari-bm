@@ -35,7 +35,7 @@ function make_srpm() {
     TARPREFIX=${PACKAGE}-${PACKAGE}-${TAG}
     TARFILE=${TARPREFIX}.tgz
 
-    make ${VARIANT}matahari.spec
+    make ${VARIANT}matahari.spec VARIANT=${VARIANT}
     
     rm -f ${TARFILE}
     git archive --prefix=${TARPREFIX}/ ${TAG} | gzip > ${TARFILE}
