@@ -22,6 +22,8 @@ def setUp(self):
 def tearDown():
     connection.disconnect()
     time.sleep(5)
+    #cmd.getoutput("ifdown lo:1")
+    #cmd.getoutput("rm -rf /etc/sysconfig/network-scripts/lo:1")
 
 class NetworkTestsSetup(object):
     def __init__(self):
@@ -55,6 +57,12 @@ class NetworkTestsSetup(object):
             return "eth1"
         elif "eth0" in list:
             return "eth0"
+        elif "em2" in list:
+            return "em2"
+        elif "em1" in list:
+            return "em1"
+        elif "em0" in list:
+            return "em0"
         else:
             print "Error determining NIC for testing."
             sys.exit(1)
@@ -65,7 +73,7 @@ class TestNetworkApi(unittest.TestCase):
     # TEARDOWN
     # ================================================================
     def tearDown(self):
-	list = connection.ifconfig_nic_list() 
+        list = connection.ifconfig_nic_list() 
         if connection.nic_ut not in list:
             cmd.getoutput("ifup " + connection.nic_ut)
             time.sleep(3)
@@ -196,7 +204,7 @@ class TestNetworkApi(unittest.TestCase):
         ip_value = ip_dict["ip"]
         if result == "":
             result = "0.0.0.0"
-        self.assertTrue(result == ip_value, "")
+        self.assertTrue(result == ip_value, str(result) + " != " + str(ip_value))
 
     def test_get_ip_addr_bad_value(self):
         results = network.get_ip_address("bad")
@@ -210,7 +218,7 @@ class TestNetworkApi(unittest.TestCase):
         mac_dict = dict(mac_add.outArgs)
         mac_value = mac_dict["mac"]
         output = cmd.getoutput("ifconfig "+nic_ut+" | grep 'HWaddr' | sed 's/^.*HWaddr \(.*\)\{1\}.*$/\\1/'").strip()
-        self.assertTrue(output == mac_value, "")
+        self.assertTrue(output == mac_value, str(output) + " != " + str(mac_value))
 
     def test_get_mac_addr_bad_value(self):
         results = network.get_mac_address("bad")
