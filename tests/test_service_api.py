@@ -10,10 +10,14 @@ import os
 connection = None
 service = None
 err = sys.stderr
+test_svc = 'snmpd'
 
 # Initialization
 # =====================================================
 def setUp(self):
+    result = cmd.getstatusoutput("yum -y install net-snmp")
+    if result[0] != 0:
+        sys.exit("unable to install snmp server (used for testing service control)")
     global service 
     global connection
     connection = ServiceTestsSetup()
@@ -30,13 +34,12 @@ class ServiceTestsSetup(object):
         self.expectedMethods = [ 'list()', 'enable(name)', 'disable(name)', 'start(name, timeout)', 'stop(name, timeout)', 'status(name, timeout)', 'describe(name)' ]
         self.connect_info = testUtil.connectToBroker('localhost','49000')
         self.sess = self.connect_info[0]
-        self.test_service = "crond"
         self.reQuery()
         # prepatory cleanup
-        if os.path.isfile('/etc/init.d/crond-slow'):
-            cmd.getoutput("rm -rf /etc/init.d/crond-slow")
-        if not os.path.isfile("/etc/init.d/crond"):
-            cmd.getoutput("mv /etc/init.d/crond.orig /etc/init.d/crond")
+        if os.path.isfile("/etc/init.d/"+test_svc+"-slow"):
+            cmd.getoutput("rm -rf /etc/init.d/"+test_svc+"-slow")
+        if not os.path.isfile("/etc/init.d/"+test_svc):
+            cmd.getoutput("mv /etc/init.d/"+test_svc+".orig /etc/init.d/"+test_svc)
     def reQuery(self):
         self.service_objects = self.sess.getObjects(_class='Services',_package="org.matahariproject")
         self.service = self.service_objects[0]
@@ -86,11 +89,11 @@ class TestServiceApi(unittest.TestCase):
     # =====================================================
     def test_disable_known_service(self):
         # make sure service enabled
-	cmd.getoutput("chkconfig crond on")
+	cmd.getoutput("chkconfig "+test_svc+" on")
         # test
-	dis = service.disable("crond")
+	dis = service.disable(test_svc)
         # verify
-	chk_off = cmd.getoutput("chkconfig --list crond")
+	chk_off = cmd.getoutput("chkconfig --list "+test_svc)
 	self.assertFalse("2:off" not in chk_off, "run level 2 wrong")
 	self.assertFalse("3:off" not in chk_off, "run level 3 wrong")
 	self.assertFalse("4:off" not in chk_off, "run level 4 wrong")
@@ -104,11 +107,11 @@ class TestServiceApi(unittest.TestCase):
     # =====================================================
     def test_enable_known_service(self):
         # make sure service disabled
-        cmd.getoutput("chkconfig crond off")
+        cmd.getoutput("chkconfig "+test_svc+" off")
         # test
-        dis = service.enable("crond")
+        dis = service.enable(test_svc)
         # verify
-        chk_on = cmd.getoutput("chkconfig --list crond")
+        chk_on = cmd.getoutput("chkconfig --list "+test_svc)
         self.assertTrue("2:on" in chk_on, "run level 2 wrong")
         self.assertTrue("3:on" in chk_on, "run level 3 wrong")
         self.assertTrue("4:on" in chk_on, "run level 4 wrong")
@@ -123,23 +126,23 @@ class TestServiceApi(unittest.TestCase):
      
     def test_stop_running_known_service(self):
         # pre-req
-        cmd.getoutput("service crond start")
+        cmd.getoutput("service "+test_svc+" start")
         # test
-        result = service.stop("crond",10000)
+        result = service.stop(test_svc,10000)
         # verify
         self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
-        svc_status = cmd.getoutput("service crond status")
-        self.assertTrue("stopped" in svc_status, "text not found, still running?")
+        svc_status = cmd.getoutput("service "+test_svc+" status")
+        self.assertTrue("running" not in svc_status, "text not found, still running?")
 
     def test_stop_stopped_known_service(self):
         # pre-req
-        cmd.getoutput("service crond stop")
+        cmd.getoutput("service "+test_svc+" stop")
         # test
-        result = service.stop("crond",10000)
+        result = service.stop(test_svc,10000)
         # verify
         self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
-        svc_status = cmd.getoutput("service crond status")
-        self.assertTrue("stopped" in svc_status, "text not found, still running?")
+        svc_status = cmd.getoutput("service "+test_svc+" status")
+        self.assertTrue("running" not in svc_status, "text not found, still running?")
 
     def test_stop_unknown_service(self):
         t = service.stop("zzzzz", 10000)
@@ -150,22 +153,22 @@ class TestServiceApi(unittest.TestCase):
 
     def test_start_stopped_known_service(self):
         # pre-req
-        cmd.getoutput("service crond stop")
+        cmd.getoutput("service "+test_svc+" stop")
         # test
-        result = service.start("crond",10000)
+        result = service.start(test_svc,10000)
         # verify
         self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
-        svc_status = cmd.getoutput("service crond status")
+        svc_status = cmd.getoutput("service "+test_svc+" status")
         self.assertTrue("running" in svc_status, "text not found, still running?")
 
     def test_start_running_known_service(self):
         # pre-req
-        cmd.getoutput("service crond start")
+        cmd.getoutput("service "+test_svc+" start")
         # test
-        result = service.start("crond",10000)
+        result = service.start(test_svc,10000)
         # verify
         self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
-        svc_status = cmd.getoutput("service crond status")
+        svc_status = cmd.getoutput("service "+test_svc+" status")
         self.assertTrue("running" in svc_status, "text not found, still running?")
 
     def test_start_unknown_service(self):
@@ -177,17 +180,17 @@ class TestServiceApi(unittest.TestCase):
 
     def test_status_stopped_known_service(self):
         # pre-req
-        cmd.getoutput("service crond stop")
+        cmd.getoutput("service "+test_svc+" stop")
         # test
-        result = service.status("crond",10000)
+        result = service.status(test_svc,10000)
         # verify
         self.assertTrue(result.outArgs['rc'] == 3, "Return code not expected (" + str(result.outArgs['rc']) + ")")
 
     def test_status_running_known_service(self):
         # pre-req
-        cmd.getoutput("service crond start")
+        cmd.getoutput("service "+test_svc+" start")
         # test
-        result = service.status("crond",10000)
+        result = service.status(test_svc,10000)
         # verify
         self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
 
@@ -198,27 +201,27 @@ class TestServiceApi(unittest.TestCase):
     # TEST - describe()
     # =====================================================
     def test_describe_not_implemented(self):
-        dscrb = service.describe("crond")
+        dscrb = service.describe(test_svc)
         self.assertTrue("Not implemented" in dscrb.text, "text not found, implemented?")
 
 class TestMatahariServiceApiTimeouts(unittest.TestCase):
     def setUp(self):
-        cmd.getoutput("mv /etc/init.d/crond /etc/init.d/crond.orig")
-        cmd.getoutput("touch /etc/init.d/crond-slow")
-        cmd.getoutput("echo 'sleep 10' >> /etc/init.d/crond-slow")
-        cmd.getoutput("echo '/etc/init.d/crond.orig $1' >> /etc/init.d/crond-slow")
-        cmd.getoutput("chmod 777 /etc/init.d/crond-slow")
-        cmd.getoutput("ln -s /etc/init.d/crond-slow /etc/init.d/crond")
+        cmd.getoutput("mv /etc/init.d/"+test_svc+" /etc/init.d/"+test_svc+".orig")
+        cmd.getoutput("touch /etc/init.d/"+test_svc+"-slow")
+        cmd.getoutput("echo 'sleep 10' >> /etc/init.d/"+test_svc+"-slow")
+        cmd.getoutput("echo '/etc/init.d/"+test_svc+".orig $1' >> /etc/init.d/"+test_svc+"-slow")
+        cmd.getoutput("chmod 777 /etc/init.d/"+test_svc+"-slow")
+        cmd.getoutput("ln -s /etc/init.d/"+test_svc+"-slow /etc/init.d/"+test_svc)
     def tearDown(self):
-        cmd.getoutput("rm -rf /etc/init.d/crond /etc/init.d/crond-slow")
-        cmd.getoutput("mv /etc/init.d/crond.orig /etc/init.d/crond")
+        cmd.getoutput("rm -rf /etc/init.d/"+test_svc+" /etc/init.d/"+test_svc+"-slow")
+        cmd.getoutput("mv /etc/init.d/"+test_svc+".orig /etc/init.d/"+test_svc)
     def test_stop_timeout(self):
-        result = service.stop("crond",5000)
+        result = service.stop(test_svc,5000)
         self.assertTrue(result.outArgs['rc'] == 198, "not expected rc198, recieved " + str(result.outArgs['rc']))
     def test_start_timeout(self):
-        result = service.start("crond",5000)
+        result = service.start(test_svc,5000)
         self.assertTrue(result.outArgs['rc'] == 198, "not expected rc198, recieved " + str(result.outArgs['rc']))
     def test_status_timeout(self):
-        result = service.status("crond",5000)
+        result = service.status(test_svc,5000)
         self.assertTrue(result.outArgs['rc'] == 198, "not expected rc198, recieved " + str(result.outArgs['rc']))
 
