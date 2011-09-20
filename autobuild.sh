@@ -20,6 +20,8 @@ set -x
 PACKAGE=matahari
 VERSION=`cat .version`
 
+FEDORA=`rpm --eval %{fedora}`
+
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
 : ${AUTOBUILD_INSTALL_ROOT:=`pwd`}
@@ -71,6 +73,11 @@ fi
 #   /home/builder/matahari/public_html/dist/rpm/ 
 
 $results
+
+if [ "${FEDORA}" = "16" ] ; then
+    echo "=::=::=::= Windows Build Currently Disabled for Fedora 16 =::=::=::= "
+    exit 0
+fi
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
