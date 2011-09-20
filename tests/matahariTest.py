@@ -20,8 +20,7 @@ def connectToBroker(hostname, port):
         broker = sess.addBroker('amqp://'+hostname+':'+port)
         #print "Connection Success"
     except:
-        error("Connection Failed")
-        sys.exit(errorCount) 
+        sys.exit(1) 
     return [ sess, broker ]
 
 def disconnectFromBroker(list):
