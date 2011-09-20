@@ -214,6 +214,9 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 #== Host
 
 %post host
+%if %{defined _unitdir}
+systemctl --system daemon-reload
+%endif
 /sbin/service matahari-host condrestart
 
 %preun host
@@ -232,6 +235,9 @@ fi
 #== Network
 
 %post network
+%if %{defined _unitdir}
+systemctl --system daemon-reload
+%endif
 /sbin/service matahari-network condrestart
 
 %preun network
@@ -250,6 +256,9 @@ fi
 #== Services
 
 %post service
+%if %{defined _unitdir}
+systemctl --system daemon-reload
+%endif
 /sbin/service matahari-service condrestart
 
 %preun service
@@ -268,6 +277,9 @@ fi
 #== sysconfig
 
 %post sysconfig
+%if %{defined _unitdir}
+systemctl --system daemon-reload
+%endif
 /sbin/service matahari-sysconfig condrestart
 
 %preun sysconfig
@@ -286,6 +298,9 @@ fi
 #== Broker
 
 %post broker
+%if %{defined _unitdir}
+systemctl --system daemon-reload
+%endif
 /sbin/service matahari-broker condrestart
 
 %preun broker
