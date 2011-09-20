@@ -383,7 +383,11 @@ mh_dnsdomainname(void)
 const char *
 mh_uuid(void)
 {
-    return mh_os_uuid();
+    const char *uuid;
+
+    uuid = mh_os_uuid();
+
+    return uuid ? uuid : "";
 }
 
 const char *
