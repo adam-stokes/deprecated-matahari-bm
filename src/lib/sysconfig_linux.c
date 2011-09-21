@@ -313,14 +313,20 @@ sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
 {
     int rc = 0;
 
-    if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
-        if (strcasecmp(scheme, "puppet") == 0) {
-            rc = run_puppet(uri, NULL, key, result_cb, cb_data);
-        } else if (strcasecmp(scheme, "augeas") == 0) {
-            rc = run_augeas(uri, NULL, key, result_cb, cb_data);
-        } else {
-            rc = -1;
-        }
+    if (mh_sysconfig_is_configured(key) && !(flags & MH_SYSCONFIG_FLAG_FORCE)) {
+        /*
+         * Already configured and not being forced.  Report success now.
+         */
+        result_cb(cb_data, 0);
+        return 0;
+    }
+
+    if (strcasecmp(scheme, "puppet") == 0) {
+        rc = run_puppet(uri, NULL, key, result_cb, cb_data);
+    } else if (strcasecmp(scheme, "augeas") == 0) {
+        rc = run_augeas(uri, NULL, key, result_cb, cb_data);
+    } else {
+        rc = -1;
     }
 
     return rc;
@@ -332,12 +338,18 @@ sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
 {
     int rc = 0;
 
-    if (mh_sysconfig_is_configured(key) == FALSE || (flags & MH_SYSCONFIG_FLAG_FORCE)) {
-        if (strcasecmp(scheme, "puppet") == 0) {
-            rc = run_puppet(NULL, string, key, result_cb, cb_data);
-        } else {
-            rc = -1;
-        }
+    if (mh_sysconfig_is_configured(key) && !(flags & MH_SYSCONFIG_FLAG_FORCE)) {
+        /*
+         * Already configured and not being forced.  Report success now.
+         */
+        result_cb(cb_data, 0);
+        return 0;
+    }
+
+    if (!strcasecmp(scheme, "puppet")) {
+        rc = run_puppet(NULL, string, key, result_cb, cb_data);
+    } else {
+        rc = -1;
     }
 
     return rc;
