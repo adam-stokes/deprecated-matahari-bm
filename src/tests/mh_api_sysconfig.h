@@ -31,7 +31,7 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
         const char key[] = "org.matahariproject.test.unittest"; // Unimportant key defined
         char *key_res;
 
-        mh_sysconfig_keys_dir_set("/tmp/");
+        mh_sysconfig_keys_dir_set("/tmp/matahari-sysconfig-keys/");
 
         TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == TRUE);
         TS_ASSERT(((key_res = mh_sysconfig_is_configured(key))) != NULL);
