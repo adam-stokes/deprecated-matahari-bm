@@ -38,7 +38,7 @@ MH_TRACE_INIT_DATA(mh_sysconfig);
 #ifdef WIN32
 static const char DEFAULT_KEYS_DIR[] = "c:\\";
 #else
-static const char DEFAULT_KEYS_DIR[] = "/var/lib/matahari/";
+static const char DEFAULT_KEYS_DIR[] = "/var/lib/matahari/sysconfig-keys/";
 #endif
 
 /*!
@@ -47,6 +47,15 @@ static const char DEFAULT_KEYS_DIR[] = "/var/lib/matahari/";
  * Set with mh_sysconfig_keys_dir_set(), get with keys_dir_get().
  */
 static char _keys_dir[PATH_MAX];
+
+static gboolean
+keys_dir_create(const char *path) {
+    if (g_mkdir(path, 0755) < 0 ) {
+        mh_err("Could not create directory %s", path);
+        return FALSE;
+    }
+    return TRUE;
+}
 
 static const char *
 keys_dir_get(void)
@@ -74,6 +83,11 @@ set_key(const char *key, const char *contents)
         return -1;
     }
 
+    if (!g_file_test(keys_dir_get(), G_FILE_TEST_IS_DIR) && !keys_dir_create(keys_dir_get())) {
+        mh_err("Could not create keys directory %s", keys_dir_get());
+        return FALSE;
+    }
+        
     g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
     if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
         mh_err("Could not set file %s", key_file);

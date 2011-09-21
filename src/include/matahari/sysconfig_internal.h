@@ -29,6 +29,8 @@
 #ifndef __MH_SYSCONFIG_INTERNAL_H__
 #define __MH_SYSCONFIG_INTERNAL_H__
 
+#include <glib.h>
+
 /**
  * Set the directory used to store data about keys
  *
