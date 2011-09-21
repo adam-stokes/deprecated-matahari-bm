@@ -166,7 +166,7 @@ mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
     return sysconfig_os_run_string(string, flags, scheme, key, result_cb, cb_data);
 }
 
-const char *
+char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
 {
     return sysconfig_os_query(query, flags, scheme);

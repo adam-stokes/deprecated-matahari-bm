@@ -88,9 +88,11 @@ mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
  *
+ * \note The return of this routine must be freed with free()
+ *
  * \return DATA of returned query result
  */
-const char *
+char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
 
 /**

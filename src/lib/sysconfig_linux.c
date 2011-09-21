@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <glib.h>
 #include <curl/curl.h>
+#include <augeas.h>
 
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
@@ -292,18 +293,115 @@ return_failure:
 }
 
 static int
-run_augeas(const char *query, const char *data, const char *key,
+run_augeas(const char *uri, const char *data, const char *key,
            mh_sysconfig_result_cb result_cb, void *cb_data)
 {
-    mh_warn("not implemented\n");
-    return -1;
+    int fd;
+    FILE *fp;
+    char *text = NULL;
+    char filename[PATH_MAX];
+    GError *err = NULL;
+    augeas *aug;
+    int result;
+    char *value = NULL;
+
+    if (uri) {
+        snprintf(filename, sizeof(filename), "%s", "augeas_conf_XXXXXX");
+
+        fd = mkstemp(filename);
+        if (fd < 0) {
+            mh_err("Unable to create temporary file");
+            return -1;
+        }
+
+        fp = fdopen(fd, "w+b");
+        if (fp == NULL) {
+            close(fd);
+            unlink(filename);
+            mh_err("Unable to open temporary file");
+            return -1;
+        }
+
+        if ((sysconfig_os_download(uri, fp)) != 0) {
+            fclose(fp);
+            unlink(filename);
+            mh_err("Unable to download file from uri %s", uri);
+            return -1;
+        }
+
+        fclose(fp);
+
+        if (!g_file_get_contents(filename, &text, NULL, &err)) {
+            mh_err("Unable to read downloaded file: %s", err ? err->message : "Unknown error");
+            unlink(filename);
+            return -1;
+        }
+
+        unlink(filename);
+
+    } else if (data) {
+        text = g_strdup(data);
+    } else {
+        mh_err("No uri/data provided for augeas");
+        return -1;
+    }
+
+    snprintf(filename, sizeof(filename), "%s", "augeas_conf_XXXXXX");
+
+    fd = mkstemp(filename);
+    if (fd < 0) {
+        mh_err("Unable to create temporary file");
+        return -1;
+    }
+
+    fp = fdopen(fd, "w+b");
+    if (fp == NULL) {
+        close(fd);
+        unlink(filename);
+        mh_err("Unable to open temporary file");
+        return -1;
+    }
+
+    aug = aug_init("", "", AUG_SAVE_BACKUP);
+    result = aug_srun(aug, fp, text);
+
+    mh_info("run_augeas for key \"%s\" exited with status %d and data \"%s\"", key, result, text);
+
+    aug_close(aug);
+
+    g_free(text);
+    fclose(fp);
+
+    if (result < 0) {
+        unlink(filename);
+        mh_err("Augeas command failed");
+        return -1;
+    }
+
+    if (!g_file_get_contents(filename, &value, NULL, &err)) {
+        mh_err("Unable to read augeas results: %s", err->message);
+        unlink(filename);
+        return -1;
+    }
+
+    mh_sysconfig_set_configured(key, value);
+    result_cb(cb_data, result);
+
+    unlink(filename);
+
+    return 0;
 }
 
-static const char *
+static char *
 sysconfig_os_query_augeas(const char *query)
 {
-    const char *data = NULL;
-    mh_warn("not implemented\n");
+    char *data = NULL;
+    const char *value = NULL;
+    augeas *aug = aug_init("", "", 0);
+    aug_get(aug, query, &value);
+    if (value)
+        data = strdup(value);
+    aug_close(aug);
     return data;
 }
 
@@ -348,6 +446,8 @@ sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
 
     if (!strcasecmp(scheme, "puppet")) {
         rc = run_puppet(NULL, string, key, result_cb, cb_data);
+    } else if (strcasecmp(scheme, "augeas") == 0) {
+        rc = run_augeas(NULL, string, key, result_cb, cb_data);
     } else {
         rc = -1;
     }
@@ -355,10 +455,10 @@ sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
     return rc;
 }
 
-const char *
+char *
 sysconfig_os_query(const char *query, uint32_t flags, const char *scheme)
 {
-    const char *data = NULL;
+    char *data = NULL;
 
     if (strcasecmp(scheme, "augeas") == 0) {
         data = sysconfig_os_query_augeas(query);

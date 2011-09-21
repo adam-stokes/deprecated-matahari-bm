@@ -153,11 +153,12 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
             async = true;
         }
     } else if (methodName == "query") {
-        const char *data = NULL;
-        data = mh_sysconfig_query(args["query"].asString().c_str(),
+        char *data = NULL;
+        data = mh_sysconfig_query(args["text"].asString().c_str(),
                                   args["flags"].asUint32(),
                                   args["scheme"].asString().c_str());
         event.addReturnArgument("data", data ? data : "unknown");
+        free(data);
     } else if (methodName == "is_configured") {
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
         event.addReturnArgument("status", status ? status : "unknown");
