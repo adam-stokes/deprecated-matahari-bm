@@ -48,15 +48,6 @@ static const char DEFAULT_KEYS_DIR[] = "/var/lib/matahari/sysconfig-keys/";
  */
 static char _keys_dir[PATH_MAX];
 
-static gboolean
-keys_dir_create(const char *path) {
-    if (g_mkdir(path, 0755) < 0 ) {
-        mh_err("Could not create directory %s", path);
-        return FALSE;
-    }
-    return TRUE;
-}
-
 static const char *
 keys_dir_get(void)
 {
@@ -83,7 +74,8 @@ set_key(const char *key, const char *contents)
         return -1;
     }
 
-    if (!g_file_test(keys_dir_get(), G_FILE_TEST_IS_DIR) && !keys_dir_create(keys_dir_get())) {
+    if (!g_file_test(keys_dir_get(), G_FILE_TEST_IS_DIR) &&
+        g_mkdir(keys_dir_get(), 0755) < 0) {
         mh_err("Could not create keys directory %s", keys_dir_get());
         return FALSE;
     }
