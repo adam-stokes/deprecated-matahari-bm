@@ -48,13 +48,13 @@ mh_sysconfig_keys_dir_set(const char *path);
  * Make sure we have some precautions on what filename and paths are
  * accepted.
  *
- * \param[in] path of key file
+ * \param[in] key file
  *
  * \note The return of this routine must be freed with free()
  *
  * \return sanitized path
  */
 const char *
-mh_sanitize_keys_file(const char *path);
+mh_sanitize_keys_file(const char *key);
 
 #endif /* __MH_SYSCONFIG_INTERNAL_H__ */
