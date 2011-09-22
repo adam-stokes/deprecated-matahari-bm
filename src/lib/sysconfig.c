@@ -141,7 +141,7 @@ mh_sysconfig_is_configured(const char *key)
     return get_key(key);
 }
 
-int
+enum mh_result
 mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
                      mh_sysconfig_result_cb result_cb, void *cb_data)
 {
@@ -153,7 +153,7 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const 
     return sysconfig_os_run_uri(uri, flags, scheme, key, result_cb, cb_data);
 }
 
-int
+enum mh_result
 mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
                         const char *key, mh_sysconfig_result_cb result_cb,
                         void *cb_data)

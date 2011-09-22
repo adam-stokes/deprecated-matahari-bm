@@ -28,7 +28,7 @@
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
 
-static int
+static enum mh_result
 run_regedit(char *registry_file)
 {
     gchar *cmd[] = {
@@ -46,20 +46,23 @@ run_regedit(char *registry_file)
 
     if (ret == FALSE) {
         g_error_free(error);
-        return -1;
+        return MH_RES_BACKEND_ERROR;
     }
 
-    return res;
+    if (WIFEXITED(res))
+        return MH_RES_SUCCESS;
+    else
+        return MH_RES_BACKEND_ERROR;
 }
 
-int
+enum mh_result
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
-    return -1;
+    return MH_RES_NOT_IMPLEMENTED;
 }
 
-int
+enum mh_result
 sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
         const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
@@ -79,7 +82,7 @@ sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
         return res;
     }
 
-    return -1;
+    return MH_RES_INVALID_ARGS;
 }
 
 char *

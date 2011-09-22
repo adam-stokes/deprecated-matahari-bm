@@ -33,6 +33,7 @@ extern "C" {
 extern "C" {
 #include "matahari/logging.h"
 #include "matahari/services.h"
+#include "matahari/errors.h"
 }
 
 #include <iostream>
@@ -304,7 +305,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
             default_timeout_ms);
 
         if (!op) {
-            session.raiseException(event, MH_INVALID_ARGS);
+            session.raiseException(event, mh_result_to_str(MH_RES_INVALID_ARGS));
         } else {
             action_async(SRV_SERVICES, session, event, op, true);
         }
@@ -318,7 +319,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
                 args["name"].asString().c_str(), methodName.c_str(), 0, args["timeout"].asInt32());
 
         if (!op) {
-            session.raiseException(event, MH_INVALID_ARGS);
+            session.raiseException(event, mh_result_to_str(MH_RES_INVALID_ARGS));
         } else {
             action_async(SRV_SERVICES, session, event, op, true);
         }
@@ -326,7 +327,7 @@ SrvAgent::invoke_services(qmf::AgentSession session, qmf::AgentEvent event,
         return TRUE;
 
     } else {
-        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
         return TRUE;
     }
 
@@ -411,7 +412,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
 
         if(valid_standard == false) {
             mh_err("%s is not a known resource standard", args["standard"].asString().c_str());
-            session.raiseException(event, MH_NOT_IMPLEMENTED);
+            session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
             return TRUE;
         }
 
@@ -441,7 +442,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
             interval, timeout, params);
 
         if (!op) {
-            session.raiseException(event, MH_INVALID_ARGS);
+            session.raiseException(event, mh_result_to_str(MH_RES_INVALID_ARGS));
             return TRUE;
         }
 
@@ -459,7 +460,7 @@ SrvAgent::invoke_resources(qmf::AgentSession session, qmf::AgentEvent event,
                 args["interval"].asInt32());
 
     } else {
-        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
         return TRUE;
     }
 

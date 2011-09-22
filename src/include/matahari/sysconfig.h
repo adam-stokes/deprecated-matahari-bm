@@ -29,6 +29,8 @@
 #include <stdint.h>
 #include <glib.h>
 
+#include "matahari/errors.h"
+
 /*! Supported FLAGS */
 #define MH_SYSCONFIG_FLAG_FORCE    (1 << 0)
 
@@ -53,17 +55,17 @@ typedef void (*mh_sysconfig_result_cb)(void *data, int res);
  *            final result of the request.
  * \param[in] cb_data custom data to be passed to the result callback.
  *
- * \retval  0 for success
- * \retval -1 for failure
+ * \return See enum mh_result
  */
-int
+enum mh_result
 mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
                      mh_sysconfig_result_cb result_cb, void *cb_data);
 
 /**
  * Process a text blob
  *
- * \param[in] string the text blob to process, accepts a range of data from XML to Puppet classes
+ * \param[in] string the text blob to process, accepts a range of data from XML
+ *            to Puppet classes or newline-separated Augeas commands.
  * \param[in] flags flags used
  * \param[in] scheme the type of configuration i.e. puppet
  * \param[in] key configuration key for keeping track of existing
@@ -73,10 +75,9 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const 
  *            final result of the request.
  * \param[in] cb_data custom data to be passed to the result callback.
  *
- * \retval  0 for success
- * \retval -1 for failure
-  */
-int
+ * \return See enum mh_result
+ */
+enum mh_result
 mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
                         const char *key, mh_sysconfig_result_cb result_cb,
                         void *cb_data);

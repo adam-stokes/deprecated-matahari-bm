@@ -44,8 +44,9 @@ int required_argument = 1;
 #endif
 }
 
-#define MH_NOT_IMPLEMENTED "Not implemented"
-#define MH_INVALID_ARGS "Invalid Arguments"
+// For backward compatibility
+#define MH_NOT_IMPLEMENTED (mh_result_to_str(MH_RES_NOT_IMPLEMENTED))
+#define MH_INVALID_ARGS (mh_result_to_str(MH_RES_INVALID_ARGS))
 
 #ifndef NS_MAXDNAME
 # define NS_MAXDNAME 1025

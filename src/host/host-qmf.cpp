@@ -34,6 +34,7 @@ extern "C" {
 #include <sigar.h>
 #include "matahari/host.h"
 #include "matahari/logging.h"
+#include "matahari/errors.h"
 }
 
 class HostAgent : public MatahariAgent
@@ -136,7 +137,7 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
             _instance.setProperty("uuid", mh_host_get_uuid("Filesystem"));
 
         } else {
-            session.raiseException(event, "No UUID supplied");
+            session.raiseException(event, mh_result_to_str(MH_RES_INVALID_ARGS));
             goto bail;
         }
 
@@ -154,7 +155,7 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         }
 
     } else {
-        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
         goto bail;
     }
 

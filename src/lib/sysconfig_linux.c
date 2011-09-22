@@ -54,13 +54,13 @@ action_data_free(struct action_data *action_data)
  * \internal
  * \note This function is not thread-safe.
  */
-static int
+static enum mh_result
 sysconfig_os_download(const char *uri, FILE *fp)
 {
     CURL *curl;
     CURLcode curl_res;
     long response = 0;
-    int res = 0;
+    enum mh_result res = MH_RES_SUCCESS;
     static int curl_init = 0;
 
     if (!curl_init) {
@@ -68,34 +68,34 @@ sysconfig_os_download(const char *uri, FILE *fp)
 
         if (curl_res != CURLE_OK) {
             mh_err("curl_global_init failed: %d", curl_res);
-            return -1;
+            return MH_RES_OTHER_ERROR;
         }
 
         curl_init = 1;
     }
 
     if (!(curl = curl_easy_init())) {
-        return -1;
+        return MH_RES_OTHER_ERROR;
     }
 
     curl_res = curl_easy_setopt(curl, CURLOPT_URL, uri);
     if (curl_res != CURLE_OK) {
         mh_warn("curl_easy_setopt of URI '%s' failed. (%d)", uri, curl_res);
-        res = -1;
+        res = MH_RES_OTHER_ERROR;
         goto return_cleanup;
     }
 
     curl_res = curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
     if (curl_res != CURLE_OK) {
         mh_warn("curl_easy_setopt of WRITEDATA '%p' failed. (%d)", fp, curl_res);
-        res = -1;
+        res = MH_RES_OTHER_ERROR;
         goto return_cleanup;
     }
 
     curl_res = curl_easy_perform(curl);
     if (curl_res != CURLE_OK) {
         mh_warn("curl request for URI '%s' failed. (%d)", uri, curl_res);
-        res = -1;
+        res = MH_RES_DOWNLOAD_ERROR;
         goto return_cleanup;
     }
 
@@ -103,12 +103,12 @@ sysconfig_os_download(const char *uri, FILE *fp)
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
         if (curl_res != CURLE_OK) {
             mh_warn("curl_easy_getinfo for RESPONSE_CODE failed. (%d)", curl_res);
-            res = -1;
+            res = MH_RES_DOWNLOAD_ERROR;
             goto return_cleanup;
         }
         if (response < 200 || response > 299) {
             mh_warn("curl request for URI '%s' got response %ld", uri, response);
-            res = -1;
+            res = MH_RES_DOWNLOAD_ERROR;
         }
     }
 
@@ -196,7 +196,7 @@ return_cleanup:
     return res;
 }
 
-static int
+static enum mh_result
 run_puppet(const char *uri, const char *data, const char *key,
            mh_sysconfig_result_cb result_cb, void *cb_data)
 {
@@ -205,9 +205,10 @@ run_puppet(const char *uri, const char *data, const char *key,
     svc_action_t *action = NULL;
     struct action_data *action_data = NULL;
     int use_apply = 0;
+    enum mh_result res = MH_RES_SUCCESS;
 
     if (check_puppet(&use_apply)) {
-        return -1;
+        return MH_RES_BACKEND_ERROR;
     }
 
     if (uri) {
@@ -218,20 +219,20 @@ run_puppet(const char *uri, const char *data, const char *key,
 
         fd = mkstemp(filename);
         if (fd < 0) {
-            return -1;
+            return MH_RES_OTHER_ERROR;
         }
 
         fp = fdopen(fd, "w+b");
         if (fp == NULL) {
             close(fd);
             unlink(filename);
-            return -1;
+            return MH_RES_OTHER_ERROR;
         }
 
-        if ((sysconfig_os_download(uri, fp)) != 0) {
+        if ((res = sysconfig_os_download(uri, fp)) != 0) {
             fclose(fp);
             unlink(filename);
-            return -1;
+            return res;
         }
 
         fclose(fp);
@@ -239,7 +240,7 @@ run_puppet(const char *uri, const char *data, const char *key,
         snprintf(filename, sizeof(filename), "puppet_conf_%u", g_random_int());
         g_file_set_contents(filename, data, strlen(data), NULL);
     } else {
-        return -1;
+        return MH_RES_INVALID_ARGS;
     }
 
     if (use_apply) {
@@ -252,6 +253,7 @@ run_puppet(const char *uri, const char *data, const char *key,
     }
 
     if (!(action = mh_services_action_create_generic("puppet", args))) {
+        res = MH_RES_BACKEND_ERROR;
         goto return_failure;
     }
 
@@ -267,10 +269,11 @@ run_puppet(const char *uri, const char *data, const char *key,
     mh_info("Running puppet %s%s", use_apply ? "apply " : "", filename);
 
     if (services_action_async(action, action_cb) == FALSE) {
+        res = MH_RES_BACKEND_ERROR;
         goto return_failure;
     }
 
-    return 0;
+    return MH_RES_SUCCESS;
 
 return_failure:
     if (action) {
@@ -289,10 +292,10 @@ return_failure:
 
     unlink(filename);
 
-    return -1;
+    return res;
 }
 
-static int
+static enum mh_result
 run_augeas(const char *uri, const char *data, const char *key,
            mh_sysconfig_result_cb result_cb, void *cb_data)
 {
@@ -304,6 +307,7 @@ run_augeas(const char *uri, const char *data, const char *key,
     augeas *aug;
     int result;
     char *value = NULL;
+    enum mh_result res = MH_RES_SUCCESS;
 
     if (uri) {
         snprintf(filename, sizeof(filename), "%s", "augeas_conf_XXXXXX");
@@ -311,7 +315,7 @@ run_augeas(const char *uri, const char *data, const char *key,
         fd = mkstemp(filename);
         if (fd < 0) {
             mh_err("Unable to create temporary file");
-            return -1;
+            return MH_RES_OTHER_ERROR;
         }
 
         fp = fdopen(fd, "w+b");
@@ -319,14 +323,14 @@ run_augeas(const char *uri, const char *data, const char *key,
             close(fd);
             unlink(filename);
             mh_err("Unable to open temporary file");
-            return -1;
+            return MH_RES_OTHER_ERROR;
         }
 
-        if ((sysconfig_os_download(uri, fp)) != 0) {
+        if ((res = sysconfig_os_download(uri, fp)) != 0) {
             fclose(fp);
             unlink(filename);
             mh_err("Unable to download file from uri %s", uri);
-            return -1;
+            return res;
         }
 
         fclose(fp);
@@ -334,7 +338,7 @@ run_augeas(const char *uri, const char *data, const char *key,
         if (!g_file_get_contents(filename, &text, NULL, &err)) {
             mh_err("Unable to read downloaded file: %s", err ? err->message : "Unknown error");
             unlink(filename);
-            return -1;
+            return MH_RES_DOWNLOAD_ERROR;
         }
 
         unlink(filename);
@@ -343,7 +347,7 @@ run_augeas(const char *uri, const char *data, const char *key,
         text = g_strdup(data);
     } else {
         mh_err("No uri/data provided for augeas");
-        return -1;
+        return MH_RES_INVALID_ARGS;
     }
 
     snprintf(filename, sizeof(filename), "%s", "augeas_conf_XXXXXX");
@@ -351,7 +355,7 @@ run_augeas(const char *uri, const char *data, const char *key,
     fd = mkstemp(filename);
     if (fd < 0) {
         mh_err("Unable to create temporary file");
-        return -1;
+        return MH_RES_OTHER_ERROR;
     }
 
     fp = fdopen(fd, "w+b");
@@ -359,10 +363,18 @@ run_augeas(const char *uri, const char *data, const char *key,
         close(fd);
         unlink(filename);
         mh_err("Unable to open temporary file");
-        return -1;
+        return MH_RES_OTHER_ERROR;
     }
 
     aug = aug_init("", "", AUG_SAVE_BACKUP);
+    if (!aug) {
+        g_free(text);
+        fclose(fp);
+        unlink(filename);
+        mh_err("Unable to initialize augeas");
+        return MH_RES_BACKEND_ERROR;
+    }
+
     result = aug_srun(aug, fp, text);
 
     mh_info("run_augeas for key \"%s\" exited with status %d and data \"%s\"", key, result, text);
@@ -375,13 +387,13 @@ run_augeas(const char *uri, const char *data, const char *key,
     if (result < 0) {
         unlink(filename);
         mh_err("Augeas command failed");
-        return -1;
+        return MH_RES_BACKEND_ERROR;
     }
 
     if (!g_file_get_contents(filename, &value, NULL, &err)) {
         mh_err("Unable to read augeas results: %s", err->message);
         unlink(filename);
-        return -1;
+        return MH_RES_BACKEND_ERROR;
     }
 
     mh_sysconfig_set_configured(key, value);
@@ -405,18 +417,18 @@ sysconfig_os_query_augeas(const char *query)
     return data;
 }
 
-int
+enum mh_result
 sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
         const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
-    int rc = 0;
+    enum mh_result rc = MH_RES_SUCCESS;
 
     if (mh_sysconfig_is_configured(key) && !(flags & MH_SYSCONFIG_FLAG_FORCE)) {
         /*
          * Already configured and not being forced.  Report success now.
          */
-        result_cb(cb_data, 0);
-        return 0;
+        result_cb(cb_data, rc);
+        return rc;
     }
 
     if (strcasecmp(scheme, "puppet") == 0) {
@@ -424,24 +436,24 @@ sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
     } else if (strcasecmp(scheme, "augeas") == 0) {
         rc = run_augeas(uri, NULL, key, result_cb, cb_data);
     } else {
-        rc = -1;
+        rc = MH_RES_INVALID_ARGS;
     }
 
     return rc;
 }
 
-int
+enum mh_result
 sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
         const char *key, mh_sysconfig_result_cb result_cb, void *cb_data)
 {
-    int rc = 0;
+    enum mh_result rc = MH_RES_SUCCESS;
 
     if (mh_sysconfig_is_configured(key) && !(flags & MH_SYSCONFIG_FLAG_FORCE)) {
         /*
          * Already configured and not being forced.  Report success now.
          */
-        result_cb(cb_data, 0);
-        return 0;
+        result_cb(cb_data, rc);
+        return rc;
     }
 
     if (!strcasecmp(scheme, "puppet")) {
@@ -449,7 +461,7 @@ sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
     } else if (strcasecmp(scheme, "augeas") == 0) {
         rc = run_augeas(NULL, string, key, result_cb, cb_data);
     } else {
-        rc = -1;
+        rc = MH_RES_INVALID_ARGS;
     }
 
     return rc;

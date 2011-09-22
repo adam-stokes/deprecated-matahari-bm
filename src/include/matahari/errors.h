@@ -1,5 +1,6 @@
-/* sysconfig_private.h - Copyright (C) 2011 Red Hat, Inc.
- * Written by Adam Stokes <astokes@fedoraproject.org>
+/* errors.h - Copyright (C) 2011 Red Hat, Inc.
+ *
+ * Written by Radek Novacek <rnovacek@redhat.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -16,20 +17,35 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __MH_SYSCONFIG_PRIVATE_H_
-#define __MH_SYSCONFIG_PRIVATE_H_
+/**
+ * \file
+ * \brief Error API
+ * \ingroup coreapi
+ */
 
-enum mh_result
-sysconfig_os_run_uri(const char *uri, uint32_t flags, const char *scheme,
-                     const char *key, mh_sysconfig_result_cb result_cb,
-                     void *cb_data);
+#ifndef __MH_ERRORS_H__
+#define __MH_ERRORS_H__
 
-enum mh_result
-sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
-                        const char *key, mh_sysconfig_result_cb result_cb,
-                        void *cb_data);
+/**
+ * Global enumeration with result codes.
+ */
+enum mh_result {
+    MH_RES_SUCCESS = 0,
+    MH_RES_NOT_IMPLEMENTED = -1,
+    MH_RES_INVALID_ARGS = -2,
+    MH_RES_DOWNLOAD_ERROR = -3,
+    MH_RES_BACKEND_ERROR = -4,
+    MH_RES_OTHER_ERROR = -5
+};
 
-char *
-sysconfig_os_query(const char *query, uint32_t flags, const char *scheme);
+/**
+ * Get string associated with result code.
+ *
+ * \param[in] res result code, see enum mh_result
+ *
+ * \return string describing the result
+ */
+const char *
+mh_result_to_str(enum mh_result res);
 
-#endif /* __MH_SYSCONFIG_PRIVATE_H_ */
+#endif
