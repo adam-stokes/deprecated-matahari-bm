@@ -64,14 +64,26 @@ mh_sysconfig_keys_dir_set(const char *path)
     mh_string_copy(_keys_dir, path, sizeof(_keys_dir));
 }
 
+const char *
+mh_sanitize_keys_file(const char *key)
+{
+    gchar *key_lowercase, *escaped_filename;
+    
+    key_lowercase = g_ascii_strdown(key, -1)
+    escaped_filename = g_strcanon(key_lowercase, "abcdefghijklmnopqrstuvwxyz", '_');
+    g_free(key_lowercase);
+    return escaped_filename;
+}
+
 static gboolean
 set_key(const char *key, const char *contents)
 {
     char key_file[PATH_MAX];
+    gchar *sanitized_key;
 
     if (mh_strlen_zero(key)) {
         mh_err("key cannot be empty");
-        return -1;
+        return FALSE;
     }
 
     if (!g_file_test(keys_dir_get(), G_FILE_TEST_IS_DIR) &&
@@ -80,7 +92,10 @@ set_key(const char *key, const char *contents)
         return FALSE;
     }
         
-    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), key);
+    // Allow only ASCII characters replace with rest with _
+    sanitized_key = mh_sanitize_keys_file(key);
+    g_snprintf(key_file, sizeof(key_file), "%s%s", keys_dir_get(), sanitized_key);
+    g_free(sanitized_key);
     if (!g_file_set_contents(key_file, contents, strlen(contents), NULL)) {
         mh_err("Could not set file %s", key_file);
         return FALSE;
