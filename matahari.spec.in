@@ -8,6 +8,12 @@
 # Choose a versioning scheme
 %bcond_without pre_release
 
+%if %{defined _unitdir}
+%global systemd 1
+%else
+%global systemd 0
+%endif
+
 %if %{with pre_release}
 %global mh_release 0.%{specversion}.%{upstream_version}.git
 %else
@@ -193,7 +199,7 @@ make %{?_smp_mflags}
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
-%if %{defined _unitdir}
+%if %{systemd}
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-service
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-network
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-host
@@ -214,7 +220,7 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 #== Host
 
 %post host
-%if %{defined _unitdir}
+%if %{systemd}
 systemctl --system daemon-reload
 %endif
 /sbin/service matahari-host condrestart
@@ -222,7 +228,7 @@ systemctl --system daemon-reload
 %preun host
 if [ $1 = 0 ]; then
    /sbin/service matahari-host stop >/dev/null 2>&1 || :
-%if %{undefined _unitdir}
+%if !%{systemd}
    chkconfig --del matahari-host
 %endif
 fi
@@ -235,7 +241,7 @@ fi
 #== Network
 
 %post network
-%if %{defined _unitdir}
+%if %{systemd}
 systemctl --system daemon-reload
 %endif
 /sbin/service matahari-network condrestart
@@ -243,7 +249,7 @@ systemctl --system daemon-reload
 %preun network
 if [ $1 = 0 ]; then
    /sbin/service matahari-network stop >/dev/null 2>&1 || :
-%if %{undefined _unitdir}
+%if !%{systemd}
    chkconfig --del matahari-network
 %endif
 fi
@@ -256,7 +262,7 @@ fi
 #== Services
 
 %post service
-%if %{defined _unitdir}
+%if %{systemd}
 systemctl --system daemon-reload
 %endif
 /sbin/service matahari-service condrestart
@@ -264,7 +270,7 @@ systemctl --system daemon-reload
 %preun service
 if [ $1 = 0 ]; then
    /sbin/service matahari-service stop >/dev/null 2>&1 || :
-%if %{undefined _unitdir}
+%if !%{systemd}
    chkconfig --del matahari-service
 %endif
 fi
@@ -277,7 +283,7 @@ fi
 #== sysconfig
 
 %post sysconfig
-%if %{defined _unitdir}
+%if %{systemd}
 systemctl --system daemon-reload
 %endif
 /sbin/service matahari-sysconfig condrestart
@@ -285,7 +291,7 @@ systemctl --system daemon-reload
 %preun sysconfig
 if [ $1 = 0 ]; then
    /sbin/service matahari-sysconfig stop >/dev/null 2>&1 || :
-%if %{undefined _unitdir}
+%if !%{systemd}
    chkconfig --del matahari-sysconfig
 %endif
 fi
@@ -298,7 +304,7 @@ fi
 #== Broker
 
 %post broker
-%if %{defined _unitdir}
+%if %{systemd}
 systemctl --system daemon-reload
 %endif
 /sbin/service matahari-broker condrestart
@@ -306,7 +312,7 @@ systemctl --system daemon-reload
 %preun broker
 if [ $1 = 0 ]; then
     /sbin/service matahari-broker stop >/dev/null 2>&1 || :
-%if %{undefined _unitdir}
+%if !%{systemd}
     chkconfig --del matahari-broker
 %endif
 fi
@@ -365,12 +371,12 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{defined _unitdir}
+%if %{systemd}
 %{_unitdir}/matahari-network.service
 %endif
 
 %if %{with qmf}
-%if %{undefined _unitdir}
+%if !%{systemd}
 %attr(755, root, root) %{_initddir}/matahari-network
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-networkd
@@ -389,12 +395,12 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{defined _unitdir}
+%if %{systemd}
 %{_unitdir}/matahari-host.service
 %endif
 
 %if %{with qmf}
-%if %{undefined _unitdir}
+%if !%{systemd}
 %attr(755, root, root) %{_initddir}/matahari-host
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-hostd
@@ -413,12 +419,12 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{defined _unitdir}
+%if %{systemd}
 %{_unitdir}/matahari-service.service
 %endif
 
 %if %{with qmf}
-%if %{undefined _unitdir}
+%if !%{systemd}
 %attr(755, root, root) %{_initddir}/matahari-service
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-serviced
@@ -438,12 +444,12 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING
 
-%if %{defined _unitdir}
+%if %{systemd}
 %{_unitdir}/matahari-sysconfig.service
 %endif
 
 %if %{with qmf}
-%if %{undefined _unitdir}
+%if !%{systemd}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfigd
@@ -455,7 +461,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %doc AUTHORS COPYING
 
 %if %{with qmf}
-%if %{undefined _unitdir}
+%if !%{systemd}
 %attr(755, root, root) %{_initddir}/matahari-sysconfig-console
 %endif
 %attr(755, root, root) %{_sbindir}/matahari-qmf-sysconfig-consoled
@@ -463,7 +469,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %attr(755, root, root) %{_sbindir}/matahari-qmf-service-cli
 %{_mandir}/man8/matahari-qmf-service-cli.8*
 
-%if %{defined _unitdir}
+%if %{systemd}
 %{_unitdir}/matahari-sysconfig-console.service
 %endif
 %endif
@@ -471,7 +477,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %if %{with qmf}
 %files broker
 %defattr(644, root, root, 755)
-%if %{undefined _unitdir}
+%if !%{systemd}
 %attr(755, root, root) %{_initddir}/matahari-broker
 %endif
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
@@ -480,7 +486,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_mandir}/man8/matahari-brokerd.8*
 %doc AUTHORS COPYING
 
-%if %{defined _unitdir}
+%if %{systemd}
 %{_unitdir}/matahari-broker.service
 %else
 %ghost %dir %attr(0775, root, qpidd) %{_localstatedir}/run/%{name}
