@@ -64,6 +64,10 @@ BuildRequires:	qmf-devel > 0.7
 BuildRequires:	dbus-devel dbus-glib-devel polkit-devel libxslt
 %endif
 
+%if %{defined run_unit_tests}
+BuildRequires:	cxxtest
+%endif
+
 %description
 
 Matahari provides QMF Agents that can be used to control and manage
@@ -193,6 +197,9 @@ QMF console for monitoring various agents
 %build
 %{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_qmf: -DWITH-QMF:BOOL=OFF} %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} -Dinitdir=%{_initddir} -Dsysconfdir=%{_sysconfdir} .
 make %{?_smp_mflags}
+%if %{defined run_unit_tests}
+cd src/tests && ctest -V
+%endif
 
 %install
 rm -rf %{buildroot}

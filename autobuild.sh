@@ -59,7 +59,7 @@ make_srpm
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}`
 
 rm -f $results/build.log $results/*.rpm
-/usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
+/usr/bin/mock --define="run_unit_tests 1" --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
 rc=$?
 
 if [ $rc != 0 ]; then
