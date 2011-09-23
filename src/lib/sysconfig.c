@@ -68,10 +68,24 @@ static gboolean
 set_key(const char *key, const char *contents)
 {
     char key_file[PATH_MAX];
+    static const char valid_chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-.";
+    char sanitized_key[PATH_MAX];
 
     if (mh_strlen_zero(key)) {
         mh_err("key cannot be empty");
-        return -1;
+        return FALSE;
+    }
+
+    if (g_str_has_prefix(key, ".")) {
+        mh_err("Invalid key filename %s", key);
+        return FALSE;
+    }
+
+    mh_string_copy(sanitized_key, key, sizeof(sanitized_key));
+    g_strcanon(sanitized_key, valid_chars, '!');
+    if (strchr(sanitized_key, '!') != NULL) {
+        mh_err("Invalid key filename %s", sanitized_key);
+        return FALSE;
     }
 
     if (!g_file_test(keys_dir_get(), G_FILE_TEST_IS_DIR) &&

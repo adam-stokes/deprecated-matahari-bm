@@ -17,6 +17,7 @@ extern "C" {
 
 #include "matahari/sysconfig.h"
 #include "matahari/sysconfig_internal.h"
+#include "matahari/utilities.h"
 #include "mh_test_utilities.h"
 };
 
@@ -29,6 +30,9 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
     void testIsConfigured(void)
     {
         const char key[] = "org.matahariproject.test.unittest"; // Unimportant key defined
+        const char *invalid_keys[3] = {"../etc/passwd",
+                                       "./../etc/passwd#",
+                                       "HAPPY#HAMMY,@"};
         char *key_res;
 
         mh_sysconfig_keys_dir_set("/tmp/matahari-sysconfig-keys/");
@@ -38,6 +42,9 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
         TS_ASSERT(!strcmp("OK", key_res));
 
         free(key_res);
+        for (int i = 0; i < DIMOF(invalid_keys); i++) {
+            TS_ASSERT((mh_sysconfig_set_configured(invalid_keys[i], "OK")) == FALSE);
+        }
     }
 };
 
