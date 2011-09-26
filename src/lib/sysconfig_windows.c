@@ -82,9 +82,8 @@ sysconfig_os_run_string(const char *string, uint32_t flags, const char *scheme,
     return -1;
 }
 
-const char *
+char *
 sysconfig_os_query(const char *query, uint32_t flags, const char *scheme)
 {
-    const char *data = NULL;
-    return data;
+    return NULL;
 }
