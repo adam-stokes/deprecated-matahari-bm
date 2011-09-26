@@ -39,6 +39,10 @@
 #include "matahari/host.h"
 #include "host_private.h"
 
+
+#define UUID_STR_BUF_LEN 37
+
+
 const char *
 host_os_get_cpu_flags(void)
 {
@@ -263,21 +267,25 @@ char *host_os_reboot_uuid(void)
     const char *file = "/var/run/matahari-reboot-id";
     char *uuid = mh_file_first_line(file);
 
-    if(uuid == NULL) {
+    if (uuid == NULL) {
         uuid_t buffer;
         GError* error = NULL;
 
-        uuid = malloc(38);
+        uuid = malloc(UUID_STR_BUF_LEN);
+        if (!uuid) {
+            return NULL;
+        }
+
         uuid_generate(buffer);
         uuid_unparse(buffer, uuid);
 
-        if(g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
+        if (g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
             mh_info("%s", error->message);
             free(uuid);
             uuid = strdup(error->message);
         }
 
-        if(error) {
+        if (error) {
             g_error_free(error);
         }
     }
@@ -291,8 +299,10 @@ const char *host_os_agent_uuid(void)
     static char *agent_uuid = NULL;
     uuid_generate(buffer);
 
-    agent_uuid = malloc(38);
-    uuid_unparse(buffer, agent_uuid);
+    agent_uuid = malloc(UUID_STR_BUF_LEN);
+    if (agent_uuid) {
+        uuid_unparse(buffer, agent_uuid);
+    }
 
     return agent_uuid;
 }
