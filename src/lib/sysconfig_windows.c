@@ -49,7 +49,7 @@ run_regedit(char *registry_file)
         return MH_RES_BACKEND_ERROR;
     }
 
-    if (WIFEXITED(res))
+    if (res > 0)
         return MH_RES_SUCCESS;
     else
         return MH_RES_BACKEND_ERROR;
