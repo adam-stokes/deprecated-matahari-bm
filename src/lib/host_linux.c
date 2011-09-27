@@ -177,7 +177,8 @@ host_os_identify(void)
     return res;
 }
 
-char *host_os_machine_uuid(void)
+char *
+host_os_machine_uuid(void)
 {
     gchar *output = NULL;
     gchar **lines = NULL;
@@ -256,44 +257,48 @@ cleanup:
     return uuid;
 }
 
-char *host_os_custom_uuid(void)
+char *
+host_os_custom_uuid(void)
 {
     return mh_file_first_line("/etc/custom-machine-id");
 }
 
-char *host_os_reboot_uuid(void)
+char *
+host_os_reboot_uuid(void)
 {
     /* Relies on /var/run being erased at boot-time as is common on most modern distros */
-    const char *file = "/var/run/matahari-reboot-id";
+    static const char file[] = "/var/run/matahari-reboot-id";
+    uuid_t buffer;
+    GError* error = NULL;
     char *uuid = mh_file_first_line(file);
 
-    if (uuid == NULL) {
-        uuid_t buffer;
-        GError* error = NULL;
+    if (uuid) {
+        return uuid;
+    }
 
-        uuid = malloc(UUID_STR_BUF_LEN);
-        if (!uuid) {
-            return NULL;
-        }
+    uuid = malloc(UUID_STR_BUF_LEN);
+    if (!uuid) {
+        return NULL;
+    }
 
-        uuid_generate(buffer);
-        uuid_unparse(buffer, uuid);
+    uuid_generate(buffer);
+    uuid_unparse(buffer, uuid);
 
-        if (g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
-            mh_info("%s", error->message);
-            free(uuid);
-            uuid = strdup(error->message);
-        }
+    if (g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
+        mh_info("%s", error->message);
+        free(uuid);
+        uuid = strdup(error->message);
+    }
 
-        if (error) {
-            g_error_free(error);
-        }
+    if (error) {
+        g_error_free(error);
     }
 
     return uuid;
 }
 
-const char *host_os_agent_uuid(void)
+const char *
+host_os_agent_uuid(void)
 {
     uuid_t buffer;
     static char *agent_uuid = NULL;
@@ -307,17 +312,22 @@ const char *host_os_agent_uuid(void)
     return agent_uuid;
 }
 
-int host_os_set_custom_uuid(const char *uuid)
+int
+host_os_set_custom_uuid(const char *uuid)
 {
     int rc = 0;
-    GError* error = NULL;
+    GError *error = NULL;
 
-    if(g_file_set_contents("/etc/custom-machine-id", uuid, strlen(uuid?uuid:""), &error) == FALSE) {
+    if (!uuid) {
+        uuid = "";
+    }
+
+    if (g_file_set_contents("/etc/custom-machine-id", uuid, strlen(uuid), &error) == FALSE) {
         mh_info("%s", error->message);
         rc = error->code;
     }
 
-    if(error) {
+    if (error) {
         g_error_free(error);
     }
 
