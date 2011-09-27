@@ -46,17 +46,18 @@ mh_os_uuid(void)
     UUID uuid;
     HKEY key;
     DWORD uuid_str_len = MAXUUIDLEN - 1;
-    // Note: not thread safe, but neither is a ton of other code ...
-    static char uuid_str[MAXUUIDLEN];
+    static char uuid_str[MAXUUIDLEN] = "";
     unsigned char *rs;
-    long res = RegOpenKey(HKEY_LOCAL_MACHINE,
-                          L"SYSTEM\\CurrentControlSet\\services\\Matahari",
-                          &key);
+    long res;
+
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
 
     if (res != ERROR_SUCCESS) {
         mh_debug("Could not open Matahari key from the registry: %ld",
                  res);
-        goto bail;
+        return "";
     }
 
     res = RegQueryValueExA(key, UUID_REGISTRY_KEY, NULL, NULL,
@@ -64,7 +65,7 @@ mh_os_uuid(void)
 
     if (res == ERROR_SUCCESS) {
         uuid_str[uuid_str_len] = '\0';
-        return uuid_str; /* <("<) stokachu! */
+        goto bail;
     }
 
     UuidCreate(&uuid);
@@ -75,16 +76,14 @@ mh_os_uuid(void)
         mh_trace("Got uuid: %s", uuid_str);
         res = RegSetValueExA(key, UUID_REGISTRY_KEY, 0, REG_SZ,
                              (CONST BYTE *) uuid_str, strlen(uuid_str) + 1);
-
-        if (res != ERROR_SUCCESS) {
-            goto bail;
-        }
     }
 
+bail:
+    if (res != ERROR_SUCCESS) {
+        mh_warn("Failed to get UUID.");
+    }
+
+    RegCloseKey(key);
+
     return uuid_str;
-
- bail:
-    mh_warn("Failed to get UUID.");
-
-    return "";
 }
