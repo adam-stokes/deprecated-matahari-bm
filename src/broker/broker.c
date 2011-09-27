@@ -58,7 +58,7 @@ static void broker_args_free(char **args)
 }
 
 #define APPEND_ARG(ARGS, COUNT, NEWARG) do {      \
-    const char *_newarg = strdup(NEWARG);         \
+    char *_newarg = strdup(NEWARG);               \
     if (((ARGS)[(COUNT)++] = _newarg) == NULL) {  \
         mh_err("Failed to allocate string");      \
         broker_args_free(ARGS);                   \
