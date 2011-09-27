@@ -100,6 +100,11 @@ host_os_identify(void)
 char *
 host_os_machine_uuid(void)
 {
+#if 0
+    UINT res;
+    char *uuid = NULL;
+    struct RawSMBIOSDData *smbios_data;
+
     /*
      * Doc on SMBIOS support in windows:
      *     http://msdn.microsoft.com/en-us/windows/hardware/gg463136
@@ -107,6 +112,38 @@ host_os_machine_uuid(void)
      * See GetSystemFirmwareTable()
      *     http://msdn.microsoft.com/en-us/library/ms724379%28v=VS.85%29.aspx
      */
+
+    res = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+
+    if (!res) {
+        mh_info("Failed to get required SMBIOS buffer size.");
+        return NULL;
+    }
+
+    if (!(buf = malloc(res))) {
+        return NULL;
+    }
+
+    res = GetSystemFirmwareTable('RSMB', 0, (void *) smbios_data, res);
+
+    if (!res) {
+        mh_info("Failed to get SMBIOS data.");
+        goto return_cleanup;
+    }
+
+    uuid = find_uuid(smbios_data->SMBIOSTableData, smbios_data->Length);
+
+return_cleanup:
+
+    free(buf);
+
+    return uuid;
+#endif
+
+    /*
+     * GetSystemFirmwareTable() does not appear to be available with mingw32.
+     */
+
     return strdup("not-implemented");
 }
 
