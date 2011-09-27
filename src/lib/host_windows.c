@@ -33,6 +33,8 @@
 #include "matahari/host.h"
 #include "host_private.h"
 
+static const char CUSTOM_UUID_KEY[] = "CustomUUID";
+
 const char *
 host_os_get_cpu_flags(void)
 {
@@ -109,12 +111,6 @@ host_os_machine_uuid(void)
 }
 
 char *
-host_os_custom_uuid(void)
-{
-    return mh_file_first_line("custom-machine-id");
-}
-
-char *
 host_os_reboot_uuid(void)
 {
     return strdup("not-implemented");
@@ -126,24 +122,62 @@ host_os_agent_uuid(void)
     return strdup("not-implemented");
 }
 
+char *
+host_os_custom_uuid(void)
+{
+    HKEY key;
+    char uuid_str[256] = "";
+    DWORD uuid_str_len = sizeof(uuid_str) - 1;
+    long res;
+
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        return NULL;
+    }
+
+    res = RegQueryValueExA(key, CUSTOM_UUID_KEY, NULL, NULL,
+                           (BYTE *) uuid_str, &uuid_str_len);
+
+    if (res != ERROR_SUCCESS) {
+        mh_warn("Failed to get custom UUID.");
+    }
+
+    RegCloseKey(key);
+
+    return mh_strlen_zero(uuid_str) ? NULL : strdup(uuid_str);
+}
+
 int
 host_os_set_custom_uuid(const char *uuid)
 {
-    int rc = 0;
-    GError *error = NULL;
+    HKEY key;
+    long res;
+    int ret = 0;
 
-    if (!uuid) {
-        uuid = "";
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        return -1;
     }
 
-    if (g_file_set_contents("custom-machine-id", uuid, strlen(uuid), &error) == FALSE) {
-        mh_info("%s", error->message);
-        rc = error->code;
+    res = RegSetValueExA(key, CUSTOM_UUID_KEY, 0, REG_SZ,
+                         (CONST BYTE *) uuid, strlen(uuid) + 1);
+
+    if (res != ERROR_SUCCESS) {
+        mh_err("Failed to set custom UUID: %ld\n", res);
+        ret = -1;
     }
 
-    if (error) {
-        g_error_free(error);
-    }
+    RegCloseKey(key);
 
-    return rc;
+    return ret;
 }
