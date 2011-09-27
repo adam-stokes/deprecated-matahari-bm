@@ -297,19 +297,20 @@ host_os_reboot_uuid(void)
     return uuid;
 }
 
-const char *
+char *
 host_os_agent_uuid(void)
 {
+    static char agent_uuid[UUID_STR_BUF_LEN] = "";
     uuid_t buffer;
-    static char *agent_uuid = NULL;
-    uuid_generate(buffer);
 
-    agent_uuid = malloc(UUID_STR_BUF_LEN);
-    if (agent_uuid) {
-        uuid_unparse(buffer, agent_uuid);
+    if (!mh_strlen_zero(agent_uuid)) {
+        return strdup(agent_uuid);
     }
 
-    return agent_uuid;
+    uuid_generate(buffer);
+    uuid_unparse(buffer, agent_uuid);
+
+    return strdup(agent_uuid);
 }
 
 int

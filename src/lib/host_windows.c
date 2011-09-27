@@ -120,10 +120,10 @@ host_os_reboot_uuid(void)
     return strdup("not-implemented");
 }
 
-const char *
+char *
 host_os_agent_uuid(void)
 {
-    return "not-implemented";
+    return strdup("not-implemented");
 }
 
 int
