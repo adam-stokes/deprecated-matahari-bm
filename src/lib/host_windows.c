@@ -119,7 +119,22 @@ host_os_reboot_uuid(void)
 char *
 host_os_agent_uuid(void)
 {
-    return strdup("not-implemented");
+    UUID uuid;
+    unsigned char *rs = NULL;
+
+    if (rs) {
+        goto return_uuid;
+    }
+
+    UuidCreate(&uuid);
+
+    if (UuidToStringA(&uuid, &rs) != RPC_S_OK) {
+        mh_err("Failed to convert agent UUID to string");
+    }
+
+return_uuid:
+
+    return strdup(rs ? (char *) rs : "");
 }
 
 char *
