@@ -68,7 +68,7 @@ static gboolean
 set_key(const char *key, const char *contents)
 {
     char key_file[PATH_MAX];
-    char valid_chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-.";
+    static const char valid_chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-.";
     char sanitized_key[PATH_MAX];
 
     if (mh_strlen_zero(key)) {
@@ -83,7 +83,7 @@ set_key(const char *key, const char *contents)
 
     mh_string_copy(sanitized_key, key, sizeof(sanitized_key));
     g_strcanon(sanitized_key, valid_chars, '!');
-    if (g_strstr_len(sanitized_key, PATH_MAX, "!") != NULL) {
+    if (strchr(sanitized_key, '!') != NULL) {
         mh_err("Invalid key filename %s", sanitized_key);
         return FALSE;
     }
@@ -141,7 +141,7 @@ mh_sysconfig_is_configured(const char *key)
     return get_key(key);
 }
 
-int
+enum mh_result
 mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const char *key,
                      mh_sysconfig_result_cb result_cb, void *cb_data)
 {
@@ -153,7 +153,7 @@ mh_sysconfig_run_uri(const char *uri, uint32_t flags, const char *scheme, const 
     return sysconfig_os_run_uri(uri, flags, scheme, key, result_cb, cb_data);
 }
 
-int
+enum mh_result
 mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
                         const char *key, mh_sysconfig_result_cb result_cb,
                         void *cb_data)
@@ -166,7 +166,7 @@ mh_sysconfig_run_string(const char *string, uint32_t flags, const char *scheme,
     return sysconfig_os_run_string(string, flags, scheme, key, result_cb, cb_data);
 }
 
-const char *
+char *
 mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme)
 {
     return sysconfig_os_query(query, flags, scheme);

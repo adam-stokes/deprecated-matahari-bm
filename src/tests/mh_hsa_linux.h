@@ -34,6 +34,7 @@ extern "C" {
 #include <resolv.h>
 #include "mh_test_utilities.h"
 #include "matahari/dnssrv.h"
+#include "matahari/utilities.h"
 #include "matahari/dnssrv_internal.h"
 };
 

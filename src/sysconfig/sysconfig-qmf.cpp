@@ -120,49 +120,41 @@ ConfigAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event, gpointer u
 
     qpid::types::Variant::Map& args = event.getArguments();
 
-    if (methodName == "run_uri") {
+    if (methodName == "run_uri" || methodName == "run_string") {
         AsyncCB *action_data = new AsyncCB(args["key"].asString(), event, session);
-        int res;
+        mh_result res;
 
-        res = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
-            args["flags"].asUint32(),
-            args["scheme"].asString().c_str(),
-            args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
+        if (methodName == "run_uri")
+            res = mh_sysconfig_run_uri(args["uri"].asString().c_str(),
+                args["flags"].asUint32(),
+                args["scheme"].asString().c_str(),
+                args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
+        else
+            res = mh_sysconfig_run_string(args["text"].asString().c_str(),
+                args["flags"].asUint32(),
+                args["scheme"].asString().c_str(),
+                args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
 
-        if (res) {
-            session.raiseException(event, MH_INVALID_ARGS);
+
+        if (res == MH_RES_SUCCESS) {
+            async = true;
+        } else {
+            session.raiseException(event, mh_result_to_str(res));
             delete action_data;
             goto bail;
-        } else {
-            async = true;
-        }
-    } else if (methodName == "run_string") {
-        AsyncCB *action_data = new AsyncCB(args["key"].asString(), event, session);
-        int res;
-
-        res = mh_sysconfig_run_string(args["text"].asString().c_str(),
-            args["flags"].asUint32(),
-            args["scheme"].asString().c_str(),
-            args["key"].asString().c_str(), AsyncCB::result_cb, action_data);
-
-        if (res) {
-            session.raiseException(event, MH_INVALID_ARGS);
-            delete action_data;
-            goto bail;
-        } else {
-            async = true;
         }
     } else if (methodName == "query") {
-        const char *data = NULL;
-        data = mh_sysconfig_query(args["query"].asString().c_str(),
+        char *data = NULL;
+        data = mh_sysconfig_query(args["text"].asString().c_str(),
                                   args["flags"].asUint32(),
                                   args["scheme"].asString().c_str());
         event.addReturnArgument("data", data ? data : "unknown");
+        free(data);
     } else if (methodName == "is_configured") {
         status = mh_sysconfig_is_configured(args["key"].asString().c_str());
         event.addReturnArgument("status", status ? status : "unknown");
     } else {
-        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
         goto bail;
     }
 

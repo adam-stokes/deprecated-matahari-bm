@@ -20,6 +20,7 @@
 #include "config.h"
 
 #include "matahari/dnssrv.h"
+#include "matahari/dnssrv_internal.h"
 
 #include <windows.h>
 #include <winsock.h>

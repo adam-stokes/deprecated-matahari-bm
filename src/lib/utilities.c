@@ -29,6 +29,7 @@
 
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
+#include "matahari/errors.h"
 #include "utilities_private.h"
 
 MH_TRACE_INIT_DATA(mh_core);
@@ -521,4 +522,24 @@ mh_string_copy(char *dst, const char *src, size_t dst_len)
     }
 
     return ret;
+}
+
+const char *
+mh_result_to_str(enum mh_result res)
+{
+    switch (res) {
+    case MH_RES_SUCCESS:
+        return "Success";
+    case MH_RES_NOT_IMPLEMENTED:
+        return "Not implemented";
+    case MH_RES_INVALID_ARGS:
+        return "Invalid Arguments";
+    case MH_RES_DOWNLOAD_ERROR:
+        return "Unable to download file";
+    case MH_RES_BACKEND_ERROR:
+        return "Error in backend";
+    case MH_RES_OTHER_ERROR:
+        return "General error";
+    }
+    return "FIXME: result code doesn't have message assigned!";
 }

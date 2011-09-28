@@ -17,6 +17,7 @@ extern "C" {
 
 #include "matahari/sysconfig.h"
 #include "matahari/sysconfig_internal.h"
+#include "matahari/utilities.h"
 #include "mh_test_utilities.h"
 };
 
@@ -41,11 +42,9 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
         TS_ASSERT(((key_res = mh_sysconfig_is_configured(key))) != NULL);
         TS_ASSERT(!strcmp("OK", key_res));
         free(key_res);
-
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < DIMOF(invalid_keys); i++) {
             TS_ASSERT((mh_sysconfig_set_configured(invalid_keys[i], "OK")) == FALSE);
         }
-
     }
 };
 

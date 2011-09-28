@@ -32,6 +32,7 @@ extern "C" {
 #include "matahari/logging.h"
 #include "matahari/network.h"
 #include "matahari/host.h"
+#include "matahari/errors.h"
 };
 
 class NetAgent : public MatahariAgent
@@ -150,7 +151,7 @@ NetAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
                 args["iface"].asString().c_str(),
                 buf, sizeof(buf)));
     } else {
-        session.raiseException(event, MH_NOT_IMPLEMENTED);
+        session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
         goto bail;
     }
 

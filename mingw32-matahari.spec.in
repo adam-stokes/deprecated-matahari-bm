@@ -25,7 +25,7 @@ Source0:	matahari-matahari-%{upstream_version}.tgz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:	noarch
 
-BuildRequires:	redhat-rpm-config cmake make qmf-devel
+BuildRequires:	redhat-rpm-config cmake make qpid-qmf-devel
 BuildRequires:	mingw32-filesystem >= 57
 BuildRequires:	mingw32-gcc-c++ mingw32-nsis genisoimage
 BuildRequires:	mingw32-pcre mingw32-qpid-cpp mingw32-srvany mingw32-glib2 mingw32-sigar

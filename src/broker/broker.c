@@ -45,28 +45,6 @@ uint16_t broker_get_port(void)
     return port ? port : MATAHARI_PORT;
 }
 
-static char **broker_args(int argc, char * const argv[])
-{
-    int i = 0, o = 0;
-    char portarg[13];
-    char **newargs = malloc(sizeof(char *) * (argc + 2 + 1));
-
-    if (argc) {
-        newargs[o++] = strdup(argv[i++]);
-    }
-
-    snprintf(portarg, sizeof(portarg), "--port=%hu", broker_get_port());
-    newargs[o++] = strdup(portarg);
-    newargs[o++] = strdup("--data-dir=" LOCAL_STATE_DIR "/lib/matahari");
-
-    while (i < argc) {
-        newargs[o++] = strdup(argv[i++]);
-    }
-
-    newargs[o] = NULL;
-
-    return newargs;
-}
 
 static void broker_args_free(char **args)
 {
@@ -79,13 +57,54 @@ static void broker_args_free(char **args)
     free(p);
 }
 
+#define APPEND_ARG(ARGS, COUNT, NEWARG) do {      \
+    char *_newarg = strdup(NEWARG);               \
+    if (((ARGS)[(COUNT)++] = _newarg) == NULL) {  \
+        mh_err("Failed to allocate string");      \
+        broker_args_free(ARGS);                   \
+        return NULL;                              \
+    }                                             \
+} while (0)
+
+static char **broker_args(int argc, char * const argv[])
+{
+    int i = 0, o = 0;
+    char portarg[13];
+    char **newargs = malloc(sizeof(char *) * (argc + 2 + 1));
+
+    if (!newargs) {
+        mh_err("Failed to allocate argument list");
+        return NULL;
+    }
+
+    if (argc) {
+        APPEND_ARG(newargs, o, argv[i++]);
+    }
+
+    snprintf(portarg, sizeof(portarg), "--port=%hu", broker_get_port());
+    APPEND_ARG(newargs, o, portarg);
+    APPEND_ARG(newargs, o, "--data-dir=" LOCAL_STATE_DIR "/lib/matahari");
+
+    while (i < argc) {
+        APPEND_ARG(newargs, o, argv[i++]);
+    }
+
+    newargs[o] = NULL;
+
+    return newargs;
+}
+
+
 int main(int argc, char *argv[])
 {
+    int ret = 1;
     char **arglist = broker_args(argc, argv);
 
-    int ret = broker_os_start_broker(arglist);
+    if (arglist) {
+        ret = broker_os_start_broker(arglist);
 
-    broker_args_free(arglist);
+        broker_args_free(arglist);
+    }
 
     return ret;
 }

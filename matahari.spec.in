@@ -54,14 +54,19 @@ BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel > 1.6.5-0.2
 BuildRequires:	libcurl-devel
 BuildRequires:	help2man
+BuildRequires:	augeas-devel >= 0.9.0
 
 %if %{with qmf}
 BuildRequires:	qpid-cpp-client-devel > 0.7
-BuildRequires:	qmf-devel > 0.7
+BuildRequires:	qpid-qmf-devel > 0.7
 %endif
 
 %if %{with dbus}
 BuildRequires:	dbus-devel dbus-glib-devel polkit-devel libxslt
+%endif
+
+%if %{defined run_unit_tests}
+BuildRequires:	cxxtest
 %endif
 
 %description
@@ -193,6 +198,9 @@ QMF console for monitoring various agents
 %build
 %{cmake} -DCMAKE_BUILD_TYPE=RelWithDebInfo %{!?with_qmf: -DWITH-QMF:BOOL=OFF} %{!?with_dbus: -DWITH-DBUS:BOOL=OFF} -Dinitdir=%{_initddir} -Dsysconfdir=%{_sysconfdir} .
 make %{?_smp_mflags}
+%if %{defined run_unit_tests}
+cd src/tests && ctest -V
+%endif
 
 %install
 rm -rf %{buildroot}
