@@ -28,12 +28,15 @@
 #include <limits.h>
 #include <string.h>
 #include <reason.h>
+#include <pcre.h>
 
 #include "matahari/logging.h"
 #include "matahari/host.h"
 #include "host_private.h"
 
 static const char CUSTOM_UUID_KEY[] = "CustomUUID";
+
+static const char REBOOT_UUID_KEY[] = "RebootUUID";
 
 const char *
 host_os_get_cpu_flags(void)
@@ -144,13 +147,131 @@ return_cleanup:
      * GetSystemFirmwareTable() does not appear to be available with mingw32.
      */
 
-    return strdup("not-implemented");
+    return NULL;
 }
+
+#if 0
+/* XXX
+ * This was written assuming GetTickCount64() would be available ...
+ * but it's not available in mingw32.
+ */
+
+/**
+ * \internal
+ * \brief Get time of last boot.
+ *
+ * The format of the output isn't terribly important.  It just needs to
+ * change each time the system is booted.
+ */
+static int
+get_last_boot(char *last_boot, size_t len)
+{
+    ULONGLONG tick_count;
+    SYSTEMTIME sys_time;
+    FILETIME f_sys_time;
+    ULARGE_INTEGER convert_again_omg;
+
+    tick_count = GetTickCount64();
+
+    GetSystemTime(&sys_time);
+    SystemTimeToFileTime(&sys_time, &f_sys_time);
+    convert_again_omg.LowPart = f_sys_time.dwLowDateTime;
+    convert_again_omg.HighPart = f_sys_time.dwHighDateTime;
+
+    /*
+     * Current time minus time since boot
+     *
+     * - Current time is 1/10 microseconds
+     * - time since boot is milliseconds
+     */
+
+    snprintf(last_boot, len, "%lu", convert_again_omg.QuadPart - (tick_count * 10000));
+
+    mh_trace("last boot: '%s'\n", last_boot);
+
+    return mh_strlen_zero(last_boot) ? -1 : 0;
+}
+#endif
 
 char *
 host_os_reboot_uuid(void)
 {
-    return strdup("not-implemented");
+#if 0
+    HKEY key;
+    char uuid_str[256] = "";
+    DWORD uuid_str_len = sizeof(uuid_str) - 1;
+    long res;
+    int reset_uuid = 0;
+    char last_boot[128] = "";
+
+    if (get_last_boot(last_boot, sizeof(last_boot))) {
+        mh_warn("Failed to determine time of last boot.");
+        return NULL;
+    }
+
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        return NULL;
+    }
+
+    res = RegQueryValueExA(key, REBOOT_UUID_KEY, NULL, NULL,
+                           (BYTE *) uuid_str, &uuid_str_len);
+
+    if (res == ERROR_SUCCESS) {
+        char *uuid_time;
+
+        /*
+         * See if a reboot has occurred since this UUID was generated.
+         */
+
+        uuid_time = strchr(uuid_str, ' ');
+        if (!uuid_time) {
+            mh_warn("Unexpected reboot UUID format: '%s'\n", uuid_str);
+        } else {
+            *uuid_time++ = '\0';
+            reset_uuid = strcmp(uuid_time, last_boot);
+        }
+    } else {
+        /*
+         * No reboot UUID found at all, so generate one.
+         */
+
+        reset_uuid = 1;
+    }
+
+    if (reset_uuid) {
+        UUID uuid;
+        char new_uuid_str[256] = "";
+        unsigned char *rs;
+
+        UuidCreate(&uuid);
+
+        if (UuidToStringA(&uuid, &rs) == RPC_S_OK) {
+            mh_string_copy(uuid_str, (char *) rs, sizeof(uuid_str));
+            snprintf(new_uuid_str, sizeof(new_uuid_str), "%s %s", uuid_str, last_boot);
+
+            RpcStringFreeA(&rs);
+
+            res = RegSetValueExA(key, REBOOT_UUID_KEY, 0, REG_SZ,
+                                 (CONST BYTE *) uuid_str, strlen(uuid_str) + 1);
+
+            if (res != ERROR_SUCCESS) {
+                mh_warn("Failed to set reboot UUID.");
+                *uuid_str = '\0';
+            }
+        }
+    }
+
+    RegCloseKey(key);
+
+    return mh_strlen_zero(uuid_str) ? NULL : strdup(uuid_str);
+#endif
+    return NULL;
 }
 
 char *
