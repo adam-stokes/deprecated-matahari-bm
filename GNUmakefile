@@ -111,7 +111,7 @@ overlay-win:
 
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
-	mock $(WITH) --root=$(PROFILE) --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
+	mock -v $(WITH) --root=$(PROFILE) --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
 
 mock:   srpm mock-nodeps
 
