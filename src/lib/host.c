@@ -305,12 +305,14 @@ mh_host_get_uuid(const char *lifetime)
 int
 mh_host_set_uuid(const char *lifetime, const char *uuid)
 {
-    if (lifetime && strcmp("Custom", lifetime) == 0) {
+    if (!mh_strlen_zero(lifetime) && !strcasecmp("custom", lifetime)) {
         int rc = host_os_set_custom_uuid(uuid);
         free(custom_uuid);
         custom_uuid = host_os_custom_uuid();
         return rc;
     }
+
+    mh_warn("Unknown UUID lifetime: '%s'", mh_strlen_zero(lifetime) ? "" : lifetime);
 
     return G_FILE_ERROR_NOSYS;
 }
