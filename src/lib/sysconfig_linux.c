@@ -128,7 +128,7 @@ action_cb(svc_action_t *action)
         snprintf(buf, sizeof(buf), "FAILED\n%d", action->rc);
     }
 
-    if (mh_sysconfig_set_configured(action_data->key, buf) == FALSE) {
+    if (mh_sysconfig_set_configured(action_data->key, buf) != MH_RES_SUCCESS) {
         mh_err("Unable to write to key file '%s'", action_data->key);
     }
 
@@ -286,7 +286,7 @@ return_failure:
         action_data = NULL;
     }
 
-    if (mh_sysconfig_set_configured(key, "ERROR") == FALSE) {
+    if (mh_sysconfig_set_configured(key, "ERROR") != MH_RES_SUCCESS) {
         mh_err("Unable to write to file.");
     }
 

@@ -37,13 +37,13 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
 
         mh_sysconfig_keys_dir_set("/tmp/matahari-sysconfig-keys/");
 
-        TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == TRUE);
+        TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == MH_RES_SUCCESS);
         TS_ASSERT(((key_res = mh_sysconfig_is_configured(key))) != NULL);
         TS_ASSERT(!strcmp("OK", key_res));
 
         free(key_res);
         for (int i = 0; i < DIMOF(invalid_keys); i++) {
-            TS_ASSERT((mh_sysconfig_set_configured(invalid_keys[i], "OK")) == FALSE);
+            TS_ASSERT((mh_sysconfig_set_configured(invalid_keys[i], "OK")) == MH_RES_INVALID_ARGS);
         }
     }
 };
