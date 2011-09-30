@@ -100,6 +100,9 @@ if(WIN32)
   file(GLOB_RECURSE DLL_LIST ${MINGW_ROOT}/*/*.dll)
   install(FILES ${DLL_LIST} DESTINATION sbin)
 
+  file(GLOB_RECURSE GSPAWN_HELPERS ${MINGW_ROOT}/*/gspawn-win32-helper*.exe)
+  install(FILES ${GSPAWN_HELPERS} DESTINATION sbin)
+
   # Util for creating services
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/srvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
