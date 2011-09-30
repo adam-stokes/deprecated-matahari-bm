@@ -153,6 +153,14 @@ host_os_machine_uuid(void)
     return ret;
 }
 
+char *
+host_os_ec2_instance_id(void)
+{
+    /* XXX */
+
+    return NULL;
+}
+
 /**
  * \internal
  * \brief Get time of last boot.

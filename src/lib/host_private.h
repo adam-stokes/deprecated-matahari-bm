@@ -53,6 +53,9 @@ char *
 host_os_machine_uuid(void);
 
 char *
+host_os_ec2_instance_id(void);
+
+char *
 host_os_custom_uuid(void);
 
 char *

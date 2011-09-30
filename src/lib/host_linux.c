@@ -34,9 +34,12 @@
 
 #include <pcre.h>
 #include <uuid/uuid.h>
+#include <curl/curl.h>
 
 #include "matahari/logging.h"
 #include "matahari/host.h"
+
+#include "utilities_private.h"
 #include "host_private.h"
 
 
@@ -211,7 +214,7 @@ host_os_machine_uuid(void)
 
     if (!output) {
         mh_err("Got no output from dmidecode when trying to get UUID.\n");
-        return strdup("(dmidecode-failed)");
+        return NULL;
     }
 
     lines = g_strsplit(output, "\n", max_lines);
@@ -242,10 +245,6 @@ host_os_machine_uuid(void)
     }
 
 cleanup:
-    if (!uuid) {
-        uuid = strdup("(not-found)");
-    }
-
     if (lines) {
         g_strfreev(lines);
     }
@@ -255,6 +254,94 @@ cleanup:
     }
 
     return uuid;
+}
+
+struct curl_write_cb_data {
+    char buf[256];
+    size_t used;
+};
+
+static size_t
+curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    struct curl_write_cb_data *buf = userdata;
+    size_t len;
+
+    len = size * nmemb;
+
+    if (len >= (sizeof(buf->buf) - buf->used)) {
+        mh_err("Buffer not large enough to hold received UC2 instance ID.");
+        return 0;
+    }
+
+    memcpy(buf->buf + buf->used, ptr, len);
+
+    return len;
+}
+
+char *
+host_os_ec2_instance_id(void)
+{
+    CURL *curl;
+    CURLcode curl_res;
+    long response = 0;
+    static const char URI[] = "http://169.254.169.254/latest/meta-data/instance-id";
+    struct curl_write_cb_data buf = {
+        .used = 0,
+    };
+
+    if (mh_curl_init() != MH_RES_SUCCESS) {
+        return NULL;
+    }
+
+    if (!(curl = curl_easy_init())) {
+        mh_warn("Failed to curl_easy_init()");
+        return NULL;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_URL, URI);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of URI '%s' failed. (%d)", URI, curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of WRITEFUNCTION failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of WRITEDATA failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long) 3);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of TIMEOUT failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_perform(curl);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl request for URI '%s' failed. (%d)", URI, curl_res);
+        goto return_cleanup;
+    }
+
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_getinfo for RESPONSE_CODE failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+    if (response < 200 || response > 299) {
+        mh_warn("curl request for URI '%s' got response %ld", URI, response);
+    }
+
+return_cleanup:
+    curl_easy_cleanup(curl);
+
+    return mh_strlen_zero(buf.buf) ? NULL : strdup(buf.buf);
 }
 
 char *

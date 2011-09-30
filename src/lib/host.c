@@ -267,7 +267,12 @@ mh_host_get_uuid(const char *lifetime)
         uuid = immutable_uuid;
     } else if (!strcasecmp("hardware", lifetime)) {
         if (!hardware_uuid) {
+            /* Check for a UUID from SMBIOS first. */
             hardware_uuid = host_os_machine_uuid();
+        }
+        if (!hardware_uuid) {
+            /* If SMBIOS wasn't available, then maybe we're on EC2, try that. */
+            hardware_uuid = host_os_ec2_instance_id();
         }
         uuid = hardware_uuid;
     } else if (!strcasecmp("reboot", lifetime)) {
