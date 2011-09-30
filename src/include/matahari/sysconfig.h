@@ -102,10 +102,9 @@ mh_sysconfig_query(const char *query, uint32_t flags, const char *scheme);
  * \param[in] key config item to define
  * \param[in] contents specifies success/fail with error where applicable
  *
- * \retval 1 if writing to file suceeds
- * \retval 0 failed to write to file
+ * \return See enum mh_result
  */
-gboolean
+enum mh_result
 mh_sysconfig_set_configured(const char *key, const char *contents);
 
 /**
