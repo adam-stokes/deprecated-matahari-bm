@@ -59,7 +59,7 @@
 
         <varlistentry><term><literal>Reboot</literal></term>
           <listitem><para>
-            Automatically (re)configured by the system whenever it boots. (Linux only).
+            Automatically (re)configured by the system whenever it boots.
           </para></listitem>
         </varlistentry>
 

@@ -150,53 +150,47 @@ return_cleanup:
     return NULL;
 }
 
-#if 0
-/* XXX
- * This was written assuming GetTickCount64() would be available ...
- * but it's not available in mingw32.
- */
-
 /**
  * \internal
  * \brief Get time of last boot.
- *
- * The format of the output isn't terribly important.  It just needs to
- * change each time the system is booted.
  */
 static int
 get_last_boot(char *last_boot, size_t len)
 {
-    ULONGLONG tick_count;
-    SYSTEMTIME sys_time;
-    FILETIME f_sys_time;
-    ULARGE_INTEGER convert_again_omg;
+    gchar *output = NULL;
+    GError *error = NULL;
+    gboolean res;
+    gchar *argv[] = { "WMIC", "OS", "Get", "LastBootUpTime", NULL };
 
-    tick_count = GetTickCount64();
+    if (len) {
+        *last_boot = '\0';
+    }
 
-    GetSystemTime(&sys_time);
-    SystemTimeToFileTime(&sys_time, &f_sys_time);
-    convert_again_omg.LowPart = f_sys_time.dwLowDateTime;
-    convert_again_omg.HighPart = f_sys_time.dwHighDateTime;
+    res = g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
+                NULL, NULL, &output, NULL, NULL, &error);
 
-    /*
-     * Current time minus time since boot
-     *
-     * - Current time is 1/10 microseconds
-     * - time since boot is milliseconds
-     */
+    if (res == FALSE) {
+        mh_err("Failed to run WMIC.exe to get last boot time: %s\n", error->message);
+        g_error_free(error);
+        error = NULL;
+    }
 
-    snprintf(last_boot, len, "%lu", convert_again_omg.QuadPart - (tick_count * 10000));
+    if (!output) {
+        mh_err("Got no output from WMIC.exe when trying to get last boot time.\n");
+        return -1;
+    }
 
-    mh_trace("last boot: '%s'\n", last_boot);
+    mh_string_copy(last_boot, output, len);
+
+    g_free(output);
+    output = NULL;
 
     return mh_strlen_zero(last_boot) ? -1 : 0;
 }
-#endif
 
 char *
 host_os_reboot_uuid(void)
 {
-#if 0
     HKEY key;
     char uuid_str[256] = "";
     DWORD uuid_str_len = sizeof(uuid_str) - 1;
@@ -208,6 +202,8 @@ host_os_reboot_uuid(void)
         mh_warn("Failed to determine time of last boot.");
         return NULL;
     }
+
+    mh_trace("last_boot: '%s'", last_boot);
 
     res = RegOpenKey(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\services\\Matahari",
@@ -232,6 +228,7 @@ host_os_reboot_uuid(void)
         uuid_time = strchr(uuid_str, ' ');
         if (!uuid_time) {
             mh_warn("Unexpected reboot UUID format: '%s'\n", uuid_str);
+            reset_uuid = 1;
         } else {
             *uuid_time++ = '\0';
             reset_uuid = strcmp(uuid_time, last_boot);
@@ -258,7 +255,7 @@ host_os_reboot_uuid(void)
             RpcStringFreeA(&rs);
 
             res = RegSetValueExA(key, REBOOT_UUID_KEY, 0, REG_SZ,
-                                 (CONST BYTE *) uuid_str, strlen(uuid_str) + 1);
+                                 (CONST BYTE *) new_uuid_str, strlen(new_uuid_str) + 1);
 
             if (res != ERROR_SUCCESS) {
                 mh_warn("Failed to set reboot UUID.");
@@ -270,8 +267,6 @@ host_os_reboot_uuid(void)
     RegCloseKey(key);
 
     return mh_strlen_zero(uuid_str) ? NULL : strdup(uuid_str);
-#endif
-    return NULL;
 }
 
 char *
