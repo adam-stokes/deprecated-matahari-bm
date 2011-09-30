@@ -18,5 +18,4 @@ if [ "$(cat .version)" != "${TAG:1}" ] ; then
     git commit -s -m "build: update .version to ${TAG:1}"
 fi
 git tag -a -m "Tagged release $TAG" $TAG $BRANCH
-git archive --prefix=matahari-${TAG:1}/ $TAG | tar x
-tar czvf matahari-${TAG:1}.tar.gz matahari-${TAG:1}/
+make export TAG=${TAG} TARPREFIX=matahari-${TAG:1} TARFILE=matahari-${TAG:1}.tar.gz
