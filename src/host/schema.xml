@@ -53,7 +53,7 @@
 
         <varlistentry><term><literal>Hardware</literal></term>
           <listitem><para>
-            UUID supplied by or generated from the underlying hardware. (Linux only).
+            UUID supplied by or generated from the underlying hardware.
           </para></listitem>
         </varlistentry>
 

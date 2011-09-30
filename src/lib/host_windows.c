@@ -103,51 +103,54 @@ host_os_identify(void)
 char *
 host_os_machine_uuid(void)
 {
-#if 0
-    UINT res;
-    char *uuid = NULL;
-    struct RawSMBIOSDData *smbios_data;
+    gchar *output = NULL, *begin, *end;
+    char *ret;
+    GError *error = NULL;
+    gboolean res;
+    gchar *argv[] = { "WMIC", "CSPRODUCT", "Get", "UUID", NULL };
 
-    /*
-     * Doc on SMBIOS support in windows:
-     *     http://msdn.microsoft.com/en-us/windows/hardware/gg463136
-     *
-     * See GetSystemFirmwareTable()
-     *     http://msdn.microsoft.com/en-us/library/ms724379%28v=VS.85%29.aspx
-     */
+    res = g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
+                NULL, NULL, &output, NULL, NULL, &error);
 
-    res = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
-
-    if (!res) {
-        mh_info("Failed to get required SMBIOS buffer size.");
-        return NULL;
+    if (res == FALSE) {
+        mh_err("Failed to run WMIC.exe to get SMBIOS UUID: %s\n", error->message);
+        g_error_free(error);
+        error = NULL;
     }
 
-    if (!(buf = malloc(res))) {
-        return NULL;
+    if (!output) {
+        mh_err("Got no output from WMIC.exe when trying to get SMBIOS UUID.\n");
+        return -1;
     }
 
-    res = GetSystemFirmwareTable('RSMB', 0, (void *) smbios_data, res);
-
-    if (!res) {
-        mh_info("Failed to get SMBIOS data.");
-        goto return_cleanup;
+    if (!(begin = strstr(output, "\r\n"))) {
+        mh_err("Unexpected format of output: '%s'", output);
+        g_free(output);
+        return -1;
     }
 
-    uuid = find_uuid(smbios_data->SMBIOSTableData, smbios_data->Length);
+    begin += 2;
 
-return_cleanup:
+    if (mh_strlen_zero(begin)) {
+        mh_err("Unexpected format of output: '%s'", output);
+        g_free(output);
+        return -1;
+    }
 
-    free(buf);
+    if (!(end = strstr(begin, "\r\n"))) {
+        mh_err("Unexpected format of output: '%s'", output);
+        g_free(output);
+        return -1;
+    }
 
-    return uuid;
-#endif
+    *end = '\0';
 
-    /*
-     * GetSystemFirmwareTable() does not appear to be available with mingw32.
-     */
+    ret = strdup(begin);
 
-    return NULL;
+    g_free(output);
+    output = NULL;
+
+    return ret;
 }
 
 /**
