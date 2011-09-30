@@ -30,6 +30,8 @@
 #ifndef __MH_UTILITIES_PRIVATE_H__
 #define __MH_UTILITIES_PRIVATE_H__
 
+#include "matahari/errors.h"
+
 /**
  * Get the local dnsdomainname.
  */
@@ -41,5 +43,11 @@ mh_os_dnsdomainname(void);
  */
 const char *
 mh_os_uuid(void);
+
+/**
+ * \note Linux only.
+ */
+enum mh_result
+mh_curl_init(void);
 
 #endif /* __MH_UTILITIES_PRIVATE_H__ */
