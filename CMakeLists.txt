@@ -95,8 +95,10 @@ if(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/windows/autorun.inf.in 
                  ${CMAKE_CURRENT_BINARY_DIR}/src/windows/autorun.inf)
   
-  # Assume all installed DLLs are needed by matahari/qpid
-  # Finding the minimal list is excruciatingly painful and unreliable
+  # Assume all installed DLLs are needed by matahari/qpid.
+  # Determining a detailed list here is unnecessary.  Package builds are done
+  # in a dedicate chroot, so the only DLLs present will be the ones that were
+  # installed as dependencies.
   file(GLOB_RECURSE DLL_LIST ${MINGW_ROOT}/*/*.dll)
   install(FILES ${DLL_LIST} DESTINATION sbin)
 
