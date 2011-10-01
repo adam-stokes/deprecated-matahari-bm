@@ -28,10 +28,15 @@
 #include <limits.h>
 #include <string.h>
 #include <reason.h>
+#include <pcre.h>
 
 #include "matahari/logging.h"
 #include "matahari/host.h"
 #include "host_private.h"
+
+static const char CUSTOM_UUID_KEY[] = "CustomUUID";
+
+static const char REBOOT_UUID_KEY[] = "RebootUUID";
 
 const char *
 host_os_get_cpu_flags(void)
@@ -95,46 +100,263 @@ host_os_identify(void)
     return Beep(FREQ, DURATION) ? 0 : -1;
 }
 
-char *host_os_machine_uuid(void)
+char *
+host_os_machine_uuid(void)
 {
-    /*
-     * Doc on SMBIOS support in windows:
-     *     http://msdn.microsoft.com/en-us/windows/hardware/gg463136
-     *
-     * See GetSystemFirmwareTable()
-     *     http://msdn.microsoft.com/en-us/library/ms724379%28v=VS.85%29.aspx
-     */
-    return strdup("not-implemented");
-}
+    gchar *output = NULL, *begin, *end;
+    char *ret;
+    GError *error = NULL;
+    gboolean res;
+    gchar *argv[] = { "WMIC", "CSPRODUCT", "Get", "UUID", NULL };
 
-char *host_os_custom_uuid(void)
-{
-    return mh_file_first_line("custom-machine-id");
-}
+    res = g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
+                NULL, NULL, &output, NULL, NULL, &error);
 
-char *host_os_reboot_uuid(void)
-{
-    return strdup("not-implemented");
-}
-
-const char *host_os_agent_uuid(void)
-{
-    return "not-implemented";
-}
-
-int host_os_set_custom_uuid(const char *uuid)
-{
-    int rc = 0;
-    GError* error = NULL;
-
-    if(g_file_set_contents("custom-machine-id", uuid, strlen(uuid?uuid:""), &error) == FALSE) {
-        mh_info("%s", error->message);
-        rc = error->code;
-    }
-
-    if(error) {
+    if (res == FALSE) {
+        mh_err("Failed to run WMIC.exe to get SMBIOS UUID: %s\n", error->message);
         g_error_free(error);
+        error = NULL;
     }
 
-    return rc;
+    if (!output) {
+        mh_err("Got no output from WMIC.exe when trying to get SMBIOS UUID.\n");
+        return NULL;
+    }
+
+    if (!(begin = strstr(output, "\r\n"))) {
+        mh_err("Unexpected format of output: '%s'", output);
+        g_free(output);
+        return NULL;
+    }
+
+    begin += 2;
+
+    if (mh_strlen_zero(begin)) {
+        mh_err("Unexpected format of output: '%s'", output);
+        g_free(output);
+        return NULL;
+    }
+
+    if (!(end = strstr(begin, "\r\n"))) {
+        mh_err("Unexpected format of output: '%s'", output);
+        g_free(output);
+        return NULL;
+    }
+
+    *end = '\0';
+
+    ret = strdup(begin);
+
+    g_free(output);
+    output = NULL;
+
+    return ret;
+}
+
+char *
+host_os_ec2_instance_id(void)
+{
+    /* XXX */
+
+    return NULL;
+}
+
+/**
+ * \internal
+ * \brief Get time of last boot.
+ */
+static int
+get_last_boot(char *last_boot, size_t len)
+{
+    gchar *output = NULL;
+    GError *error = NULL;
+    gboolean res;
+    gchar *argv[] = { "WMIC", "OS", "Get", "LastBootUpTime", NULL };
+
+    if (len) {
+        *last_boot = '\0';
+    }
+
+    res = g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH,
+                NULL, NULL, &output, NULL, NULL, &error);
+
+    if (res == FALSE) {
+        mh_err("Failed to run WMIC.exe to get last boot time: %s\n", error->message);
+        g_error_free(error);
+        error = NULL;
+    }
+
+    if (!output) {
+        mh_err("Got no output from WMIC.exe when trying to get last boot time.\n");
+        return -1;
+    }
+
+    mh_string_copy(last_boot, output, len);
+
+    g_free(output);
+    output = NULL;
+
+    return mh_strlen_zero(last_boot) ? -1 : 0;
+}
+
+char *
+host_os_reboot_uuid(void)
+{
+    HKEY key;
+    char uuid_str[256] = "";
+    DWORD uuid_str_len = sizeof(uuid_str) - 1;
+    long res;
+    int reset_uuid = 0;
+    char last_boot[128] = "";
+
+    if (get_last_boot(last_boot, sizeof(last_boot))) {
+        mh_warn("Failed to determine time of last boot.");
+        return NULL;
+    }
+
+    mh_trace("last_boot: '%s'", last_boot);
+
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        return NULL;
+    }
+
+    res = RegQueryValueExA(key, REBOOT_UUID_KEY, NULL, NULL,
+                           (BYTE *) uuid_str, &uuid_str_len);
+
+    if (res == ERROR_SUCCESS) {
+        char *uuid_time;
+
+        /*
+         * See if a reboot has occurred since this UUID was generated.
+         */
+
+        uuid_time = strchr(uuid_str, ' ');
+        if (!uuid_time) {
+            mh_warn("Unexpected reboot UUID format: '%s'\n", uuid_str);
+            reset_uuid = 1;
+        } else {
+            *uuid_time++ = '\0';
+            reset_uuid = strcmp(uuid_time, last_boot);
+        }
+    } else {
+        /*
+         * No reboot UUID found at all, so generate one.
+         */
+
+        reset_uuid = 1;
+    }
+
+    if (reset_uuid) {
+        UUID uuid;
+        char new_uuid_str[256] = "";
+        unsigned char *rs;
+
+        UuidCreate(&uuid);
+
+        if (UuidToStringA(&uuid, &rs) == RPC_S_OK) {
+            mh_string_copy(uuid_str, (char *) rs, sizeof(uuid_str));
+            snprintf(new_uuid_str, sizeof(new_uuid_str), "%s %s", uuid_str, last_boot);
+
+            RpcStringFreeA(&rs);
+
+            res = RegSetValueExA(key, REBOOT_UUID_KEY, 0, REG_SZ,
+                                 (CONST BYTE *) new_uuid_str, strlen(new_uuid_str) + 1);
+
+            if (res != ERROR_SUCCESS) {
+                mh_warn("Failed to set reboot UUID.");
+                *uuid_str = '\0';
+            }
+        }
+    }
+
+    RegCloseKey(key);
+
+    return mh_strlen_zero(uuid_str) ? NULL : strdup(uuid_str);
+}
+
+char *
+host_os_agent_uuid(void)
+{
+    UUID uuid;
+    unsigned char *rs = NULL;
+
+    if (rs) {
+        goto return_uuid;
+    }
+
+    UuidCreate(&uuid);
+
+    if (UuidToStringA(&uuid, &rs) != RPC_S_OK) {
+        mh_err("Failed to convert agent UUID to string");
+    }
+
+return_uuid:
+
+    return strdup(rs ? (char *) rs : "");
+}
+
+char *
+host_os_custom_uuid(void)
+{
+    HKEY key;
+    char uuid_str[256] = "";
+    DWORD uuid_str_len = sizeof(uuid_str) - 1;
+    long res;
+
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        return NULL;
+    }
+
+    res = RegQueryValueExA(key, CUSTOM_UUID_KEY, NULL, NULL,
+                           (BYTE *) uuid_str, &uuid_str_len);
+
+    if (res != ERROR_SUCCESS) {
+        mh_warn("Failed to get custom UUID.");
+    }
+
+    RegCloseKey(key);
+
+    return mh_strlen_zero(uuid_str) ? NULL : strdup(uuid_str);
+}
+
+int
+host_os_set_custom_uuid(const char *uuid)
+{
+    HKEY key;
+    long res;
+    int ret = 0;
+
+    res = RegOpenKey(HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\CurrentControlSet\\services\\Matahari",
+                     &key);
+
+    if (res != ERROR_SUCCESS) {
+        mh_debug("Could not open Matahari key from the registry: %ld",
+                 res);
+        return -1;
+    }
+
+    res = RegSetValueExA(key, CUSTOM_UUID_KEY, 0, REG_SZ,
+                         (CONST BYTE *) uuid, strlen(uuid) + 1);
+
+    if (res != ERROR_SUCCESS) {
+        mh_err("Failed to set custom UUID: %ld\n", res);
+        ret = -1;
+    }
+
+    RegCloseKey(key);
+
+    return ret;
 }

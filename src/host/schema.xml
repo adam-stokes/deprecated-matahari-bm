@@ -53,13 +53,13 @@
 
         <varlistentry><term><literal>Hardware</literal></term>
           <listitem><para>
-            UUID supplied by or generated from the underlying hardware
+            UUID supplied by or generated from the underlying hardware.
           </para></listitem>
         </varlistentry>
 
         <varlistentry><term><literal>Reboot</literal></term>
           <listitem><para>
-            Automatically (re)configured by the system whenever it boots
+            Automatically (re)configured by the system whenever it boots.
           </para></listitem>
         </varlistentry>
 
@@ -71,7 +71,7 @@
 
         <varlistentry><term><literal>Custom</literal></term>
           <listitem><para>
-            Manually configured by the admin/user.  May be pre-populated.
+            Manually configured by the admin/user using the set_uuid method.
           </para></listitem>
         </varlistentry>
 

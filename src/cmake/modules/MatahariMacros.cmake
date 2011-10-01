@@ -109,8 +109,14 @@ macro(create_manpage BINARY SECTION DESC)
             COMMENT "Generating ${BINARY} man page"
             VERBATIM
         )
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${BINARY}.${SECTION}.gz DESTINATION share/man/man${SECTION})
+    else(HELP2MAN)
+        if(REQUIRE_HELP2MAN)
+           message(FATAL_ERROR "help2man is required.")
+        endif(REQUIRE_HELP2MAN)
     endif(HELP2MAN)
+    if(NOT WIN32)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${BINARY}.${SECTION}.gz DESTINATION share/man/man${SECTION})
+    endif(NOT WIN32)
 endmacro(create_manpage)
 
 macro(create_service_scripts BASE)

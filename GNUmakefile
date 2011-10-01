@@ -20,8 +20,8 @@
 
 PACKAGE		?= matahari
 VERSION		?= $(shell cat .version)
-TARPREFIX	= $(PACKAGE)-$(PACKAGE)-$(TAG)
-TARFILE		= $(TARPREFIX).tgz
+TARPREFIX	?= $(PACKAGE)-$(PACKAGE)-$(TAG)
+TARFILE		?= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
 
 RPM_ROOT	?= $(shell pwd)
@@ -43,7 +43,7 @@ DOT:=$(shell which dot 2>/dev/null)
 linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
 	mkdir -p $@
-	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREQUIRE_HELP2MAN=$(REQUIRE_HELP2MAN) ..
 	@$(MAKE) --no-print-dir -C $@
 
 tests: linux.build
@@ -76,7 +76,12 @@ check-mock:
 
 export:
 	rm -f $(TARFILE).tgz
-	git archive --prefix=$(TARPREFIX)/ $(TAG) | gzip > $(TARFILE)
+	git archive --prefix=$(TARPREFIX)/ $(TAG) | tar x
+	cd $(TARPREFIX) && \
+		$(MAKE) linux.build REQUIRE_HELP2MAN=1 && \
+		for n in `find linux.build/ -iname '*.8.gz'` ; do cp $$n $${n:12}; done && \
+		cd .. && rm -rf linux.build
+	tar czvf $(TARFILE) $(TARPREFIX)
 	echo `date`: Rebuilt $(TARFILE) from $(TAG)
 
 $(VARIANT)$(PACKAGE).spec: $(VARIANT)$(PACKAGE).spec.in
@@ -93,7 +98,6 @@ $(VARIANT)$(PACKAGE).spec: $(VARIANT)$(PACKAGE).spec.in
 
 srpm:	export $(VARIANT)$(PACKAGE).spec
 	rm -f *.src.rpm
-
 	rpmbuild -bs $(RPM_OPTS) $(VARIANT)$(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
@@ -111,7 +115,7 @@ overlay-win:
 
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
-	mock $(WITH) --root=$(PROFILE) --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
+	mock -v $(WITH) --root=$(PROFILE) --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
 
 mock:   srpm mock-nodeps
 

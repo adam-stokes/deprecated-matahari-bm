@@ -34,9 +34,12 @@
 
 #include <pcre.h>
 #include <uuid/uuid.h>
+#include <curl/curl.h>
 
 #include "matahari/logging.h"
 #include "matahari/host.h"
+
+#include "utilities_private.h"
 #include "host_private.h"
 
 
@@ -177,7 +180,8 @@ host_os_identify(void)
     return res;
 }
 
-char *host_os_machine_uuid(void)
+char *
+host_os_machine_uuid(void)
 {
     gchar *output = NULL;
     gchar **lines = NULL;
@@ -210,7 +214,7 @@ char *host_os_machine_uuid(void)
 
     if (!output) {
         mh_err("Got no output from dmidecode when trying to get UUID.\n");
-        return strdup("(dmidecode-failed)");
+        return NULL;
     }
 
     lines = g_strsplit(output, "\n", max_lines);
@@ -241,10 +245,6 @@ char *host_os_machine_uuid(void)
     }
 
 cleanup:
-    if (!uuid) {
-        uuid = strdup("(not-found)");
-    }
-
     if (lines) {
         g_strfreev(lines);
     }
@@ -256,68 +256,166 @@ cleanup:
     return uuid;
 }
 
-char *host_os_custom_uuid(void)
+struct curl_write_cb_data {
+    char buf[256];
+    size_t used;
+};
+
+static size_t
+curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    struct curl_write_cb_data *buf = userdata;
+    size_t len;
+
+    len = size * nmemb;
+
+    if (len >= (sizeof(buf->buf) - buf->used)) {
+        mh_err("Buffer not large enough to hold received UC2 instance ID.");
+        return 0;
+    }
+
+    memcpy(buf->buf + buf->used, ptr, len);
+
+    return len;
+}
+
+char *
+host_os_ec2_instance_id(void)
+{
+    CURL *curl;
+    CURLcode curl_res;
+    long response = 0;
+    static const char URI[] = "http://169.254.169.254/latest/meta-data/instance-id";
+    struct curl_write_cb_data buf = {
+        .used = 0,
+    };
+
+    if (mh_curl_init() != MH_RES_SUCCESS) {
+        return NULL;
+    }
+
+    if (!(curl = curl_easy_init())) {
+        mh_warn("Failed to curl_easy_init()");
+        return NULL;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_URL, URI);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of URI '%s' failed. (%d)", URI, curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of WRITEFUNCTION failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of WRITEDATA failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long) 3);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_setopt of TIMEOUT failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+
+    curl_res = curl_easy_perform(curl);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl request for URI '%s' failed. (%d)", URI, curl_res);
+        goto return_cleanup;
+    }
+
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+    if (curl_res != CURLE_OK) {
+        mh_warn("curl_easy_getinfo for RESPONSE_CODE failed. (%d)", curl_res);
+        goto return_cleanup;
+    }
+    if (response < 200 || response > 299) {
+        mh_warn("curl request for URI '%s' got response %ld", URI, response);
+    }
+
+return_cleanup:
+    curl_easy_cleanup(curl);
+
+    return mh_strlen_zero(buf.buf) ? NULL : strdup(buf.buf);
+}
+
+char *
+host_os_custom_uuid(void)
 {
     return mh_file_first_line("/etc/custom-machine-id");
 }
 
-char *host_os_reboot_uuid(void)
+char *
+host_os_reboot_uuid(void)
 {
     /* Relies on /var/run being erased at boot-time as is common on most modern distros */
-    const char *file = "/var/run/matahari-reboot-id";
+    static const char file[] = "/var/run/matahari-reboot-id";
+    uuid_t buffer;
+    GError* error = NULL;
     char *uuid = mh_file_first_line(file);
 
-    if (uuid == NULL) {
-        uuid_t buffer;
-        GError* error = NULL;
+    if (uuid) {
+        return uuid;
+    }
 
-        uuid = malloc(UUID_STR_BUF_LEN);
-        if (!uuid) {
-            return NULL;
-        }
+    uuid = malloc(UUID_STR_BUF_LEN);
+    if (!uuid) {
+        return NULL;
+    }
 
-        uuid_generate(buffer);
-        uuid_unparse(buffer, uuid);
+    uuid_generate(buffer);
+    uuid_unparse(buffer, uuid);
 
-        if (g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
-            mh_info("%s", error->message);
-            free(uuid);
-            uuid = strdup(error->message);
-        }
+    if (g_file_set_contents(file, uuid, strlen(uuid), &error) == FALSE) {
+        mh_info("%s", error->message);
+        free(uuid);
+        uuid = strdup(error->message);
+    }
 
-        if (error) {
-            g_error_free(error);
-        }
+    if (error) {
+        g_error_free(error);
     }
 
     return uuid;
 }
 
-const char *host_os_agent_uuid(void)
+char *
+host_os_agent_uuid(void)
 {
+    static char agent_uuid[UUID_STR_BUF_LEN] = "";
     uuid_t buffer;
-    static char *agent_uuid = NULL;
-    uuid_generate(buffer);
 
-    agent_uuid = malloc(UUID_STR_BUF_LEN);
-    if (agent_uuid) {
-        uuid_unparse(buffer, agent_uuid);
+    if (!mh_strlen_zero(agent_uuid)) {
+        return strdup(agent_uuid);
     }
 
-    return agent_uuid;
+    uuid_generate(buffer);
+    uuid_unparse(buffer, agent_uuid);
+
+    return strdup(agent_uuid);
 }
 
-int host_os_set_custom_uuid(const char *uuid)
+int
+host_os_set_custom_uuid(const char *uuid)
 {
     int rc = 0;
-    GError* error = NULL;
+    GError *error = NULL;
 
-    if(g_file_set_contents("/etc/custom-machine-id", uuid, strlen(uuid?uuid:""), &error) == FALSE) {
+    if (!uuid) {
+        uuid = "";
+    }
+
+    if (g_file_set_contents("/etc/custom-machine-id", uuid, strlen(uuid), &error) == FALSE) {
         mh_info("%s", error->message);
         rc = error->code;
     }
 
-    if(error) {
+    if (error) {
         g_error_free(error);
     }
 

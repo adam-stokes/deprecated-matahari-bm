@@ -260,57 +260,54 @@ mh_host_get_uuid(const char *lifetime)
     static const char *reboot_uuid = NULL;
     static const char *agent_uuid = NULL;
 
-    if (lifetime == NULL || strcasecmp("Filesystem", lifetime) == 0) {
-        if (immutable_uuid == NULL) {
+    if (mh_strlen_zero(lifetime) || !strcasecmp("filesystem", lifetime)) {
+        if (!immutable_uuid) {
             immutable_uuid = mh_uuid();
         }
         uuid = immutable_uuid;
-
-    } else if (strcasecmp("Hardware", lifetime) == 0) {
-        if(hardware_uuid == NULL) {
+    } else if (!strcasecmp("hardware", lifetime)) {
+        if (!hardware_uuid) {
+            /* Check for a UUID from SMBIOS first. */
             hardware_uuid = host_os_machine_uuid();
         }
+        if (!hardware_uuid) {
+            /* If SMBIOS wasn't available, then maybe we're on EC2, try that. */
+            hardware_uuid = host_os_ec2_instance_id();
+        }
         uuid = hardware_uuid;
-
-    } else if (strcasecmp("Reboot", lifetime) == 0) {
-
-        if(reboot_uuid == NULL) {
+    } else if (!strcasecmp("reboot", lifetime)) {
+        if (!reboot_uuid) {
             reboot_uuid = host_os_reboot_uuid();
         }
         uuid = reboot_uuid;
-
-    } else if (strcasecmp("Agent", lifetime) == 0) {
-        if(agent_uuid == NULL) {
+    } else if (!strcasecmp("agent", lifetime)) {
+        if (!agent_uuid) {
             agent_uuid = host_os_agent_uuid();
         }
         uuid = agent_uuid;
-
-    } else if (strcasecmp("Custom", lifetime) == 0) {
-        if(custom_uuid == NULL) {
+    } else if (!strcasecmp("custom", lifetime)) {
+        if (!custom_uuid) {
             custom_uuid = host_os_custom_uuid();
         }
         uuid = custom_uuid;
-
     } else {
         uuid = "invalid-lifetime";
     }
 
-    if (uuid == NULL) {
-        uuid = "not-available";
-    }
-    return uuid;
+    return mh_strlen_zero(uuid) ? "not-available" : uuid;
 }
-
 
 int
 mh_host_set_uuid(const char *lifetime, const char *uuid)
 {
-    if (lifetime && strcmp("Custom", lifetime) == 0) {
+    if (!mh_strlen_zero(lifetime) && !strcasecmp("custom", lifetime)) {
         int rc = host_os_set_custom_uuid(uuid);
         free(custom_uuid);
         custom_uuid = host_os_custom_uuid();
         return rc;
     }
+
+    mh_warn("Unknown UUID lifetime: '%s'", mh_strlen_zero(lifetime) ? "" : lifetime);
 
     return G_FILE_ERROR_NOSYS;
 }

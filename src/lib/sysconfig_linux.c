@@ -31,6 +31,8 @@
 #include "matahari/utilities.h"
 #include "matahari/services.h"
 #include "matahari/sysconfig.h"
+
+#include "utilities_private.h"
 #include "sysconfig_private.h"
 
 MH_TRACE_INIT_DATA(mh_sysconfig);
@@ -60,18 +62,10 @@ sysconfig_os_download(const char *uri, FILE *fp)
     CURL *curl;
     CURLcode curl_res;
     long response = 0;
-    enum mh_result res = MH_RES_SUCCESS;
-    static int curl_init = 0;
+    enum mh_result res;
 
-    if (!curl_init) {
-        curl_res = curl_global_init(CURL_GLOBAL_DEFAULT);
-
-        if (curl_res != CURLE_OK) {
-            mh_err("curl_global_init failed: %d", curl_res);
-            return MH_RES_OTHER_ERROR;
-        }
-
-        curl_init = 1;
+    if ((res = mh_curl_init()) != MH_RES_SUCCESS) {
+        return res;
     }
 
     if (!(curl = curl_easy_init())) {
@@ -128,7 +122,7 @@ action_cb(svc_action_t *action)
         snprintf(buf, sizeof(buf), "FAILED\n%d", action->rc);
     }
 
-    if (mh_sysconfig_set_configured(action_data->key, buf) == FALSE) {
+    if (mh_sysconfig_set_configured(action_data->key, buf) != MH_RES_SUCCESS) {
         mh_err("Unable to write to key file '%s'", action_data->key);
     }
 
@@ -286,7 +280,7 @@ return_failure:
         action_data = NULL;
     }
 
-    if (mh_sysconfig_set_configured(key, "ERROR") == FALSE) {
+    if (mh_sysconfig_set_configured(key, "ERROR") != MH_RES_SUCCESS) {
         mh_err("Unable to write to file.");
     }
 

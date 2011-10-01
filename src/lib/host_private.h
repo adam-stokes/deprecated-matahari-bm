@@ -53,12 +53,15 @@ char *
 host_os_machine_uuid(void);
 
 char *
+host_os_ec2_instance_id(void);
+
+char *
 host_os_custom_uuid(void);
 
 char *
 host_os_reboot_uuid(void);
 
-const char *
+char *
 host_os_agent_uuid(void);
 
 int

@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <curl/curl.h>
 
 #include "matahari/logging.h"
 #include "utilities_private.h"
@@ -81,4 +82,25 @@ mh_os_uuid(void)
         mh_trace("Got uuid: %s", uuid);
     }
     return uuid;
+}
+
+enum mh_result
+mh_curl_init(void)
+{
+    static int curl_init = 0;
+
+    if (!curl_init) {
+        CURLcode curl_res;
+
+        curl_res = curl_global_init(CURL_GLOBAL_DEFAULT);
+
+        if (curl_res != CURLE_OK) {
+            mh_err("curl_global_init failed: %d", curl_res);
+            return MH_RES_OTHER_ERROR;
+        }
+
+        curl_init = 1;
+    }
+
+    return MH_RES_SUCCESS;
 }

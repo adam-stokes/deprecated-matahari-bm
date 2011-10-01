@@ -160,9 +160,20 @@ map_option(int code, const char *name, const char *arg, void *userdata)
     OptionsMap *options = (OptionsMap*)userdata;
 
     if(strcmp(name, "verbose") == 0) {
-        mh_log_level++;
         mh_enable_stderr(1);
+        if (mh_strlen_zero(arg)) {
+            mh_log_level++;
+        } else {
+            unsigned int val;
 
+            if (sscanf(arg, "%u", &val) == 1) {
+                while (val--) {
+                    mh_log_level++;
+                }
+            } else {
+                mh_warn("Failed to parse verbose value: '%s'", arg);
+            }
+        }
     } else if(strcmp(name, "broker") == 0) {
         (*options)["servername"] = arg;
 
@@ -440,6 +451,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
     mh_add_option('b', required_argument, "broker",                 "specify broker host name", &options, map_option);
     mh_add_option('D', no_argument,       "dns-srv",                "interpret the value of --broker as a domain name for DNS SRV lookups", &options, map_option);
     mh_add_option('p', required_argument, "port",                   "specify broker ", &options, map_option);
+    mh_add_option('v', no_argument,       "verbose",                "Increase the log level", NULL, map_option);
 
     mh_add_option('u', required_argument, "username",  "username to use for authentication to the broker", &amqp_options, connection_option);
     mh_add_option('P', required_argument, "password",  "username to use for authentication to the broker", &amqp_options, connection_option);
@@ -481,7 +493,6 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
 
     /* Force more local-only processing specific to linux */
     mh_add_option('h', no_argument, "help", NULL, NULL, NULL);
-    mh_add_option('v', no_argument, "verbose", "Increase the log level", NULL, map_option);
 
     opt_string[0] = 0;
     for(lpc = 0; lpc < DIMOF(matahari_options); lpc++) {
