@@ -120,13 +120,13 @@ host_os_machine_uuid(void)
 
     if (!output) {
         mh_err("Got no output from WMIC.exe when trying to get SMBIOS UUID.\n");
-        return -1;
+        return NULL;
     }
 
     if (!(begin = strstr(output, "\r\n"))) {
         mh_err("Unexpected format of output: '%s'", output);
         g_free(output);
-        return -1;
+        return NULL;
     }
 
     begin += 2;
@@ -134,13 +134,13 @@ host_os_machine_uuid(void)
     if (mh_strlen_zero(begin)) {
         mh_err("Unexpected format of output: '%s'", output);
         g_free(output);
-        return -1;
+        return NULL;
     }
 
     if (!(end = strstr(begin, "\r\n"))) {
         mh_err("Unexpected format of output: '%s'", output);
         g_free(output);
-        return -1;
+        return NULL;
     }
 
     *end = '\0';
