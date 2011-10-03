@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 
-# ####################################################################
-#  test_service_api.py - Copyright (c) 2011 Red Hat, Inc.
-#  Written by Dave Johnson <dajo@redhat.com>
-#
-#  This library is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU Lesser General Public
-#  License as published by the Free Software Foundation; either
-#  version 2.1 of the License, or (at your option) any later version.
-#
-#  This library is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  Lesser General Public License for more details.
-#
-#  You should have received a copy of the GNU Lesser General Public
-#  License along with this library; if not, write to the
-#  Free Software Foundation, Inc.,
-#  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-# ####################################################################
+"""
+  test_service_api.py - Copyright (c) 2011 Red Hat, Inc.
+  Written by Dave Johnson <dajo@redhat.com>
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the
+  Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+"""
 
 import commands as cmd
-from qmf.console import Session
+from qmf2 import QmfAgentException
 import matahariTest as testUtil
 import unittest
 import time
@@ -45,7 +45,6 @@ def setUp(self):
 
 def tearDown():
     connection.disconnect()
-    time.sleep(5)
 
 class ServiceTestsSetup(object):
     def __init__(self):
@@ -53,7 +52,7 @@ class ServiceTestsSetup(object):
         cmd.getoutput("service matahari-service start")
         self.expectedMethods = [ 'list()', 'enable(name)', 'disable(name)', 'start(name, timeout)', 'stop(name, timeout)', 'status(name, timeout)', 'describe(name)' ]
         self.connect_info = testUtil.connectToBroker('localhost','49000')
-        self.sess = self.connect_info[0]
+        self.sess = self.connect_info[1]
         self.reQuery()
         # prepatory cleanup
         if os.path.isfile("/etc/init.d/"+test_svc+"-slow"):
@@ -61,33 +60,17 @@ class ServiceTestsSetup(object):
         if not os.path.isfile("/etc/init.d/"+test_svc):
             cmd.getoutput("mv /etc/init.d/"+test_svc+".orig /etc/init.d/"+test_svc)
     def reQuery(self):
-        self.service_objects = self.sess.getObjects(_class='Services',_package="org.matahariproject")
-        self.service = self.service_objects[0]
+        self.service = testUtil.findAgent(self.sess,'service', 'Services', cmd.getoutput('hostname'))
         self.props = self.service.getProperties()
     def disconnect(self):
         testUtil.disconnectFromBroker(self.connect_info)
-    def getPropValueByKey(self,key):
-        for item in self.props:
-            if str(item[0]) == key:
-                return item[1]
 
 class TestServiceApi(unittest.TestCase):
-
-    # TEST - getMethods() 
-    # ================================================================
-    def test_getMethods(self):
-        meths = service.getMethods()
-        self.assertEquals(len(meths),len(connection.expectedMethods), "method count not matching")
-        for meth in meths:
-            try:
-                connection.expectedMethods.index(str(meth))
-            except:
-                self.fail(str(meth)+" not expected")
 
     # TEST - getProperties() 
     # =====================================================
     def test_hostname_property(self):
-        value = connection.getPropValueByKey('hostname')
+        value = connection.props.get('hostname')
         self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching") 
 
     # TEST - list()
@@ -95,8 +78,7 @@ class TestServiceApi(unittest.TestCase):
     def test_list(self):
         result = service.list()
         dirlist = os.listdir("/etc/init.d")
-        dict_list = dict(result.outArgs)
-        api_list = dict_list["agents"]
+        api_list = result.get("agents")
         self.assertTrue(len(api_list) == (len(dirlist)-1), "service count not mataching")
         for svc in dirlist:
             if (svc != 'functions'):
@@ -120,8 +102,8 @@ class TestServiceApi(unittest.TestCase):
 	self.assertFalse("5:off" not in chk_off, "run level 5 wrong")
 
     def test_disable_unknown_service(self):
-        t = service.enable("zzzzz")
-        self.assertFalse(t.outArgs['rc'] == 0, "Return code not expected (" + str(t.outArgs['rc']) + ")")
+        result = service.enable("zzzzz")
+        self.assertFalse(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
 
     # TEST - enable()
     # =====================================================
@@ -138,8 +120,8 @@ class TestServiceApi(unittest.TestCase):
         self.assertTrue("5:on" in chk_on, "run level 5 wrong")
 
     def test_enable_unknown_service(self):
-        t = service.enable("zzzzz")
-        self.assertFalse(t.outArgs['rc'] == 0, "Return code not expected (" + str(t.outArgs['rc']) + ")")
+        result = service.enable("zzzzz")
+        self.assertFalse(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
 
     # TEST - stop()
     # =====================================================
@@ -150,7 +132,7 @@ class TestServiceApi(unittest.TestCase):
         # test
         result = service.stop(test_svc,10000)
         # verify
-        self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
+        self.assertTrue(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
         svc_status = cmd.getoutput("service "+test_svc+" status")
         self.assertTrue("running" not in svc_status, "text not found, still running?")
 
@@ -160,13 +142,13 @@ class TestServiceApi(unittest.TestCase):
         # test
         result = service.stop(test_svc,10000)
         # verify
-        self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
+        self.assertTrue(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
         svc_status = cmd.getoutput("service "+test_svc+" status")
         self.assertTrue("running" not in svc_status, "text not found, still running?")
 
     def test_stop_unknown_service(self):
-        t = service.stop("zzzzz", 10000)
-        self.assertFalse(t.outArgs['rc'] == 0, "Return code not expected (" + str(t.outArgs['rc']) + ")")
+        result = service.stop("zzzzz", 10000)
+        self.assertFalse(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
 
     # TEST - start()
     # =====================================================
@@ -177,7 +159,7 @@ class TestServiceApi(unittest.TestCase):
         # test
         result = service.start(test_svc,10000)
         # verify
-        self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
+        self.assertTrue(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
         svc_status = cmd.getoutput("service "+test_svc+" status")
         self.assertTrue("running" in svc_status, "text not found, still running?")
 
@@ -187,13 +169,13 @@ class TestServiceApi(unittest.TestCase):
         # test
         result = service.start(test_svc,10000)
         # verify
-        self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
+        self.assertTrue(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
         svc_status = cmd.getoutput("service "+test_svc+" status")
         self.assertTrue("running" in svc_status, "text not found, still running?")
 
     def test_start_unknown_service(self):
-        t = service.start("zzzzz", 10000)
-        self.assertFalse(t.outArgs['rc'] == 0, "Return code not expected (" + str(t.outArgs['rc']) + ")")
+        result = service.start("zzzzz", 10000)
+        self.assertFalse(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
 
     # TEST - status()
     # =====================================================
@@ -204,7 +186,7 @@ class TestServiceApi(unittest.TestCase):
         # test
         result = service.status(test_svc,10000)
         # verify
-        self.assertTrue(result.outArgs['rc'] == 3, "Return code not expected (" + str(result.outArgs['rc']) + ")")
+        self.assertTrue(result.get('rc') == 3, "Return code not expected (" + str(result.get('rc')) + ")")
 
     def test_status_running_known_service(self):
         # pre-req
@@ -212,17 +194,16 @@ class TestServiceApi(unittest.TestCase):
         # test
         result = service.status(test_svc,10000)
         # verify
-        self.assertTrue(result.outArgs['rc'] == 0, "Return code not expected (" + str(result.outArgs['rc']) + ")")
+        self.assertTrue(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
 
     def test_status_unknown_service(self):
-        t = service.status("zzzzz", 10000)
-        self.assertFalse(t.outArgs['rc'] == 0, "Return code not expected (" + str(t.outArgs['rc']) + ")")
+        result = service.status("zzzzz", 10000)
+        self.assertFalse(result.get('rc') == 0, "Return code not expected (" + str(result.get('rc')) + ")")
 
     # TEST - describe()
     # =====================================================
     def test_describe_not_implemented(self):
-        dscrb = service.describe(test_svc)
-        self.assertTrue("Not implemented" in dscrb.text, "text not found, implemented?")
+        self.assertRaises(QmfAgentException, service.describe, test_svc)
 
 class TestMatahariServiceApiTimeouts(unittest.TestCase):
     def setUp(self):
@@ -237,11 +218,11 @@ class TestMatahariServiceApiTimeouts(unittest.TestCase):
         cmd.getoutput("mv /etc/init.d/"+test_svc+".orig /etc/init.d/"+test_svc)
     def test_stop_timeout(self):
         result = service.stop(test_svc,5000)
-        self.assertTrue(result.outArgs['rc'] == 198, "not expected rc198, recieved " + str(result.outArgs['rc']))
+        self.assertTrue(result.get('rc') == 198, "not expected rc198, recieved " + str(result.get('rc')))
     def test_start_timeout(self):
         result = service.start(test_svc,5000)
-        self.assertTrue(result.outArgs['rc'] == 198, "not expected rc198, recieved " + str(result.outArgs['rc']))
+        self.assertTrue(result.get('rc') == 198, "not expected rc198, recieved " + str(result.get('rc')))
     def test_status_timeout(self):
         result = service.status(test_svc,5000)
-        self.assertTrue(result.outArgs['rc'] == 198, "not expected rc198, recieved " + str(result.outArgs['rc']))
+        self.assertTrue(result.get('rc') == 198, "not expected rc198, recieved " + str(result.get('rc')))
 

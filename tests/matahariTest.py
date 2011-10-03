@@ -1,29 +1,29 @@
 #!/usr/bin/env python
 
-# ####################################################################
-#  matahariTest.py - Copyright (c) 2011 Red Hat, Inc.
-#  Written by Dave Johnson <dajo@redhat.com>
-#
-#  This library is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU Lesser General Public
-#  License as published by the Free Software Foundation; either
-#  version 2.1 of the License, or (at your option) any later version.
-#
-#  This library is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  Lesser General Public License for more details.
-#
-#  You should have received a copy of the GNU Lesser General Public
-#  License along with this library; if not, write to the
-#  Free Software Foundation, Inc.,
-#  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-# ####################################################################
+"""
+  matahariTest.py - Copyright (c) 2011 Red Hat, Inc.
+  Written by Dave Johnson <dajo@redhat.com>
 
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the
+  Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+"""
 
 import time
 import commands as cmd
-from qmf.console import Session
+import cqpid
+from qmf2 import ConsoleSession
 import sys
 import os
 from stat import *
@@ -34,18 +34,28 @@ import string
 
 # QMF
 # ========================================================
-def connectToBroker(hostname, port):
-    sess = Session() # defaults to synchronous-only operation. It also defaults to user-management of connections.
-    # attempt to connect to a broker
-    try:
-        broker = sess.addBroker('amqp://'+hostname+':'+port)
-        #print "Connection Success"
-    except:
-        sys.exit(1) 
-    return [ sess, broker ]
+def disconnectFromBroker(connection_info):
+    connection_info[1].close()
+    connection_info[0].close()
 
-def disconnectFromBroker(list):
-    list[0].delBroker(list[1])
+def connectToBroker(hostname, port):
+    connection = cqpid.Connection(hostname + ":" + port)
+    connection.open()
+    session = ConsoleSession(connection)
+    session.open()
+    return [ connection, session ]
+
+def findAgent(session,agentKeyWord,agentClass,hostname):
+    loop_count = 0
+    while loop_count < 70:
+        agents = session.getAgents()
+        for agent in agents:
+            if agentKeyWord in str(agent):
+                if agent.getAttributes().get('hostname') == hostname:
+                    return agent.query("{class:"+agentClass+",package:'org.matahariproject'}")[0]
+        time.sleep(1)
+        loop_count = loop_count + 1
+    sys.exit("specific " + agentKeyWord + " agent for " + hostname + " not found.")
 
 def restartService(serviceName):
     cmd.getoutput("service " + serviceName + " restart")
