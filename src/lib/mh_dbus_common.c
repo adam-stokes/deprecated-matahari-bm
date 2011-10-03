@@ -24,6 +24,7 @@
 
 #include "matahari/dbus_common.h"
 #include "matahari/logging.h"
+#include "matahari/errors.h"
 #include <glib/gi18n.h>
 
 #include <polkit/polkit.h>
@@ -231,6 +232,12 @@ matahari_get(Matahari* matahari, const char *interface, const char *name,
     free(action);
 
     spec = g_object_class_find_property(G_OBJECT_GET_CLASS(matahari), name);
+    if (!spec) {
+        error = g_error_new(MATAHARI_ERROR, abs(MH_RES_INVALID_ARGS),
+                            mh_result_to_str(MH_RES_INVALID_ARGS));
+        dbus_g_method_return_error(context, error);
+        return FALSE;
+    }
     g_value_init(&value, spec->value_type);
     g_object_get_property(G_OBJECT(matahari), name, &value);
     dbus_g_method_return(context, &value);
