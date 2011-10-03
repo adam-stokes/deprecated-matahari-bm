@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.matahariproject.Sysconfig
+Exec=/usr/sbin/matahari-sysconfig-dbusd
+User=root
