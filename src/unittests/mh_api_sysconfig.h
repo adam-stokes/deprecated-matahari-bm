@@ -72,13 +72,15 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
 
     /**
      * This test compares result of mh_sysconfig_query, mh_sysconfig_run_string
-     * and mh_sysconfig_run_uri commands.
+     * and mh_sysconfig_run_uri commands. This test is linux-only (no augeas
+     * on windows).
      */
+#ifndef WIN32
     void testAugeasQuery(void)
     {
         const char key[] = "org.matahariproject.test.unittest.augeas";
-        const char query[] = "/files/etc/fstab/1/spec";
-        const char command[] = "get /files/etc/fstab/1/spec";
+        const char query[] = "/files/etc/mtab/1/spec";
+        const char command[] = "get /files/etc/mtab/1/spec";
         char tmp_file[] = "matahari-sysconfig-test_XXXXXX";
         char *query_result, *run_string_result, *run_string_result_stripped;
         char *run_uri_result, *run_uri_result_stripped;
@@ -124,6 +126,7 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
         free(abs_path);
         free(uri);
     }
+#endif
 };
 
 #endif
