@@ -59,13 +59,13 @@ class HostTestsSetup(object):
         self.props = self.host.getProperties()
 
 class HostApiTests(unittest.TestCase):
- 
-    # TEST - getProperties() 
+
+    # TEST - getProperties()
     # =====================================================
     def test_hostname_property(self):
         value = connection.props.get('hostname')
-        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching") 
-     
+        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching")
+
     def test_os_property(self):
         value = connection.props.get('os')
         self.assertEquals(value, cmd.getoutput("uname -a | awk '{print $1,\"(\"$3\")\"}'"), "os not matching")
@@ -83,7 +83,7 @@ class HostApiTests(unittest.TestCase):
              word_size = 32
          elif cmd.getoutput("uname -a | awk '{print $12}'") == "x86_64":
              word_size = 64
-         self.assertEquals(value, word_size, "wordsize not matching") 
+         self.assertEquals(value, word_size, "wordsize not matching")
 
     def test_memory_property(self):
          value = connection.props.get('memory')
@@ -109,7 +109,7 @@ class HostApiTests(unittest.TestCase):
          value = connection.props.get('cpu_model')
          cmdline = cmd.getoutput("cat /proc/cpuinfo | grep 'model name' | head -1 | awk -F: {'print $2'}")
          self.assertTrue(value in cmdline, "cpu model not matching")
-         
+
     def test_cpu_flags_property(self):
          value = connection.props.get('cpu_flags')
          self.assertEquals(value, cmd.getoutput("cat /proc/cpuinfo | grep 'flags' | head -1 | awk -F: {'print $2'}").strip(), "cpu flags not matching")
@@ -127,7 +127,7 @@ class HostApiTests(unittest.TestCase):
 
     #def test_sequence_property(self):
     #     self.fail("no verification")
-    
+
     def test_free_mem_property(self):
          value = connection.props.get('free_mem')
          top_value = int(cmd.getoutput("free | grep Mem | awk '{ print $4 }'"))
@@ -171,32 +171,32 @@ class HostApiTests(unittest.TestCase):
             result = host.get_uuid()
             self.fail("no exception on zero parms")
         except Exception as e:
-            pass 
-    
+            pass
+
     # TEST - set_uuid()
     # =====================================================
     def test_set_uuid_Custom_lifetime(self):
-        test_uuid = testUtil.getRandomKey(20) 
-        host.set_uuid('Custom', test_uuid) 
-        result = host.get_uuid('Custom') 
+        test_uuid = testUtil.getRandomKey(20)
+        host.set_uuid('Custom', test_uuid)
+        result = host.get_uuid('Custom')
         self.assertEqual(result.get('uuid'), test_uuid, "uuid value not matching expected("+result.get('uuid')+")")
         connection.reQuery()
         self.assertEqual(connection.props.get('custom_uuid'), test_uuid, "property not matching set value")
-        
+
     def test_set_uuid_new_Custom_lifetime(self):
-        test_uuid = testUtil.getRandomKey(20) 
-        host.set_uuid('Custom', test_uuid) 
-        result = host.get_uuid('Custom') 
+        test_uuid = testUtil.getRandomKey(20)
+        host.set_uuid('Custom', test_uuid)
+        result = host.get_uuid('Custom')
         self.assertEqual(result.get('uuid'), test_uuid, "uuid value not matching expected("+result.get('uuid')+")")
         connection.reQuery()
         self.assertEqual(connection.props.get('custom_uuid'), test_uuid, "property not matching set value")
 
     def test_set_uuid_Hardware_lifetime_fails(self):
-        result = host.set_uuid('Hardware', testUtil.getRandomKey(20) ) 
+        result = host.set_uuid('Hardware', testUtil.getRandomKey(20) )
         self.assertEqual(result.get('rc'), 23, "Unexpected return code ("+str(result.get('rc'))+"), expected 23")
 
     def test_set_uuid_Reboot_lifetime_fails(self):
-        result = host.set_uuid('Reboot', testUtil.getRandomKey(20) ) 
+        result = host.set_uuid('Reboot', testUtil.getRandomKey(20) )
         self.assertEqual(result.get('rc'), 23, "Unexpected return code ("+str(result.get('rc'))+"), expected 23")
 
     # TEST - misc

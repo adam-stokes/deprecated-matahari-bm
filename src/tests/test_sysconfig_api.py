@@ -18,12 +18,12 @@
   License along with this library; if not, write to the
   Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-"""  
+"""
 
 import commands as cmd
 import sys
 from qmf2 import QmfAgentException
-import time 
+import time
 from os import stat
 import matahariTest as testUtil
 from stat import *
@@ -41,7 +41,7 @@ testFileWithPath = "/var/www/html" + testFile
 testFileUrl = "http://127.0.0.1" + testFile
 targetFilePerms = '440'
 targetFileGroup = 'root'
-targetFileOwner = 'root' 
+targetFileOwner = 'root'
 origFilePerms = '777'
 origFileGroup = 'qpidd'
 origFileOwner = 'qpidd'
@@ -106,7 +106,7 @@ def setUp(self):
 
 def tearDown():
     testUtil.disconnectFromBroker(connection.connect_info)
-        
+
 class SysconfigSetup(object):
     def __init__(self):
         cmd.getoutput("service matahari-broker start")
@@ -124,7 +124,7 @@ class SysconfigSetup(object):
 
 class TestSysconfigApi(unittest.TestCase):
 
-    # TEST - getProperties() 
+    # TEST - getProperties()
     # =====================================================
     def test_hostname_property(self):
         value = connection.props.get('hostname')
@@ -133,10 +133,10 @@ class TestSysconfigApi(unittest.TestCase):
     # TODO:
     #	no puppet
     #	duplicate keys
-    #	flags	
-    #	
+    #	flags
+    #
 
-    # TEST - run_uri() 
+    # TEST - run_uri()
     # ================================================================
     def test_run_uri_good_url_puppet_manifest(self):
         results = wrapper('uri',testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
@@ -180,7 +180,7 @@ class TestSysconfigApi(unittest.TestCase):
         self.assertTrue( results.get('status') == 'unknown', "return code (" + str(results.get('status')) + ") not expected")
         self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
-    # TEST - run_string() 
+    # TEST - run_string()
     # ================================================================
     def test_run_string_good_puppet_manifest(self):
         results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', testUtil.getRandomKey(5))
@@ -204,12 +204,12 @@ class TestSysconfigApi(unittest.TestCase):
         self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', '')
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
-    # TEST - query() 
+    # TEST - query()
     # ================================================================
     #testUtil.printHeader('query()')
     #print "\033[93m[WARN]\033[0m  NO VERIFICATION"
 
-    # TEST - is_configured() 
+    # TEST - is_configured()
     # ================================================================
     def	test_is_configured_known_key(self):
         key = testUtil.getRandomKey(5)

@@ -95,7 +95,7 @@ def getDelta(int1, int2):
 
 def checkTwoValuesInMargin(val1, val2, fudgeFactor, description):
     delta = getDelta(val1,val2)
-    margin = (val1+100) * fudgeFactor 
+    margin = (val1+100) * fudgeFactor
     #percent_str = str(fudgeFactor * 100) + "%"
     #delta > margin: error(description + " value gt "+ percent_str + " off (va1:"+str(val1)+" val2:" + str(val2) + ")")
     return delta < margin
