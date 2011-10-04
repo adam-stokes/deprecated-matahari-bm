@@ -1,5 +1,5 @@
-#ifndef __MH_API_NETWORK_UNITTEST_H
-#define __MH_API_NETWORK_UNITTEST_H
+#ifndef __MH_API_SYSCONFIG_LINUX_UNITTEST_H
+#define __MH_API_SYSCONFIG_LINUX_UNITTEST_H
 #include <iostream>
 #include <cstring>
 #include <string>
@@ -46,36 +46,14 @@ char *strip(const char *result)
     return stripped;
 }
 
-class MhApiSysconfigSuite : public CxxTest::TestSuite
+class MhApiSysconfigLinuxSuite : public CxxTest::TestSuite
 {
  public:
-
-    void testIsConfigured(void)
-    {
-        const char key[] = "org.matahariproject.test.unittest"; // Unimportant key defined
-        const char *invalid_keys[3] = {"../etc/passwd",
-                                       "./../etc/passwd#",
-                                       "HAPPY#HAMMY,@"};
-        char *key_res;
-
-        mh_sysconfig_keys_dir_set("/tmp/matahari-sysconfig-keys/");
-
-        TS_ASSERT((mh_sysconfig_set_configured(key, "OK")) == MH_RES_SUCCESS);
-        TS_ASSERT(((key_res = mh_sysconfig_is_configured(key))) != NULL);
-        TS_ASSERT(!strcmp("OK", key_res));
-
-        free(key_res);
-        for (int i = 0; i < DIMOF(invalid_keys); i++) {
-            TS_ASSERT((mh_sysconfig_set_configured(invalid_keys[i], "OK")) == MH_RES_INVALID_ARGS);
-        }
-    }
-
     /**
      * This test compares result of mh_sysconfig_query, mh_sysconfig_run_string
      * and mh_sysconfig_run_uri commands. This test is linux-only (no augeas
      * on windows).
      */
-#ifndef WIN32
     void testAugeasQuery(void)
     {
         const char key[] = "org.matahariproject.test.unittest.augeas";
@@ -126,7 +104,6 @@ class MhApiSysconfigSuite : public CxxTest::TestSuite
         free(abs_path);
         free(uri);
     }
-#endif
 };
 
 #endif
