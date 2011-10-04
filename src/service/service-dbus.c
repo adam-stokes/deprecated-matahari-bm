@@ -30,6 +30,7 @@
 #include "matahari/services.h"
 #include "matahari/utilities.h"
 #include "matahari/logging.h"
+#include "matahari/errors.h"
 
 /* Generated properties list */
 #include "service-dbus-properties.h"
@@ -204,8 +205,8 @@ Services_fail(Matahari *matahari, const char *name,
         return FALSE;
     }
     // TODO: Implement when implemented in backend
-    error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
-                        "Action fail is not implemented yet!");
+    error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
+                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     return TRUE;
 }
@@ -221,8 +222,8 @@ Services_describe(Matahari *matahari, const char *name,
         return FALSE;
     }
     // TODO: Implement when implemented in backend
-    error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
-                        "Action describe is not implemented yet!");
+    error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
+                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     g_error_free(error);
     return TRUE;
@@ -335,8 +336,8 @@ Resources_describe(Matahari *matahari, const char *standard,
         return FALSE;
     }
     // TODO: Implement when implemented in backend
-    error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
-                        "Action describe is not implemented yet!");
+    error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
+                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     g_error_free(error);
     return TRUE;
@@ -373,7 +374,7 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
     }
     if (!valid_standard) {
         mh_err("%s is not a known resource standard", standard);
-        error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
+        error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
                             "%s is not a known resource standard", standard);
         dbus_g_method_return_error(context, error);
         g_error_free(error);
@@ -419,8 +420,8 @@ Resources_fail(Matahari *matahari, const char *name, unsigned int rc,
         return FALSE;
     }
     // TODO: Implement when implemented in backend
-    error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
-                        "Action fail is not implemented yet!");
+    error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
+                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     g_error_free(error);
     return TRUE;

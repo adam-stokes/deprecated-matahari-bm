@@ -69,7 +69,7 @@ check_authorization(const gchar *action, GError** error,
     authority = polkit_authority_get_sync(NULL, &err);
     if (err != NULL) {
         g_printerr("Error in obtaining authority: %s\n", err->message);
-        g_set_error(error, MATAHARI_ERROR, MATAHARI_AUTHENTICATION_ERROR,
+        g_set_error(error, MATAHARI_ERROR, MH_RES_AUTHENTICATION_ERROR,
                     err->message);
         g_error_free(err);
         return FALSE;
@@ -81,7 +81,7 @@ check_authorization(const gchar *action, GError** error,
             &err);
     if (err != NULL) {
         g_printerr("Error in checking authorization: %s\n", err->message);
-        g_set_error(error, MATAHARI_ERROR, MATAHARI_AUTHENTICATION_ERROR,
+        g_set_error(error, MATAHARI_ERROR, MH_RES_AUTHENTICATION_ERROR,
                     err->message);
         g_error_free(err);
         return FALSE;
@@ -91,8 +91,8 @@ check_authorization(const gchar *action, GError** error,
     g_object_unref(result);
     g_object_unref(authority);
     if (!res) {
-        g_set_error(error, MATAHARI_ERROR, MATAHARI_AUTHENTICATION_ERROR,
-                    "You are not authorized for specified action");
+        g_set_error(error, MATAHARI_ERROR, MH_RES_AUTHENTICATION_ERROR,
+                    mh_result_to_str(MH_RES_AUTHENTICATION_ERROR));
         g_printerr("Caller is not authorized for action %s\n", action);
     }
     return res;
