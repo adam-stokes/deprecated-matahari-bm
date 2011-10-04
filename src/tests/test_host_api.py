@@ -85,27 +85,27 @@ class HostApiTests(unittest.TestCase):
         self.assertEquals(value, cmd.getoutput("uname -a | awk '{print $12}'"), "os not matching")
 
     def test_wordsize_property(self):
-         value = connection.props.get('wordsize')
-         word_size = 0
-         if cmd.getoutput("uname -a | awk '{print $12}'") == "i686":
-             word_size = 32
-         elif cmd.getoutput("uname -a | awk '{print $12}'") == "i386":
-             word_size = 32
-         elif cmd.getoutput("uname -a | awk '{print $12}'") == "x86_64":
-             word_size = 64
-         self.assertEquals(value, word_size, "wordsize not matching")
+        value = connection.props.get('wordsize')
+        word_size = 0
+        if cmd.getoutput("uname -a | awk '{print $12}'") == "i686":
+            word_size = 32
+        elif cmd.getoutput("uname -a | awk '{print $12}'") == "i386":
+            word_size = 32
+        elif cmd.getoutput("uname -a | awk '{print $12}'") == "x86_64":
+            word_size = 64
+        self.assertEquals(value, word_size, "wordsize not matching")
 
     def test_memory_property(self):
-         value = connection.props.get('memory')
-         self.assertEquals(value, int(cmd.getoutput("free | grep Mem | awk '{ print $2 }'")), "memory not matching")
+        value = connection.props.get('memory')
+        self.assertEquals(value, int(cmd.getoutput("free | grep Mem | awk '{ print $2 }'")), "memory not matching")
 
     def test_swap_property(self):
-         value = connection.props.get('swap')
-         self.assertEquals(value, int(cmd.getoutput("free | grep Swap | awk '{ print $2 }'")), "swap not matching")
+        value = connection.props.get('swap')
+        self.assertEquals(value, int(cmd.getoutput("free | grep Swap | awk '{ print $2 }'")), "swap not matching")
 
     def test_cpu_count_property(self):
-         value = connection.props.get('cpu_count')
-         self.assertEquals(value, int(cmd.getoutput("cat /proc/cpuinfo | grep processor | wc -l")), "cpu count not matching")
+        value = connection.props.get('cpu_count')
+        self.assertEquals(value, int(cmd.getoutput("cat /proc/cpuinfo | grep processor | wc -l")), "cpu count not matching")
 
     def test_cpu_cores_property(self):
         # XXX Core count is still busted in F15, sigar needs to be updated
@@ -119,37 +119,37 @@ class HostApiTests(unittest.TestCase):
         self.assertEquals(value, core_count, "cpu core count not matching")
 
     def test_cpu_model_property(self):
-         value = connection.props.get('cpu_model')
-         cmdline = cmd.getoutput("cat /proc/cpuinfo | grep 'model name' | head -1 | awk -F: {'print $2'}")
-         self.assertTrue(value in cmdline, "cpu model not matching")
+        value = connection.props.get('cpu_model')
+        cmdline = cmd.getoutput("cat /proc/cpuinfo | grep 'model name' | head -1 | awk -F: {'print $2'}")
+        self.assertTrue(value in cmdline, "cpu model not matching")
 
     def test_cpu_flags_property(self):
-         value = connection.props.get('cpu_flags')
-         self.assertEquals(value, cmd.getoutput("cat /proc/cpuinfo | grep 'flags' | head -1 | awk -F: {'print $2'}").strip(), "cpu flags not matching")
+        value = connection.props.get('cpu_flags')
+        self.assertEquals(value, cmd.getoutput("cat /proc/cpuinfo | grep 'flags' | head -1 | awk -F: {'print $2'}").strip(), "cpu flags not matching")
 
     def test_update_interval_property(self):
-         value = connection.props.get('update_interval')
-         self.assertEquals(value, 5, "update interval not matching")
+        value = connection.props.get('update_interval')
+        self.assertEquals(value, 5, "update interval not matching")
 
     def test_last_updated_property(self):
-         value = connection.props.get('last_updated')
-         value = value / 1000000000
-         now = int("%.0f" % time.time())
-         delta = testUtil.getDelta(value, now)
-         self.assertFalse(delta > 5, "last updated off gt 5 seconds")
+        value = connection.props.get('last_updated')
+        value = value / 1000000000
+        now = int("%.0f" % time.time())
+        delta = testUtil.getDelta(value, now)
+        self.assertFalse(delta > 5, "last updated off gt 5 seconds")
 
     #def test_sequence_property(self):
     #     self.fail("no verification")
 
     def test_free_mem_property(self):
-         value = connection.props.get('free_mem')
-         top_value = int(cmd.getoutput("free | grep Mem | awk '{ print $4 }'"))
-         self.assertTrue(testUtil.checkTwoValuesInMargin(value, top_value, 0.05, "free memory"), "free memory outside margin")
+        value = connection.props.get('free_mem')
+        top_value = int(cmd.getoutput("free | grep Mem | awk '{ print $4 }'"))
+        self.assertTrue(testUtil.checkTwoValuesInMargin(value, top_value, 0.05, "free memory"), "free memory outside margin")
 
     def test_free_swap_property(self):
-         value = connection.props.get('free_swap')
-         top_value = int(cmd.getoutput("free | grep Swap | awk '{ print $4 }'"))
-         self.assertTrue(testUtil.checkTwoValuesInMargin(value, top_value, 0.05, "free swap"), "free swap outside margin")
+        value = connection.props.get('free_swap')
+        top_value = int(cmd.getoutput("free | grep Swap | awk '{ print $4 }'"))
+        self.assertTrue(testUtil.checkTwoValuesInMargin(value, top_value, 0.05, "free swap"), "free swap outside margin")
 
     # TEST - get_uuid()
     # =====================================================
