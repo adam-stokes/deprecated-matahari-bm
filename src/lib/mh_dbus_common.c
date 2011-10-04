@@ -233,7 +233,7 @@ matahari_get(Matahari* matahari, const char *interface, const char *name,
 
     spec = g_object_class_find_property(G_OBJECT_GET_CLASS(matahari), name);
     if (!spec) {
-        error = g_error_new(MATAHARI_ERROR, abs(MH_RES_INVALID_ARGS),
+        error = g_error_new(MATAHARI_ERROR, MH_RES_INVALID_ARGS,
                             mh_result_to_str(MH_RES_INVALID_ARGS));
         dbus_g_method_return_error(context, error);
         g_error_free(error);

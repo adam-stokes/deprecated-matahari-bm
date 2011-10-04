@@ -538,6 +538,8 @@ mh_result_to_str(enum mh_result res)
         return "Unable to download file";
     case MH_RES_BACKEND_ERROR:
         return "Error in backend";
+    case MH_RES_AUTHENTICATION_ERROR:
+        return "You are not authorized for specified action";
     case MH_RES_OTHER_ERROR:
         return "General error";
     }
