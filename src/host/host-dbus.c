@@ -53,6 +53,7 @@ Host_identify(Matahari* matahari, DBusGMethodInvocation *context)
     GError* error = NULL;
     if (!check_authorization(HOST_BUS_NAME ".identify", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     mh_host_identify();
@@ -66,6 +67,7 @@ Host_shutdown(Matahari* matahari, DBusGMethodInvocation *context)
     GError* error = NULL;
     if (!check_authorization(HOST_BUS_NAME ".shutdown", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     mh_host_shutdown();
@@ -79,6 +81,7 @@ Host_reboot(Matahari* matahari, DBusGMethodInvocation *context)
     GError* error = NULL;
     if (!check_authorization(HOST_BUS_NAME ".reboot", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     mh_host_reboot();
@@ -93,6 +96,7 @@ Host_get_uuid(Matahari* matahari, const char *lifetime, DBusGMethodInvocation *c
     const char *uuid = NULL;
     if (!check_authorization(HOST_BUS_NAME ".get_uuid", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     uuid = mh_host_get_uuid(lifetime);
@@ -107,6 +111,7 @@ Host_set_uuid(Matahari* matahari, const char *lifetime, const char *uuid, DBusGM
     GError* error = NULL;
     if (!check_authorization(HOST_BUS_NAME ".set_uuid", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     rc = mh_host_set_uuid(lifetime, uuid);

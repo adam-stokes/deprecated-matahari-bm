@@ -70,6 +70,7 @@ Network_list(Matahari *matahari, DBusGMethodInvocation *context)
 
     if (!check_authorization(NETWORK_BUS_NAME ".list", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -103,6 +104,7 @@ Network_start(Matahari *matahari, const char *iface,
 
     if (!check_authorization(NETWORK_BUS_NAME ".start", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -124,6 +126,7 @@ Network_stop(Matahari *matahari, const char *iface,
 
     if (!check_authorization(NETWORK_BUS_NAME ".stop", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -143,6 +146,7 @@ Network_status(Matahari *matahari, const char *iface,
     GError* error = NULL;
     if (!check_authorization(NETWORK_BUS_NAME ".status", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -160,6 +164,7 @@ Network_get_ip_address(Matahari *matahari, const char *iface,
     if (!check_authorization(NETWORK_BUS_NAME ".get_ip_address", &error,
                              context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -179,6 +184,7 @@ Network_get_mac_address(Matahari *matahari, const char *iface,
     if (!check_authorization(NETWORK_BUS_NAME ".get_mac_address", &error,
                              context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 

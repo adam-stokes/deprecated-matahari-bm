@@ -236,6 +236,7 @@ matahari_get(Matahari* matahari, const char *interface, const char *name,
         error = g_error_new(MATAHARI_ERROR, abs(MH_RES_INVALID_ARGS),
                             mh_result_to_str(MH_RES_INVALID_ARGS));
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     g_value_init(&value, spec->value_type);
@@ -254,6 +255,7 @@ matahari_set(Matahari *matahari, const char *interface, const char *name,
     if (!check_authorization(action, &error, context)) {
         dbus_g_method_return_error(context, error);
         free(action);
+        g_error_free(error);
         return FALSE;
     }
     free(action);

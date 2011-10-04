@@ -54,6 +54,7 @@ Services_list(Matahari *matahari, DBusGMethodInvocation *context)
 
     if (!check_authorization(SERVICES_BUS_NAME ".list", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -82,6 +83,7 @@ Services_enable(Matahari *matahari, const char *name,
 
     if (!check_authorization(SERVICES_BUS_NAME ".enable", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     op = services_action_create(name, "enable", 0, TIMEOUT_MS);
@@ -101,6 +103,7 @@ Services_disable(Matahari *matahari, const char *name,
 
     if (!check_authorization(SERVICES_BUS_NAME ".disable", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     op = services_action_create(name, "disable", 0, TIMEOUT_MS);
@@ -120,6 +123,7 @@ Services_start(Matahari *matahari, const char *name, unsigned int timeout,
 
     if (!check_authorization(SERVICES_BUS_NAME ".start", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     op = services_action_create(name, "start", 0, timeout);
@@ -140,6 +144,7 @@ Services_stop(Matahari *matahari, const char *name, unsigned int timeout,
 
     if (!check_authorization(SERVICES_BUS_NAME ".stop", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     op = services_action_create(name, "stop", 0, timeout);
@@ -160,6 +165,7 @@ Services_status(Matahari *matahari, const char *name, unsigned int interval,
 
     if (!check_authorization(SERVICES_BUS_NAME ".status", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     op = services_action_create(name, "status", interval, timeout);
@@ -179,6 +185,7 @@ Services_cancel(Matahari *matahari, const char *name, const char *action,
 
     if (!check_authorization(SERVICES_BUS_NAME ".cancel", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     res = services_action_cancel(name, action, interval);
@@ -193,6 +200,7 @@ Services_fail(Matahari *matahari, const char *name,
     GError* error = NULL;
     if (!check_authorization(SERVICES_BUS_NAME ".fail", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     // TODO: Implement when implemented in backend
@@ -209,12 +217,14 @@ Services_describe(Matahari *matahari, const char *name,
     GError* error = NULL;
     if (!check_authorization(SERVICES_BUS_NAME ".describe", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
                         "Action describe is not implemented yet!");
     dbus_g_method_return_error(context, error);
+    g_error_free(error);
     return TRUE;
 }
 
@@ -237,6 +247,7 @@ Resources_list_standards(Matahari *matahari, DBusGMethodInvocation *context)
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".list_standards",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -256,6 +267,7 @@ Resources_list_providers(Matahari *matahari, const char *standard,
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".list_providers",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -286,6 +298,7 @@ Resources_list(Matahari *matahari, const char *standard, const char *provider,
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".list",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -318,12 +331,14 @@ Resources_describe(Matahari *matahari, const char *standard,
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".describe",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
                         "Action describe is not implemented yet!");
     dbus_g_method_return_error(context, error);
+    g_error_free(error);
     return TRUE;
 }
 
@@ -342,6 +357,7 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".invoke",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -360,6 +376,7 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
         error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
                             "%s is not a known resource standard", standard);
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -381,6 +398,7 @@ Resources_cancel(Matahari *matahari, const char *name, const char *action,
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".cancel",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -397,12 +415,14 @@ Resources_fail(Matahari *matahari, const char *name, unsigned int rc,
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".fail",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MATAHARI_NOT_IMPLEMENTED,
                         "Action fail is not implemented yet!");
     dbus_g_method_return_error(context, error);
+    g_error_free(error);
     return TRUE;
 }
 

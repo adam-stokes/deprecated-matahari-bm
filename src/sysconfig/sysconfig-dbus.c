@@ -49,6 +49,7 @@ Sysconfig_run_uri(Matahari* matahari, const char *uri, uint flags,
 
     if (!check_authorization(SYSCONFIG_BUS_NAME ".run_uri", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -79,6 +80,7 @@ Sysconfig_run_string(Matahari* matahari, const char *text, uint flags,
     if (!check_authorization(SYSCONFIG_BUS_NAME ".run_string", &error,
             context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -105,6 +107,7 @@ Sysconfig_query(Matahari* matahari, const char *text, uint flags,
     char *status;
     if (!check_authorization(SYSCONFIG_BUS_NAME ".query", &error, context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
@@ -124,6 +127,7 @@ Sysconfig_is_configured(Matahari* matahari, const char *key,
     if (!check_authorization(SYSCONFIG_BUS_NAME ".is_configured", &error,
             context)) {
         dbus_g_method_return_error(context, error);
+        g_error_free(error);
         return FALSE;
     }
 
