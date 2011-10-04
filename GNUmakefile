@@ -47,8 +47,8 @@ linux.build:
 	@$(MAKE) --no-print-dir -C $@
 
 tests: linux.build
-	@if [ -f linux.build/src/tests/CTestTestfile.cmake ]; then \
-		cd linux.build/src/tests && ctest -V; \
+	@if [ -f linux.build/src/unittests/CTestTestfile.cmake ]; then \
+		cd linux.build/src/unittests && ctest -V; \
 	fi
 
 windows.build:

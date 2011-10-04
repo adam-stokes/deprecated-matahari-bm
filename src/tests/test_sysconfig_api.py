@@ -1,28 +1,28 @@
 #!/usr/bin/env python
 
-# ####################################################################
-#  test_sysconfig_api.py - Copyright (c) 2011 Red Hat, Inc.
-#  Written by Dave Johnson <dajo@redhat.com>
-#
-#  This library is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU Lesser General Public
-#  License as published by the Free Software Foundation; either
-#  version 2.1 of the License, or (at your option) any later version.
-#
-#  This library is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  Lesser General Public License for more details.
-#
-#  You should have received a copy of the GNU Lesser General Public
-#  License along with this library; if not, write to the
-#  Free Software Foundation, Inc.,
-#  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-# ####################################################################
+"""
+  test_sysconfig_api.py - Copyright (c) 2011 Red Hat, Inc.
+  Written by Dave Johnson <dajo@redhat.com>
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the
+  Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+"""  
 
 import commands as cmd
 import sys
-from qmf.console import Session
+from qmf2 import QmfAgentException
 import time 
 from os import stat
 import matahariTest as testUtil
@@ -105,8 +105,7 @@ def setUp(self):
     sysconfig = connection.sysconfig
 
 def tearDown():
-    connection.disconnect()
-    time.sleep(5)
+    testUtil.disconnectFromBroker(connection.connect_info)
         
 class SysconfigSetup(object):
     def __init__(self):
@@ -115,37 +114,20 @@ class SysconfigSetup(object):
         time.sleep(3)
         self.expectedMethods = [ 'run_uri(uri, flags, scheme, key)', 'run_string(text, flags, scheme, key)', 'query(text, flags, scheme)', 'is_configured(key)' ]
         self.connect_info = testUtil.connectToBroker('localhost','49000')
-        self.sess = self.connect_info[0]
+        self.sess = self.connect_info[1]
         self.reQuery()
     def disconnect(self):
         testUtil.disconnectFromBroker(self.connect_info)
     def reQuery(self):
-        self.sysconfigs = self.sess.getObjects(_class='Sysconfig',_package="org.matahariproject")
-        self.sysconfig = self.sysconfigs[0]
+        self.sysconfig = testUtil.findAgent(self.sess,'Sysconfig','Sysconfig',cmd.getoutput("hostname"))
         self.props = self.sysconfig.getProperties()
-    def getPropValueByKey(self,key):
-        for item in self.props:
-            if str(item[0]) == key:
-                return item[1]
 
 class TestSysconfigApi(unittest.TestCase):
-
-    # TEST - getMethods() 
-    # ================================================================
-    def test_available_methods(self):
-        meths = sysconfig.getMethods()
-        self.assertTrue( len(meths) == len(connection.expectedMethods) , "number of methods not expected")
-        for meth in meths:
-            try:
-                connection.expectedMethods.index(str(meth))
-            except:
-                self.fail(str(meth)+" not expected")
-                
 
     # TEST - getProperties() 
     # =====================================================
     def test_hostname_property(self):
-        value = connection.getPropValueByKey('hostname')
+        value = connection.props.get('hostname')
         self.assertTrue( value == cmd.getoutput("hostname"), "hostname not expected")
 
     # TODO:
@@ -158,84 +140,68 @@ class TestSysconfigApi(unittest.TestCase):
     # ================================================================
     def test_run_uri_good_url_puppet_manifest(self):
         results = wrapper('uri',testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 0, "result: " + str(results) + " != 0")
+        self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
         self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_uri_http_url_not_found(self):
-        results = wrapper('uri',testFileUrl+"_bad", 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 7, "invalid args text not in result")
-        self.assertTrue( results.text == 'Invalid Arguments', "return code (" + str(results.status) + ") not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl+"_bad", 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_good_file_puppet_manifest(self):
         results = wrapper('uri', 'file://'+testFileWithPath, 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
         self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_uri_file_url_not_found(self):
-        results = wrapper('uri', 'file://'+testFile, 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', 'file://'+testFile, 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_bad_puppet_manifest(self):
         resetTestFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup, 'bad puppet script')
         results = sysconfig.run_uri(testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( "FAILED" in results.outArgs['status'], "")
+        self.assertTrue( results.get('status') == 'FAILED\n1', "result: " + str(results.get('status')) + " != FAILED\n1")
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_non_schema(self):
-        results = wrapper('uri', testFileUrl, 0, 'schema', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'schema', testUtil.getRandomKey(5))
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
+    # TODO: need to handle upstream vs rhel difference
     def test_run_uri_augeas_schema_not_implemented(self):
-        results = wrapper('uri', testFileUrl, 0, 'augeas', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'augeas', testUtil.getRandomKey(5))
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_empty_key(self):
-        results = wrapper('uri', testFileUrl, 0, 'puppet', '')
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'puppet', '')
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_special_chars_in_key(self):
         results = wrapper('uri', testFileUrl, 0, 'puppet', testUtil.getRandomKey(5) + "'s $$$")
-        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.get('status') == 'unknown', "return code (" + str(results.get('status')) + ") not expected")
         self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     # TEST - run_string() 
     # ================================================================
     def test_run_string_good_puppet_manifest(self):
         results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
         self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_string_bad_puppet_manifest(self):
         results = wrapper('string', 'bad puppet manifest', 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 0, "return code (" + str(results.status) + ") not expected")
+        self.assertTrue( results.get('status') == 'FAILED\n1', "result: " + str(results.get('status')) + " != FAILED\n1")
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_non_schema(self):
-        results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'schema', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'schema', testUtil.getRandomKey(5))
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_augeas_schema_not_implemented(self):
-        results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'augeas', testUtil.getRandomKey(5))
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'augeas', testUtil.getRandomKey(5))
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_empty_key(self):
-        results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', '')
-        self.assertTrue( results.status == 7, "return code (" + str(results.status) + ") not expected")
-        self.assertTrue( results.text == 'Invalid Arguments', "invalid args text not in result")
+        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', '')
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     # TEST - query() 
@@ -249,9 +215,9 @@ class TestSysconfigApi(unittest.TestCase):
         key = testUtil.getRandomKey(5)
         wrapper('uri',testFileUrl, 0, 'puppet', key)
         results = sysconfig.is_configured(key)
-        self.assertTrue( results.outArgs['status'] == 'OK', "")
+        self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
 
     def	test_is_configured_unknown_key(self):
         results = sysconfig.is_configured(testUtil.getRandomKey(5))
-        self.assertTrue( results.outArgs['status'] == 'unknown' , "")
+        self.assertTrue( results.get('status') == 'unknown', "result: " + str(results.get('status')) + " != unknown")
 

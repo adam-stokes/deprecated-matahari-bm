@@ -1,28 +1,28 @@
 #!/usr/bin/env python
 
-# ####################################################################
-#  test_resource_api.py - Copyright (c) 2011 Red Hat, Inc.
-#  Written by Dave Johnson <dajo@redhat.com>
-#
-#  This library is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU Lesser General Public
-#  License as published by the Free Software Foundation; either
-#  version 2.1 of the License, or (at your option) any later version.
-#
-#  This library is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  Lesser General Public License for more details.
-#
-#  You should have received a copy of the GNU Lesser General Public
-#  License along with this library; if not, write to the
-#  Free Software Foundation, Inc.,
-#  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-# ####################################################################
+"""
+  test_resource_api.py - Copyright (c) 2011 Red Hat, Inc.
+  Written by Dave Johnson <dajo@redhat.com>
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the
+  Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+"""
 
 import commands as cmd
-from qmf.console import Session
 import matahariTest as testUtil
+from qmf2 import QmfAgentException
 import unittest
 import time
 import sys
@@ -42,7 +42,6 @@ def setUp(self):
 
 def tearDown():
     connection.disconnect()
-    time.sleep(5)
 
 class ResourceTestsSetup(object):
     def __init__(self):
@@ -53,49 +52,31 @@ class ResourceTestsSetup(object):
                                  'invoke(name, standard, provider, agent, action, interval, parameters, timeout, expected-rc, userdata)', 
                                  'cancel(name, action, interval, timeout)', 'fail(name, rc)' ]
         self.connect_info = testUtil.connectToBroker('localhost','49000')
-        self.sess = self.connect_info[0]
+        self.sess = self.connect_info[1]
         self.reQuery()
     def disconnect(self):
         testUtil.disconnectFromBroker(self.connect_info)
     def reQuery(self):
-        self.resource_objects = self.sess.getObjects(_class='Resources',_package="org.matahariproject")
-        self.resource= self.resource_objects[0]
+        self.resource = testUtil.findAgent(self.sess,'service', 'Resources', cmd.getoutput('hostname'))
         self.props = self.resource.getProperties()
-    def getPropValueByKey(self,key):
-        for item in self.props:
-            if str(item[0]) == key:
-                return item[1]
 
 class TestResourceApi(unittest.TestCase):
-
-    # TEST - getMethods() 
-    # ================================================================
-    def test_getMethods(self):
-        meths = resource.getMethods()
-        self.assertEquals(len(meths),len(connection.expectedMethods), "method count not matching")
-        for meth in meths:
-            try:
-                connection.expectedMethods.index(str(meth))
-            except:
-                self.fail(str(meth)+" not expected")
 
     # TEST - getProperties() 
     # =====================================================
     def test_hostname_property(self):
-        value = connection.getPropValueByKey('hostname')
+        value = connection.props.get('hostname')
         self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching") 
 
     # TEST - fail()
     # =====================================================
     def test_fail_not_implemented(self):
-        result = resource.fail("crond", 0)
-        self.assertTrue("Not implemented" in result.text, "text not found, implemented?")
+        self.assertRaises(QmfAgentException, resource.fail, "crond", 0)
 
     # TEST - describe()
     # =====================================================
     def test_describe_not_implemented(self):
-        result = resource.describe('ocf','heartbeat','IPaddr')
-        self.assertTrue("Not implemented" in result.text, "text not found, implemented?")
+        self.assertRaises(QmfAgentException, resource.describe, 'ocf','heartbeat','IPaddr')
 
     # TEST - describe()
     # =====================================================

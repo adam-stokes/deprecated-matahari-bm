@@ -21,6 +21,7 @@
 #include <winsock.h>
 #include <windows.h>
 #include <winbase.h>
+#include <wininet.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,9 +157,42 @@ host_os_machine_uuid(void)
 char *
 host_os_ec2_instance_id(void)
 {
-    /* XXX */
+    static const char URI[] = "http://169.254.169.254/latest/meta-data/instance-id";
+    HINTERNET internet = NULL;
+    HINTERNET open_url = NULL;
+    DWORD bytes_read = 0;
+    char buf[256] = "";
 
-    return NULL;
+    internet = InternetOpenA("Matahari", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!internet) {
+        mh_err("Failed to open the internets (%lu)", (unsigned long) GetLastError());
+        return NULL;
+    }
+
+    open_url = InternetOpenUrlA(internet, URI, NULL, 0, INTERNET_FLAG_RELOAD, 0);
+    if (!open_url) {
+        mh_err("Failed to open URL '%s' (%lu)", URI, (unsigned long) GetLastError());
+        goto return_cleanup;
+    }
+
+    while (InternetReadFile(open_url, buf + strlen(buf),
+                            sizeof(buf) - strlen(buf) - 1,
+                            &bytes_read) == FALSE || bytes_read != 0)
+    {
+        /* Mad commenting in a while loop, what what */
+    }
+
+return_cleanup:
+
+    if (open_url && InternetCloseHandle(open_url) == FALSE) {
+        mh_err("Failed to close the HTTP request. (%lu)", (unsigned long) GetLastError());
+    }
+
+    if (internet && InternetCloseHandle(internet) == FALSE) {
+        mh_err("Failed to close the internets. (%lu)", (unsigned long) GetLastError());
+    }
+
+    return mh_strlen_zero(buf) ? NULL : strdup(buf);
 }
 
 /**
