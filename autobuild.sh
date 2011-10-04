@@ -22,6 +22,8 @@ VERSION=`cat .version`
 
 FEDORA=`rpm --eval %{fedora}`
 
+MOCK=/usr/bin/mock
+
 : ${AUTO_BUILD_COUNTER:="custom"}
 : ${AUTOBUILD_SOURCE_ROOT:=`pwd`}
 : ${AUTOBUILD_INSTALL_ROOT:=`pwd`}
@@ -47,6 +49,20 @@ function make_srpm() {
 		 --define "_srcrpmdir ${PWD}" ${VARIANT}matahari.spec
 }
 
+check_result() {
+    RC=$1
+    RESULTS=$2
+    PLATFORM=$3
+    STEP=$4
+
+    if [ ${RC} != 0 ]; then
+        cat $results/build.log
+        echo "=::=::=::= ${PLATFORM} Build Failed (${STEP}) =::=::=::= "
+        echo "=::=::=::= `date` =::=::=::= "
+        exit ${RC}
+    fi
+}
+
 env
 
 build_target=`rpm --eval fedora-%{fedora}-%{_arch}`
@@ -59,20 +75,35 @@ make_srpm
 results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/`rpm --eval %{_arch}`
 
 rm -f $results/build.log $results/*.rpm
-/usr/bin/mock -v --define="run_unit_tests 1" --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
-rc=$?
 
-if [ $rc != 0 ]; then
-    cat $results/build.log
-    echo "=::=::=::= Linux Build Failed =::=::=::= "
-    echo "=::=::=::= `date` =::=::=::= "
-    exit $rc
-fi
+${MOCK} -v --root=$build_target --resultdir=$results --init
+
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --define="run_unit_tests 1" --no-clean --no-cleanup-after \
+    --rebuild ${PWD}/*.src.rpm
+check_result $? ${results} "Linux" "build"
+
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --install $results/*.rpm
+check_result $? ${results} "Linux" "install"
+
+. src/tests/deps.sh
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --install ${MH_TESTS_DEPS}
+check_result $? ${results} "Linux" "install test deps"
+
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --copyin src/tests /matahari-tests
+check_result $? ${results} "Linux" "copy in tests"
+
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --shell "nosetests -v /matahari-tests/test_host_api.py"
+check_result $? ${results} "Linux" "Host API tests"
 
 # Packages get copied to:
 #   /home/builder/matahari/public_html/dist/rpm/ 
 
-$results
+ls $results
 
 if [ "${FEDORA}" = "16" ] ; then
     echo "=::=::=::= Windows Build Currently Disabled for Fedora 16 =::=::=::= "
@@ -90,11 +121,4 @@ results=$AUTOBUILD_PACKAGE_ROOT/rpm/RPMS/noarch
 
 rm -f $results/build.log $results/*.rpm
 /usr/bin/mock --root=$build_target --resultdir=$results --rebuild ${PWD}/*.src.rpm
-rc=$?
-
-if [ $rc != 0 ]; then
-    cat $results/build.log
-    echo "=::=::=::= Windows Build Failed =::=::=::= "
-    echo "=::=::=::= `date` =::=::=::= "
-    exit $rc
-fi
+check_result $? $results "Windows" "build"
