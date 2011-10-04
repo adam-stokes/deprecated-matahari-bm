@@ -31,6 +31,8 @@ from pwd import getpwuid
 from grp import getgrgid
 import random
 import string
+import subprocess
+import logging
 
 # QMF
 # ========================================================
@@ -102,3 +104,50 @@ def checkTwoValuesInMargin(val1, val2, fudgeFactor, description):
 
 def getRandomKey(length):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(length))
+
+
+class MatahariBroker(object):
+    def __init__(self):
+        self.broker = None
+
+    def start(self):
+        sys.stderr.write("Starting broker ...\n")
+        self.broker = subprocess.Popen("qpidd --auth no --port 49001",
+                                       shell=True, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
+
+    def stop(self):
+        sys.stderr.write("Stopping broker ...\n")
+        self.broker.terminate()
+        output, output_err = self.broker.communicate()
+        sys.stderr.write("********** Stopped Broker, stdout follows: *************\n")
+        sys.stderr.write(output + "\n")
+        sys.stderr.write("********************************************************\n")
+        sys.stderr.write("********** Stopped Broker, stderr follows: *************\n")
+        sys.stderr.write(output_err + "\n")
+        sys.stderr.write("********************************************************\n")
+
+class MatahariAgent(object):
+    def __init__(self, agent_name):
+        self.agent_name = agent_name
+        self.agent = None
+
+    def start(self):
+        sys.stderr.write("Starting %s ...\n" % self.agent_name)
+        self.agent = subprocess.Popen("%s --reconnect  yes --broker 127.0.0.1 "
+                                      "--port 49001 -vvv" % self.agent_name,
+                                      shell=True, stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+
+    def stop(self):
+        sys.stderr.write("Stopping %s ...\n" % self.agent_name)
+        self.agent.terminate()
+        output, output_err = self.agent.communicate()
+        sys.stderr.write("********** Stopped %s, stdout follows: *************\n" %
+                     self.agent_name)
+        sys.stderr.write(output + "\n")
+        sys.stderr.write("********************************************************\n")
+        sys.stderr.write("********** Stopped %s, stderr follows: *************\n" %
+                     self.agent_name)
+        sys.stderr.write(output_err + "\n")
+        sys.stderr.write("********************************************************\n")
