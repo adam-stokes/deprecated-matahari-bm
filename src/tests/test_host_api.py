@@ -111,8 +111,8 @@ class HostApiTests(unittest.TestCase):
         # XXX Core count is still busted in F15, sigar needs to be updated
         if os.path.exists("/etc/fedora-release") and open("/etc/fedora-release", "r").read().strip() == "Fedora release 15 (Lovelock)":
             return
-        value = connection.props.get('cpu_cores')
-        core_count = cmd.getoutput("cat /proc/cpuinfo | grep \"core id\" | uniq | wc -l")
+        value = str(connection.props.get('cpu_cores'))
+        core_count = cmd.getoutput("cat /proc/cpuinfo | grep \"core id\" | uniq | wc -l").strip()
         if value != core_count:
             sys.stderr.write("cpu_cores: '%s', expected '%s'\n" %
                              (value, core_count))
