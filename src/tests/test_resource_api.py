@@ -41,21 +41,28 @@ def setUp(self):
     resource = connection.resource
 
 def tearDown():
-    connection.disconnect()
+    connection.teardown()
 
 class ResourceTestsSetup(object):
     def __init__(self):
-        cmd.getoutput("yum -y install resource-agent")
-        cmd.getoutput("service matahari-broker start")
-        cmd.getoutput("service matahari-service start")
+        self.broker = testUtil.MatahariBroker()
+        self.broker.start()
+        time.sleep(3)
+        self.service_agent = testUtil.MatahariAgent("matahari-qmf-serviced")
+        self.service_agent.start()
+        time.sleep(3)
         self.expectedMethods = [ 'list_standards()', 'list_providers(standard)', 'list(standard, provider)', 'describe(standard, provider, agent)',
                                  'invoke(name, standard, provider, agent, action, interval, parameters, timeout, expected-rc, userdata)',
                                  'cancel(name, action, interval, timeout)', 'fail(name, rc)' ]
-        self.connect_info = testUtil.connectToBroker('localhost','49000')
+        self.connect_info = testUtil.connectToBroker('localhost','49001')
         self.sess = self.connect_info[1]
         self.reQuery()
-    def disconnect(self):
+
+    def teardown(self):
         testUtil.disconnectFromBroker(self.connect_info)
+        self.service_agent.stop()
+        self.broker.stop()
+
     def reQuery(self):
         self.resource = testUtil.findAgent(self.sess,'service', 'Resources', cmd.getoutput('hostname'))
         self.props = self.resource.getProperties()
