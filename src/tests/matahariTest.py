@@ -54,7 +54,9 @@ def findAgent(session,agentKeyWord,agentClass,hostname):
         for agent in agents:
             if agentKeyWord in str(agent):
                 if agent.getAttributes().get('hostname') == hostname:
-                    return agent.query("{class:"+agentClass+",package:'org.matahariproject'}")[0]
+                    objs = agent.query("{class:"+agentClass+",package:'org.matahariproject'}")
+                    if objs and len(objs):
+                        return objs[0]
         time.sleep(1)
         loop_count = loop_count + 1
     sys.exit("specific " + agentKeyWord + " agent for " + hostname + " not found.")
