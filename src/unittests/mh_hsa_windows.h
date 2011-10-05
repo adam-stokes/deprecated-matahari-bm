@@ -43,17 +43,23 @@ class MhHsaSuite : public CxxTest::TestSuite
  public:
      std::stringstream infomsg;
 
-     void testSrvLookup(void)
-     {
-         char *target;
-         const char *host = "_matahari._tcp.matahariproject.org";
+    void testSrvLookup(void)
+    {
+        const char query[] = "_matahari._tcp.matahariproject.org";
+        GList *records;
+        struct mh_dnssrv_record *record;
 
-         target = mh_dnssrv_lookup(host);
-         TS_ASSERT(target != NULL);
-         TS_ASSERT((mh_test_is_match("^www\\.matahariproject\\.org$",
-                                     target)) >= 0);
-         free(target);
-     }
+        records = mh_dnssrv_lookup(query);
+
+        record = (struct mh_dnssrv_record *) g_list_nth_data(records, 0);
+
+        TS_ASSERT(mh_dnssrv_record_get_port(record) == 49000);
+        TS_ASSERT((mh_test_is_match("^www\\.matahariproject\\.org$",
+                                    mh_dnssrv_record_get_host(record))) >= 0);
+
+        g_list_free_full(records, mh_dnssrv_record_free);
+    }
+
 };
 
 #endif
