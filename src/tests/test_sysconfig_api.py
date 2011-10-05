@@ -34,11 +34,21 @@ import random
 import string
 import sys
 import platform
+import os
+import threading
+import SimpleHTTPServer
+import SocketServer
+import errno
+
+# The docs for SocketServer show an allow_reuse_address option, but I
+# can't seem to make it work, so screw it, randomize the port.
+HTTP_PORT = 49002 + random.randint(0, 500)
 
 err = sys.stderr
 testFile = "/sysconfig-test"
-testFileWithPath = "/var/www/html" + testFile
-testFileUrl = "http://127.0.0.1" + testFile
+testPath = "/tmp/sysconfig-test-http-root"
+testFileWithPath = testPath + testFile
+testFileUrl = ("http://127.0.0.1:%d" % HTTP_PORT) + testFile
 targetFilePerms = '440'
 targetFileGroup = 'root'
 targetFileOwner = 'root'
@@ -48,6 +58,8 @@ origFileOwner = 'qpidd'
 fileContents = "file { \""+testFileWithPath+"\":\n    owner => "+targetFileOwner+", group => "+targetFileGroup+", mode => "+targetFilePerms+"\n}"
 connection = None
 sysconfig = None
+httpd_thread = None
+
 
 def resetTestFile(file, perms, owner, group, contents):
     cmd.getoutput("rm -rf " + file)
@@ -55,7 +67,6 @@ def resetTestFile(file, perms, owner, group, contents):
     cmd.getoutput("chmod "+ perms +" "+ file)
     cmd.getoutput("chown "+ owner +":"+ group +" "+ file)
     testUtil.setFileContents(file, contents)
-    time.sleep(3)
     #print "++checking test file pre-reqs++"
     if checkFile(file, perms, owner, group) != 0:
         sys.exit("problem setting up test file")
@@ -68,7 +79,6 @@ def wrapper(method,value,flag,schema,key):
         results = sysconfig.run_uri(value, flag, schema, key)
     elif method == 'string':
        results = sysconfig.run_string(value, flag, schema, key)
-    time.sleep(5)
     return results
 
 def checkFile(file,perms,owner,grp):
@@ -84,43 +94,79 @@ def checkFile(file,perms,owner,grp):
         count = count + 1
     return count
 
+
+class HTTPThread(threading.Thread):
+    def run(self):
+        try:
+            os.makedirs(testPath)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        os.chdir(testPath)
+        self.handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        self.httpd = SocketServer.TCPServer(("", HTTP_PORT), self.handler)
+        sys.stderr.write("Starting HTTP Server on port: %d ...\n" % HTTP_PORT)
+        self.httpd.serve_forever()
+
+
 # Initialization
 # =====================================================
 def setUp(self):
-    # get httpd pre-req
-    result = cmd.getstatusoutput("yum -y install httpd")
-    if result[0] != 0:
-        sys.exit("Unable to install httpd server (required for sysconfig url tests)")
-    cmd.getoutput("service httpd start")
+    global httpd_thread
+    httpd_thread = HTTPThread()
+    httpd_thread.start()
+
     # get puppet pre-req
     if platform.dist()[0] == 'redhat':
         cmd.getoutput("wget -O /etc/yum.repos.d/rhel-aeolus.repo http://repos.fedorapeople.org/repos/aeolus/conductor/0.3.0/rhel-aeolus.repo")
-    result = cmd.getstatusoutput("yum -y install puppet")
-    if result[0] != 0:
-        sys.exit("Unable to install puppet (required for sysconfig tests)")
+        result = cmd.getstatusoutput("yum -y install puppet")
+        if result[0] != 0:
+            sys.exit("Unable to install puppet (required for sysconfig tests)")
+
     # make connection
     global sysconfig
     global connection
     connection = SysconfigSetup()
     sysconfig = connection.sysconfig
 
+
 def tearDown():
     testUtil.disconnectFromBroker(connection.connect_info)
+    global connection
+    connection.teardown()
+    global httpd_thread
+    httpd_thread.httpd.shutdown()
+    httpd_thread.httpd.server_close()
+    httpd_thread.join()
+
 
 class SysconfigSetup(object):
     def __init__(self):
-        cmd.getoutput("service matahari-broker start")
-        cmd.getoutput("service matahari-sysconfig start")
+        self.broker = testUtil.MatahariBroker()
+        self.broker.start()
         time.sleep(3)
-        self.expectedMethods = [ 'run_uri(uri, flags, scheme, key)', 'run_string(text, flags, scheme, key)', 'query(text, flags, scheme)', 'is_configured(key)' ]
-        self.connect_info = testUtil.connectToBroker('localhost','49000')
+        self.sysconfig_agent = testUtil.MatahariAgent("matahari-qmf-sysconfigd")
+        self.sysconfig_agent.start()
+        time.sleep(3)
+        self.expectedMethods = [ 'run_uri(uri, flags, scheme, key)',
+                                 'run_string(text, flags, scheme, key)',
+                                 'query(text, flags, scheme)',
+                                 'is_configured(key)' ]
+        self.connect_info = testUtil.connectToBroker('localhost','49001')
         self.sess = self.connect_info[1]
         self.reQuery()
+
+    def teardown(self):
+        self.sysconfig_agent.stop()
+        self.broker.stop()
+
     def disconnect(self):
         testUtil.disconnectFromBroker(self.connect_info)
+
     def reQuery(self):
         self.sysconfig = testUtil.findAgent(self.sess,'Sysconfig','Sysconfig',cmd.getoutput("hostname"))
         self.props = self.sysconfig.getProperties()
+
 
 class TestSysconfigApi(unittest.TestCase):
 
@@ -176,9 +222,8 @@ class TestSysconfigApi(unittest.TestCase):
         self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_special_chars_in_key(self):
-        results = wrapper('uri', testFileUrl, 0, 'puppet', testUtil.getRandomKey(5) + "'s $$$")
-        self.assertTrue( results.get('status') == 'unknown', "return code (" + str(results.get('status')) + ") not expected")
-        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'puppet', testUtil.getRandomKey(5) + "'s $$$")
+        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     # TEST - run_string()
     # ================================================================

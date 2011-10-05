@@ -136,7 +136,7 @@ class MatahariAgent(object):
 
     def start(self):
         sys.stderr.write("Starting %s ...\n" % self.agent_name)
-        self.agent = subprocess.Popen("%s --reconnect  yes --broker 127.0.0.1 "
+        self.agent = subprocess.Popen("%s --reconnect yes --broker 127.0.0.1 "
                                       "--port 49001 -vvv" % self.agent_name,
                                       shell=True, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
