@@ -104,6 +104,18 @@ ${MOCK} -v --root=$build_target --resultdir=$results \
     --shell "nosetests -v /matahari-tests/test_sysconfig_api.py"
 check_result $? ${results} "Linux" "Sysconfig API tests"
 
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --shell "nosetests -v /matahari-tests/test_resource_api.py"
+check_result $? ${results} "Linux" "Resources API tests"
+
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --shell "nosetests -v /matahari-tests/test_service_api_minimal.py"
+check_result $? ${results} "Linux" "Services API tests"
+
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --shell "nosetests -v /matahari-tests/test_network_api_minimal.py"
+check_result $? ${results} "Linux" "Network API tests"
+
 # Packages get copied to:
 #   /home/builder/matahari/public_html/dist/rpm/ 
 
