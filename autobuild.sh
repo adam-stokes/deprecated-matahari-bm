@@ -100,6 +100,10 @@ ${MOCK} -v --root=$build_target --resultdir=$results \
     --shell "nosetests -v /matahari-tests/test_host_api.py"
 check_result $? ${results} "Linux" "Host API tests"
 
+${MOCK} -v --root=$build_target --resultdir=$results \
+    --shell "nosetests -v /matahari-tests/test_sysconfig_api.py"
+check_result $? ${results} "Linux" "Sysconfig API tests"
+
 # Packages get copied to:
 #   /home/builder/matahari/public_html/dist/rpm/ 
 
