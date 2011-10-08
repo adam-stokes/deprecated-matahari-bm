@@ -35,7 +35,6 @@
 
 // Matahari error codes
 #define MATAHARI_ERROR matahari_error_quark ()
-enum { MATAHARI_AUTHENTICATION_ERROR, MATAHARI_NOT_IMPLEMENTED };
 
 GQuark
 matahari_error_quark (void);

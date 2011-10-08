@@ -68,24 +68,24 @@ class NetworkTestsSetup(object):
                 return i
         print "Error determining NIC for testing."
         sys.exit(1)
-            
+
 
 class TestNetworkApi(unittest.TestCase):
 
     # TEARDOWN
     # ================================================================
     def tearDown(self):
-        list = connection.ifconfig_nic_list() 
+        list = connection.ifconfig_nic_list()
         if connection.nic_ut not in list:
             cmd.getoutput("ifup " + connection.nic_ut)
             time.sleep(3)
-        
-    # TEST - getProperties() 
+
+    # TEST - getProperties()
     # =====================================================
     def test_hostname_property(self):
         value = connection.props.get('hostname')
-        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching") 
-     
+        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching")
+
     # TEST - list()
     # =====================================================
     def test_nic_list(self):
@@ -100,14 +100,14 @@ class TestNetworkApi(unittest.TestCase):
                 output.index(nic)
             except:
                 self.fail("nic ("+nic+") not found)")
-    
+
     # TEST - start()
     # ================================================================
     def test_nic_start(self):
         nic_ut = connection.nic_ut
         # first, make sure it is stopped
         cmd.getoutput("ifdown " + nic_ut)
-        list = connection.ifconfig_nic_list() 
+        list = connection.ifconfig_nic_list()
         if nic_ut in list:
             self.fail("pre-req error: " + nic_ut + " not stopping for start test")
         else:
@@ -116,7 +116,7 @@ class TestNetworkApi(unittest.TestCase):
             #print "OUTPUT:",strt
         # verify up
         time.sleep(3)
-        list = connection.ifconfig_nic_list() 
+        list = connection.ifconfig_nic_list()
         if nic_ut not in list:
             self.fail(nic_ut + " not stopping for start test")
 
@@ -129,15 +129,15 @@ class TestNetworkApi(unittest.TestCase):
     def test_nic_stop(self):
         nic_ut = connection.nic_ut
         cmd.getoutput("ifup " + nic_ut)
-        list = connection.ifconfig_nic_list() 
+        list = connection.ifconfig_nic_list()
         if nic_ut not in list:
             self.fail("pre-req error: " + nic_ut + " not started for stop test")
         else:
             # do test
             result = network.stop(nic_ut)
-        # verify down 
+        # verify down
         time.sleep(3)
-        list = connection.ifconfig_nic_list() 
+        list = connection.ifconfig_nic_list()
         if nic_ut in list:
             self.fail(nic_ut + " did not stop")
 

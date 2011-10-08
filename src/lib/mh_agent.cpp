@@ -263,30 +263,31 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
     struct mh_dnssrv_record *record;
     GError *error = NULL;
     int status;
-    std::string krb5_keytab(mh_options["krb5_keytab"].asString());
-    std::string krb5_interval(mh_options["krb5_interval"].asString());
-    const gchar *k5start_bin[] = {
-        "/usr/bin/k5start",
-        "-U",
-        "-f",
-        krb5_keytab.c_str(),
-        "-K",
-        krb5_interval.c_str(),
-        NULL,
-    };
 
-    mh_trace("kerberos: %s %s %s %s %s %s",
-             k5start_bin[0],
-             k5start_bin[1],
-             k5start_bin[2],
-             k5start_bin[3],
-             k5start_bin[4],
-             k5start_bin[5]);
-
-    /* Attempt to initiate k5start for credential renewal's without 
+    /* Attempt to initiate k5start for credential renewal's without
      * prompting for a password each time an agent is run
      */
     if (strcmp(amqp_options["sasl-mechanism"].asString().c_str(),"GSSAPI") == 0) {
+        std::string krb5_keytab(mh_options["krb5_keytab"].asString());
+        std::string krb5_interval(mh_options["krb5_interval"].asString());
+        const gchar *k5start_bin[] = {
+            "/usr/bin/k5start",
+            "-U",
+            "-f",
+            krb5_keytab.c_str(),
+            "-K",
+            krb5_interval.c_str(),
+            NULL,
+        };
+
+        mh_trace("kerberos: %s %s %s %s %s %s",
+                 k5start_bin[0],
+                 k5start_bin[1],
+                 k5start_bin[2],
+                 k5start_bin[3],
+                 k5start_bin[4],
+                 k5start_bin[5]);
+
         if (g_file_test(k5start_bin[0], G_FILE_TEST_IS_EXECUTABLE)) {
             mh_trace("Running k5start");
             if (!g_spawn_sync(

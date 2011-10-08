@@ -66,6 +66,8 @@ class MhApiSysconfigLinuxSuite : public CxxTest::TestSuite
         int fd = mkstemp(tmp_file);
         TS_ASSERT(fd >= 0);
 
+        mh_sysconfig_keys_dir_set("/tmp/matahari-sysconfig-keys/");
+
         // test query function
         query_result = mh_sysconfig_query(query, 0, "augeas");
         TS_ASSERT(query_result != NULL);

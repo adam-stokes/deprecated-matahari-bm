@@ -463,6 +463,14 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %{_mandir}/man8/matahari-qmf-sysconfigd.8*
 %endif
 
+%if %{with dbus}
+%attr(755, root, root) %{_sbindir}/matahari-dbus-sysconfigd
+%config %{_sysconfdir}/dbus-1/system.d/org.matahariproject.Sysconfig.conf
+%{_datadir}/dbus-1/interfaces/org.matahariproject.Sysconfig.xml
+%{_datadir}/dbus-1/system-services/org.matahariproject.Sysconfig.service
+%{_datadir}/polkit-1/actions/org.matahariproject.Sysconfig.policy
+%endif
+
 %files consoles
 %defattr(644, root, root, 755)
 %doc AUTHORS COPYING

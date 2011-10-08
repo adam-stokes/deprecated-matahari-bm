@@ -30,12 +30,13 @@
  * Global enumeration with result codes.
  */
 enum mh_result {
-    MH_RES_SUCCESS = 0,
-    MH_RES_NOT_IMPLEMENTED = -1,
-    MH_RES_INVALID_ARGS = -2,
-    MH_RES_DOWNLOAD_ERROR = -3,
-    MH_RES_BACKEND_ERROR = -4,
-    MH_RES_OTHER_ERROR = -5
+    MH_RES_SUCCESS,
+    MH_RES_NOT_IMPLEMENTED,
+    MH_RES_INVALID_ARGS,
+    MH_RES_DOWNLOAD_ERROR,
+    MH_RES_BACKEND_ERROR,
+    MH_RES_AUTHENTICATION_ERROR,
+    MH_RES_OTHER_ERROR
 };
 
 /**

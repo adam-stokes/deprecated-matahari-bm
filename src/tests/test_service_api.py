@@ -38,7 +38,7 @@ def setUp(self):
     result = cmd.getstatusoutput("yum -y install net-snmp")
     if result[0] != 0:
         sys.exit("unable to install snmp server (used for testing service control)")
-    global service 
+    global service
     global connection
     connection = ServiceTestsSetup()
     service = connection.service
@@ -67,11 +67,11 @@ class ServiceTestsSetup(object):
 
 class TestServiceApi(unittest.TestCase):
 
-    # TEST - getProperties() 
+    # TEST - getProperties()
     # =====================================================
     def test_hostname_property(self):
         value = connection.props.get('hostname')
-        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching") 
+        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching")
 
     # TEST - list()
     # =====================================================
@@ -82,11 +82,11 @@ class TestServiceApi(unittest.TestCase):
         self.assertTrue(len(api_list) == (len(dirlist)-1), "service count not mataching")
         for svc in dirlist:
             if (svc != 'functions'):
-                try: 
+                try:
                     api_list.index(svc)
                 except:
                     self.fail(str(svc) + " service missing")
-        
+
     # TEST - disable()
     # =====================================================
     def test_disable_known_service(self):
@@ -125,7 +125,7 @@ class TestServiceApi(unittest.TestCase):
 
     # TEST - stop()
     # =====================================================
-     
+
     def test_stop_running_known_service(self):
         # pre-req
         cmd.getoutput("service "+test_svc+" start")

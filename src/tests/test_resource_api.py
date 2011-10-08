@@ -41,32 +41,39 @@ def setUp(self):
     resource = connection.resource
 
 def tearDown():
-    connection.disconnect()
+    connection.teardown()
 
 class ResourceTestsSetup(object):
     def __init__(self):
-        cmd.getoutput("yum -y install resource-agent")
-        cmd.getoutput("service matahari-broker start")
-        cmd.getoutput("service matahari-service start")
-        self.expectedMethods = [ 'list_standards()', 'list_providers(standard)', 'list(standard, provider)', 'describe(standard, provider, agent)', 
-                                 'invoke(name, standard, provider, agent, action, interval, parameters, timeout, expected-rc, userdata)', 
+        self.broker = testUtil.MatahariBroker()
+        self.broker.start()
+        time.sleep(3)
+        self.service_agent = testUtil.MatahariAgent("matahari-qmf-serviced")
+        self.service_agent.start()
+        time.sleep(3)
+        self.expectedMethods = [ 'list_standards()', 'list_providers(standard)', 'list(standard, provider)', 'describe(standard, provider, agent)',
+                                 'invoke(name, standard, provider, agent, action, interval, parameters, timeout, expected-rc, userdata)',
                                  'cancel(name, action, interval, timeout)', 'fail(name, rc)' ]
-        self.connect_info = testUtil.connectToBroker('localhost','49000')
+        self.connect_info = testUtil.connectToBroker('localhost','49001')
         self.sess = self.connect_info[1]
         self.reQuery()
-    def disconnect(self):
+
+    def teardown(self):
         testUtil.disconnectFromBroker(self.connect_info)
+        self.service_agent.stop()
+        self.broker.stop()
+
     def reQuery(self):
         self.resource = testUtil.findAgent(self.sess,'service', 'Resources', cmd.getoutput('hostname'))
         self.props = self.resource.getProperties()
 
 class TestResourceApi(unittest.TestCase):
 
-    # TEST - getProperties() 
+    # TEST - getProperties()
     # =====================================================
     def test_hostname_property(self):
         value = connection.props.get('hostname')
-        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching") 
+        self.assertEquals(value, cmd.getoutput("hostname"), "hostname not matching")
 
     # TEST - fail()
     # =====================================================
@@ -81,7 +88,7 @@ class TestResourceApi(unittest.TestCase):
     # TEST - describe()
     # =====================================================
     #def test_list_standards_empty(self):
-        
+
 
 
 
@@ -95,33 +102,33 @@ class TestResourceApi(unittest.TestCase):
 #        except:
 #            m.error(str(item)+"not expected, new?")
 
-# TEST - list_standards() 
+# TEST - list_standards()
 # ================================================================
 #m.printHeader('list_standards')
 #results = resource.list_standards().outArgs['standards']
 #expected = ['ocf', 'lsb', 'windows']
 #compareList(results, expected)
 
-# TEST - list_providers() 
+# TEST - list_providers()
 # ================================================================
 #m.printHeader('list_providers')
 #results = resource.list_providers('ocf').outArgs['providers']
 #expected = ['heartbeat', 'redhat']
 #compareList(results, expected)
 
-# TEST - list() 
+# TEST - list()
 # ================================================================
 #m.printHeader('list()')
 #expected = ['AoEtarget', 'AudibleAlarm', 'CTDB', 'ClusterMon', 'Delay', 'Dummy', 'EvmsSCC', 'Evmsd', 'Filesystem', 'ICP', 'IPaddr', 'IPaddr2', 'IPsrcaddr', 'IPv6addr', 'LVM', 'LinuxSCSI', 'MailTo', 'ManageRAID', 'ManageVE', 'Pure-FTPd', 'Raid1', 'Route', 'SAPDatabase', 'SAPInstance', 'SendArp', 'ServeRAID', 'SphinxSearchDaemon', 'Squid', 'Stateful', 'SysInfo', 'VIPArip', 'VirtualDomain', 'WAS', 'WAS6', 'WinPopup', 'Xen', 'Xinetd', 'anything', 'apache', 'conntrackd', 'db2', 'drbd', 'eDir88', 'ethmonitor', 'exportfs', 'fio', 'iSCSILogicalUnit', 'iSCSITarget', 'ids', 'iscsi', 'jboss', 'lxc', 'mysql', 'mysql-proxy', 'nfsserver', 'nginx', 'oracle', 'oralsnr', 'pgsql', 'pingd', 'portblock', 'postfix', 'proftpd', 'rsyncd', 'scsi2reservation', 'sfex', 'symlink', 'syslog-ng', 'tomcat', 'vmware']
 #results = resource.list('ocf', 'heartbeat').outArgs['agents']
 #compareList(results, expected)
 
-# TEST - invoke() 
+# TEST - invoke()
 # ================================================================
 #m.printHeader('invoke()')
 #print "\033[93m[WARN]\033[0m  NO VERIFICATION"
 
-# TEST - cancel() 
+# TEST - cancel()
 # ================================================================
 #m.printHeader('cancel()')
 #print "\033[93m[WARN]\033[0m  NO VERIFICATION"
