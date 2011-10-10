@@ -1,0 +1,2 @@
+SUBSYSTEM=="virtio-ports", ATTR{name}}=="org.matahariproject.vios_proxy.0", \
+  TAG+="systemd" ENV{SYSTEMD_WANTS}="matahari-vios-proxy-guest.service"

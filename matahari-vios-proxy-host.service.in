@@ -1,0 +1,21 @@
+[Unit]
+Description=Matahari specific requirements for a Vios proxy host
+After=syslog.target
+Requires=syslog.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+NotifyAccess=all
+SysVStartPriority=85
+User=root
+Group=root
+
+EnvironmentFile=@sysconfdir@/sysconfig/matahari-vios-proxy
+
+ExecStart=/usr/bin/vios-proxy-host $VP_H_GUEST_DIR $VP_H_SERVICE_PORT
+
+# Restart options include: no, on-success, on-failure, on-abort or always
+Restart=on-failure

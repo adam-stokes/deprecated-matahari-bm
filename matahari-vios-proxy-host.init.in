@@ -1,0 +1,96 @@
+#!/bin/sh
+
+# the following is chkconfig init header
+# matahari-vios-proxy-host: Initscript for Matahari specific vios-proxy
+### BEGIN INIT INFO
+# Provides:
+# Required-Start: $local_fs matahari-broker
+# Required-Stop: $local_fs matahari-broker
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Starts and stops vios proxy host daemon
+# Description: Matahari initscript for Vios Proxy Host
+### END INIT INFO
+
+# chkconfig: - 99 01
+# description: Matahari initscript for Vios Proxy Host
+# processname: matahari-vios-proxy-host
+# pidfile: @localstatedir@/run/matahari-vios-proxy-host.pid
+#
+
+# Turn off automatic systemd redirects
+#SYSTEMCTL_SKIP_REDIRECT=1
+
+# Source function library.
+. @sysconfdir@/rc.d/init.d/functions
+
+PROCESS=vios-proxy-host
+
+RETVAL=0
+
+# Source function library.
+. @sysconfdir@/rc.d/init.d/functions
+
+if [ -f @sysconfdir@/sysconfig/matahari-vios-proxy ]; then
+    . @sysconfdir@/sysconfig/matahari
+fi
+
+start() {
+    echo -n $"Starting the $PROCESS daemon: "
+
+    daemon $PROCESS $VP_H_GUEST_DIR $VP_H_SERVICE_DIR
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$PROCESS
+}
+
+stop() {
+    echo -n $"Stopping the $PROCESS daemon: "
+
+    killproc $PROCESS
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        rm -f @localstatedir@/lock/subsys/$PROCESS
+        rm -f @localstatedir@/run/$PROCESS.pid
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading the $PROCESS configuration: "
+
+    killproc $PROCESS -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        status $PROCESS >/dev/null || $1
+        ;;
+    stop|restart|reload)
+        $1
+        ;;
+    status)
+        status $PROCESS
+        RETVAL=$?
+        ;;
+    force-reload)
+        reload
+        ;;
+    condrestart|try-restart)
+        [ -f @localstatedir@/lock/subsys/$PROCESS ] && restart || :
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+        exit 1
+        ;;
+esac
+exit $RETVAL
