@@ -104,6 +104,25 @@ Requires:	qmf > 0.7
 Optional AMQP Broker for Matahari
 %endif
 
+%package vios-proxy-host
+License:        ASL 2.0
+Summary:        Network proxy using virtioserial for QEMU host
+Group:          Applications/System
+Requires:       %{name}-broker = %{version}-%{release}
+Requires:       vios-proxy-host
+
+%description vios-proxy-host
+%{name} specific host initialization scripts
+
+%package vios-proxy-guest
+License:        ASL 2.0
+Summary:        Network proxy using virtioserial for QEMU guest
+Group:          Applications/System
+Requires:       vios-proxy-guest
+
+%description vios-proxy-guest
+%{name} specific guest initialization scripts
+
 %package lib
 License:	GPLv2+
 Summary:	C libraries used by Matahari agents
@@ -329,6 +348,46 @@ if [ "$1" -ge "1" ]; then
     /sbin/service matahari-broker condrestart >/dev/null 2>&1 || :
 fi
 
+#== Vios Proxy Host
+%post vios-proxy-host
+%if %{systemd}
+systemctl --system daemon-reload
+%endif
+/sbin/service matahari-vios-proxy-host condrestart
+
+%preun vios-proxy-host
+if [ $1 = 0 ]; then
+    /sbin/service matahari-vios-proxy-host stop >/dev/null 2>&1 || :
+%if !%{systemd}
+    chkconfig --del matahari-vios-proxy-host
+%endif
+fi
+
+%postun vios-proxy-host
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-vios-proxy-host condrestart >/dev/null 2>&1 || :
+fi
+
+#== Vios Proxy Guest
+%post vios-proxy-guest
+%if %{systemd}
+systemctl --system daemon-reload
+%endif
+/sbin/service matahari-vios-proxy-guest condrestart
+
+%preun vios-proxy-guest
+if [ $1 = 0 ]; then
+    /sbin/service matahari-vios-proxy-guest stop >/dev/null 2>&1 || :
+%if !%{systemd}
+    chkconfig --del matahari-vios-proxy-guest
+%endif
+fi
+
+%postun vios-proxy-guest
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-vios-proxy-guest condrestart >/dev/null 2>&1 || :
+fi
+
 #== Core
 
 %pre core
@@ -509,6 +568,33 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %else
 %exclude %{_sysconfdir}/matahari-broker.conf
+%endif
+
+%files vios-proxy-host
+%defattr(644, root, root, 755)
+%dir %attr(0770, root, qpidd) %{_localstatedir}/lib/%{name}/proxy
+
+%if %{systemd}
+%{_unitdir}/matahari-vios-proxy-host.service
+%endif
+
+%if %{with qmf}
+%if !%{systemd}
+%attr(755, root, root) %{_initddir}/matahari-vios-proxy-host
+%endif
+%endif
+
+%files vios-proxy-guest
+%defattr(644, root, root, 755)
+
+%if %{systemd}
+%{_unitdir}/matahari-vios-proxy-guest.service
+%endif
+
+%if %{with qmf}
+%if !%{systemd}
+%attr(755, root, root) %{_initddir}/matahari-vios-proxy-guest
+%endif
 %endif
 
 %files devel
