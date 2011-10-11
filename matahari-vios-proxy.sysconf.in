@@ -1,0 +1,3 @@
+# VIOS Proxy Host configuration
+VP_H_GUEST_DIR=/var/lib/libvirt
+VP_H_SERVICE_PORT=49000

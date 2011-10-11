@@ -31,11 +31,8 @@ RETVAL=0
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-if [ -f @sysconfdir@/sysconfig/matahari ]; then
+if [ -f @sysconfdir@/sysconfig/matahari-vios-proxy-host ]; then
     . @sysconfdir@/sysconfig/matahari
-fi
-if [ -f @sysconfdir@/sysconfig/matahari-broker ]; then
-    . @sysconfdir@/sysconfig/matahari-broker
 fi
 
 start() {

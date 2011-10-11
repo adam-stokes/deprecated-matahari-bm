@@ -126,14 +126,10 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy-host.init.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.init @ONLY)
 
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy-guest.init.in
-		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-guest.init @ONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy-host.sysconf.in
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.sysconf @ONLY)
 
   install(DIRECTORY DESTINATION ${localstatedir}/lib/matahari
-          DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-                                GROUP_READ GROUP_WRITE GROUP_EXECUTE)
-
-  install(DIRECTORY DESTINATION ${localstatedir}/lib/matahari/proxy
           DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                                 GROUP_READ GROUP_WRITE GROUP_EXECUTE)
 
@@ -166,6 +162,7 @@ else(WIN32)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.service DESTINATION ${systemdunitdir})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.service DESTINATION ${systemdunitdir})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-guest.service DESTINATION ${systemdunitdir})
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/99-matahari-guest-agent.rules DESTINATION ${sysconfdir}/udev/rules.d)
   endif(systemd_FOUND)
 
 endif(WIN32)

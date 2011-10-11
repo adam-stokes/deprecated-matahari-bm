@@ -16,10 +16,3 @@ QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf"
 # Addresses need not all be in the same format.
 #FEDERATED_BROKERS="broker1.example.com:49000, _matahari._tcp.example.com"
 
-# VIOS Proxy Host configuration
-VP_H_GUEST_DIR=/var/lib/matahari/proxy
-VP_H_SERVICE_PORT=49000
-# 
-# VIOS Proxy Guest configuration
-VP_G_HOST_DIR=/dev/virtio-ports
-VP_G_SERVICE_PORT=48999

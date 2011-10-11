@@ -1,21 +1,11 @@
 [Unit]
-Description=Matahari specific requirements for a Vios proxy guest
-After=syslog.target
-Requires=syslog.target
-
-[Install]
-WantedBy=multi-user.target
+Description=Matahari Vios Proxy Guest
+BindTo=dev-virtio\x2dports-org.matahariproject.vios_proxy.0.device
+After=dev-virtio\x2dports-org.matahariproject.vios_proxy.0.device
 
 [Service]
-Type=simple
-NotifyAccess=all
-SysVStartPriority=85
-User=root
-Group=root
+ExecStart=-/usr/bin/vios-proxy-guest
+Restart=always
+RestartSec=0
 
-EnvironmentFile=-@sysconfdir@/sysconfig/matahari-broker
-
-ExecStart=/usr/bin/vios-proxy-guest $VP_G_HOST_DIR $VP_G_SERVICE_PORT
-
-# Restart options include: no, on-success, on-failure, on-abort or always
-Restart=on-failure
+[Install]
