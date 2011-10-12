@@ -114,6 +114,16 @@ Requires:       vios-proxy-host
 %description vios-proxy-host
 %{name} specific host initialization scripts
 
+%package vios-proxy-guest
+License:        ASL 2.0
+Summary:        Network proxy using virtioserial for QEMU host
+Group:          Applications/System
+Requires:       %{name}-broker = %{version}-%{release}
+Requires:       vios-proxy-guest
+
+%description vios-proxy-guest
+%{name} specific guest initialization scripts
+
 %package lib
 License:	GPLv2+
 Summary:	C libraries used by Matahari agents
@@ -544,7 +554,7 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %files vios-proxy-host
 %defattr(644, root, root, 755)
-%config(noreplace) %{_sysconfdir}/sysconfig/matahari-vios-proxy-host
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari-vios-proxy
 
 %if %{systemd}
 %{_unitdir}/matahari-vios-proxy-host.service
@@ -559,16 +569,17 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %files vios-proxy-guest
 %defattr(644, root, root, 755)
 %{_sysconfdir}/udev/rules.d/99-matahari-guest-agent.rules
+%config(noreplace) %{_sysconfdir}/sysconfig/matahari-vios-proxy
 
 %if %{systemd}
 %{_unitdir}/matahari-vios-proxy-guest.service
 %endif
 
-#%if %{with qmf}
-#%if !%{systemd}
-#%attr(755, root, root) %{_initddir}/matahari-vios-proxy-host
-#%endif
-#%endif
+%if %{with qmf}
+%if !%{systemd}
+%attr(755, root, root) %{_initddir}/matahari-vios-proxy-guest
+%endif
+%endif
 
 %files devel
 %defattr(644, root, root, 755)

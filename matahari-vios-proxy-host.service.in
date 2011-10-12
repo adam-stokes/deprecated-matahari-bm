@@ -13,7 +13,7 @@ SysVStartPriority=85
 User=root
 Group=root
 
-EnvironmentFile=-@sysconfdir@/sysconfig/matahari-broker
+EnvironmentFile=@sysconfdir@/sysconfig/matahari-vios-proxy
 
 ExecStart=/usr/bin/vios-proxy-host $VP_H_GUEST_DIR $VP_H_SERVICE_PORT
 

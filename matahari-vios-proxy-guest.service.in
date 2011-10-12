@@ -4,7 +4,8 @@ BindTo=dev-virtio\x2dports-org.matahariproject.vios_proxy.0.device
 After=dev-virtio\x2dports-org.matahariproject.vios_proxy.0.device
 
 [Service]
-ExecStart=-/usr/bin/vios-proxy-guest
+EnvironmentFile=@sysconfdir@/sysconfig/matahari-vios-proxy
+ExecStart=-/usr/bin/vios-proxy-guest $VP_G_HOST_DIR $VP_G_SERVICE_PORT
 Restart=always
 RestartSec=0
 

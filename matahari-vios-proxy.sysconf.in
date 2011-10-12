@@ -1,3 +1,7 @@
 # VIOS Proxy Host configuration
 VP_H_GUEST_DIR=/var/lib/libvirt
 VP_H_SERVICE_PORT=49000
+
+# VIOS Proxy Guest configuration
+VP_G_HOST_DIR=/dev/virtio-ports
+VP_G_SERVICE_PORT=48999

@@ -126,8 +126,11 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy-host.init.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.init @ONLY)
 
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy-host.sysconf.in
-		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.sysconf @ONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy-guest.init.in
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-guest.init @ONLY)
+                 
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy.sysconf.in
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy.sysconf @ONLY)
 
   install(DIRECTORY DESTINATION ${localstatedir}/lib/matahari
           DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -142,6 +145,8 @@ else(WIN32)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf DESTINATION ${sysconfdir}/sysconfig RENAME matahari-broker)
 
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION ${sysconfdir})
+
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy.sysconf DESTINATION ${sysconfdir}/sysconfig RENAME matahari-vios-proxy)
 
   # Check for systemd
   include(FindPkgConfig)

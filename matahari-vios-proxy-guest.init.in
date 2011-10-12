@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # the following is chkconfig init header
-# matahari-vios-proxy-host: Initscript for Matahari specific vios-proxy
+# matahari-vios-proxy-guest: Initscript for Matahari specific vios-proxy
 ### BEGIN INIT INFO
 # Provides:
 # Required-Start: $local_fs matahari-broker
@@ -14,8 +14,8 @@
 
 # chkconfig: - 99 01
 # description: Matahari initscript for Vios Proxy Host
-# processname: matahari-vios-proxy-host
-# pidfile: @localstatedir@/run/matahari-vios-proxy-host.pid
+# processname: matahari-vios-proxy-guest
+# pidfile: @localstatedir@/run/matahari-vios-proxy-guest.pid
 #
 
 # Turn off automatic systemd redirects
@@ -24,7 +24,7 @@
 # Source function library.
 . @sysconfdir@/rc.d/init.d/functions
 
-PROCESS=vios-proxy-host
+PROCESS=vios-proxy-guest
 
 RETVAL=0
 
