@@ -151,7 +151,9 @@ Summary:	QMF agent for remote hosts
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+%ifarch i386 x86_64
 Requires:	dmidecode
+%endif
 
 %description host
 QMF agent for viewing and controlling remote hosts
