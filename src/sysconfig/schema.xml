@@ -36,7 +36,7 @@
             &lt;/itemizedlist&gt;" />
             <arg name="scheme"        dir="I"   type="sstr"    desc="File format of configuration file. Currently supported are &lt;literal&gt;puppet&lt;/literal&gt; and &lt;literal&gt;augeas&lt;/literal&gt;." />
             <arg name="key"           dir="I"   type="sstr"    desc="Key will be associated with the result of the command. The key can be used in &lt;xref linkend='Sysconfig_is_configured' /&gt;." />
-            <arg name="status"        dir="O"   type="sstr"    desc="Result of the command." />
+            <arg name="status"        dir="O"   type="sstr"    desc="Status of the call contains newline separated records. First line is 'OK' or 'FAILED'. 'FAILED' status has return code on second line. The rest of the status message is optional data that differs per scheme." />
         </method>
 
         <method name="run_string"     desc="Configure system using given configuration text. Most arguments are the same as &lt;xref linkend='Sysconfig_run_uri' /&gt;">
