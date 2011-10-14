@@ -20,9 +20,6 @@
 
 #ifdef WIN32
 #include <windows.h>
-int use_stderr = 1;
-#else
-int use_stderr = 0;
 #endif
 
 #include <iostream>
@@ -584,7 +581,11 @@ mh_should_daemonize(int code, const char *name, const char *arg, void *userdata)
         fprintf(stderr, "Error daemonizing: %s\n", strerror(errno));
         exit(1);
     }
+
+    // Don't attempt to log to the console
+    mh_enable_stderr(false);
 #endif
+
     return 0;
 }
 
@@ -603,6 +604,16 @@ qmf::AgentSession& MatahariAgent::getSession(void)
     return _impl->_agent_session;
 }
 
+static bool
+mh_hastty(void)
+{
+#ifdef WIN32
+    return true;
+#else
+    return isatty(STDERR_FILENO);
+#endif
+}
+
 int
 MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {
@@ -612,14 +623,14 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     logname << "matahari-" << proc_name;
 
     /* Set up basic logging */
-    mh_log_init(proc_name, mh_log_level, FALSE);
+    mh_log_init(proc_name, mh_log_level, mh_hastty());
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, mh_should_daemonize);
 
     OptionsMap amqp_options = mh_parse_options(proc_name, argc, argv, options);
 
 
     /* Re-initialize logging now that we've completed option processing */
-    mh_log_init(strdup(logname.str().c_str()), mh_log_level, mh_log_level > LOG_INFO);
+    mh_log_init(strdup(logname.str().c_str()), mh_log_level, mh_hastty());
 
     // Set up the cleanup handler for sigint
     signal(SIGINT, shutdown);
