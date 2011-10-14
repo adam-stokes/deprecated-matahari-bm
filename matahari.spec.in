@@ -100,6 +100,9 @@ Requires:	%{name}-core = %{version}-%{release}
 Requires:	qpid-cpp-server > 0.7
 Requires:	qpid-cpp-server-ssl > 0.7
 Requires:	qmf > 0.7
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description broker
 Optional AMQP Broker for Matahari
@@ -155,6 +158,9 @@ Requires:	%{name}-agent-lib = %{version}-%{release}
 %ifarch i386 x86_64
 Requires:	dmidecode
 %endif
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description host
 QMF agent for viewing and controlling remote hosts
@@ -165,6 +171,9 @@ Summary:	QMF agent for network devices
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 Obsoletes:	matahari-net < %{version}-%{release}
 
 %description network
@@ -176,6 +185,9 @@ Summary:	QMF agent for system services
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires(post):	chkconfig
+Requires(preun):	initscripts
+Requires(preun):	chkconfig
 
 %description service
 QMF agent for viewing and controlling system services
@@ -186,7 +198,10 @@ Summary:	QMF agent for post boot configuration services
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:   puppet
+Requires:	puppet
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description sysconfig
 QMF agent/console for providing post boot capabilities.
@@ -254,6 +269,8 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-vios-proxy-guest
 %post host
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-host
 %endif
 /sbin/service matahari-host condrestart
 
@@ -275,6 +292,8 @@ fi
 %post network
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-network
 %endif
 /sbin/service matahari-network condrestart
 
@@ -296,6 +315,8 @@ fi
 %post service
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-service
 %endif
 /sbin/service matahari-service condrestart
 
@@ -317,6 +338,8 @@ fi
 %post sysconfig
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-sysconfig
 %endif
 /sbin/service matahari-sysconfig condrestart
 
@@ -338,6 +361,8 @@ fi
 %post broker
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-broker
 %endif
 /sbin/service matahari-broker condrestart
 
