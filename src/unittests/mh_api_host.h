@@ -163,6 +163,43 @@ class MhApiHostSuite : public CxxTest::TestSuite
         infomsg.str("");
     }
 
+    void testPowerManagement(void)
+    {
+        char *original, *newProfile;
+        const char *profile;
+        GList *profiles;
+        guint len;
+
+        srand(time(NULL));
+
+        // Save the original profile
+        TS_ASSERT(mh_host_get_power_profile(&original) == MH_RES_SUCCESS);
+
+        // List all profiles
+        profiles = mh_host_list_power_profiles();
+        len = g_list_length(profiles);
+
+        // Check if at least one profile is present
+        TS_ASSERT(len > 0);
+
+        // Choose random profile
+        profile = (const char *) g_list_nth(profiles, rand() % len)->data;
+
+        // Set it
+        TS_ASSERT(mh_host_set_power_profile(profile) == MH_RES_SUCCESS);
+
+        // Check if the profile is set
+        TS_ASSERT(mh_host_get_power_profile(&newProfile) == MH_RES_SUCCESS);
+
+        TS_ASSERT(strcmp(newProfile, profile) == 0);
+
+        // Restore original profile
+        TS_ASSERT(mh_host_set_power_profile(original) == MH_RES_SUCCESS);
+
+        free(original);
+        free(newProfile);
+        g_list_free_full(profiles, free);
+    }
 };
 
 #endif

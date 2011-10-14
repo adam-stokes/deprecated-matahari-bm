@@ -33,11 +33,14 @@
 
 #include "matahari/logging.h"
 #include "matahari/host.h"
+#include "matahari/errors.h"
 #include "host_private.h"
 
 static const char CUSTOM_UUID_KEY[] = "CustomUUID";
 
 static const char REBOOT_UUID_KEY[] = "RebootUUID";
+
+#define BUFSIZE 4096
 
 const char *
 host_os_get_cpu_flags(void)
@@ -393,4 +396,206 @@ host_os_set_custom_uuid(const char *uuid)
     RegCloseKey(key);
 
     return ret;
+}
+
+static enum mh_result
+exec_command(const char *apath, char *args[], int atimeout, char **stdoutbuf,
+             char **stderrbuf)
+{
+    enum mh_result res = MH_RES_SUCCESS;
+    DWORD status = 0;
+    gint stdout_fd;
+    gint stderr_fd;
+    HANDLE phandle = NULL;
+    GError *gerr = NULL;
+
+    if (!args || !args[0])
+        return MH_RES_OTHER_ERROR;
+
+    /* convert to ms */
+    atimeout = atimeout * 1000;
+
+    mh_trace("Spawning '%s'\n", args[0]);
+    if (!g_spawn_async_with_pipes(apath, args, NULL, G_SPAWN_DO_NOT_REAP_CHILD,
+                                  NULL, NULL, (GPid *) &phandle, NULL,
+                                  &stdout_fd, &stderr_fd, &gerr)) {
+        mh_perror(LOG_ERR, "Spawn_process failed with code %d, message: %s\n",
+                  gerr->code, gerr->message);
+        return MH_RES_OTHER_ERROR;
+    }
+
+    mh_trace("Waiting for %p", (void *)phandle);
+    WaitForSingleObject(phandle, atimeout);
+
+    if (GetExitCodeProcess(phandle, &status) == 0) {
+        mh_err("Could not get exit code: %lu", GetLastError());
+        res = MH_RES_BACKEND_ERROR;
+    }
+
+    if (res == MH_RES_BACKEND_ERROR) {
+        TerminateProcess(phandle, 1);
+        mh_err("%p - timed out after %dms", (void *)phandle, atimeout);
+    }
+
+    /* Nice to log it somewhere */
+    mh_debug("Result of '%s' was %d", args[0], (int)status);
+
+    mh_trace("Child done: %p", (void *)phandle);
+
+    if (stdoutbuf) {
+        if (mh_read_from_fd(stdout_fd, stdoutbuf) < 0) {
+            mh_err("Unable to read standard output from command %s.", apath);
+            stdoutbuf = NULL;
+        } else {
+            mh_debug("stdout: %s", *stdoutbuf);
+        }
+    }
+
+    if (stderrbuf) {
+        if (mh_read_from_fd(stderr_fd, stderrbuf) < 0) {
+            mh_err("Unable to read standard error output from command %s.", apath);
+            stderrbuf = NULL;
+        } else {
+            mh_debug("stderr: %s", *stderrbuf);
+        }
+    }
+
+    _close(stdout_fd);
+    _close(stderr_fd);
+
+    g_spawn_close_pid((GPid *) phandle);
+
+    return res;
+}
+
+static gboolean
+get_profiles(GList **names, GList **guids)
+{
+    gboolean rc = FALSE;
+    int len;
+    char *stdoutbuf = NULL;
+    char *c1, *c2;
+    char *args[3] = {0};
+
+    args[0] = SYSTEM32 "\\" POWERCFG;
+    args[1] = PC_LISTPROFILES;
+    args[2] = NULL;
+
+    if (exec_command(getenv("WINDIR"), args , TIMEOUT, &stdoutbuf, NULL)
+            == MH_RES_SUCCESS && stdoutbuf) {
+        rc = TRUE;
+        len = strlen(stdoutbuf);
+        c1 = stdoutbuf;
+
+        // powercfg command returns lines with profiles, that looks like:
+        // "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)"
+        // So we will take word after "GUID: " as GUID and word in brackets
+        // as name of the profile
+        while ((c1 = strstr(c1, GUID))) {
+            c1 += strlen(GUID);
+            // c1 is now after "GUID: "
+            if (c1 - stdoutbuf < len && (c2 = strchr(c1, ' '))) {
+                // c2 points to end of uuid, put \0 there
+                *c2 = '\0';
+                // Add guid to the list
+                *guids = g_list_append(*guids, strdup(c1));
+                // Put \n back, so the string can be freed
+                *c2 = '\n';
+                // Now find name in brackets
+                if ((c1 = strchr(c2, '(')) && ++c1 - stdoutbuf < len &&
+                    (c2 = strchr(c1, ')'))) {
+                    // Append profile name to the list
+                    *c2 = '\0';
+                     *names = g_list_append(*names, strdup(c1));
+                    *c2 = ')';
+                }
+            }
+        }
+    }
+
+    if (!*names || !*guids || g_list_length(*names) != g_list_length(*guids))
+        rc = FALSE;
+
+    free(stdoutbuf);
+    return rc;
+}
+
+enum mh_result
+host_os_set_power_profile(const char *profile)
+{
+    enum mh_result res = MH_RES_SUCCESS;
+    char *guid = NULL;
+    GList *names = NULL;
+    GList *guids = NULL;
+    GList *pnames = NULL;
+    GList *pguids = NULL;
+    char *args[4] = {0};
+
+    if (!get_profiles(&names, &guids)) {
+        return MH_RES_BACKEND_ERROR;
+    }
+
+    for (pnames = g_list_first(names), pguids = g_list_first(guids);
+         pnames && pguids && !guid;
+         pnames = g_list_next(pnames), pguids = g_list_next(pguids)) {
+        if (!strcmp((char *) pnames->data, profile)) {
+            guid = strdup((char *) pguids->data);
+        }
+    }
+
+    g_list_free_full(names, free);
+    g_list_free_full(guids, free);
+
+    if (guid) {
+        args[0] = SYSTEM32 "\\" POWERCFG;
+        args[1] = PC_SETPROFILE;
+        args[2] = guid;
+        args[3] = NULL;
+        res = exec_command(getenv("WINDIR"), args, TIMEOUT, NULL, NULL);
+        free(guid);
+    } else {
+        res = MH_RES_INVALID_ARGS;
+    }
+    return res;
+}
+
+enum mh_result
+host_os_get_power_profile(char **profile)
+{
+    enum mh_result res;
+    char *stdoutbuf = NULL;
+    char *c1, *c2;
+    char *args[3] = {0};
+
+    args[0] = SYSTEM32 "\\" POWERCFG;
+    args[1] = PC_GETPROFILE;
+    args[2] = NULL;
+
+    res = exec_command(getenv("WINDIR"), args, TIMEOUT, &stdoutbuf, NULL);
+    if (res == MH_RES_SUCCESS) {
+        // Profile name is string between brackets
+        if (stdoutbuf && (c1 = strchr(stdoutbuf, '(')) &&
+                ++c1 - stdoutbuf < strlen(stdoutbuf) && (c2 = strchr(c1, ')'))) {
+            *c2 = '\0';
+            *profile = strdup(c1);
+            *c2 = ')';
+        } else {
+            res = MH_RES_BACKEND_ERROR;
+        }
+    }
+    free(stdoutbuf);
+
+    return res;
+}
+
+GList *
+host_os_list_power_profiles(void)
+{
+    GList *names = NULL;
+    GList *guids = NULL;
+
+    get_profiles(&names, &guids);
+    g_list_free_full(guids, free);
+
+    return names;
 }

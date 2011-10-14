@@ -119,6 +119,85 @@ Host_set_uuid(Matahari* matahari, const char *lifetime, const char *uuid, DBusGM
     return TRUE;
 }
 
+gboolean
+Host_set_power_profile(Matahari* matahari, const char *profile, DBusGMethodInvocation *context)
+{
+    GError *error = NULL;
+    enum mh_result res;
+
+    if (!check_authorization(HOST_BUS_NAME ".set_power_profile", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        g_error_free(error);
+        return FALSE;
+    }
+    res = mh_host_set_power_profile(profile);
+    if (res != MH_RES_SUCCESS) {
+        error = g_error_new(MATAHARI_ERROR, res, mh_result_to_str(res));
+        dbus_g_method_return_error(context, error);
+        g_error_free(error);
+        return FALSE;
+    }
+
+    dbus_g_method_return(context, 0);
+    return TRUE;
+}
+
+gboolean
+Host_get_power_profile(Matahari* matahari, DBusGMethodInvocation *context)
+{
+    char *profile = NULL;
+    GError *error = NULL;
+    enum mh_result res;
+
+    if (!check_authorization(HOST_BUS_NAME ".get_power_profile", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        g_error_free(error);
+        return FALSE;
+    }
+    res = mh_host_get_power_profile(&profile);
+    if (res != MH_RES_SUCCESS) {
+        error = g_error_new(MATAHARI_ERROR, res, mh_result_to_str(res));
+        dbus_g_method_return_error(context, error);
+        g_error_free(error);
+        return FALSE;
+    }
+    dbus_g_method_return(context, profile);
+    free(profile);
+    return TRUE;
+}
+
+gboolean
+Host_list_power_profiles(Matahari* matahari, DBusGMethodInvocation *context)
+{
+    GError *error = NULL;
+    GList *list, *plist;
+    char **profiles;
+    int i = 0;
+
+    if (!check_authorization(HOST_BUS_NAME ".list_power_profiles", &error, context)) {
+        dbus_g_method_return_error(context, error);
+        g_error_free(error);
+        return FALSE;
+    }
+    // Get the list of profiles
+    list = mh_host_list_power_profiles();
+
+    // Convert GList * with profiles to array (char **)
+    profiles = g_new(char *, g_list_length(list) + 1);
+    for (plist = g_list_first(list);
+         plist;
+         plist = g_list_next(plist)) {
+        profiles[i++] = plist->data;
+    }
+    profiles[i] = NULL; // Sentinel
+
+    dbus_g_method_return(context, profiles);
+    g_list_free_full(list, free);
+    g_free(profiles);
+    return TRUE;
+}
+
+
 /* Generated dbus stuff for host
  * MUST be after declaration of user defined functions.
  */

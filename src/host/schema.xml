@@ -90,6 +90,19 @@
             <arg name="uuid"                 dir="I"        type="sstr" />
             <arg name="rc"                   dir="O"        type="int32" />
         </method>
+
+        <method name="set_power_profile"     desc="Set power management profile">
+            <arg name="profile"              dir="I"        type="sstr" />
+            <arg name="status"               dir="O"        type="uint32" />
+        </method>
+
+        <method name="get_power_profile"     desc="Get current power management profile">
+            <arg name="profile"              dir="O"        type="sstr" />
+        </method>
+
+        <method name="list_power_profiles"   desc="List available power management profiles">
+            <arg name="profiles"             dir="O"        type="list" />
+        </method>
     </class>
 
     <event name="heartbeat" args="timestamp,sequence,hostname,uuid" />
