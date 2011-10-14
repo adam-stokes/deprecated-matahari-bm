@@ -6,4 +6,4 @@ qmf
 matahari-*
 *-dbus-glue.h
 *-dbus-properties.h
-org.matahariproject.*.xml
+org.matahariproject.xml
