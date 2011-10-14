@@ -37,7 +37,6 @@
 #include <qpid/sys/Time.h>
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
-// #include <qpid/sys/ssl/util.h>
 #include <qmf/DataAddr.h>
 #include "matahari/agent.h"
 
@@ -49,6 +48,9 @@ extern "C" {
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netdb.h>
+#ifdef MH_SSL
+#include <secmod.h>
+#endif
 #endif
 }
 
@@ -175,7 +177,8 @@ map_option(int code, const char *name, const char *arg, void *userdata)
         (*options)["servername"] = arg;
 
     } else if(strcmp(name, "port") == 0) {
-        (*options)["serverport"] = atoi(arg);
+        uint16_t port = atoi(arg);
+        (*options)["serverport"] = port;
 
     } else if(strcmp(name, "dns-srv") == 0) {
         (*options)["dns-srv"] = 1;
@@ -185,35 +188,6 @@ map_option(int code, const char *name, const char *arg, void *userdata)
     }
     return 0;
 }
-
-#ifdef MH_SSL
-static int
-ssl_option(int code, const char *name, const char *arg, void *userdata)
-{
-    qpid::sys::ssl::SslOptions *options = static_cast<qpid::sys::ssl::SslOptions*>(userdata);
-
-    if(strcmp(name, "ssl-cert-db") == 0) {
-        options->certDbPath = strdup(arg);
-        setenv("QPID_SSL_CERT_DB", arg, 1);
-        if (!g_file_test(arg, G_FILE_TEST_IS_DIR)) {
-            fprintf(stderr, "SSL Certificate database is not accessible. See --help\n");
-            exit(1);
-        }
-
-    } else if(strcmp(name, "ssl-cert-name") == 0) {
-        options->certName = strdup(arg);
-
-    } else if(strcmp(name, "ssl-cert-password-file") == 0) {
-        options->certPasswordFile = strdup(arg);
-        setenv("QPID_SSL_CERT_PASSWORD_FILE", arg, 1);
-        if (!g_file_test(arg, G_FILE_TEST_EXISTS)) {
-            fprintf(stderr, "SSL Password file is not accessible. See --help.\n");
-            exit(1);
-        }
-    }
-    return 0;
-}
-#endif /* MH_SSL */
 
 static int
 connection_option(int code, const char *name, const char *arg, void *userdata)
@@ -228,7 +202,11 @@ connection_option(int code, const char *name, const char *arg, void *userdata)
                                   strcasecmp(arg, "false") != 0);
         (*options)["reconnect"] = reconnect;
     } else {
-        (*options)[name] = arg;
+        if (arg) {
+            (*options)[name] = arg;
+        } else {
+            (*options)[name] = true;
+        }
     }
     return 0;
 }
@@ -313,10 +291,12 @@ mh_connect(OptionsMap mh_options, OptionsMap amqp_options, int retry)
 
         std::stringstream query;
 
+        query << "_matahari.";
+        query << ((mh_options["protocol"]) == "ssl" ? "_tls" : "_tcp") << ".";
         if (mh_options.count("servername")) {
-            query << "_matahari._tcp." << mh_options["servername"];
+            query << mh_options["servername"];
         } else {
-            query << "_matahari._tcp." << mh_dnsdomainname();
+            query << mh_dnsdomainname();
         }
 
         if ((cur_srv_record = srv_records = mh_dnssrv_lookup(query.str().c_str()))) {
@@ -394,6 +374,7 @@ read_environment(OptionsMap& options)
     if (!mh_strlen_zero(data)) {
         options["serverport"] = data;
     }
+
     data = getenv("KRB5_KEYTAB");
     if (!mh_strlen_zero(data)) {
         options["krb5_keytab"] = data;
@@ -407,6 +388,27 @@ read_environment(OptionsMap& options)
     } else {
         options["krb5_interval"] = "10";
     }
+
+#ifdef MH_SSL
+    data = getenv("QPID_SSL_CERT_DB");
+    if (!mh_strlen_zero(data)) {
+        options["ssl-cert-db"] = data;
+        if (!g_file_test(data, G_FILE_TEST_IS_DIR)) {
+            mh_crit("SSL Certificate database is not accessible. See --help");
+            exit(1);
+        }
+    }
+
+    data = getenv("QPID_SSL_CERT_NAME");
+    if (!mh_strlen_zero(data)) {
+        options["ssl-cert-name"] = data;
+    }
+
+    data = getenv("QPID_SSL_CERT_PASSWORD_FILE");
+    if (!mh_strlen_zero(data)) {
+        options["ssl-cert-password-file"] = data;
+    }
+#endif /* MH_SSL */
 }
 
 static void
@@ -456,10 +458,8 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
     mh_add_option('r', required_argument, "reconnect", "attempt to reconnect if the broker connection is lost", &amqp_options, connection_option);
 
 #ifdef MH_SSL
-    qpid::sys::ssl::SslOptions ssl_options;
-    mh_add_option('n', required_argument, "ssl-cert-name",          "name of the certificate to use", &ssl_options, ssl_option);
-    mh_add_option('C', required_argument, "ssl-cert-db",            "file containing the certificate database", &ssl_options, ssl_option);
-    mh_add_option('f', required_argument, "ssl-cert-password-file", "file containing the certificate password", &ssl_options, ssl_option);
+    mh_add_option('n', required_argument, "ssl-cert-name",          "name of the certificate to use", &amqp_options, connection_option);
+    mh_add_option('t', no_argument,       "use-tls",                "Use TLS/SSL encryption", &options, connection_option);
 #endif
 
 #ifdef WIN32
@@ -540,13 +540,19 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
 #endif
 
 #ifdef MH_SSL
-    if (ssl_options.certDbPath && ssl_options.certName && ssl_options.certPasswordFile) {
+    if (options.count("use-tls")) {
         options["protocol"] = "ssl";
-        qpid::sys::ssl::initNSS(ssl_options, true);
 
-    } else if (ssl_options.certDbPath || ssl_options.certName || ssl_options.certPasswordFile) {
-        fprintf(stderr, "To enable SSL, you must supply a cert name, db and password file. See --help.\n");
-        exit(1);
+        if (!options.count("ssl-cert-db")) {
+            mh_warn("To enable SSL, you must supply a certificate database");
+        }
+        if (!options.count("ssl-cert-password-file")) {
+            mh_warn("To enable SSL, you must supply a certificate password file");
+        }
+        if (!(amqp_options.count("ssl-cert-name") ||
+              options.count("ssl-cert-name"))) {
+            mh_warn("No SSL certificate name specified");
+        }
     }
 #endif
 
@@ -584,6 +590,11 @@ mh_should_daemonize(int code, const char *name, const char *arg, void *userdata)
 
     // Don't attempt to log to the console
     mh_enable_stderr(false);
+
+#ifdef MH_SSL
+    // NSS doesn't like being fork()ed.
+    SECMOD_RestartModules(PR_FALSE);
+#endif
 #endif
 
     return 0;

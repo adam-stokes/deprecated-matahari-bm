@@ -10,6 +10,15 @@ if(WIN32)
 
 else(WIN32)
    set(VARIANT "linux")
+
+   # Enable TLS/SSL support
+   add_definitions(-DMH_SSL)
+   execute_process(COMMAND nss-config --includedir
+      OUTPUT_VARIABLE NSS_INCLUDE)
+   execute_process(COMMAND nspr-config --includedir
+      OUTPUT_VARIABLE NSPR_INCLUDE)
+   include_directories(${NSS_INCLUDE} ${NSPR_INCLUDE})
+
    # DBus makes sense only on linux
    # WITH-DBUS == OFF means no DBus,
    #              TRY means autodetection

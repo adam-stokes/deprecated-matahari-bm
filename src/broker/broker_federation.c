@@ -31,7 +31,12 @@
 #include "broker_federation.h"
 
 
-#define DNS_SRV_PREFIX "_matahari._tcp."
+#define DNS_SRV_PREFIX_TCP "_matahari._tcp."
+#define DNS_SRV_PREFIX_TLS "_matahari._tls."
+
+#define IS_DNS_SRV(ADDR, TYPE) (strncmp(ADDR,                                 \
+                                        DNS_SRV_PREFIX_##TYPE,                \
+                                        strlen(DNS_SRV_PREFIX_##TYPE)) == 0)
 
 #define ROUTE_LIST(LOCAL, REMOTE) {          \
     {REMOTE, LOCAL, "amq.direct"},           \
@@ -102,7 +107,7 @@ void broker_federation_configure(void)
     mh_string_copy(peers, brokers, sizeof(peers));
 
     while ((peer = strtok_r(p ? NULL : peers, ",; ", &p)) != NULL) {
-        if (strncmp(peer, DNS_SRV_PREFIX, strlen(DNS_SRV_PREFIX)) == 0) {
+        if (IS_DNS_SRV(peer, TCP) || IS_DNS_SRV(peer, TLS)) {
             peer = broker_lookup(peer);
         }
 

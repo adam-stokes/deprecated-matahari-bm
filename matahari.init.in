@@ -47,6 +47,9 @@ start() {
     fi
 
 
+    export QPID_SSL_CERT_DB
+    export QPID_SSL_CERT_PASSWORD_FILE
+
     daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
     echo
