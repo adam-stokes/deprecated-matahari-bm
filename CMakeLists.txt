@@ -168,7 +168,7 @@ else(WIN32)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.service DESTINATION ${systemdunitdir})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.service DESTINATION ${systemdunitdir})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-guest.service DESTINATION ${systemdunitdir})
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/99-matahari-guest-agent.rules DESTINATION ${sysconfdir}/udev/rules.d)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/99-matahari-guest-agent.rules DESTINATION ${sysconfdir}/udev/rules.d)
   endif(systemd_FOUND)
 
 endif(WIN32)
