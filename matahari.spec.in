@@ -590,8 +590,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %{_libdir}/libm*.so
 %{_includedir}/matahari.h
+%{_includedir}/matahari/config.h
 %{_includedir}/matahari/logging.h
 %{_includedir}/matahari/utilities.h
+%{_includedir}/matahari/errors.h
 %{_includedir}/matahari/dnssrv.h
 %{_includedir}/matahari/host.h
 %{_includedir}/matahari/network.h

@@ -25,7 +25,7 @@
 #ifndef __MH_UTILITIES__
 #define __MH_UTILITIES__
 
-#include "config.h"
+#include "matahari/config.h"
 
 #include <stdlib.h>
 #include <sys/types.h>
