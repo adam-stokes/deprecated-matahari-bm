@@ -1,0 +1,22 @@
+group consoles consoleuser@QPID
+
+acl allow consoles create exchange name=qmf.default.direct
+acl allow consoles access exchange name=qmf.default.direct
+acl allow consoles bind exchange name=qmf.default.topic routingkey=direct-console.* 
+acl allow consoles bind exchange name=qmf.default.topic routingkey=agent.*
+acl allow consoles publish exchange name=qmf.default.topic routingkey=direct-agent.*
+acl allow consoles publish exchange name=qmf.default.topic routingkey=console.*
+acl allow consoles publish exchange name=qmf.default.direct routingkey=broker
+
+acl allow all bind exchange name=qmf.default.topic routingkey=direct-agent.*
+acl allow all bind exchange name=qmf.default.topic routingkey=console.*
+acl allow all publish exchange name=qmf.default.topic routingkey=direct-console.*
+acl allow all publish exchange name=qmf.default.topic routingkey=agent.*
+acl allow all create link
+
+acl allow all create queue
+acl allow all create exchange name=qmf.default.topic
+acl allow all access exchange name=qmf.default.topic
+acl allow all consume
+
+acl deny all all

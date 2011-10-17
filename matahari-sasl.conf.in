@@ -1,0 +1,3 @@
+mech_list: plain
+sasldb_path: @localstatedir@/lib/matahari/matahari.sasldb
+auxprop_plugin: sasldb

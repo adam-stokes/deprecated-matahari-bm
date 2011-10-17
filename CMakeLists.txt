@@ -132,6 +132,9 @@ else(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-vios-proxy.sysconf.in
 		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy.sysconf @ONLY)
 
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-sasl.conf.in
+		 ${CMAKE_CURRENT_BINARY_DIR}/matahari-sasl.conf conf @ONLY)
+
   install(DIRECTORY DESTINATION ${localstatedir}/lib/matahari
           DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                                 GROUP_READ GROUP_WRITE GROUP_EXECUTE)
@@ -147,6 +150,12 @@ else(WIN32)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf DESTINATION ${sysconfdir})
 
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy.sysconf DESTINATION ${sysconfdir}/sysconfig RENAME matahari-vios-proxy)
+ 
+  # ACL Policy
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-policy.acl DESTINATION share/matahari)
+
+  # SASL
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-sasl.conf DESTINATION ${sysconfdir}/sasl2)
 
   # Check for systemd
   include(FindPkgConfig)
