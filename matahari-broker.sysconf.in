@@ -7,8 +7,11 @@ QPIDD_OPTIONS="--config @sysconfdir@/matahari-broker.conf"
 # The following formats are allowed:
 #   Hostname and port
 #     <fqdn>:<port>
-#   DNS SRV query format ("_matahari._tcp" is REQUIRED)
+#     amqp:tcp:<fqdn>:<port>
+#     amqp:ssl:<fqdn>:<port>
+#   DNS SRV query format ("_matahari._<protocol>" is REQUIRED)
 #     _matahari._tcp.<fqdn>
+#     _matahari._tls.<fqdn>
 #
 # Note that only the first (highest priority) SRV record returned by the DNS
 # for each given query will be used.

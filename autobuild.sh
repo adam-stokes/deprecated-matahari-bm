@@ -83,9 +83,15 @@ ${MOCK} -v --root=$build_target --resultdir=$results \
     --rebuild ${PWD}/*.src.rpm
 check_result $? ${results} "Linux" "build"
 
-${MOCK} -v --root=$build_target --resultdir=$results \
-    --install $results/*.rpm
-check_result $? ${results} "Linux" "install"
+if [ "${FEDORA}" = "16" ] ; then
+    ${MOCK} -v --root=$build_target --resultdir=$results \
+        --install $(ls $results/*.rpm | grep -v vios-proxy)
+    check_result $? ${results} "Linux" "install"
+else
+    ${MOCK} -v --root=$build_target --resultdir=$results \
+        --install $results/*.rpm
+    check_result $? ${results} "Linux" "install"
+fi
 
 . src/tests/deps.sh
 ${MOCK} -v --root=$build_target --resultdir=$results \

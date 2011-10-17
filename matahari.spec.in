@@ -53,6 +53,7 @@ BuildRequires:	pcre-devel
 BuildRequires:	glib2-devel
 BuildRequires:	sigar-devel
 BuildRequires:	libcurl-devel
+BuildRequires:	nss-devel
 BuildRequires:	help2man
 BuildRequires:	augeas-devel >= 0.9.0
 
@@ -99,6 +100,9 @@ Requires:	%{name}-core = %{version}-%{release}
 Requires:	qpid-cpp-server > 0.7
 Requires:	qpid-cpp-server-ssl > 0.7
 Requires:	qmf > 0.7
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description broker
 Optional AMQP Broker for Matahari
@@ -116,7 +120,7 @@ Requires:       vios-proxy-host
 
 %package vios-proxy-guest
 License:        ASL 2.0
-Summary:        Network proxy using virtioserial for QEMU host
+Summary:        Network proxy using virtioserial for QEMU guest
 Group:          Applications/System
 Requires:       %{name}-broker = %{version}-%{release}
 Requires:       vios-proxy-guest
@@ -151,7 +155,12 @@ Summary:	QMF agent for remote hosts
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+%ifarch i386 x86_64
 Requires:	dmidecode
+%endif
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description host
 QMF agent for viewing and controlling remote hosts
@@ -162,6 +171,9 @@ Summary:	QMF agent for network devices
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 Obsoletes:	matahari-net < %{version}-%{release}
 
 %description network
@@ -173,6 +185,9 @@ Summary:	QMF agent for system services
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
+Requires(post):	chkconfig
+Requires(preun):	initscripts
+Requires(preun):	chkconfig
 
 %description service
 QMF agent for viewing and controlling system services
@@ -183,7 +198,10 @@ Summary:	QMF agent for post boot configuration services
 Group:		Applications/System
 Requires:	%{name}-lib = %{version}-%{release}
 Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:   puppet
+Requires:	puppet
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description sysconfig
 QMF agent/console for providing post boot capabilities.
@@ -234,6 +252,7 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-sysconfig-console
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-broker
 rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-vios-proxy-host
+rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-vios-proxy-guest
 %endif
 
 %post -n matahari-lib -p /sbin/ldconfig
@@ -250,6 +269,8 @@ rm -f $RPM_BUILD_ROOT/%{_sysconfdir}/rc.d/init.d/matahari-vios-proxy-host
 %post host
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-host
 %endif
 /sbin/service matahari-host condrestart
 
@@ -271,6 +292,8 @@ fi
 %post network
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-network
 %endif
 /sbin/service matahari-network condrestart
 
@@ -292,6 +315,8 @@ fi
 %post service
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-service
 %endif
 /sbin/service matahari-service condrestart
 
@@ -313,6 +338,8 @@ fi
 %post sysconfig
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-sysconfig
 %endif
 /sbin/service matahari-sysconfig condrestart
 
@@ -334,6 +361,8 @@ fi
 %post broker
 %if %{systemd}
 systemctl --system daemon-reload
+%else
+/sbin/chkconfig --add matahari-broker
 %endif
 /sbin/service matahari-broker condrestart
 
@@ -587,8 +616,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 
 %{_libdir}/libm*.so
 %{_includedir}/matahari.h
+%{_includedir}/matahari/config.h
 %{_includedir}/matahari/logging.h
 %{_includedir}/matahari/utilities.h
+%{_includedir}/matahari/errors.h
 %{_includedir}/matahari/dnssrv.h
 %{_includedir}/matahari/host.h
 %{_includedir}/matahari/network.h

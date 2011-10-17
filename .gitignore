@@ -8,6 +8,7 @@ Makefile
 build.counter
 matahari*.tbz2
 matahari*.tgz
+matahari-matahari-*
 CMakeFiles
 CMakeCache.txt
 mock
@@ -17,6 +18,7 @@ matahari-brokerd
 matahari-broker
 matahari-broker.conf
 matahari-broker.sysconf
+matahari-broker.service
 *.build
 *.check
 *.spec.sed

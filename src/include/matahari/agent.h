@@ -42,11 +42,12 @@ int required_argument = 1;
 #else
 #  include <getopt.h>
 #endif
-}
 
 // For backward compatibility
+#include "matahari/errors.h"
 #define MH_NOT_IMPLEMENTED (mh_result_to_str(MH_RES_NOT_IMPLEMENTED))
 #define MH_INVALID_ARGS (mh_result_to_str(MH_RES_INVALID_ARGS))
+}
 
 #ifndef NS_MAXDNAME
 # define NS_MAXDNAME 1025
