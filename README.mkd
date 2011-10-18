@@ -36,8 +36,10 @@ for certain pieces of functionality to work:
 1. puppet, version 2.6.6 or above, required for the sysconfig agent
 2. dmidecode, required for the host agent
 
-These packages may be available in your distribution.  In Fedora 14, they can
+These packages may be available in your distribution.  In Fedora 14 (or later), they can
 be installed via the yum command.
+For Fedora users, the script `contrib/scripts/install_deps.sh` will install the required
+packages.
 
 *Step 2* - Build Matahari
 
