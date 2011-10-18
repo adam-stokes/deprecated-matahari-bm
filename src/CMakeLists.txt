@@ -19,11 +19,7 @@ else(WIN32)
    # Enable TLS/SSL support
    add_definitions(-DMH_SSL)
    pkg_check_modules(nss REQUIRED nss)
-   execute_process(COMMAND nss-config --includedir
-      OUTPUT_VARIABLE NSS_INCLUDE)
-   execute_process(COMMAND nspr-config --includedir
-      OUTPUT_VARIABLE NSPR_INCLUDE)
-   include_directories(${NSS_INCLUDE} ${NSPR_INCLUDE})
+   include_directories(${nss_INCLUDE_DIRS})
 
    # DBus makes sense only on linux
    # WITH-DBUS == OFF means no DBus,
