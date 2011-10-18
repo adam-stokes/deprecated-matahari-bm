@@ -480,7 +480,9 @@ child_death_dispatch(int sig)
             return;
 
         } else {
-            if (errno != ECHILD) {
+            if (errno == EAGAIN) {
+                continue;
+            } else if (errno != ECHILD) {
                 mh_perror(LOG_ERR, "wait3() failed");
             }
             break;
