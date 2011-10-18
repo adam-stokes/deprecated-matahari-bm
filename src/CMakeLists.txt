@@ -1,5 +1,10 @@
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+include(FindPkgConfig)
+if(NOT PKG_CONFIG_FOUND)
+   message("pkg-config not found")
+endif(NOT PKG_CONFIG_FOUND)
+
 if(WIN32)
    set(VARIANT "windows")
    set(SUPPORT_TRACING 0)
@@ -13,6 +18,7 @@ else(WIN32)
 
    # Enable TLS/SSL support
    add_definitions(-DMH_SSL)
+   pkg_check_modules(nss REQUIRED nss)
    execute_process(COMMAND nss-config --includedir
       OUTPUT_VARIABLE NSS_INCLUDE)
    execute_process(COMMAND nspr-config --includedir
@@ -43,7 +49,6 @@ set(CONSOLE_MAN_DESC "Console for the Matahari suite of remote agents")
 
 set(DAEMON_TYPE "AGENT")
 
-include(FindPkgConfig)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include/matahari")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
@@ -63,10 +68,6 @@ check_include_files (resolv.h HAVE_RESOLV_H)
 include (CheckFunctionExists)
 check_function_exists (asprintf HAVE_ASPRINTF)
 check_function_exists (time HAVE_TIME)
-
-if(NOT PKG_CONFIG_FOUND)
-   message("pkg-config not found")
-endif(NOT PKG_CONFIG_FOUND)
 
 ## Modules
 # systemd
