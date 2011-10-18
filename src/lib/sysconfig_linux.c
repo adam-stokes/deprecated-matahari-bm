@@ -401,7 +401,7 @@ run_augeas(const char *uri, const char *data, const char *key,
     free(result_str);
     unlink(filename);
 
-    return 0;
+    return MH_RES_SUCCESS;
 #else /* HAVE_AUGEAS */
     return MH_RES_NOT_IMPLEMENTED;
 #endif /* HAVE_AUGEAS */

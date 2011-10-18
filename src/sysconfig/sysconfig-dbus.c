@@ -34,8 +34,30 @@
 #define SYSCONFIG_INTERFACE_NAME "org.matahariproject.Sysconfig"
 #define DBUS_PROPERTY_INTERAFACE_NAME "org.freedesktop.DBus.Properties"
 
+#include <stdio.h>
+
+struct AsyncCBData {
+    DBusGMethodInvocation *context;
+    char *key;
+};
+
 void result_cb(void *data, int result)
 {
+    struct AsyncCBData *asynccb = (struct AsyncCBData *) data;
+    char *status;
+    GError* error = NULL;
+
+    if (result == MH_RES_SUCCESS) {
+        status = mh_sysconfig_is_configured(asynccb->key);
+        dbus_g_method_return(asynccb->context, status);
+        free(status);
+    } else {
+        error = g_error_new(MATAHARI_ERROR, result, mh_result_to_str(result));
+        dbus_g_method_return_error(asynccb->context, error);
+        g_error_free(error);
+    }
+    free(asynccb->key);
+    free(asynccb);
 }
 
 gboolean
@@ -44,7 +66,6 @@ Sysconfig_run_uri(Matahari* matahari, const char *uri, uint flags,
                   DBusGMethodInvocation *context)
 {
     GError* error = NULL;
-    char *status;
     enum mh_result res;
 
     if (!check_authorization(SYSCONFIG_BUS_NAME ".run_uri", &error, context)) {
@@ -53,16 +74,18 @@ Sysconfig_run_uri(Matahari* matahari, const char *uri, uint flags,
         return FALSE;
     }
 
-    res = mh_sysconfig_run_uri(uri, flags, scheme, key, result_cb, NULL);
+    struct AsyncCBData *asynccb = malloc(sizeof(struct AsyncCBData));
+    asynccb->context = context;
+    asynccb->key = strdup(key);
 
-    if (res == MH_RES_SUCCESS) {
-        status = mh_sysconfig_is_configured(key);
-        dbus_g_method_return(context, status);
-        free(status);
-    } else {
-        error = g_error_new(MATAHARI_ERROR, res, "%s", mh_result_to_str(res));
+    res = mh_sysconfig_run_uri(uri, flags, scheme, key, result_cb, asynccb);
+    if (res != MH_RES_SUCCESS)
+    {
+        error = g_error_new(MATAHARI_ERROR, res, mh_result_to_str(res));
         dbus_g_method_return_error(context, error);
         g_error_free(error);
+        free(asynccb->key);
+        free(asynccb);
         return FALSE;
     }
     return TRUE;
@@ -74,7 +97,6 @@ Sysconfig_run_string(Matahari* matahari, const char *text, uint flags,
                      DBusGMethodInvocation *context)
 {
     GError* error = NULL;
-    char *status;
     enum mh_result res;
 
     if (!check_authorization(SYSCONFIG_BUS_NAME ".run_string", &error,
@@ -84,16 +106,17 @@ Sysconfig_run_string(Matahari* matahari, const char *text, uint flags,
         return FALSE;
     }
 
-    res = mh_sysconfig_run_string(text, flags, scheme, key, result_cb, NULL);
+    struct AsyncCBData *asynccb = malloc(sizeof(struct AsyncCBData));
+    asynccb->context = context;
+    asynccb->key = strdup(key);
 
-    if (res == MH_RES_SUCCESS) {
-        status = mh_sysconfig_is_configured(key);
-        dbus_g_method_return(context, status);
-        free(status);
-    } else {
-        error = g_error_new(MATAHARI_ERROR, res, "%s", mh_result_to_str(res));
+    res = mh_sysconfig_run_string(text, flags, scheme, key, result_cb, NULL);
+    if (res != MH_RES_SUCCESS) {
+        error = g_error_new(MATAHARI_ERROR, res, mh_result_to_str(res));
         dbus_g_method_return_error(context, error);
         g_error_free(error);
+        free(asynccb->key);
+        free(asynccb);
         return FALSE;
     }
     return TRUE;
