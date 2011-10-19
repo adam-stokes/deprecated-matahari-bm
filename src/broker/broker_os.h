@@ -24,8 +24,6 @@
 #ifndef MH_BROKER_OS_H
 #define MH_BROKER_OS_H
 
-#include <glib.h>
-
 /**
  * A route between two Qpid brokers.
  */
@@ -34,8 +32,8 @@ struct mh_qpid_route {
     const char *src;       /**< The route source */
     const char *exchange;  /**< The exchange */
     const char *route_key; /**< The routing key */
-    gboolean srclocal;     /**< Is this route static? */
-    gboolean aggregate;    /**< Is this route part of aggregate? */
+    int srclocal;          /**< Is this route static? */
+    int aggregate;         /**< Is this route part of aggregate? */
 };
 
 

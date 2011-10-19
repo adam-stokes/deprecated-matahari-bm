@@ -24,11 +24,13 @@
 #include <stdio.h>
 
 #include <matahari/logging.h>
+#include <matahari/utilities.h>
 
 #include "broker_os.h"
 #include "broker.h"
 
 
+MH_TRACE_INIT_DATA(mh_broker);
 uint16_t broker_get_port(void)
 {
     static uint16_t port = 0;
@@ -99,8 +101,15 @@ int main(int argc, char *argv[])
 {
     int ret = 1;
     char **arglist = broker_args(argc, argv);
+    const char *procname = "matahari-broker";
+    int mh_conf_log_level = (long int) getenv("MATAHARI_LOG_LEVEL");
 
+    if (mh_conf_log_level) {
+        mh_log_level = mh_conf_log_level;
+    }
+    
     if (arglist) {
+        mh_log_init(procname, mh_log_level, mh_hastty());
         ret = broker_os_start_broker(arglist);
 
         broker_args_free(arglist);

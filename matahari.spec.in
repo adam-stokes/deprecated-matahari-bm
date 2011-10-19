@@ -100,6 +100,7 @@ Requires:	%{name}-core = %{version}-%{release}
 Requires:	qpid-cpp-server > 0.7
 Requires:	qpid-cpp-server-ssl > 0.7
 Requires:	qmf > 0.7
+Requires:       qpid-tools
 Requires(post):	chkconfig
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
@@ -400,6 +401,26 @@ fi
 %postun vios-proxy-host
 if [ "$1" -ge "1" ]; then
     /sbin/service matahari-vios-proxy-host condrestart >/dev/null 2>&1 || :
+fi
+
+#== Vios Proxy guest
+%post vios-proxy-guest
+%if %{systemd}
+systemctl --system daemon-reload
+%endif
+/sbin/service matahari-vios-proxy-guest condrestart
+
+%preun vios-proxy-guest
+if [ $1 = 0 ]; then
+    /sbin/service matahari-vios-proxy-guest stop >/dev/null 2>&1 || :
+%if !%{systemd}
+    chkconfig --del matahari-vios-proxy-guest
+%endif
+fi
+
+%postun vios-proxy-guest
+if [ "$1" -ge "1" ]; then
+    /sbin/service matahari-vios-proxy-guest condrestart >/dev/null 2>&1 || :
 fi
 
 #== Core

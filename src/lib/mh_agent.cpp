@@ -159,8 +159,11 @@ map_option(int code, const char *name, const char *arg, void *userdata)
     OptionsMap *options = (OptionsMap*)userdata;
 
     if(strcmp(name, "verbose") == 0) {
+        int mh_config_log_level = atoi(getenv("MATAHARI_LOG_LEVEL"));
         mh_enable_stderr(1);
-        if (mh_strlen_zero(arg)) {
+        if (mh_config_log_level) {
+            mh_log_level = mh_config_log_level;
+        } else if (mh_strlen_zero(arg)) {
             mh_log_level++;
         } else {
             unsigned int val;
@@ -614,16 +617,6 @@ MatahariAgent::~MatahariAgent()
 qmf::AgentSession& MatahariAgent::getSession(void)
 {
     return _impl->_agent_session;
-}
-
-static bool
-mh_hastty(void)
-{
-#ifdef WIN32
-    return true;
-#else
-    return isatty(STDERR_FILENO);
-#endif
 }
 
 int

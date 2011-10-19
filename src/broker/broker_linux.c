@@ -24,9 +24,14 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <matahari/logging.h>
+#include <matahari/utilities.h>
+
 #include "broker_federation.h"
 #include "broker_os.h"
 
+
+MH_TRACE_INIT_DATA(mh_broker);
 
 int broker_os_start_broker(char * const args[])
 {
@@ -60,9 +65,10 @@ int broker_os_add_qpid_route_link(const char *local, const char *remote)
     char cmd[1024];
     int ret;
 
-    snprintf(cmd, sizeof(cmd), "qpid-route link add %s %s",
+    snprintf(cmd, sizeof(cmd), "qpid-route link add %s untrusted/untrusted@%s PLAIN",
              local, remote);
 
+    mh_info("Running route_link: %s", cmd);
     ret = system(cmd);
 
     if (ret < 0) {
@@ -89,7 +95,7 @@ int broker_os_add_qpid_route(const struct mh_qpid_route *route)
     ret = system(cmd);
 
     if (ret < 0) {
-        perror("system()");
+        mh_err("Failed running: %s", cmd);
     }
     return ret;
 }

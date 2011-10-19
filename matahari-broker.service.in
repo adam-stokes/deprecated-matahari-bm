@@ -1,6 +1,6 @@
 [Unit]
 Description=Matahari Broker is an AMQP broker. It receives, stores, routes and forwards messages using the AMQP protcol.
-After=syslog.target network.target
+After=syslog.target network.target matahari-vios-proxy-guest.service
 Requires=syslog.target network.target
 
 [Install]
@@ -15,6 +15,7 @@ Group=qpidd
 
 EnvironmentFile=-@sysconfdir@/sysconfig/matahari
 EnvironmentFile=-@sysconfdir@/sysconfig/matahari-broker
+EnvironmentFile=-@sysconfdir@/sysconfig/matahari-vios-proxy
 
 ExecStart=/usr/sbin/matahari-brokerd $QPIDD_OPTIONS
 

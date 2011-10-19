@@ -24,18 +24,10 @@
 #ifndef MH_BROKER_FEDERATION_H
 #define MH_BROKER_FEDERATION_H
 
-#include <glib.h>
 /**
  * Read the broker federation settings from the environment and set up broker
  * federation.
  */
 void broker_federation_configure(void);
 
-void
-mh_broker_route_free(gpointer data);
-
-GList *
-mh_add_broker_route(GList *routes, const char *local, const char *remote,
-        const char *exchange, const char *route_key, gboolean srclocal,
-        gboolean aggregate);
 #endif

@@ -32,6 +32,8 @@
 #include "broker_federation.h"
 
 
+MH_TRACE_INIT_DATA(mh_broker);
+
 #define DNS_SRV_PREFIX_TCP "_matahari._tcp."
 #define DNS_SRV_PREFIX_TLS "_matahari._tls."
 
@@ -39,11 +41,12 @@
                                         DNS_SRV_PREFIX_##TYPE,                \
                                         strlen(DNS_SRV_PREFIX_##TYPE)) == 0)
 
-GList *
-mh_add_broker_route(GList *routes, const char *local, const char *remote,
-        const char *exchange, const char *route_key, gboolean srclocal,
-        gboolean aggregate)
+static void
+mh_add_broker_route(const char *local, const char *remote,
+        const char *exchange, const char *route_key, int srclocal,
+        int aggregate)
 {
+    int ret;
     struct mh_qpid_route *route;
 
     route = malloc(sizeof(*route));
@@ -53,55 +56,37 @@ mh_add_broker_route(GList *routes, const char *local, const char *remote,
     route->route_key = route_key;
     route->srclocal = srclocal;
     route->aggregate = aggregate;
-    free(route);
 
-    return g_list_append(routes, route);
-}
-
-void
-mh_broker_route_free(gpointer data)
-{
-    struct mh_qpid_route *route = data;
-
+    mh_info("Adding routes for federated broker \"%s\"", remote);
+    ret = broker_os_add_qpid_route(route);
+    if (ret) {
+        mh_err("Failed to route %s => %s", local, remote);
+    }
     free(route);
 }
 
 static int
-broker_federate(const char *local, const char *remote, const char *route_type)
+broker_federate(const char *local, const char *remote, int route_type)
 {
-    GList *routes = NULL;
- 
     int ret = broker_os_add_qpid_route_link(local, remote);
     if (ret) {
         mh_err("Failed to link brokers \"%s\" to \"%s\"", local, remote);
         return ret;
     }
 
-    if (strcasecmp(route_type, "aggregate") == 0) {
-        mh_add_broker_route(routes, local, remote, "qmf.default.topic", "direct-agent.#", FALSE, TRUE);
-        mh_add_broker_route(routes, local, remote, "qmf.default.topic", "console.#", FALSE, TRUE);
-        mh_add_broker_route(routes, remote, local, "qmf.default.topic", "direct-console.#", TRUE, TRUE);
-        mh_add_broker_route(routes, remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE);
+    if (route_type) {
+        mh_add_broker_route(local, remote, "qmf.default.topic", "direct-agent.#", FALSE, TRUE);
+        mh_add_broker_route(local, remote, "qmf.default.topic", "console.#", FALSE, TRUE);
+        mh_add_broker_route(remote, local, "qmf.default.topic", "direct-console.#", TRUE, TRUE);
+        mh_add_broker_route(remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE);
     } else {
-        mh_add_broker_route(routes, remote, local, "amq.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(routes, local, remote, "amq.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(routes, remote, local, "qmf.default.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(routes, local, remote, "qmf.default.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(routes, remote, local, "qmf.default.topic", NULL, FALSE, FALSE);
-        mh_add_broker_route(routes, local, remote, "qmf.default.topic", NULL, FALSE, FALSE);
+        mh_add_broker_route(remote, local, "amq.direct", NULL, FALSE, FALSE);
+        mh_add_broker_route(local, remote, "amq.direct", NULL, FALSE, FALSE);
+        mh_add_broker_route(remote, local, "qmf.default.direct", NULL, FALSE, FALSE);
+        mh_add_broker_route(local, remote, "qmf.default.direct", NULL, FALSE, FALSE);
+        mh_add_broker_route(remote, local, "qmf.default.topic", NULL, FALSE, FALSE);
+        mh_add_broker_route(local, remote, "qmf.default.topic", NULL, FALSE, FALSE);
     }
-
-    mh_trace("Adding routes for federated broker \"%s\"", remote);
-    
-    for (; routes; routes = g_list_next(routes)) {
-        struct mh_qpid_route *route = routes->data;
-        ret = broker_os_add_qpid_route(route);
-        if (ret) {
-            mh_err("Failed to add federated broker \"%s\"", remote);
-            return ret;
-        }
-    }
-    g_list_free_full(routes, mh_broker_route_free);
 
     return 0;
 }
@@ -136,16 +121,17 @@ broker_federation_configure(void)
 {
     const char *brokers = getenv("FEDERATED_BROKERS");
     const char *proxy_service_port = getenv("VP_G_SERVICE_PORT");
+    const char *proxy_service_dir = getenv("VP_G_HOST_DIR");
     char local[16];
     char peers[1024];
     char *p = NULL;
     char *peer;
 
-    if (proxy_service_port) {
+    if (g_file_test(proxy_service_dir, G_FILE_TEST_IS_DIR)) {
         char remote[16];
-        snprintf(local, sizeof(local), "localhost:%s", proxy_service_port);
-        snprintf(remote, sizeof(remote), "localhost:%hu", broker_get_port());
-        broker_federate(local, remote, "aggregate");
+        snprintf(remote, sizeof(local), "localhost:%s", proxy_service_port);
+        snprintf(local, sizeof(remote), "localhost:%hu", broker_get_port());
+        broker_federate(local, remote, TRUE);
     } else if (brokers) {
         snprintf(local, sizeof(local), "localhost:%hu", broker_get_port());
 
@@ -157,7 +143,7 @@ broker_federation_configure(void)
             }
 
             if (peer) {
-                broker_federate(local, peer, NULL);
+                broker_federate(local, peer, FALSE);
             }
         }
 
