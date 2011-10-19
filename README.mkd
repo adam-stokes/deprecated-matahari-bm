@@ -29,6 +29,7 @@ Matahari has build dependencies on the following packages:
 17. augeas
 18. augeas-devel
 19. cmake
+20. nss-devel
 
 Matahari requires that the following packages are installed at runtime
 for certain pieces of functionality to work:
