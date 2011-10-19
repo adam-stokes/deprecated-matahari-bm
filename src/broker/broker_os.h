@@ -24,6 +24,8 @@
 #ifndef MH_BROKER_OS_H
 #define MH_BROKER_OS_H
 
+#include <glib.h>
+
 /**
  * A route between two Qpid brokers.
  */
@@ -31,6 +33,9 @@ struct mh_qpid_route {
     const char *dest;      /**< The route destination */
     const char *src;       /**< The route source */
     const char *exchange;  /**< The exchange */
+    const char *route_key; /**< The routing key */
+    gboolean srclocal;     /**< Is this route static? */
+    gboolean aggregate;    /**< Is this route part of aggregate? */
 };
 
 
@@ -40,6 +45,14 @@ struct mh_qpid_route {
  * must be NULL.
  */
 int broker_os_start_broker(char * const args[]);
+
+/**
+ * Add a route link between two Qpid brokers.
+ * @param local local broker to link
+ * @param remote remote broker to link
+ * @return -1 on error, otherwise the result of the external route add command.
+ */
+int broker_os_add_qpid_route_link(const char *local, const char *remote);
 
 /**
  * Add a route between two Qpid brokers.
