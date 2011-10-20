@@ -1,48 +1,62 @@
 <schema package="org.matahariproject">
 
-    <!-- Config API -->
+    <!--
+    <para>
+        API for system configuration.
+    </para>
+    -->
     <class name="Sysconfig">
-        <property name="uuid"                   type="sstr" access="RO" desc="Host UUID" />
-        <property name="hostname"               type="sstr" access="RO" desc="Hostname" index="y"/>
+        <property name="uuid"         type="sstr" access="RO"  desc="Host UUID" />
+        <property name="hostname"     type="sstr" access="RO"  desc="Hostname" index="y"/>
 
         <!--
-        <para>It is useful to have some information in a property since you can
-        filter on properties.  This property is intended to be used as a
-        flag to know whether or not initial configuration of a host has
-        been done or not.  It is not automatically set.  Once the
-        configuring entity has completed its tasks, it should set this
-        property itself.</para>
+        <para>
+            It is useful to have some information in a property since you can
+            filter on properties.  This property is intended to be used as a
+            flag to know whether or not initial configuration of a host has
+            been done or not.  It is not automatically set.  Once the
+            configuring entity has completed its tasks, it should set this
+            property itself.
+        </para>
          -->
-        <property name="is_postboot_configured" type="uint32" access="RW" desc="Set if agent is configured." />
+        <property name="is_postboot_configured" type="uint32"  access="RW" desc="Set if agent is configured." />
 
-        <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
+        <statistic name="qmf-gen-no-crash"      type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
 
-        <method name="run_uri"             desc="Send configure uri method">
-          <arg name="uri"                  dir="I" type="sstr" />
-          <arg name="flags"                dir="I" type="uint32" />
-          <arg name="scheme"               dir="I" type="sstr" />
-          <arg name="key"                  dir="I" type="sstr" />
-          <arg name="status"               dir="O"  type="sstr" />
+        <method name="run_uri"        desc="Configure system using configuration file on given uri">
+            <arg name="uri"           dir="I"   type="sstr"    desc="URI with configuration file. Same protocols as cURL are supported." />
+            <arg name="flags"         dir="I"   type="uint32"  desc="
+            &lt;itemizedlist&gt;
+                &lt;listitem&gt;
+                    &lt;para&gt;&lt;literal&gt;0&lt;/literal&gt;: no flag,&lt;/para&gt;
+                &lt;/listitem&gt;
+                &lt;listitem&gt;
+                    &lt;para&gt;&lt;literal&gt;1&lt;/literal&gt;: force execution. Use this if the &lt;literal&gt;key&lt;/literal&gt; is already set.&lt;/para&gt;
+                &lt;/listitem&gt;
+            &lt;/itemizedlist&gt;" />
+            <arg name="scheme"        dir="I"   type="sstr"    desc="File format of configuration file. Currently supported are &lt;literal&gt;puppet&lt;/literal&gt; and &lt;literal&gt;augeas&lt;/literal&gt;." />
+            <arg name="key"           dir="I"   type="sstr"    desc="Key will be associated with the result of the command. The key can be used in &lt;xref linkend='Sysconfig_is_configured' /&gt;." />
+            <arg name="status"        dir="O"   type="sstr"    desc="Result of the command." />
         </method>
 
-        <method name="run_string"          desc="Send configure text method">
-          <arg name="text"                 dir="I" type="sstr" />
-          <arg name="flags"                dir="I" type="uint32" />
-          <arg name="scheme"               dir="I" type="sstr" />
-          <arg name="key"                  dir="I" type="sstr" />
-          <arg name="status"               dir="O"  type="sstr" />
+        <method name="run_string"     desc="Configure system using given configuration text. Most arguments are the same as &lt;xref linkend='Sysconfig_run_uri' /&gt;">
+            <arg name="text"          dir="I"   type="sstr"    desc="Configuration string" />
+            <arg name="flags"         dir="I"   type="uint32"  desc="" />
+            <arg name="scheme"        dir="I"   type="sstr"    desc="" />
+            <arg name="key"           dir="I"   type="sstr"    desc="" />
+            <arg name="status"        dir="O"   type="sstr"    desc="" />
         </method>
 
-        <method name="query"               desc="Perform query lookup">
-          <arg name="text"                 dir="I" type="sstr" />
-          <arg name="flags"                dir="I" type="uint32" />
-          <arg name="scheme"               dir="I" type="sstr" />
-          <arg name="data"                 dir="O"  type="sstr" />
+        <method name="query"          desc="Perform query lookup">
+          <arg name="text"            dir="I"   type="sstr"    desc="Text of the query." />
+          <arg name="flags"           dir="I"   type="uint32"  desc="Not used now." />
+          <arg name="scheme"          dir="I"   type="sstr"    desc="Only &lt;literal&gt;augeas&lt;/literal&gt; is supported." />
+          <arg name="data"            dir="O"   type="sstr"    desc="Result of the query." />
         </method>
 
-        <method name="is_configured"       desc="Check if system is configured">
-          <arg name="key"                  dir="I" type="sstr" />
-          <arg name="status"               dir="O" type="sstr" />
+        <method name="is_configured"  desc="Check if system is configured">
+          <arg name="key"             dir="I"   type="sstr"    desc="Configuration key" />
+          <arg name="status"          dir="O"   type="sstr"    desc="Result of command associated with the key" />
         </method>
     </class>
 </schema>

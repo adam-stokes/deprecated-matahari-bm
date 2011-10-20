@@ -1,34 +1,34 @@
 <schema package="org.matahariproject">
 
-  <class name="Network">
-   <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" />
-   <property name="hostname"         type="sstr"  access="RO" desc="Hostname" index="y" />
+    <class name="Network">
+        <property name="uuid"             type="sstr"  access="RO" desc="Host UUID" />
+        <property name="hostname"         type="sstr"  access="RO" desc="Hostname" index="y" />
 
-   <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
+        <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
 
-   <method name="list"          desc="List network interfaces">
-     <arg name="iface_map"      dir="O"  type="list" />
-   </method>
-   <method name="start"         desc="Start a network interface">
-     <arg name="iface"          dir="I"  type="sstr" />
-     <arg name="status"         dir="O"  type="uint32" />
-   </method>
-   <method name="stop"          desc="Stop a network interface">
-     <arg name="iface"          dir="I"  type="sstr" />
-     <arg name="status"         dir="O"  type="uint32" />
-   </method>
-   <method name="status"        desc="Check a network interface">
-     <arg name="iface"          dir="I"  type="sstr" />
-     <arg name="status"         dir="O"  type="uint32" />
-   </method>
-   <method name="get_ip_address" desc="Obtain ip addressof a network interface">
-     <arg name="iface"          dir="I"  type="sstr" />
-     <arg name="ip"             dir="O"  type="sstr" />
-   </method>
-   <method name="get_mac_address" desc="Obtain mac address of network interface">
-     <arg name="iface"          dir="I"  type="sstr" />     
-     <arg name="mac"            dir="O"  type="sstr" />
-   </method>
- </class>
+        <method name="list"          desc="List network interfaces">
+            <arg name="iface_map"      dir="O"  type="list" />
+        </method>
+        <method name="start"         desc="Start a network interface">
+            <arg name="iface"          dir="I"  type="sstr" />
+            <arg name="status"         dir="O"  type="uint32" />
+        </method>
+        <method name="stop"          desc="Stop a network interface">
+            <arg name="iface"          dir="I"  type="sstr" />
+            <arg name="status"         dir="O"  type="uint32" />
+        </method>
+        <method name="status"        desc="Check a network interface">
+            <arg name="iface"          dir="I"  type="sstr" />
+            <arg name="status"         dir="O"  type="uint32" />
+        </method>
+        <method name="get_ip_address" desc="Obtain ip addressof a network interface">
+            <arg name="iface"          dir="I"  type="sstr" />
+            <arg name="ip"             dir="O"  type="sstr" />
+        </method>
+        <method name="get_mac_address" desc="Obtain mac address of network interface">
+            <arg name="iface"          dir="I"  type="sstr" />
+            <arg name="mac"            dir="O"  type="sstr" />
+        </method>
+    </class>
 
 </schema>

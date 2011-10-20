@@ -1,99 +1,97 @@
 <schema package="org.matahariproject">
 
- <eventArguments>
+    <eventArguments>
+        <arg name="timestamp"                type="absTime" />
+        <arg name="sequence"                 type="uint32" />
+        <arg name="hostname"                 type="sstr"/>
+        <arg name="uuid"                     type="sstr"/>
+    </eventArguments>
 
-   <arg name="timestamp" type="absTime" />
-   <arg name="sequence"  type="uint32" />
-   <arg name="hostname"  type="sstr"/>
-   <arg name="uuid"      type="sstr"/>
+    <class name="Host">
+        <property name="hostname"            type="sstr"    access="RO" desc="Hostname" index="y" />
+        <property name="uuid"                type="sstr"    access="RO" desc="Filesystem Host UUID" index="y" />
+        <property name="custom_uuid"         type="sstr"    access="RO" desc="Custom Host UUID" index="y" />
 
- </eventArguments>
+        <property name="os"                  type="sstr"    access="RO" desc="The installed operating system." />
+        <property name="arch"                type="sstr"    access="RO" desc="The host's architecture" />
+        <property name="wordsize"            type="uint8"   access="RO" desc="The wordsize for the host" unit="bit"/>
 
- <class name="Host">
-   <property name="hostname"         type="sstr"   access="RO" desc="Hostname" index="y" />
-   <property name="uuid"             type="sstr"   access="RO" desc="Filesystem Host UUID" index="y" />
-   <property name="custom_uuid"      type="sstr"   access="RO" desc="Custom Host UUID" index="y" />
+        <property name="memory"              type="uint64"  access="RO" desc="Amount of primary memory for host" unit="kb" />
+        <property name="swap"                type="uint64"  access="RO" desc="Amount of swap for host" unit="kb" />
 
-   <property name="os"               type="sstr"   access="RO" desc="The installed operating system." />
-   <property name="arch"             type="sstr"   access="RO" desc="The host's architecture" />
-   <property name="wordsize"         type="uint8"  access="RO" desc="The wordsize for the host" unit="bit"/>
+        <property name="cpu_count"           type="uint8"   access="RO" desc="The number of logical CPUs." />
+        <property name="cpu_cores"           type="uint8"   access="RO" desc="The total number of processor cores." />
+        <property name="cpu_model"           type="lstr"    access="RO" desc="The processor(s) model description." />
+        <property name="cpu_flags"           type="lstr"    access="RO" desc="The processor(s) CPU flags." />
 
-   <property name="memory"           type="uint64" access="RO" desc="Amount of primary memory for host" unit="kb" />
-   <property name="swap"             type="uint64" access="RO" desc="Amount of swap for host" unit="kb" />
+        <property name="update_interval"     type="uint32"  access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
 
-   <property name="cpu_count"        type="uint8"  access="RO" desc="The number of logical CPUs." />
-   <property name="cpu_cores"        type="uint8"  access="RO" desc="The total number of processor cores." />
-   <property name="cpu_model"        type="lstr"   access="RO" desc="The processor(s) model description." />
-   <property name="cpu_flags"        type="lstr"   access="RO" desc="The processor(s) CPU flags." />
+        <statistic name="last_updated"       type="absTime" desc="The last time a heartbeat occurred." />
+        <statistic name="sequence"           type="uint32"  desc="The heartbeat sequence number." />
 
-   <property name="update_interval"  type="uint32" access="RW" desc="The interval at which the host sends out heartbeats and refreshes statistics." unit="s"/>
+        <statistic name="free_mem"           type="uint64"  desc="Amount of available memory for host" unit="kb" />
+        <statistic name="free_swap"          type="uint64"  desc="Amount of available swap for host" unit="kb" />
 
-   <statistic name="last_updated"    type="absTime" desc="The last time a heartbeat occurred." />
-   <statistic name="sequence"        type="uint32"  desc="The heartbeat sequence number." />
+        <statistic name="load"               type="map"     desc="The one/five/fifteen minute load average" />
+        <statistic name="process_statistics" type="map"     desc="Number of processes in each possible state" />
 
-   <statistic name="free_mem"        type="uint64"  desc="Amount of available memory for host" unit="kb" />
-   <statistic name="free_swap"       type="uint64"  desc="Amount of available swap for host" unit="kb" />
+        <method name="identify"              desc="Tell the host to beep its pc speaker." />
+        <method name="shutdown"              desc="Shutdown node" />
+        <method name="reboot"                desc="Reboot node" />
 
-   <statistic name="load"                type="map"  desc="The one/five/fifteen minute load average" />
-   <statistic name="process_statistics" type="map"  desc="Number of processes in each possible state" />
+        <!--
+        <variablelist><title>Valid UUID lifetimes:</title>
 
-   <method name="identify"  desc="Tell the host to beep its pc speaker." />
-   <method name="shutdown"  desc="Shutdown node" />
-   <method name="reboot"    desc="Reboot node" />
+            <varlistentry><term><literal>Filesystem</literal></term>
+                <listitem><para>
+                    Automatically configured by the system during
+                    installation and never reset.  May be pre-populated.
+                </para></listitem>
+            </varlistentry>
 
-   <!--
-     <variablelist><title>Valid UUID lifetimes:</title>
+            <varlistentry><term><literal>Hardware</literal></term>
+                <listitem><para>
+                    UUID supplied by or generated from the underlying hardware.
+                </para></listitem>
+            </varlistentry>
 
-        <varlistentry><term><literal>Filesystem</literal></term>
-          <listitem><para>
-            Automatically configured by the system during
-            installation and never reset.  May be pre-populated.
-          </para></listitem>
-        </varlistentry>
+            <varlistentry><term><literal>Reboot</literal></term>
+                <listitem><para>
+                    Automatically (re)configured by the system whenever it boots.
+                </para></listitem>
+            </varlistentry>
 
-        <varlistentry><term><literal>Hardware</literal></term>
-          <listitem><para>
-            UUID supplied by or generated from the underlying hardware.
-          </para></listitem>
-        </varlistentry>
+            <varlistentry><term><literal>Agent</literal></term>
+                <listitem><para>
+                    Automatically (re)configured by the agent whenever it starts
+                </para></listitem>
+            </varlistentry>
 
-        <varlistentry><term><literal>Reboot</literal></term>
-          <listitem><para>
-            Automatically (re)configured by the system whenever it boots.
-          </para></listitem>
-        </varlistentry>
+            <varlistentry><term><literal>Custom</literal></term>
+                <listitem><para>
+                    Manually configured by the admin/user using the set_uuid method.
+                </para></listitem>
+            </varlistentry>
 
-        <varlistentry><term><literal>Agent</literal></term>
-          <listitem><para>
-            Automatically (re)configured by the agent whenever it starts
-          </para></listitem>
-        </varlistentry>
+        </variablelist>
+        -->
+        <method name="get_uuid"              desc="Obtain a UUID with the specified lifetime from the machine" >
+            <arg name="lifetime"             dir="I"        type="sstr" />
+            <arg name="uuid"                 dir="O"        type="sstr" />
+        </method>
 
-        <varlistentry><term><literal>Custom</literal></term>
-          <listitem><para>
-            Manually configured by the admin/user using the set_uuid method.
-          </para></listitem>
-        </varlistentry>
+        <!--
+        <para>The only valid lifetime for <literal>set_uuid</literal> is <literal>Custom</literal>.
+            Later implementations may support re-generating the 'Hardware' uuid.
+        </para>
+        -->
+        <method name="set_uuid"              desc="Set a UUID with the specified lifetime" >
+            <arg name="lifetime"             dir="I"        type="sstr" />
+            <arg name="uuid"                 dir="I"        type="sstr" />
+            <arg name="rc"                   dir="O"        type="int32" />
+        </method>
+    </class>
 
-     </variablelist>
-   -->
-   <method name="get_uuid"  desc="Obtain a UUID with the specified lifetime from the machine" >
-     <arg name="lifetime"   dir="I"  type="sstr" />
-     <arg name="uuid"       dir="O"  type="sstr" />
- </method>
-
-   <!--
-     <para>The only valid lifetime for <literal>set_uuid</literal> is <literal>Custom</literal>.
-     Later implementations may support re-generating the 'Hardware' uuid.</para>
-   -->
-   <method name="set_uuid"  desc="Set a UUID with the specified lifetime" >
-     <arg name="lifetime"   dir="I"  type="sstr" />
-     <arg name="uuid"       dir="I"  type="sstr" />
-     <arg name="rc"         dir="O"  type="int32" />
-   </method>
-
- </class>
-
- <event name="heartbeat" args="timestamp,sequence,hostname,uuid" />
+    <event name="heartbeat" args="timestamp,sequence,hostname,uuid" />
 
 </schema>
