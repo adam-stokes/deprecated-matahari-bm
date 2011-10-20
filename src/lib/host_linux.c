@@ -102,7 +102,21 @@ host_os_get_cpu_flags(void)
                           0, PCRE_NOTEMPTY, found,
                           sizeof(found) / sizeof(found[0]));
 
-        if (match != expected || strncmp(cur + found[2], "flags", 5)) {
+        if (match != expected) {
+            continue;
+        }
+
+        // PowerPC
+        if (strncmp(cur + found[2], "cpu ", 4)) {
+            char *p = strstr(cur + found[4], "altivec supported");
+            if (p && (p - cur) < found[5]) {
+                flags = strdup("altivec");
+                break;
+            }
+        }
+
+        if (strncmp(cur + found[2], "flags", 5) &&
+            strncmp(cur + found[2], "features", 8)) {
             continue;
         }
 

@@ -29,6 +29,7 @@ Matahari has build dependencies on the following packages:
 17. augeas
 18. augeas-devel
 19. cmake
+20. nss-devel
 
 Matahari requires that the following packages are installed at runtime
 for certain pieces of functionality to work:
@@ -36,8 +37,10 @@ for certain pieces of functionality to work:
 1. puppet, version 2.6.6 or above, required for the sysconfig agent
 2. dmidecode, required for the host agent
 
-These packages may be available in your distribution.  In Fedora 14, they can
+These packages may be available in your distribution.  In Fedora 14 (or later), they can
 be installed via the yum command.
+For Fedora users, the script `contrib/scripts/install_deps.sh` will install the required
+packages.
 
 *Step 2* - Build Matahari
 
