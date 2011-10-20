@@ -229,22 +229,14 @@ Services_describe(Matahari *matahari, const char *name,
     return TRUE;
 }
 
-// TODO: This and same code in service-qmf.cpp should go to the library
-const char *standards[] = {
-#ifdef __linux__
-    "ocf",
-#endif
-    "lsb",
-#ifndef WIN32
-    "windows",
-#endif
-    NULL};
-
-
 gboolean
 Resources_list_standards(Matahari *matahari, DBusGMethodInvocation *context)
 {
     GError* error = NULL;
+    gchar **list;
+    int i = 0;
+    GList *standards;
+
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".list_standards",
                              &error, context)) {
         dbus_g_method_return_error(context, error);
@@ -252,7 +244,17 @@ Resources_list_standards(Matahari *matahari, DBusGMethodInvocation *context)
         return FALSE;
     }
 
-    dbus_g_method_return(context, standards);
+    standards = resources_list_standards();
+
+    // Convert GList to (char **)
+    list = g_new(char *, g_list_length(standards) + 1);
+    for (; standards != NULL; standards = standards->next)
+        list[i++] = strdup(standards->data);
+    list[i] = NULL; // Sentinel
+
+    dbus_g_method_return(context, list);
+    g_strfreev(list);
+    g_list_free_full(standards, free);
     return TRUE;
 }
 
@@ -343,6 +345,19 @@ Resources_describe(Matahari *matahari, const char *standard,
     return TRUE;
 }
 
+struct invoke_cb_data {
+    DBusGMethodInvocation *context;
+    char *userdata;
+};
+
+void invoke_cb(svc_action_t *op)
+{
+    struct invoke_cb_data *cb_data = op->cb_data;
+    dbus_g_method_return(cb_data->context, op->rc, op->sequence, cb_data->userdata);
+    free(cb_data->userdata);
+    free(cb_data);
+}
+
 gboolean
 Resources_invoke(Matahari *matahari, const char *name, const char *standard,
                  const char *provider, const char *agent, const char *action,
@@ -350,10 +365,9 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
                  unsigned int timeout, unsigned int expected_rc,
                  const char *userdata_in, DBusGMethodInvocation *context)
 {
-    int i = 0;
     GError* error = NULL;
     svc_action_t *op = NULL;
-    gboolean valid_standard = FALSE;
+    GList *standards;
 
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".invoke",
                              &error, context)) {
@@ -363,31 +377,30 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
     }
 
     // Check if standard is valid
-    while (standards[i] != NULL)
-    {
-        if (strcmp(standard, standards[i]) == 0)
-        {
-            valid_standard = TRUE;
-            break;
-        }
-        i++;
-    }
-    if (!valid_standard) {
+    standards = resources_list_standards();
+
+    if (g_list_find_custom(standards, standard, (GCompareFunc) strcasecmp) == NULL) {
         mh_err("%s is not a known resource standard", standard);
         error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
                             "%s is not a known resource standard", standard);
         dbus_g_method_return_error(context, error);
         g_error_free(error);
+        g_list_free_full(standards, free);
         return FALSE;
     }
+    g_list_free_full(standards, free);
 
     op = resources_action_create(name, standard, provider, agent, action,
-                                 interval, timeout, parameters);
+                                 0, timeout, g_hash_table_ref(parameters));
     op->expected_rc = expected_rc;
 
-    services_action_sync(op); //TODO: maybe async
-    dbus_g_method_return(context, op->rc, op->sequence, userdata_in);
-    return TRUE;
+    struct invoke_cb_data *data = malloc(1 * sizeof(struct invoke_cb_data));
+    data->context = context;
+    data->userdata = strdup(userdata_in);
+    op->cb_data = data;
+
+    services_action_async(op, invoke_cb);
+    return FALSE;
 }
 
 gboolean
@@ -403,7 +416,7 @@ Resources_cancel(Matahari *matahari, const char *name, const char *action,
         return FALSE;
     }
 
-    services_action_cancel(name, action, interval);
+    services_action_cancel(name, action, 0);
     dbus_g_method_return(context);
     return TRUE;
 }

@@ -96,7 +96,7 @@ svc_action_t *resources_action_create(
     op->sequence = ++operations;
     asprintf(&op->id, "%s_%s_%d", name, action, interval);
 
-    if(strcmp(standard, "ocf") == 0) {
+    if(strcasecmp(standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;
 
@@ -105,9 +105,16 @@ svc_action_t *resources_action_create(
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(action);
 
-    } else if(strcmp(standard, "lsb") == 0 || strcmp(standard, "windows") == 0) {
+    } else if(strcasecmp(standard, "lsb") == 0 || strcasecmp(standard, "windows") == 0) {
         services_os_set_exec(op);
 
+    } else if(strcasecmp(standard, "systemd") == 0) {
+        char *service;
+        op->opaque->exec = strdup(SYSTEMCTL);
+        op->opaque->args[0] = strdup(SYSTEMCTL);
+        op->opaque->args[1] = strdup(action);
+        asprintf(&service, "%s.service", agent);
+        op->opaque->args[2] = service;
     } else {
         mh_err("Unknown resource standard: %s", standard);
         services_action_free(op);
@@ -253,9 +260,25 @@ services_list(void)
 }
 
 GList *
+resources_list_standards(void)
+{
+    GList *standards = NULL;
+#ifdef __linux__
+    standards = g_list_append(standards, strdup("ocf"));
+    standards = g_list_append(standards, strdup("lsb"));
+    if (g_file_test(SYSTEMCTL, G_FILE_TEST_IS_REGULAR))
+        standards = g_list_append(standards, strdup("systemd"));
+#endif
+#ifdef WIN32
+    standards = g_list_append(standards, strdup("windows"));
+#endif
+    return standards;
+}
+
+GList *
 resources_list_providers(const char *standard)
 {
-    if(strcmp(standard, "ocf") == 0) {
+    if (strcasecmp(standard, "ocf") == 0) {
         return resources_os_list_ocf_providers();
     }
 
@@ -265,12 +288,17 @@ resources_list_providers(const char *standard)
 GList *
 resources_list_agents(const char *standard, const char *provider)
 {
-    if(strcmp(standard, "ocf") == 0) {
+    if (strcasecmp(standard, "ocf") == 0) {
         return resources_os_list_ocf_agents(provider);
 
-    } else if(strcmp(standard, "lsb") == 0
-              || strcmp(standard, "windows") == 0) {
+    } else if (strcasecmp(standard, "lsb") == 0
+            || strcasecmp(standard, "windows") == 0) {
         return services_os_list();
+
+#ifdef __linux__
+    } else if (strcasecmp(standard, "systemd") == 0) {
+        return resources_os_list_systemd_services();
+#endif
     }
 
     return NULL;
