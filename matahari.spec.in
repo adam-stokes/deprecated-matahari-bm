@@ -115,6 +115,9 @@ Summary:        Network proxy using virtioserial for QEMU host
 Group:          Applications/System
 Requires:       %{name}-broker = %{version}-%{release}
 Requires:       vios-proxy-host
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description vios-proxy-host
 %{name} specific host initialization scripts
@@ -125,6 +128,9 @@ Summary:        Network proxy using virtioserial for QEMU guest
 Group:          Applications/System
 Requires:       %{name}-broker = %{version}-%{release}
 Requires:       vios-proxy-guest
+Requires(post):	chkconfig
+Requires(preun):	chkconfig
+Requires(preun):	initscripts
 
 %description vios-proxy-guest
 %{name} specific guest initialization scripts

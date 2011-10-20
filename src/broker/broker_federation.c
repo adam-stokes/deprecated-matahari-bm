@@ -41,28 +41,22 @@ MH_TRACE_INIT_DATA(mh_broker);
                                         DNS_SRV_PREFIX_##TYPE,                \
                                         strlen(DNS_SRV_PREFIX_##TYPE)) == 0)
 
-static void
-mh_add_broker_route(const char *local, const char *remote,
+static int
+broker_add_route(const char *local, const char *remote,
         const char *exchange, const char *route_key, int srclocal,
         int aggregate)
 {
     int ret;
-    struct mh_qpid_route *route;
-
-    route = malloc(sizeof(*route));
-    route->src = local;
-    route->dest = remote;
-    route->exchange = exchange;
-    route->route_key = route_key;
-    route->srclocal = srclocal;
-    route->aggregate = aggregate;
+    struct mh_qpid_route route[] = {
+        { local, remote, exchange, route_key, srclocal, aggregate }
+    };
 
     mh_info("Adding routes for federated broker \"%s\"", remote);
     ret = broker_os_add_qpid_route(route);
     if (ret) {
         mh_err("Failed to route %s => %s", local, remote);
     }
-    free(route);
+    return ret;
 }
 
 static int
@@ -75,17 +69,21 @@ broker_federate(const char *local, const char *remote, int route_type)
     }
 
     if (route_type) {
-        mh_add_broker_route(local, remote, "qmf.default.topic", "direct-agent.#", FALSE, TRUE);
-        mh_add_broker_route(local, remote, "qmf.default.topic", "console.#", FALSE, TRUE);
-        mh_add_broker_route(remote, local, "qmf.default.topic", "direct-console.#", TRUE, TRUE);
-        mh_add_broker_route(remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE);
+        if ((broker_add_route(local, remote, "qmf.default.topic", "direct-agent.#", FALSE, TRUE) ||
+             broker_add_route(local, remote, "qmf.default.topic", "console.#", FALSE, TRUE) ||
+             broker_add_route(remote, local, "qmf.default.topic", "direct-console.#", TRUE, TRUE) ||
+             broker_add_route(remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE)) < 0) {
+            return ret;
+        }
     } else {
-        mh_add_broker_route(remote, local, "amq.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(local, remote, "amq.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(remote, local, "qmf.default.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(local, remote, "qmf.default.direct", NULL, FALSE, FALSE);
-        mh_add_broker_route(remote, local, "qmf.default.topic", NULL, FALSE, FALSE);
-        mh_add_broker_route(local, remote, "qmf.default.topic", NULL, FALSE, FALSE);
+        if ((broker_add_route(remote, local, "amq.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(local, remote, "amq.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(remote, local, "qmf.default.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(local, remote, "qmf.default.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(remote, local, "qmf.default.topic", NULL, FALSE, FALSE) ||
+             broker_add_route(local, remote, "qmf.default.topic", NULL, FALSE, FALSE)) < 0) {
+            return ret;
+        }
     }
 
     return 0;

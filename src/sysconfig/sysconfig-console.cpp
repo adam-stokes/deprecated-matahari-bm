@@ -67,6 +67,8 @@ int main(int argc, char **argv)
     connection = mh_connect(options, amqp_options, TRUE);
     connection.open();
 
+    sessionOptions = "{strict-security:True}";
+
     ConsoleSession session(connection, sessionOptions);
     // Only filter connecting agents under matahariproject.org vendor and Config product
     session.setAgentFilter("[and, [eq, _vendor, [quote, 'matahariproject.org']], [eq, _product, [quote, 'Sysconfig']]]");
