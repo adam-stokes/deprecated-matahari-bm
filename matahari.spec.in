@@ -20,54 +20,54 @@
 %global mh_release %{specversion}
 %endif
 
-Name:		matahari
-Version:	#MATAHARI_VERSION#
-Release:	%{mh_release}%{?dist}
-Summary:	Matahari QMF Agents for Linux guests
+Name:           matahari
+Version:        #MATAHARI_VERSION#
+Release:        %{mh_release}%{?dist}
+Summary:        Matahari QMF Agents for Linux guests
 
-Group:		Applications/System
-License:	GPLv2
-URL:		http://matahariproject.org
+Group:          Applications/System
+License:        GPLv2
+URL:            http://matahariproject.org
 
 # wget --no-check-certificate -O matahari-matahari-{upstream_version}.tgz https://github.com/matahari/matahari/tarball/{upstream_version}
-Source0:	matahari-matahari-%{upstream_version}.tgz
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Source0:        matahari-matahari-%{upstream_version}.tgz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 # NOTE: The host API uses dbus for the machine uuid
-Requires:	dbus
-Requires:	qmf > 0.7
-Requires:	pcre
+Requires:       dbus
+Requires:       qmf > 0.7
+Requires:       pcre
 
-Requires:	%{name}-core = %{version}-%{release}
-Requires:	%{name}-consoles = %{version}-%{release}
-Requires:	%{name}-broker = %{version}-%{release}
-Requires:	%{name}-host = %{version}-%{release}
-Requires:	%{name}-network = %{version}-%{release}
-Requires:	%{name}-service = %{version}-%{release}
-Requires:	%{name}-sysconfig = %{version}-%{release}
+Requires:       %{name}-core = %{version}-%{release}
+Requires:       %{name}-consoles = %{version}-%{release}
+Requires:       %{name}-broker = %{version}-%{release}
+Requires:       %{name}-host = %{version}-%{release}
+Requires:       %{name}-network = %{version}-%{release}
+Requires:       %{name}-service = %{version}-%{release}
+Requires:       %{name}-sysconfig = %{version}-%{release}
 
-BuildRequires:	cmake
-BuildRequires:	libuuid-devel
-BuildRequires:	gcc-c++
-BuildRequires:	pcre-devel
-BuildRequires:	glib2-devel
-BuildRequires:	sigar-devel
-BuildRequires:	libcurl-devel
-BuildRequires:	nss-devel
-BuildRequires:	help2man
-BuildRequires:	augeas-devel >= 0.9.0
+BuildRequires:  cmake
+BuildRequires:  libuuid-devel
+BuildRequires:  gcc-c++
+BuildRequires:  pcre-devel
+BuildRequires:  glib2-devel
+BuildRequires:  sigar-devel
+BuildRequires:  libcurl-devel
+BuildRequires:  nss-devel
+BuildRequires:  help2man
+BuildRequires:  augeas-devel >= 0.9.0
 
 %if %{with qmf}
-BuildRequires:	qpid-cpp-client-devel > 0.7
-BuildRequires:	qpid-qmf-devel > 0.7
+BuildRequires:  qpid-cpp-client-devel > 0.7
+BuildRequires:  qpid-qmf-devel > 0.7
 %endif
 
 %if %{with dbus}
-BuildRequires:	dbus-devel dbus-glib-devel polkit-devel libxslt
+BuildRequires:  dbus-devel dbus-glib-devel polkit-devel libxslt
 %endif
 
 %if %{defined run_unit_tests}
-BuildRequires:	cxxtest
+BuildRequires:  cxxtest
 %endif
 
 %description
@@ -84,25 +84,25 @@ as a set of objects with properties and methods.
 
 
 %package core
-License:	GPLv2+
-Summary:	Core files for Matahari
-Group:		Applications/System
+License:        GPLv2+
+Summary:        Core files for Matahari
+Group:          Applications/System
 
 %description core
 Core files for Matahari
 
 %if %{with qmf}
 %package broker
-License:	GPLv2+
-Summary:	Optional AMQP Broker for Matahari
-Group:		Applications/System
-Requires:	%{name}-core = %{version}-%{release}
-Requires:	qpid-cpp-server > 0.7
-Requires:	qpid-cpp-server-ssl > 0.7
-Requires:	qmf > 0.7
-Requires(post):	chkconfig
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
+License:        GPLv2+
+Summary:        Optional AMQP Broker for Matahari
+Group:          Applications/System
+Requires:       %{name}-core = %{version}-%{release}
+Requires:       qpid-cpp-server > 0.7
+Requires:       qpid-cpp-server-ssl > 0.7
+Requires:       qmf > 0.7
+Requires(post): chkconfig
+Requires(preun):chkconfig
+Requires(preun):initscripts
 
 %description broker
 Optional AMQP Broker for Matahari
@@ -129,103 +129,103 @@ Requires:       vios-proxy-guest
 %{name} specific guest initialization scripts
 
 %package lib
-License:	GPLv2+
-Summary:	C libraries used by Matahari agents
-Group:		Applications/System
-Requires:	%{name}-core = %{version}-%{release}
+License:        GPLv2+
+Summary:        C libraries used by Matahari agents
+Group:          Applications/System
+Requires:       %{name}-core = %{version}-%{release}
 
 %description lib
 C libraries used by Matahari agents
 
 %package agent-lib
-License:	GPLv2+
-Summary:	C++ library used by Matahari agents
-Group:		Applications/System
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	qpid-cpp-client-ssl > 0.7
-Requires(pre):	shadow-utils
+License:        GPLv2+
+Summary:        C++ library used by Matahari agents
+Group:          Applications/System
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       qpid-cpp-client-ssl > 0.7
+Requires(pre):  shadow-utils
 Requires:       kstart
 
 %description agent-lib
 C++ library containing the base class for Matahari agents
 
 %package host
-License:	GPLv2+
-Summary:	QMF agent for remote hosts
-Group:		Applications/System
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
+License:        GPLv2+
+Summary:        QMF agent for remote hosts
+Group:          Applications/System
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-agent-lib = %{version}-%{release}
 %ifarch i386 x86_64
-Requires:	dmidecode
+Requires:       dmidecode
 %endif
-Requires(post):	chkconfig
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
+Requires(post): chkconfig
+Requires(preun):chkconfig
+Requires(preun):initscripts
 
 %description host
 QMF agent for viewing and controlling remote hosts
 
 %package network
-License:	GPLv2+
-Summary:	QMF agent for network devices
-Group:		Applications/System
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires(post):	chkconfig
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
-Obsoletes:	matahari-net < %{version}-%{release}
+License:        GPLv2+
+Summary:        QMF agent for network devices
+Group:          Applications/System
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-agent-lib = %{version}-%{release}
+Requires(post): chkconfig
+Requires(preun):chkconfig
+Requires(preun):initscripts
+Obsoletes:      matahari-net < %{version}-%{release}
 
 %description network
 QMF agent for viewing and controlling network devices
 
 %package service
-License:	GPLv2+
-Summary:	QMF agent for system services
-Group:		Applications/System
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires(post):	chkconfig
-Requires(preun):	initscripts
-Requires(preun):	chkconfig
+License:        GPLv2+
+Summary:        QMF agent for system services
+Group:          Applications/System
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-agent-lib = %{version}-%{release}
+Requires(post): chkconfig
+Requires(preun):initscripts
+Requires(preun):chkconfig
 
 %description service
 QMF agent for viewing and controlling system services
 
 %package sysconfig
-License:	GPLv2+
-Summary:	QMF agent for post boot configuration services
-Group:		Applications/System
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:	puppet
-Requires(post):	chkconfig
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
+License:        GPLv2+
+Summary:        QMF agent for post boot configuration services
+Group:          Applications/System
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-agent-lib = %{version}-%{release}
+Requires:       puppet
+Requires(post): chkconfig
+Requires(preun):chkconfig
+Requires(preun):initscripts
 
 %description sysconfig
 QMF agent/console for providing post boot capabilities.
 
 %package devel
-License:	GPLv2+
-Summary:	Matahari development package
-Group:		Development/Libraries
-Requires:	%{name} = %{version}-%{release}
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
-Requires:	qpid-cpp-client-devel > 0.7
-Requires:	qmf-devel > 0.7
-Requires:	glib2-devel
+License:        GPLv2+
+Summary:        Matahari development package
+Group:          Development/Libraries
+Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-agent-lib = %{version}-%{release}
+Requires:       qpid-cpp-client-devel > 0.7
+Requires:       qmf-devel > 0.7
+Requires:       glib2-devel
 
 %description devel
 Headers and shared libraries for developing Matahari agents.
 
 %package consoles
-License:	GPLv2+
-Summary:	QMF console for monitoring various agents
-Group:		Applications/System
-Requires:	%{name}-lib = %{version}-%{release}
-Requires:	%{name}-agent-lib = %{version}-%{release}
+License:        GPLv2+
+Summary:        QMF console for monitoring various agents
+Group:          Applications/System
+Requires:       %{name}-lib = %{version}-%{release}
+Requires:       %{name}-agent-lib = %{version}-%{release}
 
 %description consoles
 QMF console for monitoring various agents
