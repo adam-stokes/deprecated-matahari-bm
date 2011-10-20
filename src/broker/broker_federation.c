@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <glib.h>
 
 #include <matahari/dnssrv.h>
 #include <matahari/utilities.h>
@@ -38,35 +39,56 @@
                                         DNS_SRV_PREFIX_##TYPE,                \
                                         strlen(DNS_SRV_PREFIX_##TYPE)) == 0)
 
-#define ROUTE_LIST(LOCAL, REMOTE) {          \
-    {REMOTE, LOCAL, "amq.direct"},           \
-    {LOCAL, REMOTE, "amq.direct"},           \
-    {REMOTE, LOCAL, "qmf.default.direct"},   \
-    {LOCAL, REMOTE, "qmf.default.direct"},   \
-    {REMOTE, LOCAL, "qmf.default.topic"},    \
-    {LOCAL, REMOTE, "qmf.default.topic"}     \
+static int
+broker_add_route(const char *local, const char *remote,
+        const char *exchange, const char *route_key, int srclocal,
+        int aggregate)
+{
+    int ret;
+    struct mh_qpid_route route[] = {
+        { local, remote, exchange, route_key, srclocal, aggregate }
+    };
+
+    mh_info("Adding routes for federated broker \"%s\"", remote);
+    ret = broker_os_add_qpid_route(route);
+    if (ret) {
+        mh_err("Failed to route %s => %s", local, remote);
+    }
+    return ret;
 }
 
-
-static int broker_federate(const char *local, const char *remote)
+static int
+broker_federate(const char *local, const char *remote, int route_type)
 {
-    int i;
-    struct mh_qpid_route routes[] = ROUTE_LIST(local, remote);
+    int ret = broker_os_add_qpid_route_link(local, remote);
+    if (ret) {
+        mh_err("Failed to link brokers \"%s\" to \"%s\"", local, remote);
+        return ret;
+    }
 
-    mh_trace("Adding routes for federated broker \"%s\"", remote);
-
-    for (i = 0; i < DIMOF(routes); i++) {
-        int ret = broker_os_add_qpid_route(&routes[i]);
-        if (ret) {
-            mh_err("Failed to add federated broker \"%s\"", remote);
-            return ret;
+    if (route_type) {
+        if ((broker_add_route(local, remote, "qmf.default.topic", "direct-agent.#", FALSE, TRUE) ||
+             broker_add_route(local, remote, "qmf.default.topic", "console.#", FALSE, TRUE) ||
+             broker_add_route(remote, local, "qmf.default.topic", "direct-console.#", TRUE, TRUE) ||
+             broker_add_route(remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE)) > 0) {
+            return 1;
+        }
+    } else {
+        if ((broker_add_route(remote, local, "amq.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(local, remote, "amq.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(remote, local, "qmf.default.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(local, remote, "qmf.default.direct", NULL, FALSE, FALSE) ||
+             broker_add_route(remote, local, "qmf.default.topic", NULL, FALSE, FALSE) ||
+             broker_add_route(local, remote, "qmf.default.topic", NULL, FALSE, FALSE)) > 0) {
+            return 1;
         }
     }
 
     return 0;
 }
 
-static char *broker_lookup(const char *query)
+static char *
+broker_lookup(const char *query)
 {
 #ifdef HAVE_RESOLV_H
     static char broker[1025 + 6];
@@ -90,30 +112,39 @@ static char *broker_lookup(const char *query)
     return NULL;
 }
 
-void broker_federation_configure(void)
+void
+broker_federation_configure(void)
 {
     const char *brokers = getenv("FEDERATED_BROKERS");
+    const char *proxy_service_port = getenv("VP_G_SERVICE_PORT");
+    const char *proxy_service_dir = getenv("VP_G_HOST_DIR");
     char local[16];
     char peers[1024];
     char *p = NULL;
     char *peer;
 
-    if (!brokers) {
+    if (g_file_test(proxy_service_dir, G_FILE_TEST_IS_DIR)) {
+        char remote[16];
+        snprintf(remote, sizeof(local), "localhost:%s", proxy_service_port);
+        snprintf(local, sizeof(remote), "localhost:%hu", broker_get_port());
+        broker_federate(local, remote, TRUE);
+    } else if (brokers) {
+        snprintf(local, sizeof(local), "localhost:%hu", broker_get_port());
+
+        mh_string_copy(peers, brokers, sizeof(peers));
+
+        while ((peer = strtok_r(p ? NULL : peers, ",; ", &p)) != NULL) {
+            if (IS_DNS_SRV(peer, TCP) || IS_DNS_SRV(peer, TLS)) {
+                peer = broker_lookup(peer);
+            }
+
+            if (peer) {
+                broker_federate(local, peer, FALSE);
+            }
+        }
+
+    } else {
         return;
-    }
-
-    snprintf(local, sizeof(local), "localhost:%hu", broker_get_port());
-
-    mh_string_copy(peers, brokers, sizeof(peers));
-
-    while ((peer = strtok_r(p ? NULL : peers, ",; ", &p)) != NULL) {
-        if (IS_DNS_SRV(peer, TCP) || IS_DNS_SRV(peer, TLS)) {
-            peer = broker_lookup(peer);
-        }
-
-        if (peer) {
-            broker_federate(local, peer);
-        }
     }
 }
 

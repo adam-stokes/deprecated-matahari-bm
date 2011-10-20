@@ -449,7 +449,7 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                 "specify broker host name", &options, map_option);
     mh_add_option('D', no_argument,       "dns-srv",                "interpret the value of --broker as a domain name for DNS SRV lookups", &options, map_option);
-    mh_add_option('p', required_argument, "port",                   "specify broker ", &options, map_option);
+    mh_add_option('p', required_argument, "port",                   "specify broker port", &options, map_option);
     mh_add_option('v', no_argument,       "verbose",                "Increase the log level", NULL, map_option);
 
     mh_add_option('u', required_argument, "username",  "username to use for authentication to the broker", &amqp_options, connection_option);

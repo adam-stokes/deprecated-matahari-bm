@@ -27,6 +27,7 @@
 # Required-Stop: $local_fs
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
+# Should-Start: matahari-vios-proxy-guest
 # Short-Description: start or stop matahari broker
 # Description: Matahari Broker is an AMQP broker. It receives, stores, routes and forwards messages using the AMQP protcol.
 ### END INIT INFO
@@ -51,6 +52,10 @@ if [ -f @sysconfdir@/sysconfig/matahari ]; then
 fi
 if [ -f @sysconfdir@/sysconfig/matahari-broker ]; then
     . @sysconfdir@/sysconfig/matahari-broker
+fi
+
+if [ -f @sysconfdir@/sysconfig/matahari-vios-proxy ]; then
+    . @sysconfdir@/sysconfig/matahari-vios-proxy
 fi
 
 RETVAL=0
