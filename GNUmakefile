@@ -75,12 +75,12 @@ check-mock:
 	make mock mock-win
 
 export:
-	rm -f $(TARFILE).tgz
+	rm -f $(TARFILE)
 	git archive --prefix=$(TARPREFIX)/ $(TAG) | tar x
 	cd $(TARPREFIX) && \
 		$(MAKE) linux.build REQUIRE_HELP2MAN=1 && \
 		for n in `find linux.build/ -iname '*.8.gz'` ; do cp $$n $${n:12}; done && \
-		cd .. && rm -rf linux.build
+		rm -rf linux.build && cd ..
 	tar czvf $(TARFILE) $(TARPREFIX)
 	echo `date`: Rebuilt $(TARFILE) from $(TAG)
 

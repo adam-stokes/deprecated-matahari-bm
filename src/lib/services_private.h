@@ -21,7 +21,7 @@
 
 struct svc_action_private_s {
     char *exec;
-    char *args[4];
+    char *args[7];
 
     guint repeat_timer;
     void (*callback)(svc_action_t *op);
@@ -50,5 +50,8 @@ resources_os_list_ocf_providers(void);
 
 GList *
 resources_os_list_ocf_agents(const char *provider);
+
+GList *
+resources_os_list_systemd_services(void);
 
 #endif /* __MH_SERVICES_PRIVATE_H__ */

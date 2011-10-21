@@ -33,6 +33,8 @@
 #define OCF_ROOT "/usr/lib/ocf"
 #define LSB_ROOT "/etc/init.d"
 
+#define SYSTEMCTL "/bin/systemctl"
+
 enum lsb_exitcode {
     LSB_OK = 0,
     LSB_UNKNOWN_ERROR = 1,
@@ -179,6 +181,15 @@ resources_list_providers(const char *standard);
  */
 GList *
 resources_list_agents(const char *standard, const char *provider);
+
+/**
+ * Get list of available standards
+ *
+ * \return a list of resource standards. The list items are char *. This list _must_
+ *         be destroyed using g_list_free_full(list, free).
+ */
+GList *
+resources_list_standards(void);
 
 svc_action_t *
 services_action_create(const char *name, const char *action,

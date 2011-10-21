@@ -24,6 +24,7 @@
 
 #include "matahari/dbus_common.h"
 #include "matahari/logging.h"
+#include "matahari/mainloop.h"
 #include "matahari/errors.h"
 #include <glib/gi18n.h>
 
@@ -207,6 +208,7 @@ run_dbus_server(char *bus_name, char *object_path)
         return 1;
     }
 
+    mainloop_track_children(G_PRIORITY_DEFAULT);
     g_main_loop_run(loop);
     g_main_loop_unref(loop);
     g_object_unref(obj);

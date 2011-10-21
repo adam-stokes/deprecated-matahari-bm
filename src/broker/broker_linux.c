@@ -68,7 +68,30 @@ int broker_os_add_qpid_route_link(const char *local, const char *remote)
     snprintf(cmd, sizeof(cmd), "qpid-route link add %s untrusted/untrusted@%s PLAIN",
              local, remote);
 
-    mh_info("Running route_link: %s", cmd);
+    ret = system(cmd);
+
+    if (ret < 0) {
+        perror("system()");
+    }
+    return ret;
+}
+
+int broker_os_add_qpid_route(const struct mh_qpid_route *route)
+{
+    char cmd[1024];
+    int ret;
+
+    if (route->aggregate && route->srclocal) {
+        snprintf(cmd, sizeof(cmd), "qpid-route --src-local route add %s %s %s %s",
+                 route->dest, route->src, route->exchange, route->route_key);
+    } else if (route->aggregate) {
+        snprintf(cmd, sizeof(cmd), "qpid-route route add %s %s %s %s",
+                 route->dest, route->src, route->exchange, route->route_key);
+    } else {
+        snprintf(cmd, sizeof(cmd), "qpid-route --timeout=5 dynamic add %s %s %s",
+                 route->dest, route->src, route->exchange);
+    }
+
     ret = system(cmd);
 
     if (ret < 0) {

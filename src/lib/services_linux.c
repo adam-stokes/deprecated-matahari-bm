@@ -142,7 +142,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 static void
 add_OCF_env_vars(svc_action_t *op)
 {
-    if (!op->standard || strcmp("ocf", op->standard) != 0) {
+    if (!op->standard || strcasecmp("ocf", op->standard) != 0) {
         return;
     }
 
@@ -502,4 +502,43 @@ resources_os_list_ocf_agents(const char *provider)
         return get_directory_list(buffer, TRUE);
     }
     return NULL;
+}
+
+GList *
+resources_os_list_systemd_services(void)
+{
+    GList *list = NULL;
+    char *ptr, *service, *end;
+    svc_action_t *action;
+    int len;
+    const char *args[] = { "list-units", "--all", "--type=service", "--full",
+                           "--no-pager", NULL };
+
+    if (!(action = mh_services_action_create_generic(SYSTEMCTL, args))) {
+        return NULL;
+    }
+    if (!services_action_sync(action)) {
+        services_action_free(action);
+        return NULL;
+    }
+    ptr = action->stdout_data;
+    // Skip first line with column labels
+    while ((ptr = strchr(ptr, '\n')) != NULL) {
+        // Skip the line break
+        ptr++;
+
+        // Read beggining of the line until ".service"
+        if (!(end = strstr(ptr, ".service")))
+            break;
+        // Length of service name
+        len = end - ptr;
+        // Append the name to the list of services
+        if (!(service = malloc(sizeof(char) * (len + 1)))) {
+            break;
+        }
+        service = mh_string_copy(service, ptr, len + 1);
+        list = g_list_append(list, service);
+    }
+    services_action_free(action);
+    return list;
 }
