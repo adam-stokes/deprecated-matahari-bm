@@ -39,16 +39,10 @@
  *
  * Using Matahari APIs:
  *  - \ref coreapi
- *  - \ref qmf_schema
  *
  * Contributing to the Matahari Project:
  *  - \ref commit_messages
  *  - \ref coding_guidelines
- */
-
-/**
- * \page qmf_schema QMFv2 Schema
- * \verbinclude src/schema.xml
  */
 
 /**
