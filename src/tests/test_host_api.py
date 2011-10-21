@@ -178,9 +178,8 @@ class HostApiTests(unittest.TestCase):
 
     def test_get_uuid_empty_string(self):
         result = host.get_uuid('')
-        result2 = host.get_uuid('filesystem')
-        self.assertEqual(result.get('uuid'), result2.get('uuid'),
-                         "empty string UUID not the same as 'filesystem' UUID")
+        self.assertEqual(result.get('uuid'), 'invalid-lifetime',
+                         "empty string UUID didn't return invalid-lifetime")
 
     def test_get_uuid_zero_parameters(self):
         try:
