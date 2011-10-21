@@ -533,7 +533,9 @@ resources_os_list_systemd_services(void)
         // Length of service name
         len = end - ptr;
         // Append the name to the list of services
-        service = malloc(sizeof(char) * (len + 1));
+        if (!(service = malloc(sizeof(char) * (len + 1)))) {
+            break;
+        }
         service = mh_string_copy(service, ptr, len + 1);
         list = g_list_append(list, service);
     }

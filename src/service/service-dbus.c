@@ -368,6 +368,7 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
     GError* error = NULL;
     svc_action_t *op = NULL;
     GList *standards;
+    struct invoke_cb_data *data;
 
     if (!check_authorization(RESOURCES_INTERFACE_NAME ".invoke",
                              &error, context)) {
@@ -394,7 +395,11 @@ Resources_invoke(Matahari *matahari, const char *name, const char *standard,
                                  0, timeout, g_hash_table_ref(parameters));
     op->expected_rc = expected_rc;
 
-    struct invoke_cb_data *data = malloc(1 * sizeof(struct invoke_cb_data));
+    if (!(data = malloc(1 * sizeof(struct invoke_cb_data)))) {
+        services_action_free(op);
+        return FALSE;
+    }
+
     data->context = context;
     data->userdata = strdup(userdata_in);
     op->cb_data = data;
