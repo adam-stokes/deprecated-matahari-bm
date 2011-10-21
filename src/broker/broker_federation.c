@@ -72,8 +72,8 @@ broker_federate(const char *local, const char *remote, int route_type)
         if ((broker_add_route(local, remote, "qmf.default.topic", "direct-agent.#", FALSE, TRUE) ||
              broker_add_route(local, remote, "qmf.default.topic", "console.#", FALSE, TRUE) ||
              broker_add_route(remote, local, "qmf.default.topic", "direct-console.#", TRUE, TRUE) ||
-             broker_add_route(remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE)) < 0) {
-            return ret;
+             broker_add_route(remote, local, "qmf.default.topic", "agent.#", TRUE, TRUE)) > 0) {
+            return 1;
         }
     } else {
         if ((broker_add_route(remote, local, "amq.direct", NULL, FALSE, FALSE) ||
@@ -81,8 +81,8 @@ broker_federate(const char *local, const char *remote, int route_type)
              broker_add_route(remote, local, "qmf.default.direct", NULL, FALSE, FALSE) ||
              broker_add_route(local, remote, "qmf.default.direct", NULL, FALSE, FALSE) ||
              broker_add_route(remote, local, "qmf.default.topic", NULL, FALSE, FALSE) ||
-             broker_add_route(local, remote, "qmf.default.topic", NULL, FALSE, FALSE)) < 0) {
-            return ret;
+             broker_add_route(local, remote, "qmf.default.topic", NULL, FALSE, FALSE)) > 0) {
+            return 1;
         }
     }
 
