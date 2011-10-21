@@ -19,6 +19,21 @@ if(NOT WIN32)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${MAN_PAGE}.gz
         DESTINATION share/man/man${AGENT_MAN_SECTION})
 
+    configure_file(${CMAKE_SOURCE_DIR}/sys/matahari-broker.init.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.init @ONLY)
+
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.init
+            DESTINATION ${initdir} RENAME matahari-broker)
+
+    pkg_check_modules(systemd systemd)
+
+    if(systemd_FOUND)
+        configure_file(${CMAKE_SOURCE_DIR}/sys/matahari-broker.service.in
+                       ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.service)
+
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.service DESTINATION ${systemdunitdir})
+    endif(systemd_FOUND)
+
 endif(NOT WIN32)
 endif(WITH-QMF)
 

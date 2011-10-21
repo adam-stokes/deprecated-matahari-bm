@@ -1,2 +1,5 @@
 # Note that directives from the parent .gitignore files will be inherited
 testhostapis
+libmh_tester.so
+*_unittest.cpp
+*_unittest

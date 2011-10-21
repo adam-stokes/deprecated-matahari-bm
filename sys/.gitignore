@@ -1,0 +1,5 @@
+# Note that directives from the root .gitignore file will be inherited
+*.sysconf
+*.conf
+*.init
+*.service
