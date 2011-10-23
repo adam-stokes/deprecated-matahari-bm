@@ -24,6 +24,7 @@ TARPREFIX	?= $(PACKAGE)-$(PACKAGE)-$(TAG)
 TARFILE		?= $(TARPREFIX).tgz
 HTML_ROOT	= coverity@www.clusterlabs.org:/var/www/html
 
+RPM             := $(shell which rpm)
 RPM_ROOT	?= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
@@ -43,7 +44,11 @@ DOT:=$(shell which dot 2>/dev/null)
 linux.build:
 	@echo "=::=::=::= Setting up for Linux =::=::=::= "
 	mkdir -p $@
+ifeq ($(RPM),)
+	cd $@ && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREQUIRE_HELP2MAN=$(REQUIRE_HELP2MAN) -DSYSCONF_INSTALL_DIR=/etc ..
+else
 	cd $@ && eval "`rpm --eval "%{cmake}" | grep -v -e "^%"`" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREQUIRE_HELP2MAN=$(REQUIRE_HELP2MAN) ..
+endif
 	@$(MAKE) --no-print-dir -C $@
 
 tests: linux.build
