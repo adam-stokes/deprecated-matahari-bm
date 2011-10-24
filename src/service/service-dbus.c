@@ -206,7 +206,7 @@ Services_fail(Matahari *matahari, const char *name,
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
-                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
+                        "%s", mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     return TRUE;
 }
@@ -223,7 +223,7 @@ Services_describe(Matahari *matahari, const char *name,
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
-                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
+                        "%s", mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     g_error_free(error);
     return TRUE;
@@ -339,7 +339,7 @@ Resources_describe(Matahari *matahari, const char *standard,
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
-                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
+                        "%s", mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     g_error_free(error);
     return TRUE;
@@ -439,7 +439,7 @@ Resources_fail(Matahari *matahari, const char *name, unsigned int rc,
     }
     // TODO: Implement when implemented in backend
     error = g_error_new(MATAHARI_ERROR, MH_RES_NOT_IMPLEMENTED,
-                        mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
+                        "%s", mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
     dbus_g_method_return_error(context, error);
     g_error_free(error);
     return TRUE;

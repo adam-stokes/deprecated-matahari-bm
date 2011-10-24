@@ -60,7 +60,7 @@ Sysconfig_run_uri(Matahari* matahari, const char *uri, uint flags,
         dbus_g_method_return(context, status);
         free(status);
     } else {
-        error = g_error_new(MATAHARI_ERROR, res, mh_result_to_str(res));
+        error = g_error_new(MATAHARI_ERROR, res, "%s", mh_result_to_str(res));
         dbus_g_method_return_error(context, error);
         g_error_free(error);
         return FALSE;
@@ -91,7 +91,7 @@ Sysconfig_run_string(Matahari* matahari, const char *text, uint flags,
         dbus_g_method_return(context, status);
         free(status);
     } else {
-        error = g_error_new(MATAHARI_ERROR, res, mh_result_to_str(res));
+        error = g_error_new(MATAHARI_ERROR, res, "%s", mh_result_to_str(res));
         dbus_g_method_return_error(context, error);
         g_error_free(error);
         return FALSE;
