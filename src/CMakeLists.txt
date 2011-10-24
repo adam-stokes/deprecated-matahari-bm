@@ -119,10 +119,12 @@ endif(NOT WIN32)
 # Augeas
 # At least version 0.9.0 - we need aug_srun command
 if(NOT WIN32)
-    pkg_check_modules(augeas REQUIRED augeas>=0.9.0)
-    if(NOT augeas_FOUND)
-        message(FATAL_ERROR "Augeas headers/library >= 0.9.0 not found.")
-    endif(NOT augeas_FOUND)
+    pkg_check_modules(augeas augeas>=0.9.0)
+    if(augeas_FOUND)
+        set(HAVE_AUGEAS 1)
+    else(augeas_FOUND)
+        message("Augeas headers/library >= 0.9.0 not found.")
+    endif(augeas_FOUND)
 endif(NOT WIN32)
 
 # Include QMF and DBus generation macros
