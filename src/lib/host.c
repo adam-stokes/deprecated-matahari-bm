@@ -34,7 +34,6 @@
 #include "host_private.h"
 
 #include <sigar.h>
-#include <sigar_private.h>
 #include <sigar_format.h>
 
 MH_TRACE_INIT_DATA(mh_host);

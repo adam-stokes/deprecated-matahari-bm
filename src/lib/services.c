@@ -94,14 +94,18 @@ svc_action_t *resources_action_create(
     op->standard = strdup(standard);
     op->agent = strdup(agent);
     op->sequence = ++operations;
-    asprintf(&op->id, "%s_%s_%d", name, action, interval);
+    if (asprintf(&op->id, "%s_%s_%d", name, action, interval) == -1) {
+        goto return_error;
+    }
 
     if(strcasecmp(standard, "ocf") == 0) {
         op->provider = strdup(provider);
         op->params = params;
 
-        asprintf(&op->opaque->exec, "%s/resource.d/%s/%s",
-                 OCF_ROOT, provider, agent);
+        if (asprintf(&op->opaque->exec, "%s/resource.d/%s/%s",
+                     OCF_ROOT, provider, agent) == -1) {
+            goto return_error;
+        }
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(action);
 
@@ -113,7 +117,9 @@ svc_action_t *resources_action_create(
         op->opaque->exec = strdup(SYSTEMCTL);
         op->opaque->args[0] = strdup(SYSTEMCTL);
         op->opaque->args[1] = strdup(action);
-        asprintf(&service, "%s.service", agent);
+        if (asprintf(&service, "%s.service", agent) == -1) {
+            goto return_error;
+        }
         op->opaque->args[2] = service;
     } else {
         mh_err("Unknown resource standard: %s", standard);
@@ -122,6 +128,11 @@ svc_action_t *resources_action_create(
     }
 
     return op;
+
+return_error:
+    services_action_free(op);
+
+    return NULL;
 }
 
 svc_action_t *

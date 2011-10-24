@@ -25,7 +25,10 @@
 #include <unistd.h>
 #include <glib.h>
 #include <curl/curl.h>
+
+#ifdef HAVE_AUGEAS
 #include <augeas.h>
+#endif
 
 #include "matahari/logging.h"
 #include "matahari/utilities.h"
@@ -293,6 +296,7 @@ static enum mh_result
 run_augeas(const char *uri, const char *data, const char *key,
            mh_sysconfig_result_cb result_cb, void *cb_data)
 {
+#ifdef HAVE_AUGEAS
     int fd;
     FILE *fp;
     char *text = NULL;
@@ -396,11 +400,15 @@ run_augeas(const char *uri, const char *data, const char *key,
     unlink(filename);
 
     return 0;
+#else /* HAVE_AUGEAS */
+    return MH_RES_NOT_IMPLEMENTED;
+#endif /* HAVE_AUGEAS */
 }
 
 static char *
 sysconfig_os_query_augeas(const char *query)
 {
+#ifdef HAVE_AUGEAS
     char *data = NULL;
     const char *value = NULL;
     augeas *aug = aug_init("", "", 0);
@@ -409,6 +417,9 @@ sysconfig_os_query_augeas(const char *query)
         data = strdup(value);
     aug_close(aug);
     return data;
+#else /* HAVE_AUGEAS */
+    return NULL;
+#endif /* HAVE_AUGEAS */
 }
 
 enum mh_result

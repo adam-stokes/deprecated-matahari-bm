@@ -472,7 +472,9 @@ services_os_set_exec(svc_action_t *op)
         op->opaque->args[3] = NULL;
 
     } else {
-        asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT, op->agent);
+        if (asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT, op->agent) == -1) {
+            return;
+        }
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
