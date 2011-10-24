@@ -92,7 +92,6 @@ int main(int argc, char** argv)
     options["provider"] = "heartbeat";
     options["interval"] = 0;
     options["timeout"] = 60000;
-    sessionOptions = "{strict-security:True}";
 
     mh_log_init("service-cli", LOG_INFO, TRUE);
 

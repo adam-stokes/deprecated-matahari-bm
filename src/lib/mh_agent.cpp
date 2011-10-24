@@ -448,7 +448,6 @@ mh_parse_options(const char *proc_name, int argc, char **argv, OptionsMap &optio
     options["protocol"] = "tcp";
     options["serverport"] = "49000";
     amqp_options["reconnect"] = true;
-    amqp_options["strict-security"] = true;
 
     /* Force local-only handling */
     mh_add_option('b', required_argument, "broker",                 "specify broker host name", &options, map_option);
@@ -641,7 +640,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
 
     _impl->_amqp_connection = mh_connect(options, amqp_options, TRUE);
 
-    _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection, "{strict-security:True}");
+    _impl->_agent_session = qmf::AgentSession(_impl->_amqp_connection);
     _impl->_agent_session.setVendor("matahariproject.org");
     _impl->_agent_session.setProduct(proc_name);
     _impl->_agent_session.setAttribute("uuid", mh_uuid());

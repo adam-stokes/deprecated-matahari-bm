@@ -49,7 +49,7 @@ if(WIN32)
   set (CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/src/windows/matahari-icon.ico")
   set (CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/src/windows/matahari-icon.ico")
   set (CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/src/windows/matahari-install-banner.bmp")
-  set (CPACK_NSIS_URL_INFO_ABOUT "http://fedorahosted.org/matahari")
+  set (CPACK_NSIS_URL_INFO_ABOUT "http://matahariproject.org")
 
   # Needs this to correctly set up Start menu links later.
   set (CPACK_PACKAGE_EXECUTABLES "")
@@ -72,18 +72,7 @@ if(WIN32)
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "\\n")
   set( CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS ${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS} 
   					   " Some comment\\n  DetailPrint \\\"Stopping Matahari services\\\"\\n"
-					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe stop mh_hostd\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe stop mh_netd\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe stop mh_serviced\\\"'\\n"
-					   " Give them time to stop\\n  Sleep 10000\\n"
-  					   " Some comment\\n  DetailPrint \\\"Removing Matahari services\\\"\\n"
-					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe delete mh_hostd\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe delete mh_netd\\\"'\\n"
-					   " Some comment\\n  ExecWait '\\\"$SYSDIR\\\\sc.exe delete mh_serviced\\\"'\\n"
-  					   " Some comment\\n  DetailPrint \\\"Removing Matahari service binaries\\\"\\n"
-					   " Some comment\\n  ExecWait 'del \\\"$INSTDIR\\\\mh_hostd.exe\\\"'\\n"
-					   " Some comment\\n  ExecWait 'del \\\"$INSTDIR\\\\mh_netd.exe\\\"'\\n"
-					   " Some comment\\n  ExecWait 'del \\\"$INSTDIR\\\\mh_serviced.exe\\\"'\\n"
+					   " Some comment\\n  ExecWait \\\"$INSTDIR\\\\sbin\\\\uninstall.bat\\\"\\n"
 					   )
 
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/windows/autorun.inf.in 
@@ -103,6 +92,7 @@ if(WIN32)
   file(GLOB_RECURSE SRVANY_EXE ${MINGW_ROOT}/*/srvany.exe)
   install(FILES ${SRVANY_EXE} DESTINATION sbin)
   install(FILES src/windows/install.bat DESTINATION sbin)
+  install(FILES src/windows/uninstall.bat DESTINATION sbin)
 
 else(WIN32)
 
