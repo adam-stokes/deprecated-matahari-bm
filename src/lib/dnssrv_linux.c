@@ -31,6 +31,7 @@
 #include <limits.h>
 
 #include "dnssrv_private.h"
+#include "matahari/utilities.h"
 #include "matahari/dnssrv.h"
 #include "matahari/dnssrv_internal.h"
 
