@@ -38,6 +38,8 @@
 #include <qpid/agent/ManagementAgent.h>
 #include <qpid/client/ConnectionSettings.h>
 #include <qmf/DataAddr.h>
+#include <qmf/Schema.h>
+#include <qmf/SchemaProperty.h>
 #include "matahari/agent.h"
 
 extern "C" {
@@ -67,6 +69,9 @@ struct MatahariAgentImpl {
 
     qmf::AgentSession _agent_session;
     qpid::messaging::Connection _amqp_connection;
+
+    qmf::Data _agent_instance;
+    void registerAgent(void);
 };
 
 
@@ -615,6 +620,34 @@ qmf::AgentSession& MatahariAgent::getSession(void)
     return _impl->_agent_session;
 }
 
+void
+MatahariAgentImpl::registerAgent(void)
+{
+    qmf::Schema data_Agent(qmf::SCHEMA_TYPE_DATA,
+                           "org.matahariproject", "Agent");
+    {
+        qmf::SchemaProperty prop("hostname", qmf::SCHEMA_DATA_STRING);
+        prop.setAccess(qmf::ACCESS_READ_ONLY);
+        prop.setIndex(true);
+        prop.setDesc("Hostname");
+        data_Agent.addProperty(prop);
+    }
+    {
+        qmf::SchemaProperty prop("uuid", qmf::SCHEMA_DATA_STRING);
+        prop.setAccess(qmf::ACCESS_READ_ONLY);
+        prop.setIndex(true);
+        prop.setDesc("Filesystem Host UUID");
+        data_Agent.addProperty(prop);
+    }
+
+    _agent_session.registerSchema(data_Agent);
+
+    _agent_instance = qmf::Data(data_Agent);
+    _agent_instance.setProperty("uuid", mh_uuid());
+    _agent_instance.setProperty("hostname", mh_hostname());
+    _agent_session.addData(_agent_instance);
+}
+
 static bool
 mh_hastty(void)
 {
@@ -663,6 +696,8 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
         res = -1;
         goto return_cleanup;
     }
+
+    _impl->registerAgent();
 
     _impl->_mainloop = g_main_new(FALSE);
     _impl->_qpid_source = mainloop_add_qmf(G_PRIORITY_HIGH, _impl->_agent_session,
