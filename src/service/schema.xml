@@ -1,206 +1,245 @@
 <schema package="org.matahariproject">
 
- <eventArguments>
+    <eventArguments>
+        <arg name="timestamp"         type="absTime" />
+        <arg name="sequence"          type="uint32"  />
 
-   <arg name="timestamp"      type="absTime" />
-   <arg name="sequence"       type="uint32"  />
+        <arg name="name"              type="sstr"    />
+        <arg name="standard"          type="sstr"    />
+        <arg name="provider"          type="sstr"    />
+        <arg name="agent"             type="sstr"    />
 
-   <arg name="name"           type="sstr"    />
-   <arg name="standard"       type="sstr"    />
-   <arg name="provider"       type="sstr"    />
-   <arg name="agent"           type="sstr"    />
+        <arg name="action"            type="sstr"    />
+        <arg name="interval"          type="uint32"  />
+        <arg name="rc"                type="uint32"  />
 
-   <arg name="action"         type="sstr"    />
-   <arg name="interval"       type="uint32"  />
-   <arg name="rc"             type="uint32"  />
+        <arg name="expected-rc"       type="uint32"  />
+        <arg name="userdata"          type="sstr"    />
+    </eventArguments>
 
-   <arg name="expected-rc"    type="uint32"  />
-   <arg name="userdata"       type="sstr"    />
+    <event name="resource_op"         args="timestamp,sequence,name,standard,provider,agent,action,interval,rc,expected-rc,userdata" />
 
- </eventArguments>
+    <!--
+    <para>
+        Simple API for accessing system services
+    </para>
 
- <event name="resource_op"	args="timestamp,sequence,name,standard,provider,agent,action,interval,rc,expected-rc,userdata" />
+    <para>
+        For more advanced functionality, use the Resources API with standard="lsb"
+    </para>
+    -->
 
- <!--
-     Services API
-     Simple API for accessing system services
-     
-     For more advanced functionality, use the Resources API with standard="lsb"
-  -->
+    <class name="Services">
+        <property name="uuid"         type="sstr" access="RO"   desc="Host UUID" />
+        <property name="hostname"     type="sstr" access="RO"   desc="Hostname" index="y"/>
 
- <class name="Services">
-   <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
-   <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
+        <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
 
-   <statistic name="qmf-gen-no-crash" type="absTime" desc="Dummy stat to stop qmf-gen from crashing." />
+        <method name="list"           desc="List known system services">
+            <arg name="agents"        dir="O"     type="list" />
+        </method>
+        <method name="enable"         desc="Configure a system service to start at boot">
+            <arg name="name"          dir="I"     type="sstr" />
+            <arg name="rc"            dir="O"     type="uint32" />
+        </method>
+        <method name="disable"        desc="Configure a system service _not_ to start at boot">
+            <arg name="name"          dir="I"     type="sstr" />
+            <arg name="rc"            dir="O"     type="uint32" />
+        </method>
+        <method name="start"          desc="Start a system service">
+            <arg name="name"          dir="I"     type="sstr" />
+            <arg name="timeout"       dir="I"     type="uint32" />
+            <arg name="rc"            dir="O"     type="uint32" />
+        </method>
+        <method name="stop"           desc="Stop a system service">
+            <arg name="name"          dir="I"     type="sstr" />
+            <arg name="timeout"       dir="I"     type="uint32" />
+            <arg name="rc"            dir="O"     type="uint32" />
+        </method>
+        <method name="status"         desc="Check the health of a system service">
+            <arg name="name"          dir="I"     type="sstr" />
+            <arg name="timeout"       dir="I"     type="uint32" />
+            <arg name="rc"            dir="O"     type="uint32" />
+        </method>
+        <method name="describe"       desc="Obtain XML description of a system service">
+            <arg name="name"          dir="I"     type="sstr" />
+            <arg name="xml"           dir="O"     type="sstr" />
+        </method>
+    </class>
 
-   <method name="list"          desc="List known system services">
-     <arg name="agents"       dir="O"  type="list" />
-   </method>
-   <method name="enable"        desc="Configure a system service to start at boot">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="disable"       desc="Configure a system service _not_ to start at boot">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="start"         desc="Start a system service">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="stop"          desc="Stop a system service">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="status"        desc="Check the health of a system service">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-   </method>
-   <method name="describe"      desc="Obtain XML description of a system service">
-     <arg name="name"           dir="I"  type="sstr" />
-     <arg name="xml"            dir="O"  type="sstr" />
-   </method>
- </class>
+    <!--
+    <para>
+        Fully featured API for controlling and monitoring services
+        conforming to a standardized specification.
+    </para>
+    <para>
+        Currently supported standards:
+        <literal>windows</literal>,
+        <literal>lsb</literal> (Linux Standard Base),
+        <literal>ocf</literal> (Open Cluster Framework),
+        <literal>systemd</literal>.
+    </para>
+    <para>
+        On Windows, <literal>lsb</literal> is an alias for <literal>windows</literal>.
+    </para>
+    -->
 
- <!--
-     Resources API
+    <class name="Resources">
+        <property name="uuid"         type="sstr" access="RO"   desc="Host UUID" />
+        <property name="hostname"     type="sstr" access="RO"   desc="Hostname" index="y"/>
 
-     Fully featured API for controlling and monitoring services
-     conforming to a standardized specification.
-     
-     Currently supported standards:  windows, lsb (Linux Standard Base), ocf (Open Cluster Framework)
-     On Windows, 'lsb' is an alias for 'windows'
-  -->
+        <method name="list_standards" desc="List known resource standards (OCF, LSB, systemd, etc)">
+            <arg name="standards"     dir="O"     type="list" />
+        </method>
 
- <class name="Resources">
-   <property name="uuid"        type="sstr" access="RO" desc="Host UUID" />
-   <property name="hostname"    type="sstr" access="RO" desc="Hostname" index="y"/>
+        <method name="list_providers" desc="List known providers (if supported) for a given standard">
+            <arg name="standard"      dir="I"     type="sstr" />
+            <arg name="providers"     dir="O"     type="list" />
+        </method>
 
-   <method name="list_standards" desc="List known resource standards (OCF, LSB, Upstart, etc)">
-     <arg name="standards"       dir="O"  type="list" />
-   </method>
-   <method name="list_providers" desc="List known providers (if supported) for a given standard">
-     <arg name="standard"        dir="I"  type="sstr" />
-     <arg name="providers"       dir="O"  type="list" />
-   </method>
-   <method name="list"          desc="List known resource types for a given standard and provider">
-     <arg name="standard"       dir="I"  type="sstr" />
-     <arg name="provider"       dir="I"  type="sstr" />
-     <arg name="agents"         dir="O"  type="list" />
-   </method>
+        <method name="list"           desc="List known resource types for a given standard and provider">
+            <arg name="standard"      dir="I"     type="sstr" />
+            <arg name="provider"      dir="I"     type="sstr" />
+            <arg name="agents"        dir="O"     type="list" />
+        </method>
 
-   <method name="describe"      desc="Obtain XML description of a resource">
-     <arg name="standard"       dir="I"  type="sstr" />
-     <arg name="provider"       dir="I"  type="sstr" />
-     <arg name="agent"           dir="I"  type="sstr" />
-     <arg name="xml"            dir="O"  type="sstr" />
-   </method>
-   <!--
-    <para>The <literal>rc</literal> output parameter warrants some additional discussion.
-    The potential return values depends on which <literal>standard</literal> is being
-    used.  In the case of <literal>OCF</literal>, these values are defined by the
-    <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD">OCF
-    resource agent specification</ulink>.  However, see <xref linkend="ocf_return_vals"/>
-    for an overview of the OCF resource agent return codes.</para>
+        <method name="describe"       desc="Obtain XML description of a resource">
+            <arg name="standard"      dir="I"     type="sstr" />
+            <arg name="provider"      dir="I"     type="sstr" />
+            <arg name="agent"         dir="I"     type="sstr" />
+            <arg name="xml"           dir="O"     type="sstr" />
+        </method>
 
-    <table id="ocf_return_vals">
-    <title>OCF Resource Agent Exit Codes</title>
-    <tgroup cols="3">
-    <thead>
-      <row>
-        <entry>Value(s)</entry>
-        <entry>OCF Name</entry>
-        <entry>Description</entry>
-      </row>
-    </thead>
-    <tbody>
-      <row>
-        <entry><literal>0</literal></entry>
-        <entry><literal>OCF_SUCCESS</literal></entry>
-        <entry>Success. The command complete successfully. This is the expected result for all start, stop, promote and demote commands.</entry>
-      </row>
-      <row>
-        <entry><literal>1</literal></entry>
-        <entry><literal>OCF_ERR_GENERIC</literal></entry>
-        <entry>Generic "there was a problem" error code.</entry>
-      </row>
-      <row>
-        <entry><literal>2</literal></entry>
-        <entry><literal>OCF_ERR_ARGS</literal></entry>
-        <entry>The resource's configuration is not valid on this machine. Eg. Refers to a location/tool not found on the node.</entry>
-      </row>
-      <row>
-        <entry><literal>3</literal></entry>
-        <entry><literal>OCF_ERR_UNIMPLEMENTED</literal></entry>
-        <entry>The requested action is not implemented.</entry>
-      </row>
-      <row>
-        <entry><literal>4</literal></entry>
-        <entry><literal>OCF_ERR_PERM</literal></entry>
-        <entry>The resource agent does not have sufficient privileges to complete the task.</entry>
-      </row>
-      <row>
-        <entry><literal>5</literal></entry>
-        <entry><literal>OCF_ERR_INSTALLED</literal></entry>
-        <entry>The tools required by the resource are not installed on this machine.</entry>
-      </row>
-      <row>
-        <entry><literal>6</literal></entry>
-        <entry><literal>OCF_ERR_CONFIGURED</literal></entry>
-        <entry>The resource's configuration is invalid. Eg. A required parameters are missing.</entry>
-      </row>
-      <row>
-        <entry><literal>7</literal></entry>
-        <entry><literal>OCF_NOT_RUNNING</literal></entry>
-        <entry>The resource is safely stopped.</entry>
-      </row>
-      <row>
-        <entry><literal>8</literal></entry>
-        <entry><literal>OCF_RUNNING_MASTER</literal></entry>
-        <entry>The resource is running in Master mode.</entry>
-      </row>
-      <row>
-        <entry><literal>9</literal></entry>
-        <entry><literal>OCF_FAILED_MASTER</literal></entry>
-        <entry>The resource is in Master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.</entry>
-      </row>
-      <row>
-        <entry>other</entry>
-        <entry>N/A</entry>
-        <entry>Custom error code.</entry>
-      </row>
-    </tbody>
-    </tgroup>
-    </table>
-   -->
-   <method name="invoke"        desc="Perform a custom action on a resource">
-     <arg name="name"           dir="I"  type="sstr"   />
-     <arg name="standard"       dir="I"  type="sstr"   />
-     <arg name="provider"       dir="I"  type="sstr"   />
-     <arg name="agent"          dir="I"  type="sstr"   />
-     <arg name="action"         dir="I"  type="sstr"   />
-     <arg name="interval"       dir="I"  type="uint32" />
-     <arg name="parameters"     dir="I"  type="map"    />
-     <arg name="timeout"        dir="I"  type="uint32" />
-     <arg name="expected-rc"    dir="I"  type="uint32" />
-     <arg name="rc"             dir="O"  type="uint32" />
-     <arg name="sequence"       dir="O"  type="uint32" />
-     <arg name="userdata"       dir="IO" type="sstr"   />
-   </method>
-   <method name="cancel"        desc="Cancel a pending or running action on a resource">
-     <arg name="name"           dir="I"  type="sstr"   />
-     <arg name="action"         dir="I"  type="sstr"   />
-     <arg name="interval"       dir="I"  type="uint32" />
-     <arg name="timeout"        dir="I"  type="uint32" />
-   </method>
-   <method name="fail"          desc="Indicate a resource has failed">
-     <arg name="name"           dir="I"  type="sstr"   />
-     <arg name="rc"             dir="I"  type="uint32" />
-   </method>
- </class>
+        <!--
+        <para>
+            <literal>action</literal> depends on the standard/provider/agent
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <literal>OCF</literal>: see
+                        <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD">
+                            ocf specification
+                        </ulink>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>LSB</literal>: enable/disable/start/stop/status
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>systemd</literal>: see
+                        <ulink url="http://www.linuxcertif.com/man/1/systemctl/">
+                            man systemctl
+                        </ulink>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
 
+        <para>
+            The <literal>rc</literal> output parameter warrants some additional discussion.
+            The potential return values depends on which <literal>standard</literal> is being
+            used.  In the case of <literal>OCF</literal>, these values are defined by the
+            <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD">OCF
+            resource agent specification</ulink>.  However, see <xref linkend="ocf_return_vals"/>
+            for an overview of the OCF resource agent return codes.
+        </para>
+
+        <table id="ocf_return_vals">
+        <title>OCF Resource Agent Exit Codes</title>
+        <tgroup cols="3">
+        <thead>
+            <row>
+                <entry>Value(s)</entry>
+                <entry>OCF Name</entry>
+                <entry>Description</entry>
+            </row>
+        </thead>
+        <tbody>
+            <row>
+                <entry><literal>0</literal></entry>
+                <entry><literal>OCF_SUCCESS</literal></entry>
+                <entry>Success. The command complete successfully. This is the expected result for all start, stop, promote and demote commands.</entry>
+            </row>
+            <row>
+                <entry><literal>1</literal></entry>
+                <entry><literal>OCF_ERR_GENERIC</literal></entry>
+                <entry>Generic "there was a problem" error code.</entry>
+            </row>
+            <row>
+                <entry><literal>2</literal></entry>
+                <entry><literal>OCF_ERR_ARGS</literal></entry>
+                <entry>The resource's configuration is not valid on this machine. Eg. Refers to a location/tool not found on the node.</entry>
+            </row>
+            <row>
+                <entry><literal>3</literal></entry>
+                <entry><literal>OCF_ERR_UNIMPLEMENTED</literal></entry>
+                <entry>The requested action is not implemented.</entry>
+            </row>
+            <row>
+                <entry><literal>4</literal></entry>
+                <entry><literal>OCF_ERR_PERM</literal></entry>
+                <entry>The resource agent does not have sufficient privileges to complete the task.</entry>
+            </row>
+            <row>
+                <entry><literal>5</literal></entry>
+                <entry><literal>OCF_ERR_INSTALLED</literal></entry>
+                <entry>The tools required by the resource are not installed on this machine.</entry>
+            </row>
+            <row>
+                <entry><literal>6</literal></entry>
+                <entry><literal>OCF_ERR_CONFIGURED</literal></entry>
+                <entry>The resource's configuration is invalid. Eg. A required parameters are missing.</entry>
+            </row>
+            <row>
+                <entry><literal>7</literal></entry>
+                <entry><literal>OCF_NOT_RUNNING</literal></entry>
+                <entry>The resource is safely stopped.</entry>
+            </row>
+            <row>
+                <entry><literal>8</literal></entry>
+                <entry><literal>OCF_RUNNING_MASTER</literal></entry>
+                <entry>The resource is running in Master mode.</entry>
+            </row>
+            <row>
+                <entry><literal>9</literal></entry>
+                <entry><literal>OCF_FAILED_MASTER</literal></entry>
+                <entry>The resource is in Master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.</entry>
+            </row>
+            <row>
+                <entry>other</entry>
+                <entry>N/A</entry>
+                <entry>Custom error code.</entry>
+            </row>
+        </tbody>
+        </tgroup>
+        </table>
+        -->
+        <method name="invoke"         desc="Perform a custom action on a resource">
+            <arg name="name"          dir="I"     type="sstr"   desc="Identification of the action" />
+            <arg name="standard"      dir="I"     type="sstr"   desc="Resource standard to be used, see &lt;xref linkend='Resources_list_standards' /&gt;" />
+            <arg name="provider"      dir="I"     type="sstr"   desc="Provider of ocf standard, see &lt;xref linkend='Resources_list_providers' /&gt;" />
+            <arg name="agent"         dir="I"     type="sstr"   desc="Name of the resource affected by action" />
+            <arg name="action"        dir="I"     type="sstr"   desc="Action that will be executed on resource" />
+            <arg name="interval"      dir="I"     type="uint32" desc="Event resource_op will be risen each interval miliseconds (not supported by dbus agent)" />
+            <arg name="parameters"    dir="I"     type="map"    desc="Additional parameters for the action (enviromental variables for OCF)" />
+            <arg name="timeout"       dir="I"     type="uint32" desc="Timeout for the action in miliseconds" />
+            <arg name="expected-rc"   dir="I"     type="uint32" />
+            <arg name="rc"            dir="O"     type="uint32" desc="Return code of the action" />
+            <arg name="sequence"      dir="O"     type="uint32" />
+            <arg name="userdata"      dir="IO"    type="sstr"  />
+        </method>
+        <method name="cancel"         desc="Cancel a pending or running action on a resource. name, action and interval must be the same as for invoke method">
+            <arg name="name"          dir="I"     type="sstr"   desc="Identification of the action" />
+            <arg name="action"        dir="I"     type="sstr"   desc="Action that is running or pending" />
+            <arg name="interval"      dir="I"     type="uint32" desc="Interval in miliseconds" />
+            <arg name="timeout"       dir="I"     type="uint32" desc="Timeout for cancelling in miliseconds" />
+        </method>
+        <method name="fail"           desc="Indicate a resource has failed">
+            <arg name="name"          dir="I"     type="sstr"   />
+            <arg name="rc"            dir="I"     type="uint32" />
+        </method>
+    </class>
 </schema>
