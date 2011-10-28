@@ -1,0 +1,117 @@
+#!/bin/sh
+
+# the following is chkconfig init header
+# matahari-network: Matahari QMF network daemon
+### BEGIN INIT INFO
+# Provides: matahari-network
+# Required-Start: $local_fs
+# Required-Stop: $local_fs
+# Should-Start: matahari-broker
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Starts and stops the network matahari daemon
+# Description: Matahari network daemon using the AMQP protocol.
+### END INIT INFO
+
+# chkconfig: - 99 01
+# description: Matahari network daemon using the AMQP protocol.
+# processname: matahari-networkd
+# pidfile: /var/run/matahari-network.pid
+#
+
+# Turn off automatic systemd redirects
+#SYSTEMCTL_SKIP_REDIRECT=1
+
+# Source function library.
+. /lib/lsb/init-functions
+
+SERVICE=matahari-network
+PROCESS=matahari-qmf-networkd
+# Old process naming convention, this is here
+# for compability sake when starting/stopping the
+# service from an upgrade of 0.4.0 > 0.4.2
+OLDPROCESS=matahari-networkd
+
+RETVAL=0
+
+test -f /etc/default/sysconfig/matahari && . /etc/default/sysconfig/matahari
+
+start() {
+    echo -n $"Starting the $SERVICE daemon: "
+
+    MATAHARI_ARGS="$MATAHARI_AGENT_ARGS $network_AGENT_ARGS"
+    if [ -n "$MATAHARI_PORT" ]; then
+	MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
+    fi
+    if [ -n "$MATAHARI_BROKER" ]; then
+	MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
+    fi
+
+
+    export QPID_SSL_CERT_DB
+    export QPID_SSL_CERT_PASSWORD_FILE
+
+    daemon $PROCESS $MATAHARI_ARGS --daemon
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+}
+
+stop() {
+    echo -n $"Stopping the $SERVICE daemon: "
+
+    # Check for OLDPROCESS for pre 0.4.2 compat
+    pidofproc $OLDPROCESS >/dev/null
+    RETVAL=$?
+    if [ $RETVAL -lt 3 ]; then
+        killproc $OLDPROCESS
+        RETVAL=$?
+    else
+        killproc $PROCESS
+        RETVAL=$?
+    fi
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        rm -f /var/lock/subsys/$SERVICE
+        rm -f /var/run/$SERVICE.pid
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading the $SERVICE configuration: "
+
+    killproc $PROCESS -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        status $PROCESS >/dev/null || $1
+        ;;
+    stop|restart|reload)
+        $1
+        ;;
+    status)
+        status $PROCESS
+        RETVAL=$?
+        ;;
+    force-reload)
+        reload
+        ;;
+    condrestart|try-restart)
+        [ -f /var/lock/subsys/$SERVICE ] && restart || :
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+        exit 1
+        ;;
+esac
+exit $RETVAL

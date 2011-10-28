@@ -556,3 +556,4 @@ mh_result_to_str(enum mh_result res)
     }
     return "FIXME: result code doesn't have message assigned!";
 }
+

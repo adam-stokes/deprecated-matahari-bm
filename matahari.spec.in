@@ -597,10 +597,10 @@ test "x%{buildroot}" != "x" && rm -rf %{buildroot}
 %endif
 %config(noreplace) %{_sysconfdir}/sysconfig/matahari-broker
 %config(noreplace) %{_sysconfdir}/matahari-broker.conf
-%config(noreplace) %{_sysconfdir}/sasl2/matahari-sasl.conf
+#%config(noreplace) %{_sysconfdir}/sasl2/matahari-sasl.conf
 %attr(755, root, root) %{_sbindir}/matahari-brokerd
 %{_mandir}/man8/matahari-brokerd.8*
-%{_datadir}/matahari/matahari-policy.acl
+#%{_datadir}/matahari/matahari-policy.acl
 %doc AUTHORS COPYING
 
 %if %{systemd}

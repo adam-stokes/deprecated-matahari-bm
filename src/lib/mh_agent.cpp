@@ -651,16 +651,6 @@ MatahariAgentImpl::registerAgent(void)
     _agent_session.addData(_agent_instance);
 }
 
-static bool
-mh_hastty(void)
-{
-#ifdef WIN32
-    return true;
-#else
-    return isatty(STDERR_FILENO);
-#endif
-}
-
 int
 MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {

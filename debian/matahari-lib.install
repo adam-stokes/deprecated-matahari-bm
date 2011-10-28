@@ -1,0 +1,5 @@
+/usr/lib/libmcommon*so*
+/usr/lib/libmhost*so*
+/usr/lib/libmnetwork*so*
+/usr/lib/libmservice*so*
+/usr/lib/libmsysconfig*so*

@@ -1,0 +1,70 @@
+Source: matahari
+Section: libs
+Priority: extra
+Maintainer: Adam Stokes <astokes@fedoraproject.org>
+Build-Depends: debhelper (>= 7),
+               cmake,
+               cdbs,
+               libpcre3-dev,
+               uuid-dev,
+               libglib2.0-dev,
+               libsigar-dev,
+               libnss3-dev,
+               help2man,
+               libaugeas-dev,
+               qpidc
+Standards-Version: 3.8.4
+Homepage: http://www.matahariproject.org
+
+Package: matahari-lib
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: C libraries used by Matahari agents
+
+Package: matahari-agent-lib
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         qpidc
+Description: C++ library containing the base class
+
+Package: matahari-core
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Matahari Core files
+
+Package: matahari-broker
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, qpidc, matahari-core
+Description: Matahari Broker
+
+Package: matahari-host
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, dmidecode
+Description: Matahari Host Agent
+
+Package: matahari-network
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, matahari-lib, matahari-agent-lib
+Description: Matahari Network Agent
+
+Package: matahari-sysconfig
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, matahari-lib, matahari-agent-lib
+Description: Matahari Sysconfig Agent
+
+Package: matahari-service
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, matahari-lib, matahari-agent-lib
+Description: Matahari Services Agent
+
+Package: matahari-consoles
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, matahari-lib, matahari-agent-lib
+Description: QMF console for monitoring agents
+
+Package: matahari-dev
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, matahari-lib, matahari-agent-lib
+Description: Headers and shared libraries for developing
