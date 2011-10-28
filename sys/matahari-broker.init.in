@@ -46,8 +46,9 @@ pidfile=@localstatedir@/run/matahari-broker.pid
 
 
 # Source function library.
-. @sysconfdir@/rc.d/init.d/functions
+test -f /lib/lsb/init-functions && . /lib/lsb/init-functions
 
+# RPM
 if [ -f @sysconfdir@/sysconfig/matahari ]; then
     . @sysconfdir@/sysconfig/matahari
 fi
@@ -59,12 +60,37 @@ if [ -f @sysconfdir@/sysconfig/matahari-vios-proxy ]; then
     . @sysconfdir@/sysconfig/matahari-vios-proxy
 fi
 
+# Debian/Ubuntu
+if [ -f @sysconfdir@/default/matahari ]; then
+    . @sysconfdir@/default/matahari
+fi
+if [ -f @sysconfdir@/default/matahari-broker ]; then
+    . @sysconfdir@/default/matahari-broker
+fi
+
+if [ -f @sysconfdir@/default/matahari-vios-proxy ]; then
+    . @sysconfdir@/default/matahari-vios-proxy
+fi
+
 RETVAL=0
+
+status()
+{
+	pid=$(pidof $1 2>/dev/null)
+	rtrn=$?
+	if [ $rtrn -ne 0 ]; then
+		echo "$1 is stopped"
+	else
+		echo "$1 (pid $pid) is running..."
+	fi
+	return $rtrn
+}
 
 start() {
 	echo -n $"Starting Matahari broker daemon: "
 	install -o root -g qpidd -m 775 -d @localstatedir@/run/matahari
-	daemon --pidfile $pidfile --check $proc --user qpidd /usr/sbin/$prog $QPIDD_OPTIONS --daemon
+	#start_daemon --pidfile $pidfile --check $proc --user qpidd /usr/sbin/$prog $QPIDD_OPTIONS --daemon
+	start_daemon --pidfile $pidfile /usr/sbin/$prog $QPIDD_OPTIONS --daemon
 	RETVAL=$?
 	echo
 	[ $RETVAL = 0 ] && touch $lockfile
@@ -98,13 +124,14 @@ restart() {
 # See how we were called.
 case "$1" in
   start)
-        status -p $pidfile -l $lockfile $proc >/dev/null || $1
+        #status -p $pidfile -l $lockfile $proc >/dev/null || $1
+        status $proc >/dev/null || $1
         ;;
   stop|restart|reload)
         $1
 	;;
   status)
-	status -p $pidfile -l $lockfile $proc
+	status $proc
 	RETVAL=$?
 	;;
   force-reload)
