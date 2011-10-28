@@ -3,6 +3,8 @@
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/cmake.mk
 
+DEB_CMAKE_EXTRA_FLAGS=-DWITH-QMF:BOOL=ON -DWITH-DEBIAN:BOOL=ON -Dinitdir=/etc/init.d -Dsysconfdir=/etc
+
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
