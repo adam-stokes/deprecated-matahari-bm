@@ -1,2 +1,3 @@
 /usr/sbin/matahari-qmf-sysconfigd
 /usr/share/man/man8/matahari-qmf-sysconfigd.8*
+/etc/init/matahari-sysconfig.conf

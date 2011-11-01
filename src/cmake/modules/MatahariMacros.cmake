@@ -129,4 +129,12 @@ macro(create_service_scripts BASE)
         configure_file(${CMAKE_SOURCE_DIR}/sys/matahari.service.in ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.service DESTINATION ${systemdunitdir})
     endif(systemd_FOUND)
+    
+    if(IS_DIRECTORY /lib/init)
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari.upstart.in
+                       ${CMAKE_CURRENT_BINARY_DIR}/matahari-${BASE}.upstart)
+        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-${BASE}.upstart
+                DESTINATION ${sysconfdir}/init
+                RENAME matahari-${BASE}.conf
+    endif(IS_DIRECTORY /lib/init)
 endmacro(create_service_scripts)
