@@ -45,6 +45,31 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-guest.init
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-guest-agent.rules
         DESTINATION ${sysconfdir}/udev/rules.d
         RENAME 99-matahari-guest-agent.rules)
+        
+if(IS_DIRECTORY /lib/init)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf
+            DESTINATION ${sysconfdir}/default RENAME matahari)
+    
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf
+            DESTINATION ${sysconfdir}/default RENAME matahari-broker)
+    
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf
+            DESTINATION ${sysconfdir})
+    
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy.sysconf
+            DESTINATION ${sysconfdir}/default RENAME matahari-vios-proxy)
+    
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-host.init
+            DESTINATION ${initdir} RENAME matahari-vios-proxy-host)
+    
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy-guest.init
+            DESTINATION ${initdir} RENAME matahari-vios-proxy-guest)
+    
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-guest-agent.rules
+            DESTINATION ${sysconfdir}/udev/rules.d
+            RENAME 99-matahari-guest-agent.rules)
+endif(IS_DIRECTORY /lib/init)
 
 
 # Check for systemd
@@ -73,9 +98,9 @@ endif(systemd_FOUND)
 if(IS_DIRECTORY /lib/init)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.upstart.in
                    ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.upstart)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.upstart
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.upstart
             DESTINATION ${sysconfdir}/init
-            RENAME matahari-broker.conf
+            RENAME matahari-broker.conf)
 endif(IS_DIRECTORY /lib/init)
 
 

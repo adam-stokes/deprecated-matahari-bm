@@ -12,9 +12,9 @@ expect fork
 respawn
 
 script
-    . @sysconfdir@/sysconfig/matahari
-    . @sysconfdir@/sysconfig/matahari-broker
-    . @sysconfdir@/sysconfig/matahari-vios-proxy
+    . @sysconfdir@/default/matahari
+    . @sysconfdir@/default/matahari-broker
+    . @sysconfdir@/default/matahari-vios-proxy
     
     su -c "matahari-brokerd $QPIDD_OPTIONS" qpidd
 end script

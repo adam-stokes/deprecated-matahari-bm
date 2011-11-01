@@ -11,16 +11,15 @@ stop on runlevel [06]
 expect fork
 respawn
 
-SERVICE=matahari-@BASE@@BASE_SUB@
-PROCESS=matahari-qmf-@BASE@@BASE_SUB@d
+env SERVICE=matahari-@BASE@@BASE_SUB@
+env PROCESS=matahari-qmf-@BASE@@BASE_SUB@d
 # Old process naming convention, this is here
 # for compability sake when starting/stopping the
 # service from an upgrade of 0.4.0 > 0.4.2
-OLDPROCESS=matahari-@BASE@@BASE_SUB@d
+env OLDPROCESS=matahari-@BASE@@BASE_SUB@d
 
 script
-    . @sysconfdir@/sysconfig/matahari
-    
+    . @sysconfdir@/default/matahari
     MATAHARI_ARGS="$MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS"
     if [ -n "$MATAHARI_PORT" ]; then
 	MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
