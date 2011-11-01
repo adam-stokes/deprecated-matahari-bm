@@ -1,2 +1,3 @@
 /usr/sbin/matahari-brokerd
 /usr/share/man/man8/matahari-brokerd.8.gz
+/etc/init/matahari-broker.conf

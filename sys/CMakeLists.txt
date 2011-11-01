@@ -69,3 +69,13 @@ if(systemd_FOUND)
 
 endif(systemd_FOUND)
 
+# Check for upstart
+if(IS_DIRECTORY /lib/init)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.upstart.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.upstart)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-broker.upstart
+            DESTINATION ${sysconfdir}/init
+            RENAME matahari-broker.conf
+endif(IS_DIRECTORY /lib/init)
+
+
