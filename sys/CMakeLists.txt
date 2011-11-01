@@ -46,23 +46,6 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-guest-agent.rules
         DESTINATION ${sysconfdir}/udev/rules.d
         RENAME 99-matahari-guest-agent.rules)
 
-if(WITH-DEBIAN)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari.sysconf
-            DESTINATION ${sysconfdir}/default RENAME matahari)
-    
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.sysconf
-            DESTINATION ${sysconfdir}/default RENAME matahari-broker)
-    
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.conf
-            DESTINATION ${sysconfdir})
-    
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-vios-proxy.sysconf
-            DESTINATION ${sysconfdir}/default RENAME matahari-vios-proxy)
-    
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/matahari-guest-agent.rules
-            DESTINATION ${sysconfdir}/udev/rules.d
-            RENAME 99-matahari-guest-agent.rules)
-endif(WITH-DEBIAN)
 
 # Check for systemd
 include(FindPkgConfig)

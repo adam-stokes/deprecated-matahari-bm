@@ -32,8 +32,6 @@
 #include "broker_federation.h"
 
 
-MH_TRACE_INIT_DATA(mh_broker);
-
 #define DNS_SRV_PREFIX_TCP "_matahari._tcp."
 #define DNS_SRV_PREFIX_TLS "_matahari._tls."
 

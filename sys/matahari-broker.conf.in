@@ -23,8 +23,3 @@
 # "qpidd --help" or "man qpidd" for more details.
 cluster-mechanism=ANONYMOUS
 auth=no
-
-# ACL
-# acl-file=/usr/share/matahari/matahari-policy.acl
-# SASL
-# sasl-config=/etc/sasl2/matahari-sasl.conf

@@ -9,18 +9,6 @@ MATAHARI_BROKER=@MATAHARI_BROKER@
 # Other options that all agents should observe
 MATAHARI_AGENT_ARGS="--reconnect=yes"
 
-# Matahari Logging
-# LOG_EMERG   /* system is unusable */
-# LOG_ALERT   /* action must be taken immediately */
-# LOG_CRIT    /* critical conditions */
-# LOG_ERR     /* error conditions */
-# LOG_WARNING /* warning conditions */
-# LOG_NOTICE  /* normal but significant condition */
-# LOG_INFO    /* informational */
-# LOG_DEBUG   /* debug-level messages */
-# LOG_TRACE   /* trace-level messages */
-#MATAHARI_LOG_LEVEL=LOG_INFO
-
 # SSL client options
 #QPID_SSL_CERT_DB=
 #QPID_SSL_CERT_PASSWORD_FILE=

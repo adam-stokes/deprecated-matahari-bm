@@ -21,10 +21,6 @@ if(NOT WIN32)
 
     configure_file(${CMAKE_SOURCE_DIR}/sys/matahari-broker.init.in
                    ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.init @ONLY)
-    if(WITH-DEBIAN)
-        configure_file(${CMAKE_SOURCE_DIR}/sys/matahari-broker.init.in
-                       ${CMAKE_SOURCE_DIR}/debian/matahari-broker.init @ONLY)
-    endif(WITH-DEBIAN)
 
     install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.init
             DESTINATION ${initdir} RENAME matahari-broker)

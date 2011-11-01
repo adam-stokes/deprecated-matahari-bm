@@ -59,7 +59,6 @@ class MhHsaSuite : public CxxTest::TestSuite
 
         g_list_free_full(records, mh_dnssrv_record_free);
     }
-
 };
 
 #endif

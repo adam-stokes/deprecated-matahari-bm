@@ -21,7 +21,6 @@
 #include <windows.h>
 #include <rpc.h>
 #include <wchar.h>
-
 #include "matahari/utilities.h"
 #include "matahari/logging.h"
 #include "utilities_private.h"
@@ -88,4 +87,3 @@ bail:
 
     return uuid_str;
 }
-

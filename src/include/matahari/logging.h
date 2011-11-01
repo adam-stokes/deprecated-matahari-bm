@@ -53,9 +53,6 @@ mh_log_fn(int priority, const char * fmt, ...) G_GNUC_PRINTF(2,3);
 void
 mh_log_init(const char *ident, int level, gboolean to_stderr);
 
-int
-mh_hastty(void);
-
 void
 mh_enable_stderr(gboolean to_stderr);
 

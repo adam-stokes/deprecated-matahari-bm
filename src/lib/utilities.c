@@ -193,20 +193,9 @@ mh_glib_handler(const gchar *log_domain, GLogLevelFlags flags,
     mh_log(log_level, "%s: %s", log_domain, message);
 }
 
-int
-mh_hastty()
-{
-#ifdef WIN32
-    return TRUE;
-#else
-    return isatty(STDERR_FILENO);
-#endif
-}
-
 void
 mh_enable_stderr(gboolean to_stderr)
 {
-
     mh_stderr_enabled = to_stderr;
 }
 
@@ -580,3 +569,4 @@ mh_read_from_fd(int fd, char **data)
     g_io_channel_unref(ch);
     return length;
 }
+

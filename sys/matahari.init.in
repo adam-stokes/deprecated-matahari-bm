@@ -23,17 +23,7 @@
 #SYSTEMCTL_SKIP_REDIRECT=1
 
 # Source function library.
-test -f /lib/lsb/init-functions && . /lib/lsb/init-functions
-
-# (RPM)
-if [ -d @sysconfdir@/sysconfig ]; then
-	[ -f @sysconfdir@/sysconfig/matahari ] && . @sysconfdir@/sysconfig/matahari
-fi
-
-# (DEBIAN/UBUNTU)
-if [ -d @sysconfdir@/default ]; then
-    [ -f @sysconfdir@/default/matahari ] && . @sysconfdir@/default/matahari
-fi
+. @sysconfdir@/rc.d/init.d/functions
 
 SERVICE=matahari-@BASE@@BASE_SUB@
 PROCESS=matahari-qmf-@BASE@@BASE_SUB@d
@@ -44,21 +34,24 @@ OLDPROCESS=matahari-@BASE@@BASE_SUB@d
 
 RETVAL=0
 
+test -f @sysconfdir@/sysconfig/matahari && . @sysconfdir@/sysconfig/matahari
+
 start() {
     echo -n $"Starting the $SERVICE daemon: "
 
     MATAHARI_ARGS="$MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS"
     if [ -n "$MATAHARI_PORT" ]; then
-        MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
+	MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
     fi
     if [ -n "$MATAHARI_BROKER" ]; then
-        MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
+	MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
     fi
+
 
     export QPID_SSL_CERT_DB
     export QPID_SSL_CERT_PASSWORD_FILE
 
-    start_daemon $PROCESS $MATAHARI_ARGS --daemon
+    daemon $PROCESS $MATAHARI_ARGS --daemon
     RETVAL=$?
     echo
     [ $RETVAL -eq 0 ] && touch @localstatedir@/lock/subsys/$SERVICE
@@ -117,7 +110,7 @@ case "$1" in
         [ -f @localstatedir@/lock/subsys/$SERVICE ] && restart || :
         ;;
     *)
-        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload}"
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
         exit 1
         ;;
 esac

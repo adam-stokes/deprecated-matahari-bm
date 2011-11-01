@@ -24,14 +24,9 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <matahari/logging.h>
-#include <matahari/utilities.h>
-
 #include "broker_federation.h"
 #include "broker_os.h"
 
-
-MH_TRACE_INIT_DATA(mh_broker);
 
 int broker_os_start_broker(char * const args[])
 {
@@ -91,7 +86,6 @@ int broker_os_add_qpid_route(const struct mh_qpid_route *route)
         snprintf(cmd, sizeof(cmd), "qpid-route --timeout=5 dynamic add %s %s %s",
                  route->dest, route->src, route->exchange);
     }
-
     ret = system(cmd);
 
     if (ret < 0) {

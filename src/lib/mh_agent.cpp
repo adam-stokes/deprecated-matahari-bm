@@ -164,11 +164,8 @@ map_option(int code, const char *name, const char *arg, void *userdata)
     OptionsMap *options = (OptionsMap*)userdata;
 
     if(strcmp(name, "verbose") == 0) {
-        int mh_config_log_level = atoi(getenv("MATAHARI_LOG_LEVEL"));
         mh_enable_stderr(1);
-        if (mh_config_log_level) {
-            mh_log_level = mh_config_log_level;
-        } else if (mh_strlen_zero(arg)) {
+        if (mh_strlen_zero(arg)) {
             mh_log_level++;
         } else {
             unsigned int val;
@@ -651,6 +648,16 @@ MatahariAgentImpl::registerAgent(void)
     _agent_session.addData(_agent_instance);
 }
 
+static bool
+mh_hastty(void)
+{
+#ifdef WIN32
+    return true;
+#else
+    return isatty(STDERR_FILENO);
+#endif
+}
+
 int
 MatahariAgent::init(int argc, char **argv, const char* proc_name)
 {
@@ -664,6 +671,7 @@ MatahariAgent::init(int argc, char **argv, const char* proc_name)
     mh_add_option('d', no_argument, "daemon", "run as a daemon", NULL, mh_should_daemonize);
 
     OptionsMap amqp_options = mh_parse_options(proc_name, argc, argv, options);
+
 
     /* Re-initialize logging now that we've completed option processing */
     mh_log_init(strdup(logname.str().c_str()), mh_log_level, mh_hastty());

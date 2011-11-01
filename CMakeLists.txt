@@ -15,8 +15,6 @@ MACRO (inherit_value theSymbol theValue)
         set (${theSymbol}_inherited = "true")
     endif (NOT DEFINED ${theSymbol})
 ENDMACRO (inherit_value)
-# Debian/Ubuntu
-option(WITH-DEBIAN "Add Debian/Ubuntu specifics to build" OFF)
 
 # Various defines 
 inherit_value(MATAHARI_PORT "49000")

@@ -131,7 +131,6 @@ int main(int argc, char** argv)
         /* Restrict further, to a single host */
         filter << ", [eq, hostname, [quote, " << core_options["host-dns"] << "]]";
     }
-
     filter << "]";
 
     /* Only interested in agents under matahariproject.org vendor

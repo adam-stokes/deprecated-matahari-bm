@@ -23,6 +23,13 @@ extern "C" {
 
 using namespace std;
 
+/**
+ * Callback function, doesn't do anything
+ */
+void f(void *, int)
+{
+}
+
 class MhApiSysconfigWindowsSuite : public CxxTest::TestSuite
 {
  public:

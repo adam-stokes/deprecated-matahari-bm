@@ -110,15 +110,6 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
-deb:
-	debuild -i -us -uc $(WITH)
-
-deb-source:
-	debuild -i -S -sa $(WITH)
-
-pbuild:
-	pbuilder build $@
-
 overlay: export $(VARIANT)$(PACKAGE).spec
 	cp $(TARFILE) ~/rpmbuild/SOURCES
 	cp $(VARIANT)$(PACKAGE).spec ~/rpmbuild/SPECS
