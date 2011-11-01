@@ -118,7 +118,7 @@ def setUp(self):
 
     # get puppet pre-req
     if platform.dist()[0] == 'redhat':
-        cmd.getoutput("wget -O /etc/yum.repos.d/rhel-aeolus.repo http://repos.fedorapeople.org/repos/aeolus/conductor/0.3.0/rhel-aeolus.repo")
+        cmd.getoutput("wget -O /etc/yum.repos.d/rhel-aeolus.repo http://repos.fedorapeople.org/repos/aeolus/conductor/rhel-aeolus.repo")
         result = cmd.getstatusoutput("yum -y install puppet")
         if result[0] != 0:
             sys.exit("Unable to install puppet (required for sysconfig tests)")
