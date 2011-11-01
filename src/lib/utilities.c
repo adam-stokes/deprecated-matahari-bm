@@ -557,3 +557,26 @@ mh_result_to_str(enum mh_result res)
     return "FIXME: result code doesn't have message assigned!";
 }
 
+gsize
+mh_read_from_fd(int fd, char **data)
+{
+    gsize length;
+    GError *err = NULL;
+    GIOChannel *ch;
+
+#ifdef WIN32
+    ch = g_io_channel_win32_new_fd(fd);
+#else
+    ch = g_io_channel_unix_new(fd);
+#endif
+
+    if (g_io_channel_read_to_end(ch, data, &length, &err) != G_IO_STATUS_NORMAL) {
+        mh_err("Unable to read from filedescriptor %d: %s", fd, err->message);
+        free(*data);
+        data = NULL;
+        return -err->code;
+    }
+    g_io_channel_close(ch);
+    g_io_channel_unref(ch);
+    return length;
+}

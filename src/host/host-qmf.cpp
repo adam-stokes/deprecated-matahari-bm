@@ -112,6 +112,7 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         return TRUE;
     }
 
+    enum mh_result res = MH_RES_SUCCESS;
     const std::string& methodName(event.getMethodName());
     qpid::types::Variant::Map& args = event.getArguments();
 
@@ -153,7 +154,37 @@ HostAgent::invoke(qmf::AgentSession session, qmf::AgentEvent event,
         if (uuid) {
             event.addReturnArgument("uuid", uuid);
         }
+    } else if (methodName == "set_power_profile") {
+        res = mh_host_set_power_profile(args["profile"].asString().c_str());
+        if (res != MH_RES_SUCCESS) {
+            session.raiseException(event, mh_result_to_str(res));
+            goto bail;
+        } else {
+            event.addReturnArgument("status", 0);
+        }
+    } else if (methodName == "get_power_profile") {
+        char *profile = NULL;
+        res = mh_host_get_power_profile(&profile);
+        if (res != MH_RES_SUCCESS) {
+            session.raiseException(event, mh_result_to_str(res));
+            goto bail;
+        } else {
+            event.addReturnArgument("profile", profile);
+        }
+        free(profile);
+    } else if (methodName == "list_power_profiles") {
+        GList *plist = NULL;
+        GList *profile_list = NULL;
 
+        _qtype::Variant::List s_list;
+
+        profile_list = mh_host_list_power_profiles();
+        for (plist = g_list_first(profile_list); plist;
+             plist = g_list_next(plist)) {
+            s_list.push_back((const char *) plist->data);
+        }
+        event.addReturnArgument("profiles", s_list);
+        g_list_free_full(profile_list, free);
     } else {
         session.raiseException(event, mh_result_to_str(MH_RES_NOT_IMPLEMENTED));
         goto bail;

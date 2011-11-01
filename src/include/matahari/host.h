@@ -28,6 +28,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sigar.h>
+#include <glib.h>
+
+#include "matahari/errors.h"
 
 /**
  * Get a UUID for a host.
@@ -117,5 +120,37 @@ mh_host_get_load_averages(sigar_loadavg_t *avg);
 
 void
 mh_host_get_processes(sigar_proc_stat_t *procs);
+
+/**
+ * Set power management profile.
+ *
+ * \param[in] profile One of profile returned by mh_host_list_power_profiles
+ *                    function
+ * \return see enum mh_result
+ */
+enum mh_result
+mh_host_set_power_profile(const char *profile);
+
+/**
+ * Get current power management profile.
+ *
+ * \param[out] profile Variable where current profile will be written to.
+ *                     Variable must be freed with free().
+ *
+ * \return see enum mh_result
+ */
+enum mh_result
+mh_host_get_power_profile(char **profile);
+
+/**
+ * Get list of all available power management profiles.
+ *
+ * \note The return of this routine must be freed with
+ *       g_list_free_full(returned_list, free);
+ *
+ * \return list of all profiles.
+ */
+GList *
+mh_host_list_power_profiles(void);
 
 #endif // __MH_HOST_H__

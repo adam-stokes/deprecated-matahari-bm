@@ -310,3 +310,21 @@ mh_host_set_uuid(const char *lifetime, const char *uuid)
 
     return G_FILE_ERROR_NOSYS;
 }
+
+enum mh_result
+mh_host_set_power_profile(const char* profile)
+{
+    return host_os_set_power_profile(profile);
+}
+
+enum mh_result
+mh_host_get_power_profile(char **profile)
+{
+    return host_os_get_power_profile(profile);
+}
+
+GList *
+mh_host_list_power_profiles(void)
+{
+    return host_os_list_power_profiles();
+}

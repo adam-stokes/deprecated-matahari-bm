@@ -168,6 +168,8 @@ Requires:       dmidecode
 Requires(post): chkconfig
 Requires(preun):chkconfig
 Requires(preun):initscripts
+# Power management functions in host agent require tuned
+Requires:       tuned
 
 %description host
 QMF agent for viewing and controlling remote hosts

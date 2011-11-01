@@ -31,6 +31,25 @@
 
 #include <glib.h>
 
+#define TIMEOUT 10
+#define TA_PATH          "/usr/bin/"
+#define TA_SETPROFILE    "profile"
+#define TA_GETPROFILE    "active"
+#define TA_LISTPROFILES  "list"
+#define TA_OFF           "off"
+#define TUNEDADM TA_PATH "tuned-adm"
+
+#define SYSTEM32 "system32"
+#define POWERCFG "powercfg"
+#define PC_SETPROFILE "-SETACTIVE"
+#define PC_GETPROFILE "-GETACTIVESCHEME"
+#define PC_LISTPROFILES "-LIST"
+#define GUID "GUID: "
+
+#define STR_UNK   "UNKNOWN"
+#define STR_ERR   "ERROR"
+
+
 const char *
 host_os_get_cpu_flags(void);
 
@@ -66,5 +85,14 @@ host_os_agent_uuid(void);
 
 int
 host_os_set_custom_uuid(const char *uuid);
+
+enum mh_result
+host_os_set_power_profile(const char *profile);
+
+enum mh_result
+host_os_get_power_profile(char **profile);
+
+GList *
+host_os_list_power_profiles(void);
 
 #endif /* __MH_HOST_PRIVATE_H__ */

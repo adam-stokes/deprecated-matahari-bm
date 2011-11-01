@@ -24,10 +24,12 @@
 #include <limits.h>
 #include <string.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <sys/reboot.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 
 #include <linux/reboot.h>
 #include <linux/kd.h>
@@ -45,6 +47,7 @@
 
 #define UUID_STR_BUF_LEN 37
 
+#define BUFSIZE 4096
 
 const char *
 host_os_get_cpu_flags(void)
@@ -436,3 +439,223 @@ host_os_set_custom_uuid(const char *uuid)
     return rc;
 }
 
+static enum mh_result
+exec_command(const char *apath, char *args[], int atimeout, char **stdoutbuf,
+             char **stderrbuf)
+{
+    enum mh_result res = MH_RES_SUCCESS;
+    GPid pid = 0;
+    GError *gerr = NULL;
+    int status = 0;
+    int timeout = atimeout;
+    gint stdout_fd;
+    gint stderr_fd;
+
+    if (!args || !args[0])
+      return MH_RES_OTHER_ERROR;
+
+    mh_trace("Spawning '%s'\n", args[0]);
+    if (!g_spawn_async_with_pipes(apath, args, NULL, G_SPAWN_DO_NOT_REAP_CHILD,
+                                  NULL, NULL, &pid, NULL, &stdout_fd,
+                                  &stderr_fd, &gerr)) {
+        mh_perror(LOG_ERR, "Spawn_process failed with code %d, message: %s\n",
+                  gerr->code, gerr->message);
+        return MH_RES_OTHER_ERROR;
+    }
+
+    mh_trace("Waiting for %d", pid);
+    while (timeout > 0 && waitpid(pid, &status, WNOHANG) <= 0) {
+        sleep(1);
+        timeout--;
+    }
+
+    if (timeout == 0) {
+        int killrc = sigar_proc_kill(pid, SIGKILL);
+
+        res = MH_RES_BACKEND_ERROR;
+        mh_warn("%d - timed out after %dms", pid, atimeout);
+
+        if (killrc != SIGAR_OK && killrc != ESRCH) {
+            mh_err("kill(%d, KILL) failed: %d", pid, killrc);
+        }
+
+    } else if (WIFEXITED(status)) {
+        if (WEXITSTATUS(status) > 0)
+            res = MH_RES_BACKEND_ERROR;
+        mh_err("Managed process %d exited with rc=%d", pid, WEXITSTATUS(status));
+
+    } else if (WIFSIGNALED(status)) {
+        int signo = WTERMSIG(status);
+        res = MH_RES_BACKEND_ERROR;
+        mh_err("Managed process %d exited with signal=%d", pid, signo);
+    }
+
+    mh_trace("Child done: %d", pid);
+
+    if (stdoutbuf) {
+        if (mh_read_from_fd(stdout_fd, stdoutbuf) < 0) {
+            mh_err("Unable to read standard output from command %s.", apath);
+            stdoutbuf = NULL;
+        } else {
+            mh_debug("stdout: %s", *stdoutbuf);
+        }
+    }
+
+    if (stderrbuf) {
+        if (mh_read_from_fd(stderr_fd, stderrbuf) < 0) {
+            mh_err("Unable to read standard error output from command %s.", apath);
+            stderrbuf = NULL;
+        } else {
+            mh_debug("stderr: %s", *stderrbuf);
+        }
+    }
+
+    close(stdout_fd);
+    close(stderr_fd);
+
+    g_spawn_close_pid(pid);
+
+    return res;
+}
+
+GList *
+host_os_list_power_profiles(void)
+{
+    char *stdoutbuf = NULL;
+    char *c1, *c2;
+    char *args[3] = {0};
+    GList *list = NULL;
+    enum mh_result res;
+    int len;
+
+    args[0] = TUNEDADM;
+    args[1] = TA_LISTPROFILES;
+    args[2] = NULL;
+
+    res = exec_command(NULL, args, TIMEOUT, &stdoutbuf, NULL);
+    len = strlen(stdoutbuf);
+
+    if (res == MH_RES_SUCCESS && stdoutbuf) {
+        c1 = stdoutbuf;
+        do {
+            // Each line with profile in "tuned-adm list" starts with "-"
+            if (*c1 == '-' && c1 - stdoutbuf + 2 < len) {
+                // Skip the dash and the space after it
+                c1 += 2;
+                // Profile name is the rest of the line
+                c2 = strchr(c1, '\n');
+                if (c2 && c2 > c1) {
+                    // Replace \n with \0 and append it to output
+                    *c2 = '\0';
+                    list = g_list_append(list, strdup(c1));
+                    // Replace it back with \n, so free() will free whole string
+                    *c2 = '\n';
+                }
+            } else {
+                // Line doesn't contain the profile -> skip the line
+                c2 = strchr(c1, '\n');
+            }
+            // Move c1 to beggining of the next line
+            if (c2) {
+                c1 = c2 + 1;
+            }
+        } while (c2 && c1 - stdoutbuf < len);
+
+        if (g_list_length(list) == 0) {
+            // Return at least "off" profile, if no other profile found
+            list = g_list_append(list, strdup(TA_OFF));
+        }
+    }
+    free(stdoutbuf);
+
+    return list;
+}
+
+static gboolean
+check_profile(const char *profile)
+{
+    GList *list = NULL;
+    GList *llist;
+    gboolean rc = FALSE;
+
+    if (!(list = host_os_list_power_profiles()))
+        return FALSE;
+
+    if (!g_list_length(list))
+        return FALSE;
+
+    for (llist = g_list_first(list); llist && !rc; llist = g_list_next(llist)) {
+        mh_trace("comparing '%s' with '%s'", (char *) llist->data, profile);
+        if (!strcmp(profile, (char *) llist->data)) {
+            rc = TRUE;
+            break;
+        }
+    }
+    g_list_free_full(list, free);
+
+    return rc;
+}
+
+enum mh_result
+host_os_set_power_profile(const char *profile)
+{
+    char *args[4] = {0};
+
+    args[0] = TUNEDADM;
+    if (!profile)
+        return MH_RES_INVALID_ARGS;
+
+    if (!strcmp(profile, TA_OFF)) {
+        args[1] = TA_OFF;
+        mh_trace("switching tuning off");
+    } else {
+        if (!check_profile(profile)) {
+            mh_err("invalid profile: %s", profile);
+            return MH_RES_INVALID_ARGS;
+        }
+        args[1] = TA_SETPROFILE;
+        mh_trace("setting profile: %s", profile);
+    }
+
+    args[2] = (char *) profile;
+    args[3] = NULL;
+
+    return exec_command(NULL, args, TIMEOUT, NULL, NULL);
+}
+
+enum mh_result
+host_os_get_power_profile(char **profile)
+{
+    char *stdoutbuf = NULL;
+    char *c1, *c2 = NULL;
+    char *args[3] = {0};
+    enum mh_result res;
+
+    args[0] = TUNEDADM;
+    args[1] = TA_GETPROFILE;
+    args[2] = NULL;
+
+    res = exec_command(NULL, args, TIMEOUT, &stdoutbuf, NULL);
+    if (res == MH_RES_SUCCESS) {
+        // Parse first line of "tuned-adm active", that is something like
+        // "Current active profile: profile_name", so take what is after
+        // semicolon and space to the end of the line
+        if (stdoutbuf && (c1 = strchr(stdoutbuf, ':')) &&
+                (c1 - stdoutbuf + 2 < strlen(stdoutbuf))) {
+            if ((c2 = strchr(c1, '\n'))) {
+                *c2 = '\0';
+            }
+            // + 2 because we need to skip semicolon and space
+            *profile = strdup(c1 + 2);
+            if (c2)
+                *c2 = '\n';
+        } else {
+            *profile = strdup(STR_UNK);
+        }
+    } else {
+        res = MH_RES_BACKEND_ERROR;
+    }
+    free(stdoutbuf);
+
+    return res;
+}
