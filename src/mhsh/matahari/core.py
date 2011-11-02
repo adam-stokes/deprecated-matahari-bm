@@ -2,6 +2,10 @@ import itertools
 import threading
 import qmf.console as qc
 
+
+(TIMEOUT,) = (10,)
+
+
 _chain = itertools.chain.from_iterable
 
 
@@ -138,19 +142,18 @@ class Manager(object):
         """Invoke a method on a list of objects"""
         results = [None] * len(objs)
         seqs = []
-        lock = threading.Lock()
-        lock.acquire()
+        event = threading.Event()
         def recv_response(seq, response):
             i = seqs.index(seq)
             results[i] = response
             if None not in results:
-                lock.release()
+                event.set()
         self._async.handle_method_responses(recv_response)
 
         for o in objs:
             m = getattr(o, method)
             seqs.append(m(*args, _async=True, **kwargs))
-        lock.acquire()
+        event.wait(TIMEOUT)
         return tuple(results)
 
 
