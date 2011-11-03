@@ -5,16 +5,27 @@
 
 description "Matahari broker"
 
-start on filesystem
+start on runlevel [2345]
 stop on runlevel [06]
 
 expect fork
 respawn
 
+pre-start script
+	mkdir -p -m0775 /var/lib/matahari
+	chgrp qpidd /var/lib/matahari
+end script
+
 script
-    . @sysconfdir@/default/matahari
-    . @sysconfdir@/default/matahari-broker
-    . @sysconfdir@/default/matahari-vios-proxy
+	if [ -f @sysconfdir@/default/matahari ]; then
+		. @sysconfdir@/default/matahari
+	fi
+	if [ -f @sysconfdir@/default/matahari-broker ]; then
+		. @sysconfdir@/default/matahari-broker
+	fi
+	if [ -f @sysconfdir@/default/matahari-vios-proxy ]; then
+		. @sysconfdir@/default/matahari-vios-proxy
+	fi
     
-    su -c "matahari-brokerd $QPIDD_OPTIONS" qpidd
+	exec start-stop-daemon --start --quiet --chuid qpidd --exec /usr/sbin/matahari-brokerd -- $QPIDD_OPTIONS
 end script

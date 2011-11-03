@@ -3,34 +3,29 @@
 # Matahari Broker is an AMQP broker. It receives, stores, routes and 
 # forwards messages using the AMQP protcol.
 
-description Matahari @BASE@@BASE_SUB@ daemon using the AMQP protocol.
+description "Matahari @BASE@@BASE_SUB@ daemon using the AMQP protocol."
 
-start on filesystem
+start on runlevel [2345]
 stop on runlevel [06]
 
 expect fork
 respawn
 
-env SERVICE=matahari-@BASE@@BASE_SUB@
-env PROCESS=matahari-qmf-@BASE@@BASE_SUB@d
-# Old process naming convention, this is here
-# for compability sake when starting/stopping the
-# service from an upgrade of 0.4.0 > 0.4.2
-env OLDPROCESS=matahari-@BASE@@BASE_SUB@d
-
 script
-    . @sysconfdir@/default/matahari
-    MATAHARI_ARGS="$MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS"
-    if [ -n "$MATAHARI_PORT" ]; then
-	MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
-    fi
-    if [ -n "$MATAHARI_BROKER" ]; then
-	MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
-    fi
-    
-    export QPID_SSL_CERT_DB
-    export QPID_SSL_CERT_PASSWORD_FILE
-    
-    exec $PROCESS $MATAHARI_ARGS --daemon
+	if [ -f @sysconfdir@/default/matahari ]; then
+		. @sysconfdir@/default/matahari
+	fi
+	
+	MATAHARI_ARGS="$MATAHARI_@DAEMON_TYPE@_ARGS $@BASE@_@DAEMON_TYPE@_ARGS"
+	if [ -n "$MATAHARI_PORT" ]; then
+		MATAHARI_ARGS="--port $MATAHARI_PORT $MATAHARI_ARGS"
+	fi
+	if [ -n "$MATAHARI_BROKER" ]; then
+		MATAHARI_ARGS="--broker $MATAHARI_BROKER $MATAHARI_ARGS"
+	fi
+	
+	export QPID_SSL_CERT_DB
+	export QPID_SSL_CERT_PASSWORD_FILE
+	
+	exec matahari-qmf-@BASE@@BASE_SUB@d $MATAHARI_ARGS --daemon
 end script
-
