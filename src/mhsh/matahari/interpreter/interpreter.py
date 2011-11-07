@@ -8,6 +8,10 @@ class Interpreter(cmd.Cmd):
         self.misc_header = 'Help topics:'
         self.undoc_header = ''
 
+    def completenames(self, *args, **kwargs):
+        # Tab-complete should move to the next argument
+        return [s + ' ' for s in cmd.Cmd.completenames(self, *args, **kwargs)]
+
     def emptyline(self):
         # Don't do anything for an empty command
         pass
@@ -45,7 +49,7 @@ class Interpreter(cmd.Cmd):
     def complete_test(self, text, line, begidx, endidx):
         params = ['foo', 'bar', 'baz', 'blarg', 'wibble']
         previous = frozenset(line.split())
-        return [p for p in params if p not in previous and p.startswith(text)]
+        return [p + ' ' for p in params if p not in previous and p.startswith(text)]
 
 
 if __name__ == '__main__':

@@ -21,7 +21,11 @@ Arguments in all caps (e.g. 'PARAM') are variable parameters. Additionally,
 an argument that is a function will be treated as a type conversion and
 validation function for a variable parameter. For example, pass the builtin
 int class to convert the argument to an integer. The function should throw
-a ValueError exception if the argument cannot be converted.
+a ValueError exception if the argument cannot be converted. If the function
+has an attribute named "complete", this will be called to provide suggested
+values for tab-completion. The complete method is passed the current
+fragment that the user is trying to tab-complete, and should return a list
+of matching allowable values.
 
 A group of optional parameters can be passed as a tuple. For example:
 
@@ -47,7 +51,14 @@ parameter, thus:
 
 A least one argument must be supplied for a variable argument list. To allow
 a list with zero items, make it optional by wrapping it in a tuple.
+
+The docstring of the command handler function will be used to display help
+about the command to the user on request.
 """
+
+
+from itertools import *
+
 
 class Command(object):
     """
@@ -55,22 +66,25 @@ class Command(object):
 
     Arguments may be keywords (lower-case strings), string parameters
     (upper-case strings), or parameters of different types (functions that
-    validate and convert the parameters from strings).
+    validate and/or convert the parameters from strings).
 
     A series of arguments can be made optional by enclosing them in a tuple,
     or repeated by enclosing in a list.
     """
 
-    def __init__(self, *args):
+    def __init__(self, name, *args):
         """Initialise with a list of command arguments."""
+        self.name = Keyword(name)
         self.args = [_parse(a) for a in args]
 
     def __call__(self, func):
         """Decorate the command handler."""
-        return CommandHandler(func, self.args)
+        return CommandHandler(func, self.name, self.args)
+
 
 class InvalidArgumentException(Exception):
     pass
+
 
 def _collate_args(args, values):
     for a in args:
@@ -88,10 +102,10 @@ def _collate_args(args, values):
             while values:
                 for c in _collate_args(a.args, values):
                     yield c
-        elif a == values[0]:
-            yield values.pop(0)
         elif isinstance(a, Parameter):
             yield a(values.pop(0))
+        elif a == values[0]:
+            yield values.pop(0)
         else:
             raise InvalidArgumentException
 
@@ -104,11 +118,16 @@ def _collate(args, values):
         raise InvalidArgumentException("Excess arguments %s" % v)
     return r
 
+
 class CommandHandler(object):
     """A handler for a command"""
-    def __init__(self, func, args):
+
+    def __init__(self, func, name, args):
+        """Initialise with a handler function and a list of arguments."""
         self.do = func
-        self.args = args
+        self.name = name
+        self.args = [self.name] + args
+        self.arg_graph = ArgGraph(self.args)
         self.__name__ = self.do.__name__
         self.__doc__ = self.help()
 
@@ -117,25 +136,121 @@ class CommandHandler(object):
         doc = _trim(self.do.__doc__)
         return ' > %s\n\n%s' % (str(self), doc)
 
+    def complete(self, text, line, begidx, endidx):
+        """Return a list of tab-completion options for the command."""
+        values = line.split()
+        if values[-1] != text:
+            values.append(text)
+
+        match = lambda (a, v): a and a.complete(v) or []
+
+        def completions(arglist):
+            argvals = takewhile(lambda (a, v): v is not None,
+                                izip_longest(arglist, values, fillvalue=None))
+            for m in imap(match, argvals):
+                if not m:
+                    return []
+            return m
+
+        candidates = chain.from_iterable(imap(completions, self.arg_graph))
+        return set(candidates)
+
     def __call__(self, commandline):
-        """Do the command"""
+        """Do the command."""
         args = _collate(self.args, commandline.split())
         self.do(*args)
 
     def __repr__(self):
-        return '@Command(%s)' % ', '.join(repr(a) in self.args)
+        return '@Command(%s)' % ', '.join(repr(a) for a in self.args)
 
     def __str__(self):
         return ' '.join(str(a) for a in self.args)
+
+
+class ArgGraph(object):
+    """A representation of the allowable sequences of command arguments in the
+    form of a directed acyclic graph."""
+
+    def __init__(self, args):
+        """Initialise with a list of arguments"""
+        self.edges = {}
+        roots, leaves = self._addargs(args)
+        self.first = roots[0]
+
+    def __getitem__(self, key):
+        return self.edges[key]
+
+    def __iter__(self):
+        """Return a generator for all the of allowable sequences of
+        arguments."""
+        return self._getpaths([self.first])
+
+    def _getpaths(self, visited):
+        start = visited[-1]
+        isleaf = lambda n: n not in self.edges
+        pathto = lambda n: visited + [n]
+
+        # Paths that end with the start node's children
+        for n in ifilter(isleaf, self[start]):
+            yield chain.from_iterable(iter(a) for a in pathto(n))
+
+        subpaths = lambda n: self._getpaths(pathto(n))
+        internal_children = ifilterfalse(isleaf, self[start])
+
+        # Paths that are recursively obtained via non-leaf children
+        for p in chain.from_iterable(imap(subpaths, internal_children)):
+            yield p
+
+    def _addargs(self, args):
+        roots_found = False
+        roots = []
+        leaves = []
+
+        optional = lambda n: isinstance(n, OptionalArguments)
+
+        def handle_opt_args(opt_args):
+            r, l = self._addargs(opt_args)
+            self._addedges(leaves, *r)
+            if not roots_found:
+                roots.extend(r)
+            leaves.extend(l)
+
+        def handle_arg(arg):
+            self._addedges(leaves, arg)
+            if not roots_found:
+                roots.append(arg)
+            leaves[:] = [arg]
+
+        for a in args:
+            if optional(a):
+                handle_opt_args(a)
+            else:
+                handle_arg(a)
+                roots_found = True
+
+        return roots, leaves
+
+    def _addedges(self, srcs, *dests):
+        for s in srcs:
+            l = self.edges.get(s, [])
+            l.extend(dests)
+            self.edges[s] = l
+
 
 class Parameter(object):
     """A parameter passed to the command by the user"""
     def __init__(self, param):
         self.param = param
 
+    def __iter__(self):
+        yield self
+
     def __repr__(self):
         if callable(self.param):
-            return self.param.__name__
+            if hasattr(self.param, '__name__'):
+                return self.param.__name__
+            else:
+                return type(self.param).__name__
         return str(self.param)
 
     def __str__(self):
@@ -149,10 +264,45 @@ class Parameter(object):
                 raise InvalidArgumentException('Invalid argument value (%s)' % e)
         return arg
 
+    def complete(self, value):
+        if hasattr(self.param, 'complete') and callable(self.param.complete):
+            return self.param.complete(value)
+        try:
+            if value:
+                parsed = self(value)
+            return ['']
+        except InvalidArgumentException:
+            return []
+
+
+class Keyword(object):
+    """A fixed keyword that must be present in the command"""
+    def __init__(self, kw):
+        self.kw = kw
+
+    def __iter__(self):
+        yield self
+
+    def __str__(self):
+        return self.kw
+
+    def __eq__(self, other):
+        return self.kw == other
+
+    def complete(self, value):
+        if self.kw.startswith(value):
+            return [self.kw + ' ']
+        else:
+            return []
+
+
 class OptionalArguments(object):
     """A list of arguments that may be omitted when the command is called"""
     def __init__(self, *args):
         self.args = args
+
+    def __iter__(self):
+        return iter(self.args)
 
     def __repr__(self):
         contents = ', '.join(repr(a) for a in self.args)
@@ -163,10 +313,14 @@ class OptionalArguments(object):
     def __str__(self):
         return '(%s)' % ' '.join(str(a) for a in self.args)
 
+
 class RepeatedArguments(object):
     """A list of arguments that may be repeated"""
     def __init__(self, *args):
         self.args = args
+
+    def __iter__(self):
+        return cycle(self.args)
 
     def __repr__(self):
         contents = ', '.join(repr(a) for a in self.args)
@@ -175,17 +329,22 @@ class RepeatedArguments(object):
     def __str__(self):
         return '[%s]' % ' '.join(str(a) for a in self.args)
 
+
 def _parse(arg):
     """Parse an argument definition to determine its type."""
     if isinstance(arg, tuple):
         return OptionalArguments(*[_parse(a) for a in arg])
     if isinstance(arg, list):
         return RepeatedArguments(*[_parse(a) for a in arg])
-    if isinstance(arg, basestring) and arg.upper() == arg:
-        return Parameter(arg)
     if callable(arg):
         return Parameter(arg)
+    if isinstance(arg, basestring):
+        if arg.upper() == arg:
+            return Parameter(arg)
+        else:
+            return Keyword(arg)
     return arg
+
 
 def _trim(docstring):
     """Trim whitespace from a docstring."""
@@ -195,16 +354,11 @@ def _trim(docstring):
     # and split into a list of lines:
     lines = docstring.expandtabs().splitlines()
     # Determine minimum indentation (first line doesn't count):
-    indent = None
-    for line in lines[1:]:
-        stripped = line.lstrip()
-        if stripped:
-            depth = len(line) - len(stripped)
-            indent = indent is None and depth or min(indent, depth)
+    indents = [len(l) - len(l.lstrip()) for l in lines[1:] if l and
+                                                              not l.isspace()]
+    indent = indents and reduce(min, indents) or 0
     # Remove indentation (first line is special):
-    trimmed = [lines[0].strip()]
-    if indent:
-        trimmed.extend(l[indent:].rstrip() for l in lines[1:])
+    trimmed = [lines[0].strip()] + [l[indent:].rstrip() for l in lines[1:]]
     # Strip off trailing and leading blank lines:
     while trimmed and not trimmed[-1]:
         trimmed.pop()
@@ -391,6 +545,144 @@ class CommandTest(unittest.TestCase):
         handler('foo bar')
         self.assertEqual(foo.calls, 1)
 
+class CompletionTest(unittest.TestCase):
+    def handler(self, *args):
+        @Command(*args)
+        def nullCmd(*args, **kwargs):
+            self.fail('Command handler called')
+        return nullCmd
+
+    def assertCompletion(self, handler, line, expected):
+        actual = self.complete(handler, line)
+        err = '\n' + '\n'.join(('Command:      "%s"' % handler,
+                                'Typed:        "%s"' % line,
+                                'Completions:  %s' % actual,
+                                'Expected:     %s' % expected))
+        self.assertItemsEqual(actual, expected, err)
+
+    def complete(self, handler, line):
+        parts = line.rpartition(' ')
+        text = parts[2]
+        begidx = len(parts[0]) + len(parts[1])
+        endidx = len(line)
+        return handler.complete(text, line, begidx, endidx)
+
+    def test_kw(self):
+        h = self.handler('foo', 'bar')
+        self.assertCompletion(h, 'foo ', ['bar '])
+        self.assertCompletion(h, 'foo b', ['bar '])
+        self.assertCompletion(h, 'foo bar ', [])
+
+    def test_kw_space(self):
+        h = self.handler('foo', 'bar')
+        self.assertCompletion(h, 'foo', ['foo '])
+        self.assertCompletion(h, 'foo bar', ['bar '])
+
+    def test_multiple_kw(self):
+        h = self.handler('foo', 'bar', 'baz')
+        self.assertCompletion(h, 'foo b', ['bar '])
+        self.assertCompletion(h, 'foo bar ', ['baz '])
+
+    def test_param(self):
+        h = self.handler('foo', 'PARAM')
+        self.assertCompletion(h, 'foo ', [''])
+        self.assertCompletion(h, 'foo b', [''])
+        self.assertCompletion(h, 'foo bar ', [])
+
+    def test_param_validator(self):
+        h = self.handler('foo', int)
+        self.assertCompletion(h, 'foo ', [''])
+        self.assertCompletion(h, 'foo b', [])
+        self.assertCompletion(h, 'foo 1', [''])
+        self.assertCompletion(h, 'foo 123 ', [])
+
+    def test_param_suggestor(self):
+        candidates = ['bar ', 'baz ', 'blarg ']
+        class Param(object):
+            def __call__(self):
+                pass
+            def complete(self, arg):
+                return [a for a in candidates if a.startswith(arg)]
+
+        h = self.handler('foo', Param())
+        self.assertCompletion(h, 'foo ', candidates)
+        self.assertCompletion(h, 'foo b', candidates)
+        self.assertCompletion(h, 'foo ba', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo bar', ['bar '])
+        self.assertCompletion(h, 'foo bar ', [])
+        self.assertCompletion(h, 'foo quux', [])
+
+    def test_multiple_param(self):
+        h = self.handler('foo', 'PARAM', 'PARAM2')
+        self.assertCompletion(h, 'foo ', [''])
+        self.assertCompletion(h, 'foo b', [''])
+        self.assertCompletion(h, 'foo bar ', [''])
+        self.assertCompletion(h, 'foo bar baz', [''])
+        self.assertCompletion(h, 'foo bar baz ', [])
+
+    def test_opt_args(self):
+        h = self.handler('foo', ('bar', 'PARAM1'), 'PARAM2')
+        self.assertCompletion(h, 'foo ', ['bar ', ''])
+        self.assertCompletion(h, 'foo b', ['bar ', ''])
+        self.assertCompletion(h, 'foo bar ', [''])
+        self.assertCompletion(h, 'foo quux', [''])
+        self.assertCompletion(h, 'foo quux ', [])
+
+    def test_multiple_opt_args(self):
+        h = self.handler('foo', ('bar', 'PARAM1'), ('baz', 'PARAM2'))
+        self.assertCompletion(h, 'foo', ['foo '])
+        self.assertCompletion(h, 'foo ', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo b', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo bar ', [''])
+        self.assertCompletion(h, 'foo baz ', [''])
+        self.assertCompletion(h, 'foo baz quux ', [])
+
+    def test_opt_kw(self):
+        h = self.handler('foo', ('bar',), 'PARAM')
+        self.assertCompletion(h, 'foo ', ['bar ', ''])
+        self.assertCompletion(h, 'foo b', ['bar ', ''])
+        self.assertCompletion(h, 'foo bar ', [''])
+        self.assertCompletion(h, 'foo bar quux', [''])
+        self.assertCompletion(h, 'foo bar quux ', [])
+        self.assertCompletion(h, 'foo quux', [''])
+        self.assertCompletion(h, 'foo quux ', [])
+
+    def test_list(self):
+        h = self.handler('foo', 'bar', ['PARAMS'])
+        self.assertCompletion(h, 'foo ', ['bar '])
+        self.assertCompletion(h, 'foo bar', ['bar '])
+        self.assertCompletion(h, 'foo bar ', [''])
+        self.assertCompletion(h, 'foo bar baz', [''])
+        self.assertCompletion(h, 'foo bar baz ', [''])
+        self.assertCompletion(h, 'foo bar baz blarg', [''])
+        self.assertCompletion(h, 'foo bar baz blarg ', [''])
+        self.assertCompletion(h, 'foo bar baz blarg wibble', [''])
+        self.assertCompletion(h, 'foo bar baz blarg wibble ', [''])
+
+    def test_list_optional(self):
+        h = self.handler('foo', 'bar', (['PARAMS'],))
+        self.assertCompletion(h, 'foo ', ['bar '])
+        self.assertCompletion(h, 'foo bar', ['bar '])
+        self.assertCompletion(h, 'foo bar ', [''])
+        self.assertCompletion(h, 'foo bar baz', [''])
+        self.assertCompletion(h, 'foo bar baz ', [''])
+        self.assertCompletion(h, 'foo bar baz blarg', [''])
+        self.assertCompletion(h, 'foo bar baz blarg ', [''])
+        self.assertCompletion(h, 'foo bar baz blarg wibble', [''])
+        self.assertCompletion(h, 'foo bar baz blarg wibble ', [''])
+
+    def test_list_kw_optional(self):
+        h = self.handler('foo', 'bar', ('baz', ['PARAMS'],))
+        self.assertCompletion(h, 'foo ', ['bar '])
+        self.assertCompletion(h, 'foo bar', ['bar '])
+        self.assertCompletion(h, 'foo bar ', ['baz '])
+        self.assertCompletion(h, 'foo bar baz', ['baz '])
+        self.assertCompletion(h, 'foo bar baz ', [''])
+        self.assertCompletion(h, 'foo bar baz blarg', [''])
+        self.assertCompletion(h, 'foo bar baz blarg ', [''])
+        self.assertCompletion(h, 'foo bar baz blarg wibble', [''])
+        self.assertCompletion(h, 'foo bar baz blarg wibble ', [''])
+
 class SyntaxTest(unittest.TestCase):
     def setUp(self):
         def nullCmd(*args, **kwargs):
@@ -428,5 +720,6 @@ class SyntaxTest(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(CommandTest)
+    suite.addTest(CompletionTest)
     suite.addTest(SyntaxTest)
     return suite
