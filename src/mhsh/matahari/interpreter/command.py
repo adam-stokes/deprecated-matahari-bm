@@ -75,7 +75,7 @@ class Command(object):
     def __init__(self, name, *args):
         """Initialise with a list of command arguments."""
         self.name = Keyword(name)
-        self.args = [_parse(a) for a in args]
+        self.args = [Argument(a) for a in args]
 
     def __call__(self, func):
         """Decorate the command handler."""
@@ -84,39 +84,6 @@ class Command(object):
 
 class InvalidArgumentException(Exception):
     pass
-
-
-def _collate_args(args, values):
-    for a in args:
-        if isinstance(a, OptionalArguments):
-            try:
-                if not values:
-                    raise InvalidArgumentException
-                list(_collate_args(a.args, values[:]))
-                yield list(_collate_args(a.args, values))
-            except InvalidArgumentException:
-                yield [None] * len(a.args)
-        elif not values:
-            return
-        elif isinstance(a, RepeatedArguments):
-            while values:
-                for c in _collate_args(a.args, values):
-                    yield c
-        elif isinstance(a, Parameter):
-            yield a(values.pop(0))
-        elif a == values[0]:
-            yield values.pop(0)
-        else:
-            raise InvalidArgumentException
-
-def _collate(args, values):
-    v = list(values)
-    r = list(_collate_args(args, v))
-    if len(r) < len(args):
-        raise InvalidArgumentException("Missing arguments")
-    if v:
-        raise InvalidArgumentException("Excess arguments %s" % v)
-    return r
 
 
 class CommandHandler(object):
@@ -133,7 +100,7 @@ class CommandHandler(object):
 
     def help(self):
         """Return the help string for the command."""
-        doc = _trim(self.do.__doc__)
+        doc = self._trimdoc(self.do.__doc__)
         return ' > %s\n\n%s' % (str(self), doc)
 
     def complete(self, text, line, begidx, endidx):
@@ -157,7 +124,15 @@ class CommandHandler(object):
 
     def __call__(self, commandline):
         """Do the command."""
-        args = _collate(self.args, commandline.split())
+        vals = commandline.split()
+        args = tuple(Argument.collate(self.args, vals))
+        if len(args) < len(self.args):
+            missing = ' '.join(str(a) for a in self.args[len(args):])
+            raise InvalidArgumentException("Missing arguments: '%s'" % missing)
+        if vals:
+            excess = ' '.join(vals)
+            raise InvalidArgumentException("Excess arguments: '%s'" % excess)
+
         self.do(*args)
 
     def __repr__(self):
@@ -165,6 +140,28 @@ class CommandHandler(object):
 
     def __str__(self):
         return ' '.join(str(a) for a in self.args)
+
+    @staticmethod
+    def _trimdoc(docstring):
+        """Trim whitespace from a docstring."""
+        if not docstring:
+            return ''
+        # Convert tabs to spaces (following the normal Python rules)
+        # and split into a list of lines:
+        lines = docstring.expandtabs().splitlines()
+        # Determine minimum indentation (first line doesn't count):
+        nonblank = lambda l: l and not l.isspace()
+        indents = [len(l) - len(l.lstrip()) for l in lines[1:] if nonblank(l)]
+        indent = indents and reduce(min, indents) or 0
+        # Remove indentation (first line is special):
+        trimmed = [lines[0].strip()] + [l[indent:].rstrip() for l in lines[1:]]
+        # Strip off trailing and leading blank lines:
+        while trimmed and not trimmed[-1]:
+            trimmed.pop()
+        while trimmed and not trimmed[0]:
+            trimmed.pop(0)
+        # Return a single string:
+        return '\n'.join(trimmed)
 
 
 class ArgGraph(object):
@@ -237,13 +234,46 @@ class ArgGraph(object):
             self.edges[s] = l
 
 
-class Parameter(object):
-    """A parameter passed to the command by the user"""
-    def __init__(self, param):
-        self.param = param
+class Argument(object):
+    """The definition of an argument to a command"""
+
+    def __new__(cls, arg):
+        """Create an argument of the correct type from its definition."""
+        if cls != Argument:
+            return super(Argument, cls).__new__(cls)
+
+        if isinstance(arg, tuple):
+            argclass = OptionalArguments
+        elif isinstance(arg, list):
+            argclass = RepeatedArguments
+        elif callable(arg):
+            argclass = Parameter
+        elif isinstance(arg, basestring):
+            if arg.upper() == arg:
+                argclass = Parameter
+            else:
+                argclass = Keyword
+        else:
+            return arg
+        return argclass(arg)
+
+    @staticmethod
+    def collate(args, values):
+        """
+        Match values to arguments and return an argument list suitable for
+        passing to the handler function.
+        """
+        arglist = chain.from_iterable(imap(lambda a: a.match(values), args))
+        return takewhile(lambda p: p is not None, arglist)
 
     def __iter__(self):
         yield self
+
+
+class Parameter(Argument):
+    """A parameter passed to the command by the user"""
+    def __init__(self, param):
+        self.param = param
 
     def __repr__(self):
         if callable(self.param):
@@ -274,14 +304,17 @@ class Parameter(object):
         except InvalidArgumentException:
             return []
 
+    def match(self, values):
+        if not values:
+            yield None
+            return
+        yield self(values.pop(0))
 
-class Keyword(object):
+
+class Keyword(Argument):
     """A fixed keyword that must be present in the command"""
     def __init__(self, kw):
         self.kw = kw
-
-    def __iter__(self):
-        yield self
 
     def __str__(self):
         return self.kw
@@ -289,83 +322,87 @@ class Keyword(object):
     def __eq__(self, other):
         return self.kw == other
 
+    def __ne__(self, other):
+        return self.kw != other
+
     def complete(self, value):
         if self.kw.startswith(value):
             return [self.kw + ' ']
         else:
             return []
 
+    def match(self, values):
+        if not values:
+            yield None
+            return
+        val = values[0]
+        if self != val:
+            raise InvalidArgumentException("Invalid keyword '%s'" % val)
+        yield values.pop(0)
 
-class OptionalArguments(object):
-    """A list of arguments that may be omitted when the command is called"""
-    def __init__(self, *args):
-        self.args = args
+
+class ArgumentList(Argument):
+    """Abstract base class for lists of arguments"""
+
+    def __init__(self, args):
+        self.args = [Argument(a) for a in args]
 
     def __iter__(self):
         return iter(self.args)
 
     def __repr__(self):
-        contents = ', '.join(repr(a) for a in self.args)
+        return ', '.join(repr(a) for a in self.args)
+
+    def __str__(self):
+        return ' '.join(str(a) for a in self.args)
+
+
+class OptionalArguments(ArgumentList):
+    """A list of arguments that may be omitted when the command is called"""
+
+    def __repr__(self):
+        contents = ArgumentList.__repr__(self)
         if len(self.args) == 1:
             contents += ','
         return '(%s)' % contents
 
     def __str__(self):
-        return '(%s)' % ' '.join(str(a) for a in self.args)
+        return '(%s)' % ArgumentList.__str__(self)
+
+    def match(self, values):
+        args = [None] * len(self.args)
+        if values:
+            values_copy = list(values)
+            try:
+                args = list(self.collate(self.args, values_copy))
+                values[:] = values_copy
+            except InvalidArgumentException:
+                pass
+        yield args
 
 
-class RepeatedArguments(object):
+class RepeatedArguments(ArgumentList):
     """A list of arguments that may be repeated"""
-    def __init__(self, *args):
-        self.args = args
 
     def __iter__(self):
         return cycle(self.args)
 
     def __repr__(self):
-        contents = ', '.join(repr(a) for a in self.args)
-        return '[%s]' % contents
+        return '[%s]' % ArgumentList.__repr__(self)
 
     def __str__(self):
-        return '[%s]' % ' '.join(str(a) for a in self.args)
+        return '[%s]' % ArgumentList.__str__(self)
 
+    def match(self, values):
+        if not values:
+            return iter([None])
 
-def _parse(arg):
-    """Parse an argument definition to determine its type."""
-    if isinstance(arg, tuple):
-        return OptionalArguments(*[_parse(a) for a in arg])
-    if isinstance(arg, list):
-        return RepeatedArguments(*[_parse(a) for a in arg])
-    if callable(arg):
-        return Parameter(arg)
-    if isinstance(arg, basestring):
-        if arg.upper() == arg:
-            return Parameter(arg)
-        else:
-            return Keyword(arg)
-    return arg
+        values_remain = lambda c: values
 
-
-def _trim(docstring):
-    """Trim whitespace from a docstring."""
-    if not docstring:
-        return ''
-    # Convert tabs to spaces (following the normal Python rules)
-    # and split into a list of lines:
-    lines = docstring.expandtabs().splitlines()
-    # Determine minimum indentation (first line doesn't count):
-    indents = [len(l) - len(l.lstrip()) for l in lines[1:] if l and
-                                                              not l.isspace()]
-    indent = indents and reduce(min, indents) or 0
-    # Remove indentation (first line is special):
-    trimmed = [lines[0].strip()] + [l[indent:].rstrip() for l in lines[1:]]
-    # Strip off trailing and leading blank lines:
-    while trimmed and not trimmed[-1]:
-        trimmed.pop()
-    while trimmed and not trimmed[0]:
-        trimmed.pop(0)
-    # Return a single string:
-    return '\n'.join(trimmed)
+        iterations = takewhile(values_remain,
+                               starmap(self.collate,
+                                       repeat((self.args, values))))
+        return chain.from_iterable(iterations)
 
 
 import unittest
