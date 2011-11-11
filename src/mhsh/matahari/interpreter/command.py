@@ -175,30 +175,45 @@ class ArgGraph(object):
         self.first = roots[0]
 
     def __getitem__(self, key):
+        if key is None:
+            return self.first
         return self.edges[key]
 
     def __iter__(self):
-        """Return a generator for all the of allowable sequences of
-        arguments."""
-        return self._getpaths([self.first])
+        """
+        Return a generator for all of the allowed sequences of arguments.
+        """
+        return self._getpaths()
 
-    def _getpaths(self, visited):
-        start = visited[-1]
+    def _getpaths(self, visited=None):
+        """
+        Return a generator for all of the allowed sequences of agruments
+        beginning with the given subpath.
+        """
+        children = self[visited and visited[-1]]
+
         isleaf = lambda n: n not in self.edges
-        pathto = lambda n: visited + [n]
+        pathto = lambda n: (visited or []) + [n]
 
         # Paths that end with the start node's children
-        for n in ifilter(isleaf, self[start]):
-            yield chain.from_iterable(iter(a) for a in pathto(n))
+        leaf_paths = imap(lambda leaf: pathto(leaf),
+                          ifilter(isleaf, children))
 
-        subpaths = lambda n: self._getpaths(pathto(n))
-        internal_children = ifilterfalse(isleaf, self[start])
+        # Treat each Argument as an iterator and chain their output to pick up
+        # internal members of e.g. RepeatedArguments
+        arg_chains = imap(chain.from_iterable, leaf_paths)
+
+        getpaths = lambda n: self._getpaths(pathto(n))
+        nonleaf_children = ifilterfalse(isleaf, children)
 
         # Paths that are recursively obtained via non-leaf children
-        for p in chain.from_iterable(imap(subpaths, internal_children)):
-            yield p
+        child_arg_chains = chain.from_iterable(imap(getpaths,
+                                                    nonleaf_children))
+
+        return chain(arg_chains, child_arg_chains)
 
     def _addargs(self, args):
+        """Add a list of arguments to the Graph"""
         roots_found = False
         roots = []
         leaves = []
@@ -683,6 +698,27 @@ class CompletionTest(unittest.TestCase):
         self.assertCompletion(h, 'foo bar quux ', [])
         self.assertCompletion(h, 'foo quux', [''])
         self.assertCompletion(h, 'foo quux ', [])
+
+    def test_multiple_opt_kw_first(self):
+        h = self.handler('foo', ('bar',), ('baz',))
+        self.assertCompletion(h, 'foo', ['foo '])
+        self.assertCompletion(h, 'foo ', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo b', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo bar ', ['baz '])
+        self.assertCompletion(h, 'foo baz ', [])
+        self.assertCompletion(h, 'foo quux ', [])
+        self.assertCompletion(h, 'foo bar quux ', [])
+
+    def test_multiple_opt_kw(self):
+        h = self.handler('foo', 'wibble', ('bar',), ('baz',))
+        self.assertCompletion(h, 'foo', ['foo '])
+        self.assertCompletion(h, 'foo ', ['wibble '])
+        self.assertCompletion(h, 'foo wibble ', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo wibble b', ['bar ', 'baz '])
+        self.assertCompletion(h, 'foo wibble bar ', ['baz '])
+        self.assertCompletion(h, 'foo wibble baz ', [])
+        self.assertCompletion(h, 'foo wibble quux ', [])
+        self.assertCompletion(h, 'foo wibble bar quux ', [])
 
     def test_list(self):
         h = self.handler('foo', 'bar', ['PARAMS'])
