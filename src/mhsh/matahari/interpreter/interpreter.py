@@ -1,16 +1,51 @@
+"""
+Module defining a modal command interpreter.
+
+The commands supported by the interpreter are supplied by the current mode,
+which can be changed by passing a new mode to the set_mode() method.
+"""
+
 import cmd
 
+import mode
+from command import InvalidCommandException, InvalidArgumentException
+
+
 class Interpreter(cmd.Cmd):
-    def __init__(self, prompt):
+    """A modal command interpreter."""
+
+    def __init__(self, prompt, mode=mode.Mode()):
+        """Initialise the interpreter in the initial mode."""
         cmd.Cmd.__init__(self)
-        self.prompt = prompt + '> '
+        self.name = prompt
+        self.mode = None
+        self.set_mode(mode)
         self.doc_header = 'Commands:'
         self.misc_header = 'Help topics:'
         self.undoc_header = ''
 
-    def completenames(self, *args, **kwargs):
+    def set_mode(self, mode):
+        """Set the shell mode."""
+        if self.mode is not None:
+            self.mode.deactivate(self)
+        self.mode = mode
+        self.mode.activate(self)
+        self.prompt = self.name + mode.prompt() + '> '
+
+    def completenames(self, *args):
         # Tab-complete should move to the next argument
-        return [s + ' ' for s in cmd.Cmd.completenames(self, *args, **kwargs)]
+        return [s + ' ' for s in cmd.Cmd.completenames(self, *args)]
+
+    def complete_help(self, *args):
+        # Don't suggest multiple arguments
+        if len(args[1].split()) > (args[1][-1] == ' ' and 1 or 2):
+            return []
+        # Explicitly call superclass's completenames() method, to avoid adding
+        # spaces (and thus duplicate output when combined with the topic list)
+        commands = set(cmd.Cmd.completenames(self, *args))
+        topics = set(a[5:] for a in self.get_names()
+                     if a.startswith('help_' + args[0]))
+        return list(commands | topics)
 
     def emptyline(self):
         # Don't do anything for an empty command
@@ -21,6 +56,13 @@ class Interpreter(cmd.Cmd):
         self.stdout.write('\n')
         # Exit the interpreter on ^D
         return True
+
+    def onecmd(self, line):
+        try:
+            return cmd.Cmd.onecmd(self, line)
+        except (InvalidCommandException, InvalidArgumentException), e:
+            data = '\n'.join('% ' + l for l in str(e).splitlines())
+            self.stdout.write(data + '\n\n')
 
     def cmdloop(self, *args, **kwargs):
         while True:
@@ -33,6 +75,7 @@ class Interpreter(cmd.Cmd):
             break
 
     def runscript(self, script):
+        """Run the specified file as a script."""
         for line in script:
             if not line.strip().startswith('#'):
                 self.onecmd(line)
@@ -41,18 +84,36 @@ class Interpreter(cmd.Cmd):
         # You've got to be kidding me
         self.stdout.write('Type "help <topic>" for help on commands\n')
 
-    ### A test command
-    def do_test(self, c):
-        """A test command"""
-        print 'Testing', ', '.join(c.split())
+    def __getattr__(self, name):
+        """
+        Get the do_ or complete_ method for a command from the current mode.
+        The help_ methods should not be needed, as commands can provide help
+        via their docstrings.
+        """
 
-    def complete_test(self, text, line, begidx, endidx):
-        params = ['foo', 'bar', 'baz', 'blarg', 'wibble']
-        previous = frozenset(line.split())
-        return [p + ' ' for p in params if p not in previous and p.startswith(text)]
+        action, u, command_name = name.partition('_')
+        if command_name:
+            try:
+                command = self.mode[command_name]
+            except KeyError:
+                pass
+            else:
+                if action == 'do':
+                    return command
+                if action == 'complete':
+                    return command.complete
+
+        raise AttributeError("%r object has no attribute %r" %
+                             (type(self).__name__, name))
+
+    def get_names(self):
+        return (filter(lambda n: n != 'do_EOF', cmd.Cmd.get_names(self)) +
+                ['%s_%s' % (p, c) for p in ['do', 'complete', 'help']
+                                  for c in self.mode])
 
 
 if __name__ == '__main__':
-    shell = Interpreter('mhsh')
+    mode = mode.Mode()
+    shell = Interpreter('mhsh', mode)
     shell.cmdloop()
 

@@ -83,17 +83,38 @@ class Command(object):
 
 
 class InvalidArgumentException(Exception):
+    """
+    An Exception raised when the value of an argument passed by the user is not
+    valid in the current context.
+    """
     pass
+
+class InvalidCommandException(Exception):
+    """
+    An Exception raised when a command executed by the user is invalid.
+    """
+
+    def __init__(self, line, candidates=[], message=None):
+        self.line = line
+        self.candidates = candidates
+        if message is None:
+            message = 'Invalid Command: "%s"' % self.line
+
+        if self.candidates:
+            message += ('\nCandidates are:\n' +
+                        '\n'.join('    ' + str(c) for c, e in self.candidates))
+
+        super(InvalidCommandException, self).__init__(message)
 
 
 class CommandHandler(object):
-    """A handler for a command"""
+    """A handler for a command."""
 
     def __init__(self, func, name, args):
         """Initialise with a handler function and a list of arguments."""
         self.do = func
-        self.name = name
-        self.args = [self.name] + args
+        self.name = str(name)
+        self.args = [name] + args
         self.arg_graph = ArgGraph(self.args)
         self.__name__ = self.do.__name__
         self.__doc__ = self.help()
@@ -101,7 +122,7 @@ class CommandHandler(object):
     def help(self):
         """Return the help string for the command."""
         doc = self._trimdoc(self.do.__doc__)
-        return ' > %s\n\n%s' % (str(self), doc)
+        return ' > %s\n\n%s\n' % (str(self), doc)
 
     def complete(self, text, line, begidx, endidx):
         """Return a list of tab-completion options for the command."""
@@ -120,18 +141,21 @@ class CommandHandler(object):
             return m
 
         candidates = chain.from_iterable(imap(completions, self.arg_graph))
-        return set(candidates)
+
+        return list(set(candidates))
 
     def __call__(self, commandline):
         """Do the command."""
-        vals = commandline.split()
+        vals = [self.name] + commandline.split()
         args = tuple(Argument.collate(self.args, vals))
         if len(args) < len(self.args):
-            missing = ' '.join(str(a) for a in self.args[len(args):])
-            raise InvalidArgumentException("Missing arguments: '%s'" % missing)
+            miss = ' '.join(str(a) for a in self.args[len(args):])
+            raise InvalidCommandException(commandline,
+                message="Missing arguments: '%s'" % miss)
         if vals:
-            excess = ' '.join(vals)
-            raise InvalidArgumentException("Excess arguments: '%s'" % excess)
+            extra = ' '.join(vals)
+            raise InvalidCommandException(commandline,
+                message="Excess arguments: '%s'" % extra)
 
         self.do(*args)
 
@@ -140,6 +164,20 @@ class CommandHandler(object):
 
     def __str__(self):
         return ' '.join(str(a) for a in self.args)
+
+    def __add__(self, other):
+        if other is None:
+            return self
+        if not isinstance(other, CommandHandler):
+            raise TypeError('%s object is not a CommandHandler' % type(other))
+        return CommandGroupHandler(self.name, self, other)
+
+    def __radd__(self, other):
+        if other is None:
+            return self
+        if not isinstance(other, CommandHandler):
+            raise TypeError('%s object is not a CommandHandler' % type(other))
+        return CommandGroupHandler(self.name, self, other)
 
     @staticmethod
     def _trimdoc(docstring):
@@ -162,6 +200,55 @@ class CommandHandler(object):
             trimmed.pop(0)
         # Return a single string:
         return '\n'.join(trimmed)
+
+
+class CommandGroupHandler(object):
+    """A handler for a group of commands with the same name."""
+
+    def __init__(self, name, *cmds):
+        self.name = name
+        self.cmds = []
+        for c in cmds:
+            self += c
+        self.__doc__ = self.help()
+
+    def help(self):
+        """Return the help string for the command."""
+        return '\n'.join(c.help() for c in self.cmds)
+
+    def complete(self, text, line, begidx, endidx):
+        """Return a list of tab-completion options for the command."""
+        completions = lambda c: c.complete(text, line, begidx, endidx)
+        return list(set().union(*map(completions, self.cmds)))
+
+    def __iadd__(self, cmd):
+        """Add a new command to the group."""
+        if not isinstance(cmd, CommandHandler):
+            raise TypeError("%s object is not a CommandHandler" % type(cmd))
+        self.cmds.append(cmd)
+        return self
+
+    def __repr__(self):
+        return 'CommandGroupHandler(%s)' % repr(self.cmds)
+
+    def __str__(self):
+        return '\n'.join('    ' + str(c) for c in self.cmds)
+
+    def __call__(self, commandline):
+        """Do the command."""
+        failures = []
+
+        for c in self.cmds:
+            try:
+                c(commandline)
+                return
+            except InvalidCommandException, e:
+                failures.extend(e.candidates or [(c, None)])
+            except InvalidArgumentException, e:
+                failures.append((c, e))
+
+        commandline = self.name + ' ' + commandline
+        raise InvalidCommandException(commandline.strip(), candidates=failures)
 
 
 class ArgGraph(object):
@@ -436,7 +523,7 @@ class CommandTest(unittest.TestCase):
 
     def setUp(self):
         def nullCmd(*args, **kwargs):
-            self.fail('Command handler called')
+            self.fail('Command handler erroneously called')
         self.nullCmd = nullCmd
 
     def test_simple(self):
@@ -444,12 +531,12 @@ class CommandTest(unittest.TestCase):
         def foo(arg):
             self.assertEqual(arg, 'foo')
         handler = Command('foo')(foo)
-        handler('foo')
+        handler('')
         self.assertEqual(foo.calls, 1)
 
     def test_simple_bad(self):
         handler = Command('foo')(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'bar')
+        self.assertRaises(InvalidCommandException, handler, 'bar')
 
     def test_param(self):
         @self.CallCounter
@@ -457,16 +544,16 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(kwfoo, 'foo')
             self.assertEqual(param, 'bar')
         handler = Command('foo', 'PARAM')(foo)
-        handler('foo bar')
+        handler('bar')
         self.assertEqual(foo.calls, 1)
 
     def test_param_missing(self):
         handler = Command('foo', 'PARAM')(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'foo')
+        self.assertRaises(InvalidCommandException, handler, '')
 
     def test_param_extra(self):
         handler = Command('foo')(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+        self.assertRaises(InvalidCommandException, handler, 'bar')
 
     def test_param_validator(self):
         @self.CallCounter
@@ -475,7 +562,7 @@ class CommandTest(unittest.TestCase):
             self.assertIsInstance(intarg, int)
             self.assertEqual(intarg, 42)
         handler = Command('foo', int)(foo)
-        handler('foo 42')
+        handler('42')
         self.assertEqual(foo.calls, 1)
 
     def test_param_validator_invalid(self):
@@ -483,7 +570,7 @@ class CommandTest(unittest.TestCase):
         def foo(kwfoo, intarg):
             self.fail('Command handler called')
         handler = Command('foo', int)(foo)
-        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+        self.assertRaises(InvalidArgumentException, handler, 'bar')
 
     def test_opt_args(self):
         @self.CallCounter
@@ -493,7 +580,7 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(param1, 'baz')
             self.assertEqual(param2, 'blarg')
         handler = Command('foo', ('bar', 'PARAM1'), 'PARAM2')(foo)
-        handler('foo bar baz blarg')
+        handler('bar baz blarg')
         self.assertEqual(foo.calls, 1)
 
     def test_opt_args_missing(self):
@@ -503,12 +590,12 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(optargs, [None, None])
             self.assertEqual(param2, 'wibble')
         handler = Command('foo', ('bar', 'PARAM1'), 'PARAM2')(foo)
-        handler('foo wibble')
+        handler('wibble')
         self.assertEqual(foo.calls, 1)
 
     def test_opt_args_partial(self):
         handler = Command('foo', ('bar', 'PARAM1'), 'PARAM2')(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+        self.assertRaises(InvalidCommandException, handler, 'bar')
 
     def test_opt_args_end_missing(self):
         @self.CallCounter
@@ -516,7 +603,7 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(kwfoo, 'foo')
             self.assertSequenceEqual(optargs, [None])
         handler = Command('foo', ('bar',))(foo)
-        handler('foo')
+        handler('')
         self.assertEqual(foo.calls, 1)
 
     def test_opt_kw(self):
@@ -526,7 +613,7 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(kwbar, 'bar')
             self.assertEqual(param, 'baz')
         handler = Command('foo', ('bar',), 'PARAM')(foo)
-        handler('foo bar baz')
+        handler('bar baz')
         self.assertEqual(foo.calls, 1)
 
     def test_opt_kw_missing(self):
@@ -536,12 +623,12 @@ class CommandTest(unittest.TestCase):
             self.assertIs(kwbar, None)
             self.assertEqual(param, 'quux')
         handler = Command('foo', ('bar',), 'PARAM')(foo)
-        handler('foo quux')
+        handler('quux')
         self.assertEqual(foo.calls, 1)
 
     def test_opt_kw_partial(self):
         handler = Command('foo', ('bar',), 'PARAM')(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+        self.assertRaises(InvalidCommandException, handler, 'bar')
 
     def test_opt_kw_missing(self):
         @self.CallCounter
@@ -550,7 +637,7 @@ class CommandTest(unittest.TestCase):
             self.assertIs(kwbar, None)
             self.assertEqual(param, 'quux')
         handler = Command('foo', ('bar',), 'PARAM')(foo)
-        handler('foo quux')
+        handler('quux')
         self.assertEqual(foo.calls, 1)
 
     def test_list(self):
@@ -560,7 +647,7 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(param, 'bar')
             self.assertSequenceEqual(args, ['baz', 'blarg', 'wibble'])
         handler = Command('foo', 'bar', ['PARAMS'])(foo)
-        handler('foo bar baz blarg wibble')
+        handler('bar baz blarg wibble')
         self.assertEqual(foo.calls, 1)
 
     def test_list_single(self):
@@ -570,12 +657,12 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(param, 'bar')
             self.assertSequenceEqual(args, ['baz'])
         handler = Command('foo', 'bar', ['PARAMS'])(foo)
-        handler('foo bar baz')
+        handler('bar baz')
         self.assertEqual(foo.calls, 1)
 
     def test_list_empty(self):
         handler = Command('foo', 'bar', ['PARAMS'])(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+        self.assertRaises(InvalidArgumentException, handler, 'bar')
 
     def test_list_optional(self):
         @self.CallCounter
@@ -584,7 +671,7 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(param, 'bar')
             self.assertSequenceEqual(args, [42, 43])
         handler = Command('foo', 'bar', ([int],))(foo)
-        handler('foo bar 42 43')
+        handler('bar 42 43')
         self.assertEqual(foo.calls, 1)
 
     def test_list_optional_empty(self):
@@ -594,12 +681,12 @@ class CommandTest(unittest.TestCase):
             self.assertEqual(param, 'bar')
             self.assertIs(args[0], None)
         handler = Command('foo', 'bar', ([int],))(foo)
-        handler('foo bar')
+        handler('bar')
         self.assertEqual(foo.calls, 1)
 
     def test_list_optional_kw_err(self):
         handler = Command('foo', ('bar', ['PARAMS']))(self.nullCmd)
-        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+        self.assertRaises(InvalidCommandException, handler, 'bar')
 
 
 class CompletionTest(unittest.TestCase):
