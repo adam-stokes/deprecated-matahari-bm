@@ -6,6 +6,11 @@ shell prompt by overriding the prompt() method. Add commands to the mode by
 concatenating them with the += operator.
 """
 
+import types
+import time
+import command
+
+
 class Mode(object):
     """
     A interpreter shell mode. Each mode may have a distinctive prompt and its
@@ -16,6 +21,14 @@ class Mode(object):
         """Initialise with an initial set of commands."""
         self.shell = None
         self.commands = {}
+        for m in dir(type(self)):
+            try:
+                c = getattr(self, m)
+            except AttributeError:
+                pass
+            else:
+                if (isinstance(c, command.CommandHandler)):
+                    self += c
         for c in commands:
             self += c
 
@@ -35,6 +48,11 @@ class Mode(object):
         """
         return ''
 
+    def write(self, *lines):
+        """Write one or more lines to the console."""
+        for line in lines:
+            self.shell.stdout.write(line + '\n')
+
     def __iadd__(self, cmd):
         """Add a command."""
         n = cmd.name
@@ -50,3 +68,13 @@ class Mode(object):
 
     def iterkeys(self):
         return iter(self)
+
+    @command.Command('sleep', float)
+    def sleep(self, kw_sleep, seconds):
+        """Sleep for the specified number of seconds"""
+        time.sleep(seconds)
+
+    @command.Command('quit')
+    def quit(self, kw_quit):
+        """Exit the interpreter"""
+        return True

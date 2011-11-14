@@ -60,7 +60,7 @@ class Interpreter(cmd.Cmd):
     def onecmd(self, line):
         try:
             return cmd.Cmd.onecmd(self, line)
-        except (InvalidCommandException, InvalidArgumentException), e:
+        except Exception, e:
             data = '\n'.join('% ' + l for l in str(e).splitlines())
             self.stdout.write(data + '\n\n')
 

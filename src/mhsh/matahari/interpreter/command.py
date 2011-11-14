@@ -57,6 +57,7 @@ about the command to the user on request.
 """
 
 
+import types
 from itertools import *
 
 
@@ -144,20 +145,26 @@ class CommandHandler(object):
 
         return list(set(candidates))
 
-    def __call__(self, commandline):
+    def __get__(self, obj, objtype=None):
+        # Allow the handler to be bound to objects as a method
+        boundfunc = types.MethodType(self.do, obj, objtype)
+        return CommandHandler(boundfunc, self.args[0], self.args[1:])
+
+    def __call__(self, line):
         """Do the command."""
-        vals = [self.name] + commandline.split()
+        vals = [self.name] + line.split()
         args = tuple(Argument.collate(self.args, vals))
+
         if len(args) < len(self.args):
             miss = ' '.join(str(a) for a in self.args[len(args):])
-            raise InvalidCommandException(commandline,
+            raise InvalidCommandException(line,
                 message="Missing arguments: '%s'" % miss)
         if vals:
             extra = ' '.join(vals)
-            raise InvalidCommandException(commandline,
+            raise InvalidCommandException(line,
                 message="Excess arguments: '%s'" % extra)
 
-        self.do(*args)
+        return self.do(*args)
 
     def __repr__(self):
         return '@Command(%s)' % ', '.join(repr(a) for a in self.args)
@@ -168,16 +175,12 @@ class CommandHandler(object):
     def __add__(self, other):
         if other is None:
             return self
-        if not isinstance(other, CommandHandler):
-            raise TypeError('%s object is not a CommandHandler' % type(other))
         return CommandGroupHandler(self.name, self, other)
 
     def __radd__(self, other):
         if other is None:
             return self
-        if not isinstance(other, CommandHandler):
-            raise TypeError('%s object is not a CommandHandler' % type(other))
-        return CommandGroupHandler(self.name, self, other)
+        return CommandGroupHandler(self.name, other, self)
 
     @staticmethod
     def _trimdoc(docstring):
@@ -205,10 +208,19 @@ class CommandHandler(object):
 class CommandGroupHandler(object):
     """A handler for a group of commands with the same name."""
 
-    def __init__(self, name, *cmds):
-        self.name = name
+    def __init__(self, *args):
+        """
+        Initialise with an optional command name and a series of command
+        handlers.
+        """
+        if isinstance(args[0], basestring):
+            self.name = args[0]
+            args = args[1:]
+        else:
+            self.name = args[0].name
         self.cmds = []
-        for c in cmds:
+        self.__doc__ = None
+        for c in args:
             self += c
         self.__doc__ = self.help()
 
@@ -221,11 +233,33 @@ class CommandGroupHandler(object):
         completions = lambda c: c.complete(text, line, begidx, endidx)
         return list(set().union(*map(completions, self.cmds)))
 
-    def __iadd__(self, cmd):
+    def _check_add(self, other):
+        if not isinstance(other, CommandHandler):
+            raise TypeError("%s is not a CommandHandler" % type(other))
+        if other.name != self.name:
+            raise ValueError('Command name "%s" does not match group "%s"' %
+                             (other.name, self.name))
+
+    def __add__(self, other):
+        """Create a new group including an additional command or group."""
+        if other is None:
+            return self
+        if isinstance(other, CommandGroupHandler):
+            cmds = other.cmds
+            if other.name != self.name:
+                raise ValueError('Command names "%s" and "%s" do not match' %
+                                 (self.name, other.name))
+        else:
+            self._check_add(other)
+            cmds = [other]
+        return CommandGroupHandler(self.name, *(self.cmds + cmds))
+
+    def __iadd__(self, other):
         """Add a new command to the group."""
-        if not isinstance(cmd, CommandHandler):
-            raise TypeError("%s object is not a CommandHandler" % type(cmd))
-        self.cmds.append(cmd)
+        self._check_add(other)
+        self.cmds.append(other)
+        if self.__doc__ is not None:
+            self.__doc__ = self.help()
         return self
 
     def __repr__(self):
@@ -234,21 +268,20 @@ class CommandGroupHandler(object):
     def __str__(self):
         return '\n'.join('    ' + str(c) for c in self.cmds)
 
-    def __call__(self, commandline):
+    def __call__(self, line):
         """Do the command."""
         failures = []
 
         for c in self.cmds:
             try:
-                c(commandline)
-                return
+                return c(line)
             except InvalidCommandException, e:
                 failures.extend(e.candidates or [(c, None)])
             except InvalidArgumentException, e:
                 failures.append((c, e))
 
-        commandline = self.name + ' ' + commandline
-        raise InvalidCommandException(commandline.strip(), candidates=failures)
+        line = ' '.join((self.name, line))
+        raise InvalidCommandException(line.strip(), candidates=failures)
 
 
 class ArgGraph(object):
