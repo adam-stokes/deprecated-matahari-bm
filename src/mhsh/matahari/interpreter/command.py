@@ -410,7 +410,7 @@ class RepeatedArguments(ArgumentList):
 
     def match(self, values):
         if not values:
-            return iter([None])
+            raise InvalidArgumentException("Empty variadic argument list")
 
         values_remain = lambda c: values
 
@@ -597,6 +597,11 @@ class CommandTest(unittest.TestCase):
         handler('foo bar')
         self.assertEqual(foo.calls, 1)
 
+    def test_list_optional_kw_err(self):
+        handler = Command('foo', ('bar', ['PARAMS']))(self.nullCmd)
+        self.assertRaises(InvalidArgumentException, handler, 'foo bar')
+
+
 class CompletionTest(unittest.TestCase):
     def handler(self, *args):
         @Command(*args)
@@ -755,6 +760,7 @@ class CompletionTest(unittest.TestCase):
         self.assertCompletion(h, 'foo bar baz blarg ', [''])
         self.assertCompletion(h, 'foo bar baz blarg wibble', [''])
         self.assertCompletion(h, 'foo bar baz blarg wibble ', [''])
+
 
 class SyntaxTest(unittest.TestCase):
     def setUp(self):
