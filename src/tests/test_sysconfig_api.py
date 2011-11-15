@@ -45,17 +45,22 @@ import errno
 HTTP_PORT = 49002 + random.randint(0, 500)
 
 err = sys.stderr
-testFile = "/sysconfig-test"
+testPuppetFile = "/sysconfig-puppet-test"
+testAugeasFile = "/sysconfig-augeas-test"
 testPath = "/tmp/sysconfig-test-http-root"
-testFileWithPath = testPath + testFile
-testFileUrl = ("http://127.0.0.1:%d" % HTTP_PORT) + testFile
+testPuppetFileWithPath = testPath + testPuppetFile
+testAugeasFileWithPath = testPath + testAugeasFile
+testPuppetFileUrl = ("http://127.0.0.1:%d" % HTTP_PORT) + testPuppetFile
+testAugeasFileUrl = ("http://127.0.0.1:%d" % HTTP_PORT) + testAugeasFile
 targetFilePerms = '440'
 targetFileGroup = 'root'
 targetFileOwner = 'root'
 origFilePerms = '777'
 origFileGroup = 'qpidd'
 origFileOwner = 'qpidd'
-fileContents = "file { \""+testFileWithPath+"\":\n    owner => "+targetFileOwner+", group => "+targetFileGroup+", mode => "+targetFilePerms+"\n}"
+puppetFileContents = "file { \""+testPuppetFileWithPath+"\":\n    owner => "+targetFileOwner+", group => "+targetFileGroup+", mode => "+targetFilePerms+"\n}"
+augeasQuery = "/files/etc/mtab/1/spec"
+augeasFileContents = "get %s\n" % augeasQuery
 connection = None
 sysconfig = None
 httpd_thread = None
@@ -72,8 +77,11 @@ def resetTestFile(file, perms, owner, group, contents):
         sys.exit("problem setting up test file")
     #print "++DONE...checking test file pre-reqs++"
 
-def wrapper(method,value,flag,schema,key):
-    resetTestFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup, fileContents)
+def wrapper(method, value, flag, schema, key):
+    if schema == "augeas":
+        resetTestFile(testAugeasFileWithPath, origFilePerms, origFileOwner, origFileGroup, augeasFileContents)
+    else:
+        resetTestFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup, puppetFileContents)
     results = None
     if method == 'uri':
         results = sysconfig.run_uri(value, flag, schema, key)
@@ -81,7 +89,7 @@ def wrapper(method,value,flag,schema,key):
        results = sysconfig.run_string(value, flag, schema, key)
     return results
 
-def checkFile(file,perms,owner,grp):
+def checkFile(file, perms, owner, grp):
     count = 0
     if testUtil.getFilePermissionMask(file) != perms:
         err.write('\nfile permissions wrong, '+testUtil.getFilePermissionMask(file)+' != ' +perms+ '\n')
@@ -118,7 +126,7 @@ def setUp(self):
 
     # get puppet pre-req
     if platform.dist()[0] == 'redhat':
-        cmd.getoutput("wget -O /etc/yum.repos.d/rhel-aeolus.repo http://repos.fedorapeople.org/repos/aeolus/conductor/0.3.0/rhel-aeolus.repo")
+        cmd.getoutput("wget -O /etc/yum.repos.d/rhel-aeolus.repo http://repos.fedorapeople.org/repos/aeolus/conductor/rhel-aeolus.repo")
         result = cmd.getstatusoutput("yum -y install puppet")
         if result[0] != 0:
             sys.exit("Unable to install puppet (required for sysconfig tests)")
@@ -184,85 +192,122 @@ class TestSysconfigApi(unittest.TestCase):
 
     # TEST - run_uri()
     # ================================================================
+    # TEST - Puppet
     def test_run_uri_good_url_puppet_manifest(self):
-        results = wrapper('uri',testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
+        results = wrapper('uri', testPuppetFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
-        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
-    def test_run_uri_http_url_not_found(self):
-        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl+"_bad", 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+    def test_run_uri_http_url_not_found_puppet(self):
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testPuppetFileUrl+"_bad", 0, 'puppet', testUtil.getRandomKey(5))
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_good_file_puppet_manifest(self):
-        results = wrapper('uri', 'file://'+testFileWithPath, 0, 'puppet', testUtil.getRandomKey(5))
+        results = wrapper('uri', 'file://'+testPuppetFileWithPath, 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
-        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_uri_file_url_not_found(self):
-        self.assertRaises(QmfAgentException, wrapper, 'uri', 'file://'+testFile, 0, 'puppet', testUtil.getRandomKey(5))
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', 'file://'+testPuppetFile, 0, 'puppet', testUtil.getRandomKey(5))
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_bad_puppet_manifest(self):
-        resetTestFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup, 'bad puppet script')
-        results = sysconfig.run_uri(testFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
+        resetTestFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup, 'bad puppet script')
+        results = sysconfig.run_uri(testPuppetFileUrl, 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( results.get('status') == 'FAILED\n1', "result: " + str(results.get('status')) + " != FAILED\n1")
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_non_schema(self):
-        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'schema', testUtil.getRandomKey(5))
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testPuppetFileUrl, 0, 'schema', testUtil.getRandomKey(5))
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     # TODO: need to handle upstream vs rhel difference
-    def test_run_uri_augeas_schema_not_implemented(self):
-        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'augeas', testUtil.getRandomKey(5))
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+
+    # TEST - Augeas
+    def test_run_uri_good_url_augeas(self):
+        results = wrapper('uri', testAugeasFileUrl, 0, 'augeas', testUtil.getRandomKey(5)).get('status')
+        tokens = results.split('\n')
+        self.assertEqual(tokens[0], 'OK', "result: %s != OK" % tokens[0])
+        self.assertTrue(tokens[1].startswith("%s = " % augeasQuery))
+
+    def test_run_uri_http_url_not_found_augeas(self):
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testAugeasFileUrl + "_bad", 0, 'augeas', testUtil.getRandomKey(5))
+
+    def test_run_uri_good_file_augeas(self):
+        results = wrapper('uri', 'file://'+testAugeasFileWithPath, 0, 'augeas', testUtil.getRandomKey(5)).get('status')
+        tokens = results.split('\n')
+        self.assertEqual(tokens[0], 'OK', "result: %s != OK" % tokens[0])
+        self.assertTrue(tokens[1].startswith("%s = " % augeasQuery))
+
+    def test_run_uri_file_url_not_found(self):
+        self.assertRaises(QmfAgentException, wrapper, 'uri', 'file://'+testAugeasFile, 0, 'augeas', testUtil.getRandomKey(5))
+
 
     def test_run_uri_empty_key(self):
-        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'puppet', '')
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testPuppetFileUrl, 0, 'puppet', '')
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_uri_special_chars_in_key(self):
-        self.assertRaises(QmfAgentException, wrapper, 'uri', testFileUrl, 0, 'puppet', testUtil.getRandomKey(5) + "'s $$$")
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'uri', testPuppetFileUrl, 0, 'puppet', testUtil.getRandomKey(5) + "'s $$$")
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     # TEST - run_string()
     # ================================================================
+    # TEST - Puppet
     def test_run_string_good_puppet_manifest(self):
-        results = wrapper('string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', testUtil.getRandomKey(5))
+        results = wrapper('string', testUtil.getFileContents(testPuppetFileWithPath), 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
-        self.assertTrue( 0 == checkFile(testFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, targetFilePerms, targetFileOwner, targetFileGroup), "file properties not expected")
 
     def test_run_string_bad_puppet_manifest(self):
         results = wrapper('string', 'bad puppet manifest', 0, 'puppet', testUtil.getRandomKey(5))
         self.assertTrue( results.get('status') == 'FAILED\n1', "result: " + str(results.get('status')) + " != FAILED\n1")
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_non_schema(self):
-        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'schema', testUtil.getRandomKey(5))
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
-
-    def test_run_string_augeas_schema_not_implemented(self):
-        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'augeas', testUtil.getRandomKey(5))
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testPuppetFileWithPath), 0, 'schema', testUtil.getRandomKey(5))
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
 
     def test_run_string_empty_key(self):
-        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testFileWithPath), 0, 'puppet', '')
-        self.assertTrue( 0 == checkFile(testFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+        self.assertRaises(QmfAgentException, wrapper, 'string', testUtil.getFileContents(testPuppetFileWithPath), 0, 'puppet', '')
+        self.assertTrue( 0 == checkFile(testPuppetFileWithPath, origFilePerms, origFileOwner, origFileGroup), "file properties not expected")
+
+    # TEST - Augeas
+    def test_run_string_good_augeas(self):
+        results = wrapper('string', augeasFileContents, 0, 'augeas', testUtil.getRandomKey(5)).get('status')
+        tokens = results.split('\n')
+        self.assertEqual(tokens[0], 'OK', "result: %s != OK" % tokens[0])
+        self.assertTrue(tokens[1].startswith("%s = " % augeasQuery))
+
+    def test_run_string_bad_augeas(self):
+        result = wrapper('string', 'bad augeas query', 0, 'augeas', testUtil.getRandomKey(5)).get('status')
+        tokens = result.split('\n')
+        self.assertEqual(tokens[0], 'FAILED', "result: %s != FAILED" % tokens[0])
 
     # TEST - query()
     # ================================================================
-    #testUtil.printHeader('query()')
-    #print "\033[93m[WARN]\033[0m  NO VERIFICATION"
+    def test_query_good_augeas(self):
+        result = sysconfig.query(augeasQuery, 0, 'augeas').get('data')
+        self.assertNotEqual(result, 'unknown', "result: %s == unknown" % result)
+
+    def test_query_bad_augeas(self):
+        result = sysconfig.query('bad augeas query', 0, 'augeas').get('data')
+        self.assertEqual(result, 'unknown', "result: %s != unknown" % result)
 
     # TEST - is_configured()
     # ================================================================
-    def	test_is_configured_known_key(self):
+    def test_is_configured_known_key(self):
         key = testUtil.getRandomKey(5)
-        wrapper('uri',testFileUrl, 0, 'puppet', key)
+        wrapper('uri',testPuppetFileUrl, 0, 'puppet', key)
         results = sysconfig.is_configured(key)
         self.assertTrue( results.get('status') == 'OK', "result: " + str(results.get('status')) + " != OK")
 
-    def	test_is_configured_unknown_key(self):
+    def test_is_configured_unknown_key(self):
         results = sysconfig.is_configured(testUtil.getRandomKey(5))
         self.assertTrue( results.get('status') == 'unknown', "result: " + str(results.get('status')) + " != unknown")
 
+    def test_is_configured_failed_key(self):
+        key = testUtil.getRandomKey(5)
+        wrapper('string', "bad puppet manifest", 0, 'puppet', key)
+        tokens = sysconfig.is_configured(key).get('status').split('\n')
+        self.assertTrue(tokens[0] == 'FAILED', "result: %s != FAILED" % tokens[0])

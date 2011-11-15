@@ -26,6 +26,7 @@
 #include "matahari/logging.h"
 #include "matahari/mainloop.h"
 #include "matahari/errors.h"
+#include "matahari/mainloop.h"
 #include <glib/gi18n.h>
 
 #include <polkit/polkit.h>

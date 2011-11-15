@@ -304,7 +304,7 @@ run_augeas(const char *uri, const char *data, const char *key,
     GError *err = NULL;
     augeas *aug;
     int result;
-    char *value = NULL;
+    char *value = NULL, *result_str;
     enum mh_result res = MH_RES_SUCCESS;
 
     if (uri) {
@@ -382,24 +382,26 @@ run_augeas(const char *uri, const char *data, const char *key,
     g_free(text);
     fclose(fp);
 
-    if (result < 0) {
-        unlink(filename);
-        mh_err("Augeas command failed");
-        return MH_RES_BACKEND_ERROR;
-    }
-
     if (!g_file_get_contents(filename, &value, NULL, &err)) {
         mh_err("Unable to read augeas results: %s", err->message);
         unlink(filename);
         return MH_RES_BACKEND_ERROR;
     }
 
-    mh_sysconfig_set_configured(key, value);
-    result_cb(cb_data, result);
+    if (result < 0) {
+        asprintf(&result_str, "FAILED\n%d\n%s", result, value);
+        mh_sysconfig_set_configured(key, result_str);
+        result_cb(cb_data, MH_RES_SUCCESS);
+    } else {
+        asprintf(&result_str, "OK\n%s", value);
+        mh_sysconfig_set_configured(key, result_str);
+        result_cb(cb_data, MH_RES_SUCCESS);
+    }
 
+    free(result_str);
     unlink(filename);
 
-    return 0;
+    return MH_RES_SUCCESS;
 #else /* HAVE_AUGEAS */
     return MH_RES_NOT_IMPLEMENTED;
 #endif /* HAVE_AUGEAS */

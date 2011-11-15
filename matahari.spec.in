@@ -223,7 +223,7 @@ Requires:       %{name} = %{version}-%{release}
 Requires:       %{name}-lib = %{version}-%{release}
 Requires:       %{name}-agent-lib = %{version}-%{release}
 Requires:       qpid-cpp-client-devel > 0.7
-Requires:       qmf-devel > 0.7
+Requires:       qpid-qmf-devel > 0.7
 Requires:       glib2-devel
 
 %description devel
