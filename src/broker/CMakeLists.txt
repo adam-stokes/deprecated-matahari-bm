@@ -1,7 +1,7 @@
 SET(BROKER_DAEMON "matahari-brokerd")
 
 if(WITH-QMF)
-if(NOT WIN32)
+#if(NOT WIN32)
     add_executable(${BROKER_DAEMON} broker.c broker_federation.c broker_${VARIANT}.c)
 
     if(HAVE_RESOLV_H)
@@ -34,6 +34,6 @@ if(NOT WIN32)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/matahari-broker.service DESTINATION ${systemdunitdir})
     endif(systemd_FOUND)
 
-endif(NOT WIN32)
+#endif(NOT WIN32)
 endif(WITH-QMF)
 
