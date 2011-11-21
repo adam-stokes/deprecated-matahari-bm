@@ -1,69 +1,97 @@
-/* Copyright (C) 2011 Red Hat, Inc.
- * Written by Zane Bitter <zbitter@redhat.com>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+#include <stdio.h>
+#include <wchar.h>
 
-#include "config.h"
-
-#include <glib.h>
 #include <windows.h>
 
-#include <matahari/logging.h>
-
-#include "broker_federation.h"
+#include "broker.h"
 #include "broker_os.h"
+#include "broker_federation.h"
 
+
+#define CMD_LINE_LENGTH  32768
+
+#define QPID_BROKER      L"qpidd"
+#define QPID_ROUTE       L"qpid-route"
+
+
+static int start_process(const wchar_t *proc, wchar_t *cmdline)
+{
+    STARTUPINFO startupinfo;
+    PROCESS_INFORMATION procinfo;
+    BOOL result;
+
+    GetStartupInfo(&startupinfo);
+
+    result = CreateProcess(proc, cmdline,
+                           NULL, NULL, FALSE, 0, NULL, NULL,
+                           &startupinfo, &procinfo);
+
+    CloseHandle(procinfo.hProcess);
+    CloseHandle(procinfo.hThread);
+
+    return result == FALSE;
+}
 
 int broker_os_start_broker(char * const args[])
 {
-    gchar *cmd[] = {
-        "qpidd",
-        "--auth",
-        "no",
-        "--port",
-        "49000",
-        "--daemon",
-        NULL,
-    };
-    gboolean ret;
-    GError *error = NULL;
-    gint res = 0;
+    int ret;
+    wchar_t cmdline[CMD_LINE_LENGTH];
+    int i = 0;
+    const char *arg;
 
-    ret = g_spawn_sync(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH,
-            NULL, NULL, NULL, NULL, &res, &error);
-
-    if (ret == FALSE) {
-        g_error_free(error);
-        return -1;
+    for (arg = *args; arg; arg++) {
+        int c = snwprintf(cmdline + i, CMD_LINE_LENGTH - i, L"%s ", arg);
+        if (c < 0 || (i += c) >= (CMD_LINE_LENGTH - 1)) {
+            return -1;
+        }
     }
 
-    if (res > 0)
-        return 0;
-    else
-        return -1;
+    ret = start_process(QPID_BROKER, cmdline);
 
+    broker_federation_configure();
+
+    return ret ? -1 : 0;
 }
 
 int broker_os_add_qpid_route_link(const char *local, const char *remote)
 {
+    wchar_t cmd[1024];
+
+    snwprintf(cmd, sizeof(cmd) / sizeof(*cmd), 
+              L"%ls link add %s untrusted/untrusted@%s PLAIN", QPID_ROUTE,
+              local, remote);
+
+    if (start_process(QPID_ROUTE, cmd)) {
+        return -1;
+    }
+
     return 0;
 }
 
+
+
 int broker_os_add_qpid_route(const struct mh_qpid_route *route)
 {
+    wchar_t cmd[1024];
+
+    if (route->aggregate && route->srclocal) {
+        snwprintf(cmd, sizeof(cmd) / sizeof(*cmd), 
+                  L"%ls --src-local route add %s %s %s %s", QPID_ROUTE,
+                  route->dest, route->src, route->exchange, route->route_key);
+    } else if (route->aggregate) {
+        snwprintf(cmd, sizeof(cmd) / sizeof(*cmd),
+                  L"%ls route add %s %s %s %s", QPID_ROUTE,
+                  route->dest, route->src, route->exchange, route->route_key);
+    } else {
+        snwprintf(cmd, sizeof(cmd) / sizeof(*cmd),
+                  L"%ls --timeout=5 dynamic add %s %s %s", QPID_ROUTE,
+                  route->dest, route->src, route->exchange);
+    }
+ 
+    if (start_process(QPID_ROUTE, cmd)) {
+        return -1;
+    }
+
     return 0;
 }
 
