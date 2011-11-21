@@ -18,11 +18,10 @@
 
 #include "config.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <unistd.h>
+#include <glib.h>
+#include <windows.h>
+
+#include <matahari/logging.h>
 
 #include "broker_federation.h"
 #include "broker_os.h"
@@ -48,13 +47,13 @@ int broker_os_start_broker(char * const args[])
 
     if (ret == FALSE) {
         g_error_free(error);
-        return MH_RES_BACKEND_ERROR;
+        return -1;
     }
 
     if (res > 0)
-        return MH_RES_SUCCESS;
+        return 0;
     else
-        return MH_RES_BACKEND_ERROR;
+        return -1;
 
 }
 

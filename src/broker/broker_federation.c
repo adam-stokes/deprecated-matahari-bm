@@ -133,7 +133,7 @@ broker_federation_configure(void)
 
         mh_string_copy(peers, brokers, sizeof(peers));
 
-        while ((peer = strtok_r(p ? NULL : peers, ",; ", &p)) != NULL) {
+        while ((peer = strtok(peers, ",; ")) != NULL) {
             if (IS_DNS_SRV(peer, TCP) || IS_DNS_SRV(peer, TLS)) {
                 peer = broker_lookup(peer);
             }
