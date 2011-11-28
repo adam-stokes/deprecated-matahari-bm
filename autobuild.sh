@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Copyright (C) 2008 Andrew Beekhof
+# Copyrigh (C) 2011, Russell Bryant <rbryant@redhat.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -127,10 +128,8 @@ check_result $? ${results} "Linux" "Network API tests"
 
 ls $results
 
-if [ "${FEDORA}" = "16" ] ; then
-    echo "=::=::=::= Windows Build Currently Disabled for Fedora 16 =::=::=::= "
-    exit 0
-fi
+# Disabled windows builds for now.  The mingw toolchain is busted.
+exit 0
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
