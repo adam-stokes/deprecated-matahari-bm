@@ -120,7 +120,6 @@ broker_federation_configure(void)
     const char *proxy_service_dir = getenv("VP_G_HOST_DIR");
     char local[16];
     char peers[1024];
-    char *p = NULL;
     char *peer;
 
     if (g_file_test(proxy_service_dir, G_FILE_TEST_IS_DIR)) {
@@ -133,7 +132,7 @@ broker_federation_configure(void)
 
         mh_string_copy(peers, brokers, sizeof(peers));
 
-        while ((peer = strtok(peers, ",; ")) != NULL) {
+        while ((peer = strtok(peers ? NULL : peers ",; ")) != NULL) {
             if (IS_DNS_SRV(peer, TCP) || IS_DNS_SRV(peer, TLS)) {
                 peer = broker_lookup(peer);
             }
