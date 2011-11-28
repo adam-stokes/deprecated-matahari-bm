@@ -129,7 +129,7 @@ check_result $? ${results} "Linux" "Network API tests"
 ls $results
 
 # Disabled windows builds for now.  The mingw toolchain is busted.
-# exit 0
+exit 0
 
 echo "=::=::=::= `date` =::=::=::= "
 echo "=::=::=::= Beginning Windows Build =::=::=::= "
